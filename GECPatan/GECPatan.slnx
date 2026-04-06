@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="GECPatan.Admin/GECPatan.Admin.csproj" />
+  <Project Path="GECPatan.Web/GECPatan.Web.csproj" />
+</Solution>
