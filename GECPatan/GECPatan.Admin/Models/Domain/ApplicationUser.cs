@@ -1,8 +1,9 @@
-﻿using NuGet.Protocol.Plugins;
+﻿using Microsoft.AspNetCore.Identity;
+using NuGet.Protocol.Plugins;
 
 namespace GECPatan.Admin.Models.Domain
 {
-    public class ApplicationUser
+    public class ApplicationUser :IdentityUser
     {
         public string FullName { get; set; } = string.Empty;
         // Department the user belongs to.

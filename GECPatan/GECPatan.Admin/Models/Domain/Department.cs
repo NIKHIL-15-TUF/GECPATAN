@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.EntityFrameworkCore;
 using NuGet.Protocol.Plugins;
 using System.ComponentModel.DataAnnotations;
 
@@ -6,6 +7,7 @@ namespace GECPatan.Admin.Models.Domain
 {
     public class Department : BaseEntity
     {
+        [Key]
         public int DeptId { get; set; }
 
         [Required, MaxLength(200)]
