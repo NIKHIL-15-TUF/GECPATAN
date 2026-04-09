@@ -1,0 +1,306 @@
+﻿@model GECPatan.Admin.Models.ViewModels.DepartmentEditVM
+@{
+    ViewData["Title"] = "Edit Department";
+}
+
+<form asp-action="Edit" asp-route-id="@Model.DeptId"
+      method="post" enctype="multipart/form-data">
+
+    <input asp-for="DeptId" type="hidden" />
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            @Html.ValidationSummary(false)
+        </div>
+    }
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs mb-0" id="deptTabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#basic">
+                <i class="fas fa-info-circle mr-1"></i>Basic Info
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#vision">
+                <i class="fas fa-eye mr-1"></i>Vision & Mission
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#peo">
+                <i class="fas fa-list mr-1"></i>PEOs & PSOs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#hod">
+                <i class="fas fa-user-tie mr-1"></i>HOD Info
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content card" style="border-top:none; border-radius:0 0 8px 8px;">
+        <div class="card-body">
+
+            <!-- ── TAB 1: BASIC INFO ── -->
+            <div class="tab-pane fade show active" id="basic">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label asp-for="Name" class="font-weight-bold"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="ShortCode" class="font-weight-bold"></label>
+                            <input asp-for="ShortCode" class="form-control" placeholder="e.g. CSE" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">About Department</label>
+                    <textarea asp-for="About" class="form-control" rows="4"></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="Intake" class="font-weight-bold"></label>
+                            <input asp-for="Intake" class="form-control" type="number" min="0" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="FacultyCount" class="font-weight-bold"></label>
+                            <input asp-for="FacultyCount" class="form-control" type="number" min="0" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="LabCount" class="font-weight-bold"></label>
+                            <input asp-for="LabCount" class="form-control" type="number" min="0" />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="AnnualPlacement" class="font-weight-bold"></label>
+                            <input asp-for="AnnualPlacement" class="form-control" type="number" min="0" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Title Image -->
+                <div class="form-group">
+                    <label class="font-weight-bold">Department Banner Image</label>
+                    @if (!string.IsNullOrEmpty(Model.ExistingTitleImagePath))
+                    {
+                        <div class="mb-2">
+                            <img src="@Model.ExistingTitleImagePath"
+                                 class="img-thumbnail"
+                                 style="max-height:100px;" />
+                            <small class="text-muted d-block">Current image</small>
+                        </div>
+                    }
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input"
+                               id="TitleImage" name="TitleImage"
+                               accept="image/*"
+                               onchange="previewImage(this,'titlePreview')" />
+                        <label class="custom-file-label" for="TitleImage">
+                            @(string.IsNullOrEmpty(Model.ExistingTitleImagePath)
+                                ? "Choose image..." : "Replace image...")
+                        </label>
+                    </div>
+                    <img id="titlePreview" src="#" class="img-thumbnail mt-2 d-none"
+                         style="max-height:100px;" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label asp-for="Tagline" class="font-weight-bold"></label>
+                            <input asp-for="Tagline" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="DisplayOrder" class="font-weight-bold"></label>
+                            <input asp-for="DisplayOrder" class="form-control" type="number" min="0" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="custom-control custom-switch">
+                        <input asp-for="ShowIntake" type="checkbox"
+                               class="custom-control-input" id="showIntake" />
+                        <label class="custom-control-label" for="showIntake">
+                            Show Intake on Website
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB 2: VISION & MISSION ── -->
+            <div class="tab-pane fade" id="vision">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fas fa-eye mr-1 text-primary"></i>Vision Statements
+                            </label>
+                            <small class="text-muted d-block mb-2">
+                                Enter each vision statement on a new line
+                            </small>
+                            <textarea name="VisionItems"
+                                      class="form-control"
+                                      rows="8"
+                                      placeholder="Enter vision statement 1&#10;Enter vision statement 2&#10;...">@string.Join("\n", Model.VisionItems)</textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fas fa-rocket mr-1 text-success"></i>Mission Statements
+                            </label>
+                            <small class="text-muted d-block mb-2">
+                                Enter each mission statement on a new line
+                            </small>
+                            <textarea name="MissionItems"
+                                      class="form-control"
+                                      rows="8"
+                                      placeholder="Enter mission statement 1&#10;Enter mission statement 2&#10;...">@string.Join("\n", Model.MissionItems)</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB 3: PEOs & PSOs ── -->
+            <div class="tab-pane fade" id="peo">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fas fa-bullseye mr-1 text-warning"></i>
+                                Program Educational Objectives (PEOs)
+                            </label>
+                            <small class="text-muted d-block mb-2">
+                                Enter each PEO on a new line
+                            </small>
+                            <textarea name="PEOItems"
+                                      class="form-control"
+                                      rows="8"
+                                      placeholder="Enter PEO 1&#10;Enter PEO 2&#10;...">@string.Join("\n", Model.PEOItems)</textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fas fa-star mr-1 text-danger"></i>
+                                Program Specific Outcomes (PSOs)
+                            </label>
+                            <small class="text-muted d-block mb-2">
+                                Enter each PSO on a new line
+                            </small>
+                            <textarea name="PSOItems"
+                                      class="form-control"
+                                      rows="8"
+                                      placeholder="Enter PSO 1&#10;Enter PSO 2&#10;...">@string.Join("\n", Model.PSOItems)</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB 4: HOD INFO ── -->
+            <div class="tab-pane fade" id="hod">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="HODName" class="font-weight-bold"></label>
+                            <input asp-for="HODName" class="form-control"
+                                   placeholder="Dr. Full Name" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">HOD Photo</label>
+                            @if (!string.IsNullOrEmpty(Model.ExistingHODImagePath))
+                            {
+                                <div class="mb-2">
+                                    <img src="@Model.ExistingHODImagePath"
+                                         class="img-thumbnail"
+                                         style="max-height:80px;" />
+                                    <small class="text-muted d-block">Current photo</small>
+                                </div>
+                            }
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input"
+                                       id="HODImage" name="HODImage"
+                                       accept="image/*"
+                                       onchange="previewImage(this,'hodPreview')" />
+                                <label class="custom-file-label" for="HODImage">
+                                    @(string.IsNullOrEmpty(Model.ExistingHODImagePath)
+                                        ? "Choose photo..." : "Replace photo...")
+                                </label>
+                            </div>
+                            <img id="hodPreview" src="#" class="img-thumbnail mt-2 d-none"
+                                 style="max-height:80px;" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="HODMessage" class="font-weight-bold"></label>
+                    <textarea asp-for="HODMessage" class="form-control" rows="5"
+                              placeholder="HOD's message to students..."></textarea>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to List
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+        </div>
+    </div>
+
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        document.querySelectorAll('.custom-file-input').forEach(input => {
+            input.addEventListener('change', function () {
+                this.nextElementSibling.textContent = this.files[0]?.name || 'Choose file...';
+            });
+        });
+
+        // Keep active tab after form validation error
+        const activeTab = localStorage.getItem('deptActiveTab');
+        if (activeTab) {
+            $(`a[href="${activeTab}"]`).tab('show');
+        }
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            localStorage.setItem('deptActiveTab', $(e.target).attr('href'));
+        });
+    </script>
+}
