@@ -1,0 +1,155 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.DynamicSectionListVM>
+@using GECPatan.Admin.Models.Domain
+@{
+    ViewData["Title"] = "Manage Sections";
+    var pageType = (PageType)ViewBag.PageType;
+    var pageId = (int)ViewBag.PageId;
+    string pageName = ViewBag.PageName ?? "";
+}
+ 
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <a asp-controller="@(pageType == PageType.Department ? "Department" : "CampusCommittee")"
+               asp-action="Edit" asp-route-id="@pageId"
+               class="btn btn-secondary btn-sm mr-2">
+            <i class="fas fa-arrow-left"></i> Back to @pageName
+        </a>
+        <span class="badge badge-info px-3 py-2" style="font-size:13px;">
+            @Model.Count Section(s)
+        </span>
+    </div>
+    <a asp-action="Create"
+           asp-route-pageType="@pageType"
+           asp-route-pageId="@pageId"
+           class="btn btn-primary">
+        <i class="fas fa-plus mr-2"></i>Add Section
+    </a>
+</div>
+ 
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-layer-group mr-2"></i>
+            Sections for: <strong>@pageName</strong>
+        </h5>
+    </div>
+ 
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-layer-group fa-3x mb-3 d-block"></i>
+                <p>No sections yet. Click <strong>Add Section</strong> to get started.</p>
+                <p class="small">You can add Rich Text, PDF, Image Gallery, or File List sections.</p>
+            </div>
+        }
+        else
+        {
+            <div id="sortable-sections">
+                @foreach (var s in Model)
+                {
+                    <div class="section-item border-bottom p-3 d-flex align-items-center"
+                         data-id="@s.Id" style="background:#fff;">
+ 
+                        <!-- Drag Handle -->
+                        <div class="drag-handle mr-3 text-muted" style="cursor:grab;">
+                            <i class="fas fa-grip-vertical fa-lg"></i>
+                        </div>
+ 
+                        <!-- Section Info -->
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center">
+                                <strong style="font-size:15px;">@s.Title</strong>
+                                <span class="badge ml-2 @GetTypeBadge(s.SectionType)">
+                                    @GetTypeIcon(s.SectionType) @s.SectionTypeName
+                                </span>
+                                @if (!s.IsVisible)
+                                {
+                                    <span class="badge badge-secondary ml-1">Hidden</span>
+                                }
+                            </div>
+                            <small class="text-muted">Order: @s.DisplayOrder</small>
+                        </div>
+ 
+                        <!-- Actions -->
+                        <div class="d-flex" style="gap:6px;">
+                            <a asp-action="Edit" asp-route-id="@s.Id"
+                                   class="btn btn-sm btn-info">
+                                <i class="fas fa-edit"></i>
+                            </a>
+ 
+                            <form asp-action="ToggleVisible" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@s.Id" />
+                                <button type="submit"
+                                        class="btn btn-sm @(s.IsVisible ? "btn-warning" : "btn-success")"
+                                        title="@(s.IsVisible ? "Hide" : "Show")">
+                                    <i class="fas @(s.IsVisible ? "fa-eye-slash" : "fa-eye")"></i>
+                                </button>
+                            </form>
+ 
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@s.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Delete this section?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+ 
+            <div class="p-3 bg-light border-top">
+                <small class="text-muted">
+                    <i class="fas fa-grip-vertical mr-1"></i>
+                    Drag sections to reorder them. Changes save automatically.
+                </small>
+            </div>
+        }
+    </div>
+</div>
+ 
+@functions {
+    string GetTypeBadge(GECPatan.Admin.Models.Domain.SectionType type) => type switch
+    {
+        GECPatan.Admin.Models.Domain.SectionType.RichText => "badge-primary",
+        GECPatan.Admin.Models.Domain.SectionType.PDFViewer => "badge-danger",
+        GECPatan.Admin.Models.Domain.SectionType.PDFDownload => "badge-warning",
+        GECPatan.Admin.Models.Domain.SectionType.ImageGallery => "badge-success",
+        GECPatan.Admin.Models.Domain.SectionType.FileList => "badge-info",
+        GECPatan.Admin.Models.Domain.SectionType.Table => "badge-secondary",
+        _ => "badge-light"
+    };
+ 
+    string GetTypeIcon(GECPatan.Admin.Models.Domain.SectionType type) => type switch
+    {
+        GECPatan.Admin.Models.Domain.SectionType.RichText => "📝",
+        GECPatan.Admin.Models.Domain.SectionType.PDFViewer => "📄",
+        GECPatan.Admin.Models.Domain.SectionType.PDFDownload => "⬇️",
+        GECPatan.Admin.Models.Domain.SectionType.ImageGallery => "🖼️",
+        GECPatan.Admin.Models.Domain.SectionType.FileList => "📁",
+        GECPatan.Admin.Models.Domain.SectionType.Table => "📊",
+        _ => ""
+    };
+}
+ 
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script>
+        const sortable = new Sortable(document.getElementById('sortable-sections'), {
+        handle: '.drag-handle',
+        animation: 150,
+        onEnd: function () {
+        const items = [...document.querySelectorAll('#sortable-sections .section-item')].map((el, i) => ({
+        id: parseInt(el.dataset.id),
+        order: i
+        }));
+        fetch('/DynamicSection/SaveOrder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items)
+        });
+        }
+        });
+    </script>
+}

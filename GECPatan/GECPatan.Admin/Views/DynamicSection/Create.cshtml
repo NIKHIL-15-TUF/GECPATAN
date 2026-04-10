@@ -1,0 +1,243 @@
+﻿@model GECPatan.Admin.Models.ViewModels.DynamicSectionVM
+@using GECPatan.Admin.Models.Domain
+@{
+    ViewData["Title"] = "Add Section";
+    var pageType = (PageType)ViewBag.PageType;
+    var pageId = (int)ViewBag.PageId;
+}
+ 
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title">
+                    <i class="fas fa-plus mr-2"></i>Add New Section
+                </h3>
+            </div>
+ 
+            <form asp-action="Create" method="post" enctype="multipart/form-data" id="sectionForm">
+                <input type="hidden" asp-for="PageType" />
+                <input type="hidden" asp-for="PageId" />
+ 
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+ 
+                    <!-- Title -->
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title" class="form-control"
+                               placeholder="e.g. Syllabus, Lab Manual, Notice Board..." />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+ 
+                    <!-- Section Type -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Section Type</label>
+                        <select asp-for="SectionType"
+                                asp-items="Model.SectionTypes"
+                                class="form-control"
+                                id="sectionTypeSelect"
+                                onchange="showTypeFields(this.value)">
+                        </select>
+                        <small class="text-muted" id="typeHint"></small>
+                    </div>
+ 
+                    <!-- RICHTEXT fields -->
+                    <div id="fields-richtext" class="section-fields">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Content</label>
+                            <textarea asp-for="HtmlContent" id="richTextEditor"
+                                      class="form-control" rows="10"
+                                      placeholder="Enter content here..."></textarea>
+                        </div>
+                    </div>
+ 
+                    <!-- TABLE fields -->
+                    <div id="fields-table" class="section-fields d-none">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Table Content (HTML)</label>
+                            <textarea asp-for="HtmlContent" id="tableEditor"
+                                      class="form-control" rows="10"
+                                      placeholder="<table class='table table-bordered'>&#10;  <thead><tr><th>Column 1</th><th>Column 2</th></tr></thead>&#10;  <tbody><tr><td>Data</td><td>Data</td></tr></tbody>&#10;</table>"></textarea>
+                            <small class="text-muted">Enter a valid HTML table.</small>
+                        </div>
+                    </div>
+ 
+                    <!-- PDF fields -->
+                    <div id="fields-pdf" class="section-fields d-none">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Upload PDF File</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input"
+                                       id="UploadFile" name="UploadFile"
+                                       accept=".pdf" onchange="updateLabel(this)" />
+                                <label class="custom-file-label" for="UploadFile">
+                                    Choose PDF file...
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <!-- GALLERY fields -->
+                    <div id="fields-gallery" class="section-fields d-none">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Upload Images</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input"
+                                       id="GalleryFiles" name="GalleryFiles"
+                                       accept="image/*" multiple
+                                       onchange="updateLabel(this)" />
+                                <label class="custom-file-label" for="GalleryFiles">
+                                    Choose images (multiple allowed)...
+                                </label>
+                            </div>
+                            <small class="text-muted">Hold Ctrl to select multiple images.</small>
+                        </div>
+                    </div>
+ 
+                    <!-- FILELIST fields -->
+                    <div id="fields-filelist" class="section-fields d-none">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Upload Files</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input"
+                                       id="FileListFiles" name="FileListFiles"
+                                       multiple
+                                       onchange="updateLabel(this)" />
+                                <label class="custom-file-label" for="FileListFiles">
+                                    Choose files (multiple allowed)...
+                                </label>
+                            </div>
+                            <small class="text-muted">Hold Ctrl to select multiple files.</small>
+                        </div>
+                    </div>
+ 
+                </div>
+ 
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index"
+                           asp-route-pageType="@pageType"
+                           asp-route-pageId="@pageId"
+                           class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save Section
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+ 
+    <!-- Type Guide -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>Section Types
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <span class="badge badge-primary mr-2">Rich Text</span>
+                        <small>Format text, add links, headings with editor</small>
+                    </li>
+                    <li class="list-group-item">
+                        <span class="badge badge-danger mr-2">PDF Viewer</span>
+                        <small>PDF shown inline on the page</small>
+                    </li>
+                    <li class="list-group-item">
+                        <span class="badge badge-warning mr-2">PDF Download</span>
+                        <small>Download button for a PDF file</small>
+                    </li>
+                    <li class="list-group-item">
+                        <span class="badge badge-success mr-2">Image Gallery</span>
+                        <small>Grid of images with lightbox</small>
+                    </li>
+                    <li class="list-group-item">
+                        <span class="badge badge-info mr-2">File List</span>
+                        <small>List of downloadable files</small>
+                    </li>
+                    <li class="list-group-item">
+                        <span class="badge badge-secondary mr-2">Table</span>
+                        <small>HTML table with custom rows/cols</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+@section Scripts {
+    <!-- TinyMCE -->
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        let tinyMceInitialized = false;
+ 
+        const hints = {
+        '1': 'Use the editor to format text, add headings, links, bullet points.',
+        '2': 'Upload a PDF file that will be shown inline on the page.',
+        '3': 'Upload a PDF file. A download button will be shown.',
+        '4': 'Upload multiple images. They will be displayed as a gallery.',
+        '5': 'Upload multiple files. They will be shown as a download list.',
+        '6': 'Enter an HTML table. Use Bootstrap classes for styling.'
+        };
+ 
+        function showTypeFields(val) {
+        document.querySelectorAll('.section-fields').forEach(el => el.classList.add('d-none'));
+        document.getElementById('typeHint').textContent = hints[val] || '';
+ 
+        if (val === '1') {
+        document.getElementById('fields-richtext').classList.remove('d-none');
+        if (!tinyMceInitialized) {
+        tinymce.init({
+        selector: '#richTextEditor',
+        plugins: 'link lists table image code',
+        toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image table | code',
+        height: 350,
+        menubar: false,
+        promotion: false,
+        branding: false
+        });
+        tinyMceInitialized = true;
+        }
+        } else if (val === '6') {
+        document.getElementById('fields-table').classList.remove('d-none');
+        } else if (val === '2' || val === '3') {
+        document.getElementById('fields-pdf').classList.remove('d-none');
+        } else if (val === '4') {
+        document.getElementById('fields-gallery').classList.remove('d-none');
+        } else if (val === '5') {
+        document.getElementById('fields-filelist').classList.remove('d-none');
+        }
+        }
+ 
+        function updateLabel(input) {
+        const label = input.nextElementSibling;
+        if (input.files.length > 1) {
+        label.textContent = input.files.length + ' files selected';
+        } else if (input.files.length === 1) {
+        label.textContent = input.files[0].name;
+        }
+        }
+ 
+        // Make gallery/filelist files available as "UploadFile" name for controller
+        document.getElementById('sectionForm').addEventListener('submit', function (e) {
+        const val = document.getElementById('sectionTypeSelect').value;
+ 
+        // Sync TinyMCE content before submit
+        if (val === '1' && tinyMceInitialized) {
+        tinymce.triggerSave();
+        }
+        });
+ 
+        // Initialize on page load
+        showTypeFields(document.getElementById('sectionTypeSelect').value);
+    </script>
+}
