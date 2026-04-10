@@ -1,0 +1,160 @@
+﻿@model GECPatan.Admin.Models.ViewModels.FacultyEditVM
+@{
+    ViewData["Title"] = "Edit Faculty";
+}
+<form asp-action="Edit" asp-route-id="@Model.FacultyId" method="post" enctype="multipart/form-data">
+    <input asp-for="FacultyId" type="hidden" />
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+    }
+    <div class="card">
+        <div class="card-header" style="background:#1a237e;color:#fff;">
+            <h3 class="card-title"><i class="fas fa-user-edit mr-2"></i>Edit Faculty — @Model.Name</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-9">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <label asp-for="Name" class="font-weight-bold"></label>
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label asp-for="Designation" class="font-weight-bold"></label>
+                                <input asp-for="Designation" class="form-control" />
+                                <span asp-validation-for="Designation" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <label asp-for="DeptId" class="font-weight-bold"></label>
+                                <select asp-for="DeptId" asp-items="Model.Departments" class="form-control">
+                                    <option value="">-- Select Department --</option>
+                                </select>
+                                <span asp-validation-for="DeptId" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label asp-for="DateOfJoining" class="font-weight-bold"></label>
+                                <input asp-for="DateOfJoining" class="form-control" type="date" />
+                                <span asp-validation-for="DateOfJoining" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Qualification" class="font-weight-bold"></label>
+                                <input asp-for="Qualification" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="AreaOfInterest" class="font-weight-bold"></label>
+                                <input asp-for="AreaOfInterest" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label asp-for="Website" class="font-weight-bold"></label>
+                                <input asp-for="Website" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="SeniorityOrder" class="font-weight-bold"></label>
+                                <input asp-for="SeniorityOrder" class="form-control" type="number" min="0" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input asp-for="IsTeaching" type="checkbox" class="custom-control-input" id="isTeaching" />
+                            <label class="custom-control-label" for="isTeaching">Teaching Staff</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    @if (!string.IsNullOrEmpty(Model.ExistingImagePath))
+                    {
+                        <img src="@Model.ExistingImagePath" id="photoPreview" class="img-thumbnail rounded-circle mb-2" style="width:120px;height:120px;object-fit:cover;" />
+                    }
+                    else
+                    {
+                        <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:120px;height:120px;">
+                            <i class="fas fa-user fa-3x text-white"></i>
+                        </div>
+                        <img id="photoPreview" src="#" class="img-thumbnail rounded-circle mb-2 d-none" style="width:120px;height:120px;object-fit:cover;" />
+                    }
+                    <div class="custom-file mt-2">
+                        <input type="file" class="custom-file-input" id="Photo" name="Photo" accept="image/*" onchange="previewPhoto(this)" />
+                        <label class="custom-file-label" for="Photo" style="font-size:12px;">@(string.IsNullOrEmpty(Model.ExistingImagePath) ? "Upload photo" : "Change photo")</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>Back to List</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-2"></i>Save Changes</button>
+        </div>
+    </div>
+</form>
+<div class="card mt-3">
+    <div class="card-header bg-light">
+        <h6 class="card-title mb-0"><i class="fas fa-list mr-2"></i>Manage Sub-sections for @Model.Name</h6>
+    </div>
+    <div class="card-body p-2">
+        <div class="row">
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="Qualifications" asp-route-id="@Model.FacultyId" class="btn btn-outline-primary btn-block btn-sm">
+                    <i class="fas fa-graduation-cap d-block mb-1" style="font-size:18px;"></i>Qualifications
+                </a>
+            </div>
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="Experience" asp-route-id="@Model.FacultyId" class="btn btn-outline-success btn-block btn-sm">
+                    <i class="fas fa-briefcase d-block mb-1" style="font-size:18px;"></i>Experience
+                </a>
+            </div>
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="Training" asp-route-id="@Model.FacultyId" class="btn btn-outline-warning btn-block btn-sm">
+                    <i class="fas fa-chalkboard d-block mb-1" style="font-size:18px;"></i>Training
+                </a>
+            </div>
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="Publications" asp-route-id="@Model.FacultyId" class="btn btn-outline-danger btn-block btn-sm">
+                    <i class="fas fa-book d-block mb-1" style="font-size:18px;"></i>Publications
+                </a>
+            </div>
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="PersonalDetails" asp-route-id="@Model.FacultyId" class="btn btn-outline-info btn-block btn-sm">
+                    <i class="fas fa-id-card d-block mb-1" style="font-size:18px;"></i>Personal Details
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function previewPhoto(input) {
+        const preview = document.getElementById('photoPreview');
+        if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => { preview.src = e.target.result; preview.classList.remove('d-none'); };
+        reader.readAsDataURL(input.files[0]);
+        input.nextElementSibling.textContent = input.files[0].name;
+        }
+        }
+    </script>
+}

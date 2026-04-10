@@ -1,0 +1,138 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.FacultyListVM>
+@{
+    ViewData["Title"] = "Faculty";
+}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form asp-action="Index" method="get" class="form-inline">
+            <label class="mr-2 font-weight-bold">Filter by Department:</label>
+            <select name="deptId" class="form-control mr-2" onchange="this.form.submit()">
+                <option value="">-- All Departments --</option>
+                @foreach (SelectListItem item in ViewBag.Departments)
+                {
+                    <option value="@item.Value" selected="@(item.Selected ? "selected" : null)">@item.Text</option>
+                }
+            </select>
+        </form>
+    </div>
+    <div class="col-md-6 text-right">
+        <span class="badge badge-info px-3 py-2 mr-2" style="font-size:13px;">@Model.Count Faculty Member(s)</span>
+        @if (User.IsInRole("SuperAdmin") || User.IsInRole("HOD"))
+        {
+            <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus mr-2"></i>Add Faculty</a>
+        }
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th width="60">Order</th>
+                    <th width="60">Photo</th>
+                    <th>Name</th>
+                    <th>Designation</th>
+                    <th>Department</th>
+                    <th width="100">Type</th>
+                    <th width="80">Status</th>
+                    <th width="220">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="fas fa-chalkboard-teacher fa-2x mb-2 d-block"></i>No faculty members found.
+                        </td>
+                    </tr>
+                }
+                @foreach (var f in Model)
+                {
+                    <tr>
+                        <td>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("HOD"))
+                            {
+                                <div class="d-flex flex-column" style="gap:2px;">
+                                    <form asp-action="Reorder" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@f.FacultyId" />
+                                        <input type="hidden" name="direction" value="up" />
+                                        <button type="submit" class="btn btn-xs btn-light border px-2 py-1"><i class="fas fa-chevron-up" style="font-size:10px;"></i></button>
+                                    </form>
+                                    <form asp-action="Reorder" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@f.FacultyId" />
+                                        <input type="hidden" name="direction" value="down" />
+                                        <button type="submit" class="btn btn-xs btn-light border px-2 py-1"><i class="fas fa-chevron-down" style="font-size:10px;"></i></button>
+                                    </form>
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(f.ImagePath))
+                            {
+                                <img src="@f.ImagePath" class="img-thumbnail rounded-circle" style="width:45px;height:45px;object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <div class="bg-secondary d-flex align-items-center justify-content-center rounded-circle" style="width:45px;height:45px;">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <strong>@f.Name</strong>
+                            <small class="text-muted d-block">Joined: @f.DateOfJoining.ToString("MMM yyyy")</small>
+                        </td>
+                        <td>@f.Designation</td>
+                        <td><span class="badge badge-light border">@f.DepartmentName</span></td>
+                        <td>@if (f.IsTeaching){
+                            <span class="badge badge-primary">Teaching</span>
+                        }else
+                        {
+
+                            <span class="badge badge-secondary">Non-Teaching</span>
+                        }
+                    </td>
+                    <td>@if (f.IsActive){
+                        <span class="badge badge-success">Active</span>
+                    }else
+                    {
+
+                        <span class="badge badge-danger">Inactive</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@f.FacultyId" class="btn btn-sm btn-info mb-1"><i class="fas fa-edit"></i> Edit</a>
+                    <div class="btn-group mb-1">
+                        <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown"><i class="fas fa-list"></i></button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" asp-action="Qualifications" asp-route-id="@f.FacultyId"><i class="fas fa-graduation-cap mr-2"></i>Qualifications</a>
+                            <a class="dropdown-item" asp-action="Experience" asp-route-id="@f.FacultyId"><i class="fas fa-briefcase mr-2"></i>Experience</a>
+                            <a class="dropdown-item" asp-action="Training" asp-route-id="@f.FacultyId"><i class="fas fa-chalkboard mr-2"></i>Training</a>
+                            <a class="dropdown-item" asp-action="Publications" asp-route-id="@f.FacultyId"><i class="fas fa-book mr-2"></i>Publications</a>
+                            <a class="dropdown-item" asp-action="PersonalDetails" asp-route-id="@f.FacultyId"><i class="fas fa-id-card mr-2"></i>Personal Details</a>
+                        </div>
+                    </div>
+                    @if (User.IsInRole("SuperAdmin") || User.IsInRole("HOD"))
+                    {
+                        <form asp-action="ToggleActive" method="post" class="d-inline mb-1">
+                            <input type="hidden" name="id" value="@f.FacultyId" />
+                            <button type="submit" class="btn btn-sm @(f.IsActive ? "btn-warning" : "btn-success")" onclick="return confirm('Toggle status?')">
+                                <i class="fas @(f.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
+                            </button>
+                        </form>
+                    }
+                    @if (User.IsInRole("SuperAdmin"))
+                    {
+                        <form asp-action="Delete" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@f.FacultyId" />
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete?')"><i class="fas fa-trash"></i></button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+</div>
+</div>
