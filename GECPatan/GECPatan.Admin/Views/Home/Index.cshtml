@@ -1,136 +1,72 @@
 ﻿@{
     ViewData["Title"] = "Dashboard";
 }
-
-<!-- Welcome Banner -->
 <div class="row mb-3">
     <div class="col-12">
-        <div class="card" style="border-left: 4px solid #1a237e;">
+        <div class="card" style="border-left:4px solid #1a237e;">
             <div class="card-body py-3">
                 <div class="d-flex align-items-center">
                     <i class="fas fa-university fa-2x mr-3" style="color:#1a237e"></i>
                     <div>
                         <h5 class="mb-0" style="color:#1a237e">Welcome, @User.Identity?.Name</h5>
-                        <small class="text-muted">
-                            Government Engineering College, Patan — Admin Panel
-                        </small>
+                        <small class="text-muted">Government Engineering College, Patan — Admin Panel</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Stats Cards -->
 <div class="row">
     <div class="col-lg-3 col-6">
         <div class="small-box bg-info">
-            <div class="inner">
-                <h3>7</h3>
-                <p>Departments</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-building"></i>
-            </div>
-            <a asp-controller="Department" asp-action="Index" class="small-box-footer">
-                Manage <i class="fas fa-arrow-circle-right"></i>
-            </a>
+            <div class="inner"><h3>7</h3><p>Departments</p></div>
+            <div class="icon"><i class="fas fa-building"></i></div>
+            <a asp-controller="Department" asp-action="Index" class="small-box-footer">Manage <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
-
     <div class="col-lg-3 col-6">
         <div class="small-box bg-success">
-            <div class="inner">
-                <h3>-</h3>
-                <p>Faculty Members</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-chalkboard-teacher"></i>
-            </div>
-            <a asp-controller="Faculty" asp-action="Index" class="small-box-footer">
-                Manage <i class="fas fa-arrow-circle-right"></i>
-            </a>
+            <div class="inner"><h3>-</h3><p>Faculty Members</p></div>
+            <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <a asp-controller="Faculty" asp-action="Index" class="small-box-footer">Manage <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
-
     <div class="col-lg-3 col-6">
         <div class="small-box bg-warning">
-            <div class="inner">
-                <h3>-</h3>
-                <p>Committees</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-users"></i>
-            </div>
-            <a asp-controller="CampusCommittee" asp-action="Index" class="small-box-footer">
-                Manage <i class="fas fa-arrow-circle-right"></i>
-            </a>
+            <div class="inner"><h3>-</h3><p>Committees</p></div>
+            <div class="icon"><i class="fas fa-users"></i></div>
+            <a asp-controller="CampusCommittee" asp-action="Index" class="small-box-footer">Manage <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
-
     <div class="col-lg-3 col-6">
         <div class="small-box bg-danger">
-            <div class="inner">
-                <h3>-</h3>
-                <p>News Items</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-newspaper"></i>
-            </div>
-            <a asp-controller="NewsItem" asp-action="Index" class="small-box-footer">
-                Manage <i class="fas fa-arrow-circle-right"></i>
-            </a>
+            <div class="inner"><h3>-</h3><p>News Items</p></div>
+            <div class="icon"><i class="fas fa-newspaper"></i></div>
+            <a asp-controller="NewsItem" asp-action="Index" class="small-box-footer">Manage <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
 </div>
-
-<!-- Quick Links -->
 <div class="row">
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header" style="background:#1a237e;color:#fff">
-                <h3 class="card-title">
-                    <i class="fas fa-bolt mr-2"></i>Quick Actions
-                </h3>
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title"><i class="fas fa-bolt mr-2"></i>Quick Actions</h3>
             </div>
             <div class="card-body p-0">
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item">
-                        <a asp-controller="Faculty" asp-action="Create" class="text-decoration-none">
-                            <i class="fas fa-user-plus mr-2 text-success"></i>Add New Faculty
-                        </a>
-                    </li>
-                    <li class="list-group-item">
-                        <a asp-controller="Department" asp-action="Create" class="text-decoration-none">
-                            <i class="fas fa-plus-circle mr-2 text-info"></i>Add Department
-                        </a>
-                    </li>
-                    <li class="list-group-item">
-                        <a asp-controller="NewsItem" asp-action="Create" class="text-decoration-none">
-                            <i class="fas fa-newspaper mr-2 text-warning"></i>Post News
-                        </a>
-                    </li>
-                    <li class="list-group-item">
-                        <a asp-controller="Activity" asp-action="Create" class="text-decoration-none">
-                            <i class="fas fa-calendar-plus mr-2 text-primary"></i>Add Activity
-                        </a>
-                    </li>
-                    <li class="list-group-item">
-                        <a asp-controller="Achievement" asp-action="Create" class="text-decoration-none">
-                            <i class="fas fa-trophy mr-2 text-danger"></i>Add Achievement
-                        </a>
-                    </li>
+                    <li class="list-group-item"><a asp-controller="Faculty" asp-action="Create" class="text-decoration-none"><i class="fas fa-user-plus mr-2 text-success"></i>Add New Faculty</a></li>
+                    <li class="list-group-item"><a asp-controller="Department" asp-action="Create" class="text-decoration-none"><i class="fas fa-plus-circle mr-2 text-info"></i>Add Department</a></li>
+                    <li class="list-group-item"><a asp-controller="NewsItem" asp-action="Index" class="text-decoration-none"><i class="fas fa-newspaper mr-2 text-warning"></i>Post News</a></li>
+                    <li class="list-group-item"><a asp-controller="Activity" asp-action="Index" class="text-decoration-none"><i class="fas fa-calendar-plus mr-2 text-primary"></i>Add Activity</a></li>
+                    <li class="list-group-item"><a asp-controller="Achievement" asp-action="Index" class="text-decoration-none"><i class="fas fa-trophy mr-2 text-danger"></i>Add Achievement</a></li>
                 </ul>
             </div>
         </div>
     </div>
-
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header" style="background:#1a237e;color:#fff">
-                <h3 class="card-title">
-                    <i class="fas fa-info-circle mr-2"></i>System Info
-                </h3>
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>System Info</h3>
             </div>
             <div class="card-body p-0">
                 <ul class="list-group list-group-flush">
@@ -156,10 +92,6 @@
                     <li class="list-group-item d-flex justify-content-between">
                         <span><i class="fas fa-database mr-2 text-muted"></i>Database</span>
                         <strong class="text-success">Connected</strong>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span><i class="fas fa-code-branch mr-2 text-muted"></i>Version</span>
-                        <strong>1.0.0</strong>
                     </li>
                 </ul>
             </div>
