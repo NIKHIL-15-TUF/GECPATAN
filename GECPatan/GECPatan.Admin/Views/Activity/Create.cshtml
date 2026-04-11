@@ -1,0 +1,123 @@
+﻿@model GECPatan.Admin.Models.ViewModels.ActivityCreateVM
+@{
+    ViewData["Title"] = "Add Activity";
+}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title"><i class="fas fa-plus mr-2"></i>Add Activity</h3>
+            </div>
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title" class="form-control" placeholder="Activity title..." />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe the activity..."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="EventDate" class="font-weight-bold"></label>
+                                <input asp-for="EventDate" class="form-control" type="date" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="EventTime" class="font-weight-bold"></label>
+                                <input asp-for="EventTime" class="form-control" placeholder="e.g. 02:00 PM to 04:00 PM" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="Year" class="font-weight-bold"></label>
+                                <input asp-for="Year" class="form-control" type="number" placeholder="e.g. 2025" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="DeptId" class="font-weight-bold"></label>
+                                <select asp-for="DeptId" asp-items="Model.Departments" class="form-control">
+                                    <option value="">-- None --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="CommitteeId" class="font-weight-bold"></label>
+                                <select asp-for="CommitteeId" asp-items="Model.Committees" class="form-control">
+                                    <option value="">-- None --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="TargetStudents" class="font-weight-bold"></label>
+                        <input asp-for="TargetStudents" class="form-control" placeholder="e.g. All Students, CSE 3rd Sem" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Keywords" class="font-weight-bold"></label>
+                        <input asp-for="Keywords" class="form-control" placeholder="e.g. Workshop, Seminar, NSS" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ExternalLink" class="font-weight-bold"></label>
+                        <input asp-for="ExternalLink" class="form-control" placeholder="https://..." />
+                    </div>
+                    <hr />
+                    <div class="form-group">
+                        <label class="font-weight-bold">Activity Images</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" name="Images" multiple accept="image/*"
+                                   onchange="this.nextElementSibling.textContent=this.files.length+' image(s) selected'" />
+                            <label class="custom-file-label">Choose images (multiple allowed)...</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Activity Files (PDF)</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" name="Files" multiple accept=".pdf"
+                                   onchange="this.nextElementSibling.textContent=this.files.length+' file(s) selected'" />
+                            <label class="custom-file-label">Choose PDF files (multiple allowed)...</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input asp-for="IsVisible" type="checkbox" class="custom-control-input" id="isVisible" />
+                            <label class="custom-control-label" for="isVisible">Visible on website</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>Back</a>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-2"></i>Save Activity</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0"><i class="fas fa-info-circle mr-2 text-info"></i>Tips</h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2"><i class="fas fa-check text-success mr-1"></i>Link activity to a Department OR Committee — both optional.</p>
+                <p class="small text-muted mb-2"><i class="fas fa-check text-success mr-1"></i>Multiple images can be uploaded at once.</p>
+                <p class="small text-muted mb-0"><i class="fas fa-check text-success mr-1"></i>PDF files will appear as download links on the activity page.</p>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+}

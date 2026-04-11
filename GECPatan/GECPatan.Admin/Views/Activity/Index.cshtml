@@ -1,0 +1,112 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.ActivityListVM>
+@{
+    ViewData["Title"] = "Activities";
+}
+ 
+<div class="row mb-3">
+    <div class="col-md-8">
+        <form asp-action="Index" method="get" class="form-inline flex-wrap" style="gap:8px;">
+            <select name="deptId" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">-- All Departments --</option>
+                @foreach (SelectListItem item in ViewBag.Departments)
+                {
+                    <option value="@item.Value" selected="@(item.Selected ? "selected" : null)">@item.Text</option>
+                }
+            </select>
+            <select name="committeeId" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">-- All Committees --</option>
+                @foreach (SelectListItem item in ViewBag.Committees)
+                {
+                    <option value="@item.Value" selected="@(item.Selected ? "selected" : null)">@item.Text</option>
+                }
+            </select>
+        </form>
+    </div>
+    <div class="col-md-4 text-right">
+        <span class="badge badge-info px-3 py-2 mr-2" style="font-size:13px;">@Model.Count Activity(ies)</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-2"></i>Add Activity
+        </a>
+    </div>
+</div>
+ 
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th>Title</th>
+                    <th width="120">Date</th>
+                    <th width="80">Images</th>
+                    <th width="80">Files</th>
+                    <th width="80">Status</th>
+                    <th width="160">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="fas fa-calendar-alt fa-2x mb-2 d-block"></i>
+                            No activities yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong>@a.Title</strong>
+                            @if (!string.IsNullOrEmpty(a.DeptName))
+                            {
+                                <span class="badge badge-light border ml-1">@a.DeptName</span>
+                            }
+                            @if (!string.IsNullOrEmpty(a.CommitteeName))
+                            {
+                                <span class="badge badge-info ml-1">@a.CommitteeName</span>
+                            }
+                        </td>
+                        <td><small>@a.EventDate</small></td>
+                        <td>
+                            <span class="badge badge-success">@a.ImageCount 🖼</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-warning">@a.FileCount 📄</span>
+                        </td>
+                        <td>
+                            @if (a.IsVisible)
+                            {
+                                <span class="badge badge-success">Visible</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Hidden</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-info">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form asp-action="ToggleVisible" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <button type="submit" class="btn btn-sm @(a.IsVisible ? "btn-warning" : "btn-success")" title="Toggle">
+                                    <i class="fas @(a.IsVisible ? "fa-eye-slash" : "fa-eye")"></i>
+                                </button>
+                            </form>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("HOD"))
+                            {
+                                <form asp-action="Delete" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@a.Id" />
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

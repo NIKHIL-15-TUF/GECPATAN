@@ -1,0 +1,162 @@
+﻿@model GECPatan.Admin.Models.ViewModels.ActivityEditVM
+@using GECPatan.Admin.Models.Domain
+@{
+    ViewData["Title"] = "Edit Activity";
+    var existingImages = ViewBag.ExistingImages as List<ActivityImage> ?? new();
+    var existingFiles = ViewBag.ExistingFiles as List<ActivityFile> ?? new();
+}
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <h3 class="card-title"><i class="fas fa-edit mr-2"></i>Edit Activity</h3>
+    </div>
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+        <input asp-for="Id" type="hidden" />
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+            }
+            <div class="form-group">
+                <label asp-for="Title" class="font-weight-bold"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+            <div class="form-group">
+                <label class="font-weight-bold">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="EventDate" class="font-weight-bold"></label>
+                        <input asp-for="EventDate" class="form-control" type="date" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="EventTime" class="font-weight-bold"></label>
+                        <input asp-for="EventTime" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="Year" class="font-weight-bold"></label>
+                        <input asp-for="Year" class="form-control" type="number" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="DeptId" class="font-weight-bold"></label>
+                        <select asp-for="DeptId" asp-items="Model.Departments" class="form-control">
+                            <option value="">-- None --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="CommitteeId" class="font-weight-bold"></label>
+                        <select asp-for="CommitteeId" asp-items="Model.Committees" class="form-control">
+                            <option value="">-- None --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="TargetStudents" class="font-weight-bold"></label>
+                <input asp-for="TargetStudents" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Keywords" class="font-weight-bold"></label>
+                <input asp-for="Keywords" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="ExternalLink" class="font-weight-bold"></label>
+                <input asp-for="ExternalLink" class="form-control" />
+            </div>
+            <hr />
+ 
+            <!-- Existing Images -->
+            @if (existingImages.Any())
+            {
+                <label class="font-weight-bold">Current Images (@existingImages.Count)</label>
+                <div class="row mb-3">
+                    @foreach (var img in existingImages)
+                    {
+                        <div class="col-md-2 col-4 mb-2 text-center">
+                            <img src="@img.ImagePath" class="img-thumbnail"
+                                 style="height:70px;object-fit:cover;width:100%;" />
+                            <form asp-action="DeleteImage" method="post" class="mt-1">
+                                <input type="hidden" name="id" value="@img.Id" />
+                                <input type="hidden" name="activityId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-xs btn-danger btn-block"
+                                        onclick="return confirm('Remove?')">
+                                    <i class="fas fa-times mr-1"></i>Remove
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+ 
+            <div class="form-group">
+                <label class="font-weight-bold">Add More Images</label>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" name="Images" multiple accept="image/*"
+                           onchange="this.nextElementSibling.textContent=this.files.length+' image(s) selected'" />
+                    <label class="custom-file-label">Choose images...</label>
+                </div>
+            </div>
+ 
+            <!-- Existing Files -->
+            @if (existingFiles.Any())
+            {
+                <label class="font-weight-bold">Current Files (@existingFiles.Count)</label>
+                <ul class="list-group mb-3">
+                    @foreach (var f in existingFiles)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                            <div>
+                                <i class="fas fa-file-pdf text-danger mr-2"></i>
+                                <a href="@f.FilePath" target="_blank">@f.Title</a>
+                            </div>
+                            <form asp-action="DeleteActivityFile" method="post">
+                                <input type="hidden" name="id" value="@f.Id" />
+                                <input type="hidden" name="activityId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-xs btn-danger"
+                                        onclick="return confirm('Remove file?')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                        </li>
+                    }
+                </ul>
+            }
+ 
+            <div class="form-group">
+                <label class="font-weight-bold">Add More Files (PDF)</label>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" name="Files" multiple accept=".pdf"
+                           onchange="this.nextElementSibling.textContent=this.files.length+' file(s) selected'" />
+                    <label class="custom-file-label">Choose PDF files...</label>
+                </div>
+            </div>
+ 
+            <div class="form-group">
+                <div class="custom-control custom-switch">
+                    <input asp-for="IsVisible" type="checkbox" class="custom-control-input" id="isVisible" />
+                    <label class="custom-control-label" for="isVisible">Visible on website</label>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>Back</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-2"></i>Save Changes</button>
+        </div>
+    </form>
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+}

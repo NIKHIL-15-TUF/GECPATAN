@@ -1,0 +1,124 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.AchievementListVM>
+@{
+    ViewData["Title"] = "Achievements";
+}
+ 
+<div class="row mb-3">
+    <div class="col-md-8">
+        <form asp-action="Index" method="get" class="form-inline flex-wrap" style="gap:8px;">
+            <select name="deptId" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">-- All Departments --</option>
+                @foreach (SelectListItem item in ViewBag.Departments)
+                {
+                    <option value="@item.Value" selected="@(item.Selected ? "selected" : null)">@item.Text</option>
+                }
+            </select>
+            <select name="committeeId" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">-- All Committees --</option>
+                @foreach (SelectListItem item in ViewBag.Committees)
+                {
+                    <option value="@item.Value" selected="@(item.Selected ? "selected" : null)">@item.Text</option>
+                }
+            </select>
+            <select name="year" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">-- All Years --</option>
+                @foreach (SelectListItem item in ViewBag.Years)
+                {
+                    <option value="@item.Value" selected="@(item.Selected ? "selected" : null)">@item.Text</option>
+                }
+            </select>
+        </form>
+    </div>
+    <div class="col-md-4 text-right">
+        <span class="badge badge-info px-3 py-2 mr-2" style="font-size:13px;">@Model.Count Achievement(s)</span>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-2"></i>Add Achievement
+        </a>
+    </div>
+</div>
+ 
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th width="60">Image</th>
+                    <th>Title</th>
+                    <th width="120">Date</th>
+                    <th width="80">Year</th>
+                    <th width="80">Status</th>
+                    <th width="140">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="fas fa-trophy fa-2x mb-2 d-block"></i>
+                            No achievements yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(a.ImagePath))
+                            {
+                                <img src="@a.ImagePath" class="img-thumbnail"
+                                     style="width:45px;height:45px;object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <div class="bg-warning d-flex align-items-center justify-content-center"
+                                     style="width:45px;height:45px;border-radius:4px;">
+                                    <i class="fas fa-trophy text-white"></i>
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <strong>@a.Title</strong>
+                            @if (!string.IsNullOrEmpty(a.DeptName))
+                            {
+                                <small class="text-muted d-block">@a.DeptName</small>
+                            }
+                        </td>
+                        <td><small>@a.Date</small></td>
+                        <td>@a.Year</td>
+                        <td>
+                            @if (a.IsVisible)
+                            {
+                                <span class="badge badge-success">Visible</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Hidden</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-info">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form asp-action="ToggleVisible" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <button type="submit" class="btn btn-sm @(a.IsVisible ? "btn-warning" : "btn-success")">
+                                    <i class="fas @(a.IsVisible ? "fa-eye-slash" : "fa-eye")"></i>
+                                </button>
+                            </form>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("HOD"))
+                            {
+                                <form asp-action="Delete" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@a.Id" />
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
