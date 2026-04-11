@@ -1,0 +1,100 @@
+﻿@model GECPatan.Admin.Models.ViewModels.CommitteeCreateVM
+@{
+    ViewData["Title"] = "Add Committee";
+}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title"><i class="fas fa-plus mr-2"></i>New Committee</h3>
+            </div>
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title" class="form-control" placeholder="e.g. NSS, SSIP, Anti-Ragging" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Tagline" class="font-weight-bold"></label>
+                        <input asp-for="Tagline" class="form-control" placeholder="Short tagline..." />
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">About</label>
+                        <textarea asp-for="About" class="form-control" rows="4" placeholder="About this committee..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Title Image</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="TitleImage" name="TitleImage" accept="image/*"
+                                   onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose image...'" />
+                            <label class="custom-file-label" for="TitleImage">Choose image...</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="BlogLink" class="font-weight-bold"></label>
+                                <input asp-for="BlogLink" class="form-control" placeholder="https://..." />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Link" class="font-weight-bold"></label>
+                                <input asp-for="Link" class="form-control" placeholder="External link..." />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="DisplayOrder" class="font-weight-bold"></label>
+                                <input asp-for="DisplayOrder" class="form-control" type="number" min="0" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mt-4">
+                                <div class="custom-control custom-switch">
+                                    <input asp-for="ShowDocument" type="checkbox" class="custom-control-input" id="showDoc" />
+                                    <label class="custom-control-label" for="showDoc">Show Documents Tab</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mt-4">
+                                <div class="custom-control custom-switch">
+                                    <input asp-for="TableView" type="checkbox" class="custom-control-input" id="tableView" />
+                                    <label class="custom-control-label" for="tableView">Table View</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>Back</a>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-2"></i>Save Committee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0"><i class="fas fa-info-circle mr-2 text-info"></i>Tips</h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2"><i class="fas fa-check text-success mr-1"></i>After creating, go to Edit to add Vision, Mission, Objectives.</p>
+                <p class="small text-muted mb-2"><i class="fas fa-check text-success mr-1"></i>Add Members from the Members button.</p>
+                <p class="small text-muted mb-0"><i class="fas fa-check text-success mr-1"></i>Add custom sections (PDF, Gallery etc.) from Sections button.</p>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+}

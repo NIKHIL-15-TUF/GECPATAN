@@ -29,7 +29,6 @@
     <Folder Include="Helpers\" />
     <Folder Include="Services\" />
     <Folder Include="wwwroot\adminlte\" />
-    <Folder Include="wwwroot\tinymce\" />
     <Folder Include="wwwroot\uploads\faculty\" />
     <Folder Include="wwwroot\uploads\committee\" />
     <Folder Include="wwwroot\uploads\documents\" />
