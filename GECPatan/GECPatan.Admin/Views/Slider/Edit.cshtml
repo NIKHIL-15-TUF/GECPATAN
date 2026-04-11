@@ -1,0 +1,163 @@
+﻿@model GECPatan.Admin.Models.ViewModels.SliderVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Slider" : "Add Slider";
+    string action = isEdit ? "Edit" : "Create";
+}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title">
+                    <i class="fas fa-images mr-2"></i>@ViewData["Title"]
+                </h3>
+            </div>
+            <form asp-action="@action" method="post" enctype="multipart/form-data">
+                @if (isEdit)
+                {
+                    <input asp-for="Id" type="hidden" />
+                }
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+ 
+                    <!-- Image -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Slider Image</label>
+                        @if (!string.IsNullOrEmpty(Model.ExistingImagePath))
+                        {
+                            <div class="mb-2">
+                                <img src="@Model.ExistingImagePath" class="img-thumbnail"
+                                     style="max-height:120px;" />
+                                <small class="text-muted d-block">Current image</small>
+                            </div>
+                        }
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" name="SliderImage"
+                                   accept="image/*"
+                                   onchange="previewSlider(this)" />
+                            <label class="custom-file-label">
+                                @(string.IsNullOrEmpty(Model.ExistingImagePath) ? "Choose image..." : "Replace image...")
+                            </label>
+                        </div>
+                        <img id="sliderPreview" src="#" class="img-thumbnail mt-2 d-none"
+                             style="max-height:120px;" />
+                        <small class="text-muted">Recommended: 1920x600px</small>
+                    </div>
+                    <hr />
+ 
+                    <!-- Text -->
+                    <div class="form-group">
+                        <label asp-for="H3Text" class="font-weight-bold"></label>
+                        <input asp-for="H3Text" class="form-control"
+                               placeholder="e.g. Welcome to" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="H4Text" class="font-weight-bold"></label>
+                        <input asp-for="H4Text" class="form-control"
+                               placeholder="e.g. Government Engineering College, Patan" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="H5Text" class="font-weight-bold"></label>
+                        <input asp-for="H5Text" class="form-control"
+                               placeholder="e.g. NAAC Accredited | NBA Accredited" />
+                    </div>
+                    <hr />
+ 
+                    <!-- Buttons -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Anchor1Text" class="font-weight-bold"></label>
+                                <input asp-for="Anchor1Text" class="form-control"
+                                       placeholder="e.g. About College" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Anchor1Link" class="font-weight-bold"></label>
+                                <input asp-for="Anchor1Link" class="form-control"
+                                       placeholder="e.g. /Institute/AboutUs" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Anchor2Text" class="font-weight-bold"></label>
+                                <input asp-for="Anchor2Text" class="form-control"
+                                       placeholder="e.g. Admissions" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Anchor2Link" class="font-weight-bold"></label>
+                                <input asp-for="Anchor2Link" class="form-control"
+                                       placeholder="e.g. /Academics/AdmissionProcess" />
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input asp-for="IsVisible" type="checkbox"
+                                   class="custom-control-input" id="isVisible" />
+                            <label class="custom-control-label" for="isVisible">
+                                Visible on website
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save Slider
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    <i class="fas fa-check text-success mr-1"></i>
+                    Recommended image size: <strong>1920 x 600px</strong>
+                </p>
+                <p class="small text-muted mb-2">
+                    <i class="fas fa-check text-success mr-1"></i>
+                    All text fields are optional — you can have an image-only slider.
+                </p>
+                <p class="small text-muted mb-0">
+                    <i class="fas fa-check text-success mr-1"></i>
+                    Use reorder arrows on the list page to change slider order.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function previewSlider(input) {
+            const preview = document.getElementById('sliderPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+                input.nextElementSibling.textContent = input.files[0].name;
+            }
+        }
+    </script>
+}

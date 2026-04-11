@@ -1,0 +1,124 @@
+﻿@model GECPatan.Admin.Models.ViewModels.TestimonialVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Testimonial" : "Add Testimonial";
+    string action = isEdit ? "Edit" : "Create";
+}
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title">
+                    <i class="fas fa-quote-left mr-2"></i>@ViewData["Title"]
+                </h3>
+            </div>
+            <form asp-action="@action" method="post">
+                @if (isEdit)
+                {
+                    <input asp-for="Id" type="hidden" />
+                }
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+ 
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="StudentName" class="font-weight-bold"></label>
+                                <input asp-for="StudentName" class="form-control"
+                                       placeholder="e.g. Rahul Patel" />
+                                <span asp-validation-for="StudentName" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Department" class="font-weight-bold"></label>
+                                <input asp-for="Department" class="form-control"
+                                       placeholder="e.g. Computer Engineering" />
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div class="form-group">
+                        <label asp-for="PassoutYear" class="font-weight-bold"></label>
+                        <input asp-for="PassoutYear" class="form-control"
+                               placeholder="e.g. 2023" />
+                    </div>
+ 
+                    <div class="form-group">
+                        <label asp-for="TestimonialText" class="font-weight-bold"></label>
+                        <textarea asp-for="TestimonialText" class="form-control" rows="5"
+                                  placeholder="Student's testimonial text..."></textarea>
+                        <span asp-validation-for="TestimonialText" class="text-danger small"></span>
+                    </div>
+ 
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input asp-for="IsVisible" type="checkbox"
+                                   class="custom-control-input" id="isVisible" />
+                            <label class="custom-control-label" for="isVisible">
+                                Visible on website
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>Preview
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mr-3"
+                         style="width:40px;height:40px;min-width:40px;">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <div>
+                        <strong id="previewName">Student Name</strong>
+                        <small class="text-muted d-block">
+                            <span id="previewDept">Department</span> —
+                            <span id="previewYear">Year</span>
+                        </small>
+                    </div>
+                </div>
+                <p class="text-muted small" style="font-style:italic;">
+                    "<span id="previewText">Testimonial text will appear here...</span>"
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        document.getElementById('StudentName')?.addEventListener('input', function() {
+        document.getElementById('previewName').textContent = this.value || 'Student Name';
+        });
+        document.getElementById('Department')?.addEventListener('input', function() {
+        document.getElementById('previewDept').textContent = this.value || 'Department';
+        });
+        document.getElementById('PassoutYear')?.addEventListener('input', function() {
+        document.getElementById('previewYear').textContent = this.value || 'Year';
+        });
+        document.getElementById('TestimonialText')?.addEventListener('input', function() {
+        const text = this.value || 'Testimonial text will appear here...';
+        document.getElementById('previewText').textContent = text.length > 150 ? text.substring(0,150) + '...' : text;
+        });
+    </script>
+}

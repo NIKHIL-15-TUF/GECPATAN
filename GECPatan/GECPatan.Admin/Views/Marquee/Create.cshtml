@@ -1,0 +1,131 @@
+﻿@model GECPatan.Admin.Models.ViewModels.MarqueeVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Marquee Item" : "Add Marquee Item";
+    string action = isEdit ? "Edit" : "Create";
+}
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title">
+                    <i class="fas fa-scroll mr-2"></i>@ViewData["Title"]
+                </h3>
+            </div>
+            <form asp-action="@action" method="post">
+                @if (isEdit)
+                {
+                    <input asp-for="Id" type="hidden" />
+                }
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+ 
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title" class="form-control"
+                               placeholder="e.g. Apprentice Recruitment Notice" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+ 
+                    <div class="form-group">
+                        <label asp-for="MarqueeType" class="font-weight-bold">Type</label>
+                        <select asp-for="MarqueeType" class="form-control">
+                            <option value="1">Update (Notices/Documents)</option>
+                            <option value="2">Activity</option>
+                        </select>
+                    </div>
+ 
+                    <div class="form-group">
+                        <label asp-for="FileLink" class="font-weight-bold"></label>
+                        <input asp-for="FileLink" class="form-control"
+                               placeholder="e.g. /ImpDocs/notice.pdf OR https://..." />
+                        <small class="text-muted">
+                            For PDF files — enter the file URL. Leave blank if linking to a page.
+                        </small>
+                    </div>
+ 
+                    <hr />
+                    <p class="text-muted small">
+                        <strong>OR</strong> link to a page instead of a file:
+                    </p>
+ 
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label asp-for="ControllerName" class="font-weight-bold"></label>
+                                <input asp-for="ControllerName" class="form-control"
+                                       placeholder="e.g. Institute" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="ActionName" class="font-weight-bold"></label>
+                                <input asp-for="ActionName" class="form-control"
+                                       placeholder="e.g. NEWS" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label asp-for="DynamicId" class="font-weight-bold"></label>
+                                <input asp-for="DynamicId" class="form-control"
+                                       type="number" placeholder="Optional" />
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input asp-for="IsVisible" type="checkbox"
+                                   class="custom-control-input" id="isVisible" />
+                            <label class="custom-control-label" for="isVisible">
+                                Visible in marquee
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>How Marquee Works
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    <strong>Updates</strong> — shown in the top marquee strip.<br />
+                    e.g. notices, announcements, document links.
+                </p>
+                <p class="small text-muted mb-2">
+                    <strong>Activities</strong> — shown in the activities marquee strip.<br />
+                    e.g. upcoming events, workshops.
+                </p>
+                <p class="small text-muted mb-2">
+                    <strong>File Link</strong> — direct PDF/file URL.<br />
+                    e.g. <code>/ImpDocs/brochure.pdf</code>
+                </p>
+                <p class="small text-muted mb-0">
+                    <strong>Controller/Action</strong> — links to a page.<br />
+                    e.g. Controller=Institute, Action=NEWS
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+}

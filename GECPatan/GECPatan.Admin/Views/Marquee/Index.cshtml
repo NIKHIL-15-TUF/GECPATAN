@@ -1,0 +1,94 @@
+﻿@using GECPatan.Admin.Models.Domain
+@model List<Marquee>
+@{
+    ViewData["Title"] = "Marquee Items";
+}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge badge-primary mr-2">Updates: @Model.Count(m => m.MarqueeType == 1)</span>
+            <span class="badge badge-info">Activities: @Model.Count(m => m.MarqueeType == 2)</span>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i>Add Marquee Item
+        </a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th>Title</th>
+                    <th width="100">Type</th>
+                    <th width="80">Status</th>
+                    <th width="140">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">
+                            <i class="fas fa-scroll fa-2x mb-2 d-block"></i>No marquee items yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var m in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong>@m.Title</strong>
+                            @if (!string.IsNullOrEmpty(m.FileLink))
+                            {
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-file-pdf mr-1 text-danger"></i>@m.FileLink
+                                </small>
+                            }
+                        </td>
+                        <td>
+                            @if (m.MarqueeType == 1)
+                            {
+                                <span class="badge badge-primary">Update</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-info">Activity</span>
+                            }
+                        </td>
+                        <td>
+                            @if (m.IsVisible)
+                            {
+                                <span class="badge badge-success">Visible</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Hidden</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@m.Id"
+                               class="btn btn-sm btn-info">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form asp-action="ToggleVisible" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@m.Id" />
+                                <button type="submit"
+                                        class="btn btn-sm @(m.IsVisible?"btn-warning":"btn-success")">
+                                    <i class="fas @(m.IsVisible?"fa-eye-slash":"fa-eye")"></i>
+                                </button>
+                            </form>
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@m.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Delete?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
