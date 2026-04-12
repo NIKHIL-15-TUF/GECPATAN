@@ -40,7 +40,9 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
         
             <!-- Brand Logo -->
+           
             <a href="/" class="brand-link text-center">
+                <img src="/adminlte/img/GECP_LOGO_recreated.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
                 <span class="brand-text font-weight-light">GEC Patan Admin</span>
             </a>
 
@@ -66,7 +68,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a asp-controller="Faculty" asp-action="Index" class="nav-link">
                                 <i class="nav-icon fas fa-users"></i>
                                 <p>Faculties</p>
                             </a>
@@ -77,10 +79,43 @@
                                 <p>Campus Committees</p>
                             </a>
                         </li>
-                        <li class="nav-item">
+                        @* <li class="nav-item">
                             <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Labs</p>
+                            </a>
+                        </li> *@
+                        <li class="nav-header">HOME PAGE</li>
+
+                        <li class="nav-item">
+                            <a asp-controller="Slider" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Slider" ? "active" : "")">
+                                <i class="nav-icon fas fa-images"></i>
+                                <p>Master Slider</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a asp-controller="Marquee" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Marquee" ? "active" : "")">
+                                <i class="nav-icon fas fa-bullhorn"></i>
+                                <p>Marquee</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a asp-controller="Testimonial" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Testimonial" ? "active" : "")">
+                                <i class="nav-icon fas fa-comments"></i>
+                                <p>Testimonial</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a asp-controller="TopRecruiter" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "TopRecruiter" ? "active" : "")">
+                                <i class="nav-icon fas fa-briefcase"></i>
+                                <p>Top Recruiters</p>
                             </a>
                         </li>
                         <li class="nav-header">INSTITUTE</li>
