@@ -1,0 +1,105 @@
+﻿@using GECPatan.Admin.Models.Domain
+@model List<ProgramIntake>
+@{
+    ViewData["Title"] = "Program Intake";
+}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <span class="badge badge-info px-3 py-2" style="font-size:13px;">
+            @Model.Count Program(s) — Total Intake: @Model.Sum(p => p.Intake)
+        </span>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-2"></i>Add Program
+        </a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th width="60">Order</th>
+                    <th>Program Name</th>
+                    <th width="120">Course Code</th>
+                    <th width="100">Intake</th>
+                    <th width="140">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="fas fa-graduation-cap fa-2x mb-2 d-block"></i>
+                            No programs yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex flex-column" style="gap:2px;">
+                                <form asp-action="Reorder" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@p.Id" />
+                                    <input type="hidden" name="direction" value="up" />
+                                    <button type="submit"
+                                            class="btn btn-xs btn-light border px-2 py-1">
+                                        <i class="fas fa-chevron-up" style="font-size:10px;"></i>
+                                    </button>
+                                </form>
+                                <form asp-action="Reorder" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@p.Id" />
+                                    <input type="hidden" name="direction" value="down" />
+                                    <button type="submit"
+                                            class="btn btn-xs btn-light border px-2 py-1">
+                                        <i class="fas fa-chevron-down" style="font-size:10px;"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                        <td><strong>@p.ProgramName</strong></td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(p.CourseCode))
+                            {
+                                <span class="badge badge-secondary">@p.CourseCode</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge badge-primary px-3" style="font-size:14px;">
+                                @p.Intake
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@p.Id"
+                                   class="btn btn-sm btn-info">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@p.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Delete this program?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            @if (Model.Any())
+            {
+                <tfoot>
+                    <tr class="bg-light font-weight-bold">
+                        <td colspan="3" class="text-right">Total Intake:</td>
+                        <td>
+                            <span class="badge badge-success px-3" style="font-size:14px;">
+                                @Model.Sum(p => p.Intake)
+                            </span>
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            }
+        </table>
+    </div>
+</div>

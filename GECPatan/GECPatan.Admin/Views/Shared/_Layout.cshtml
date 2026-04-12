@@ -121,6 +121,35 @@
                                 <p>MoU Documents</p>
                             </a>
                         </li>
+                        <li class="nav-header">ACADEMICS</li>
+                        <li class="nav-item">
+                            <a asp-controller="AcademicCalendar" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AcademicCalendar" ? "active" : "")">
+                                <i class="nav-icon fas fa-calendar-alt"></i>
+                                <p>Academic Calendars</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="SSIPDocument" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "SSIPDocument" ? "active" : "")">
+                                <i class="nav-icon fas fa-lightbulb"></i>
+                                <p>SSIP Documents</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="ResearchGrant" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ResearchGrant" ? "active" : "")">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Research Grants</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="ProgramIntake" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ProgramIntake" ? "active" : "")">
+                                <i class="nav-icon fas fa-graduation-cap"></i>
+                                <p>Program Intake</p>
+                            </a>
+                        </li>
 
                         <!-- 🔴 Logout -->
                         <li class="nav-item">
