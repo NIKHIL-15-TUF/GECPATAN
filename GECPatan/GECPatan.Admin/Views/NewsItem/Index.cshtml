@@ -1,0 +1,97 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.NewsItemListVM>
+@{
+    ViewData["Title"] = "News & Notices";
+}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <span class="badge badge-info px-3 py-2" style="font-size:13px;">@Model.Count Item(s)</span>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i>Add News
+        </a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th width="60">Thumb</th>
+                    <th>Title</th>
+                    <th width="120">Date</th>
+                    <th width="80">Images</th>
+                    <th width="80">Files</th>
+                    <th width="80">Marquee</th>
+                    <th width="80">Status</th>
+                    <th width="130">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="fas fa-newspaper fa-2x mb-2 d-block"></i>No news items yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var n in Model)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(n.ThumbnailPath))
+                            {
+                                <img src="@n.ThumbnailPath" class="img-thumbnail"
+                                     style="width:45px;height:45px;object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <div class="bg-light d-flex align-items-center justify-content-center"
+                                     style="width:45px;height:45px;border-radius:4px;">
+                                    <i class="fas fa-newspaper text-muted"></i>
+                                </div>
+                            }
+                        </td>
+                        <td><strong>@n.Title</strong></td>
+                        <td><small>@n.PublishDate</small></td>
+                        <td><span class="badge badge-success">@n.ImageCount 🖼</span></td>
+                        <td><span class="badge badge-warning">@n.FileCount 📄</span></td>
+                        <td>
+                            @if (n.ShowInMarquee)
+                            {
+                                <span class="badge badge-primary">Yes</span>
+                            }
+                        </td>
+                        <td>
+                            @if (n.IsVisible)
+                            {
+                                <span class="badge badge-success">Visible</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Hidden</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@n.Id" class="btn btn-sm btn-info">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form asp-action="ToggleVisible" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@n.Id" />
+                                <button type="submit" class="btn btn-sm @(n.IsVisible?"btn-warning":"btn-success")">
+                                    <i class="fas @(n.IsVisible?"fa-eye-slash":"fa-eye")"></i>
+                                </button>
+                            </form>
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@n.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Delete?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

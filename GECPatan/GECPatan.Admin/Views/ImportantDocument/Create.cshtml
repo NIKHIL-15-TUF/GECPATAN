@@ -1,0 +1,91 @@
+﻿@model GECPatan.Admin.Models.ViewModels.ImportantDocumentVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Document" : "Add Document";
+    string action = isEdit ? "Edit" : "Create";
+}
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title">
+                    <i class="fas fa-folder-open mr-2"></i>@ViewData["Title"]
+                </h3>
+            </div>
+            <form asp-action="@action" method="post" enctype="multipart/form-data">
+                @if (isEdit)
+                {
+                    <input asp-for="Id" type="hidden" />
+                }
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title" class="form-control" placeholder="Document title..." />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="FileType" class="font-weight-bold"></label>
+                                <select asp-for="FileType" class="form-control">
+                                    <option value="PDF">PDF</option>
+                                    <option value="Excel">Excel</option>
+                                    <option value="Word">Word</option>
+                                    <option value="Image">Image</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="UploadDate" class="font-weight-bold"></label>
+                                <input asp-for="UploadDate" class="form-control"
+                                       placeholder="e.g. 15 Jan 2025" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">File</label>
+                        @if (!string.IsNullOrEmpty(Model.ExistingFilePath))
+                        {
+                            <div class="mb-2 d-flex align-items-center">
+                                <i class="fas fa-file text-primary mr-2 fa-lg"></i>
+                                <a href="@Model.ExistingFilePath" target="_blank">Current File</a>
+                            </div>
+                        }
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" name="DocFile"
+                                   onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose file...'" />
+                            <label class="custom-file-label">
+                                @(string.IsNullOrEmpty(Model.ExistingFilePath) ? "Choose file..." : "Replace file...")
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DisplayOrder" class="font-weight-bold"></label>
+                        <input asp-for="DisplayOrder" class="form-control" type="number" min="0" />
+                    </div>
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input asp-for="IsVisible" type="checkbox"
+                                   class="custom-control-input" id="isVisible" />
+                            <label class="custom-control-label" for="isVisible">Visible on website</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

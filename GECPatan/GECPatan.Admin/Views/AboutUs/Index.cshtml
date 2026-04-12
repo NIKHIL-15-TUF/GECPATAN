@@ -1,0 +1,75 @@
+﻿@model GECPatan.Admin.Models.ViewModels.AboutUsVM
+@{
+    ViewData["Title"] = "About Us";
+}
+<div class="row">
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title">
+                    <i class="fas fa-university mr-2"></i>Edit About Us
+                </h3>
+            </div>
+            <form asp-action="Index" method="post">
+                <input asp-for="Id" type="hidden" />
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+                    <div class="form-group">
+                        <label asp-for="HistoryText" class="font-weight-bold"></label>
+                        <textarea asp-for="HistoryText" id="aboutEditor"
+                                  class="form-control" rows="15"
+                                  placeholder="College history and about text..."></textarea>
+                        <span asp-validation-for="HistoryText" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save About Us
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>Note
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    This text appears on the <strong>About Us</strong> page of the public website.
+                </p>
+                <p class="small text-muted mb-0">
+                    You can use the TinyMCE editor to format the text with headings, bold, links etc.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        tinymce.init({
+        selector: '#aboutEditor',
+        plugins: 'link lists table code',
+        toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright | bullist numlist | link table | code',
+        height: 450,
+        menubar: false,
+        promotion: false,
+        branding: false,
+        setup: function (editor) {
+        editor.on('change', function () { tinymce.triggerSave(); });
+        }
+        });
+        document.querySelector('form').addEventListener('submit', function () {
+        tinymce.triggerSave();
+        });
+    </script>
+}

@@ -1,0 +1,81 @@
+﻿@using GECPatan.Admin.Models.Domain
+@model List<MoUDocument>
+@{
+    ViewData["Title"] = "MoU Documents";
+}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <span class="badge badge-info px-3 py-2" style="font-size:13px;">@Model.Count MoU(s)</span>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i>Add MoU
+        </a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th>Title</th>
+                    <th width="130">Month/Year</th>
+                    <th width="80">File</th>
+                    <th width="80">Status</th>
+                    <th width="140">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="fas fa-handshake fa-2x mb-2 d-block"></i>No MoU documents yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var m in Model)
+                {
+                    <tr>
+                        <td><strong>@m.Title</strong></td>
+                        <td><small>@m.MonthYear</small></td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(m.FilePath))
+                            {
+                                <a href="@m.FilePath" target="_blank" class="btn btn-xs btn-outline-danger">
+                                    <i class="fas fa-file-pdf mr-1"></i>View
+                                </a>
+                            }
+                        </td>
+                        <td>
+                            @if (m.IsVisible)
+                            {
+                                <span class="badge badge-success">Visible</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Hidden</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@m.Id" class="btn btn-sm btn-info">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form asp-action="ToggleVisible" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@m.Id" />
+                                <button type="submit" class="btn btn-sm @(m.IsVisible ? "btn-warning" : "btn-success")">
+                                    <i class="fas @(m.IsVisible ? "fa-eye-slash" : "fa-eye")"></i>
+                                </button>
+                            </form>
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@m.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Delete?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

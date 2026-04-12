@@ -78,6 +78,49 @@
                                 <p>Labs</p>
                             </a>
                         </li>
+                        <li class="nav-header">INSTITUTE</li>
+                        <li class="nav-item">
+                            <a asp-controller="AboutUs" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AboutUs" ? "active" : "")">
+                                <i class="nav-icon fas fa-university"></i>
+                                <p>About Us</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="NewsItem" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "NewsItem" ? "active" : "")">
+                                <i class="nav-icon fas fa-newspaper"></i>
+                                <p>News & Notices</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="NewsLetter" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "NewsLetter" ? "active" : "")">
+                                <i class="nav-icon fas fa-file-pdf"></i>
+                                <p>News Letters</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Tender" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Tender" ? "active" : "")">
+                                <i class="nav-icon fas fa-file-contract"></i>
+                                <p>Tenders</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="ImportantDocument" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ImportantDocument" ? "active" : "")">
+                                <i class="nav-icon fas fa-folder-open"></i>
+                                <p>Important Docs</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="MoU" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "MoU" ? "active" : "")">
+                                <i class="nav-icon fas fa-handshake"></i>
+                                <p>MoU Documents</p>
+                            </a>
+                        </li>
 
                         <!-- 🔴 Logout -->
                         <li class="nav-item">

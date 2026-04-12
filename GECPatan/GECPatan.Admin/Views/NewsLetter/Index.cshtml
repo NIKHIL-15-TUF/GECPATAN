@@ -1,0 +1,75 @@
+﻿@using GECPatan.Admin.Models.Domain
+@model List<NewsLetter>
+@{
+    ViewData["Title"] = "News Letters";
+}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <span class="badge badge-info px-3 py-2" style="font-size:13px;">@Model.Count Newsletter(s)</span>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i>Add Newsletter
+        </a>
+    </div>
+</div>
+<div class="row">
+    @if (!Model.Any())
+    {
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5 text-muted">
+                    <i class="fas fa-file-pdf fa-3x mb-3 d-block"></i>No newsletters yet.
+                </div>
+            </div>
+        </div>
+    }
+    @foreach (var n in Model)
+    {
+        <div class="col-md-3 mb-3">
+            <div class="card @(!n.IsVisible ? "border-secondary" : "")">
+                @if (!string.IsNullOrEmpty(n.ThumbnailPath))
+                {
+                    <img src="@n.ThumbnailPath" class="card-img-top"
+                         style="height:140px;object-fit:cover;" />
+                }
+                else
+                {
+                    <div class="bg-light d-flex align-items-center justify-content-center"
+                         style="height:140px;">
+                        <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                    </div>
+                }
+                <div class="card-body py-2">
+                    <strong style="font-size:13px;">@n.Title</strong>
+                    @if (!n.IsVisible)
+                    {
+                        <span class="badge badge-secondary d-block mt-1">Hidden</span>
+                    }
+                </div>
+                <div class="card-footer py-2 d-flex justify-content-end" style="gap:4px;">
+                    @if (!string.IsNullOrEmpty(n.FilePath))
+                    {
+                        <a href="@n.FilePath" target="_blank" class="btn btn-xs btn-outline-danger">
+                            <i class="fas fa-file-pdf"></i>
+                        </a>
+                    }
+                    <a asp-action="Edit" asp-route-id="@n.Id" class="btn btn-xs btn-info">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form asp-action="ToggleVisible" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@n.Id" />
+                        <button type="submit" class="btn btn-xs @(n.IsVisible?"btn-warning":"btn-success")">
+                            <i class="fas @(n.IsVisible?"fa-eye-slash":"fa-eye")"></i>
+                        </button>
+                    </form>
+                    <form asp-action="Delete" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@n.Id" />
+                        <button type="submit" class="btn btn-xs btn-danger"
+                                onclick="return confirm('Delete?')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>
