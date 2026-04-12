@@ -2,288 +2,203 @@
 @{
     ViewData["Title"] = "Edit Committee";
 }
+
 <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
     <input asp-for="Id" type="hidden" />
+    
     @if (!ViewData.ModelState.IsValid)
     {
-        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+        <div class="alert alert-danger py-2 mb-2">@Html.ValidationSummary(false)</div>
     }
- 
-    <ul class="nav nav-tabs mb-0" id="commTabs">
-        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#basic"><i class="fas fa-info-circle mr-1"></i>Basic Info</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#vision"><i class="fas fa-eye mr-1"></i>Vision & Mission</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#objectives"><i class="fas fa-list mr-1"></i>Objectives</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#images"><i class="fas fa-images mr-1"></i>Images</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tabs"><i class="fas fa-columns mr-1"></i>Tab Titles</a></li>
+
+    <ul class="nav nav-tabs mb-0 border-bottom-0" id="commTabs" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#basic" role="tab"><i class="fas fa-info-circle mr-1"></i>Basic Info</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#vision" role="tab"><i class="fas fa-eye mr-1"></i>Vision & Mission</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#objectives" role="tab"><i class="fas fa-list mr-1"></i>Objectives</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#images" role="tab"><i class="fas fa-images mr-1"></i>Images</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tabs" role="tab"><i class="fas fa-columns mr-1"></i>Tab Titles</a></li>
     </ul>
- 
-    <div class="tab-content card" style="border-top:none;border-radius:0 0 8px 8px;">
-        <div class="card-body">
- 
-            <!-- TAB 1: BASIC INFO -->
-            <div class="tab-pane fade show active" id="basic">
-                <div class="form-group">
-                    <label asp-for="Title" class="font-weight-bold"></label>
-                    <input asp-for="Title" class="form-control" />
-                    <span asp-validation-for="Title" class="text-danger small"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="Tagline" class="font-weight-bold"></label>
-                    <input asp-for="Tagline" class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label class="font-weight-bold">About</label>
-                    <textarea asp-for="About" class="form-control" rows="5"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="font-weight-bold">Measures / Procedure</label>
-                    <textarea asp-for="Measures" class="form-control" rows="4"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="font-weight-bold">Message</label>
-                    <textarea asp-for="Message" class="form-control" rows="3"></textarea>
-                </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="BlogLink" class="font-weight-bold"></label>
-                            <input asp-for="BlogLink" class="form-control" />
+
+    <div class="card" style="border-top:none; border-radius:0 0 8px 8px;">
+        <div class="card-body pt-3">
+            <div class="tab-content" id="commTabContent">
+                
+                <div class="tab-pane fade show active" id="basic" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Title" class="font-weight-bold"></label>
+                                <input asp-for="Title" class="form-control" />
+                                <span asp-validation-for="Title" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Tagline" class="font-weight-bold"></label>
+                                <input asp-for="Tagline" class="form-control" />
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="Link" class="font-weight-bold"></label>
-                            <input asp-for="Link" class="form-control" />
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold">About</label>
+                        <textarea asp-for="About" class="form-control" rows="4"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="BlogLink" class="font-weight-bold"></label>
+                                <input asp-for="BlogLink" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="Link" class="font-weight-bold"></label>
+                                <input asp-for="Link" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="Account" class="font-weight-bold"></label>
+                                <input asp-for="Account" class="form-control" />
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="Account" class="font-weight-bold"></label>
-                            <input asp-for="Account" class="form-control" />
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label asp-for="DisplayOrder" class="font-weight-bold"></label>
+                                <input asp-for="DisplayOrder" class="form-control" type="number" />
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label asp-for="NationalTaskForce" class="font-weight-bold"></label>
-                    <input asp-for="NationalTaskForce" class="form-control" />
-                </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="DisplayOrder" class="font-weight-bold"></label>
-                            <input asp-for="DisplayOrder" class="form-control" type="number" min="0" />
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group mt-4">
-                            <div class="custom-control custom-switch">
+                        <div class="col-md-4">
+                            <div class="custom-control custom-switch mt-2">
                                 <input asp-for="ShowDocument" type="checkbox" class="custom-control-input" id="showDoc" />
-                                <label class="custom-control-label" for="showDoc">Show Documents Tab</label>
+                                <label class="custom-control-label font-weight-bold" for="showDoc">Show Documents Tab</label>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group mt-4">
-                            <div class="custom-control custom-switch">
+                        <div class="col-md-4">
+                            <div class="custom-control custom-switch mt-2">
                                 <input asp-for="TableView" type="checkbox" class="custom-control-input" id="tableView" />
-                                <label class="custom-control-label" for="tableView">Table View</label>
+                                <label class="custom-control-label font-weight-bold" for="tableView">Table View</label>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
- 
-            <!-- TAB 2: VISION & MISSION -->
-            <div class="tab-pane fade" id="vision">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-bold"><i class="fas fa-eye mr-1 text-primary"></i>Vision Statements</label>
+
+                <div class="tab-pane fade" id="vision" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="font-weight-bold text-primary">Vision Statements</label>
                             <small class="text-muted d-block mb-2">One per line</small>
-                            <textarea name="VisionItems" class="form-control" rows="8">@string.Join("\n", Model.VisionItems)</textarea>
+                            <textarea name="VisionItems" class="form-control" rows="8">@string.Join("\n", Model.VisionItems ?? new List<string>())</textarea>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-bold"><i class="fas fa-rocket mr-1 text-success"></i>Mission Statements</label>
+                        <div class="col-md-6">
+                            <label class="font-weight-bold text-success">Mission Statements</label>
                             <small class="text-muted d-block mb-2">One per line</small>
-                            <textarea name="MissionItems" class="form-control" rows="8">@string.Join("\n", Model.MissionItems)</textarea>
+                            <textarea name="MissionItems" class="form-control" rows="8">@string.Join("\n", Model.MissionItems ?? new List<string>())</textarea>
                         </div>
                     </div>
                 </div>
-            </div>
- 
-            <!-- TAB 3: OBJECTIVES -->
-            <div class="tab-pane fade" id="objectives">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-bold"><i class="fas fa-bullseye mr-1 text-warning"></i>Objectives</label>
+
+                <div class="tab-pane fade" id="objectives" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="font-weight-bold text-warning">Objectives</label>
                             <small class="text-muted d-block mb-2">One per line</small>
-                            <textarea name="ObjectiveItems" class="form-control" rows="8">@string.Join("\n", Model.ObjectiveItems)</textarea>
+                            <textarea name="ObjectiveItems" class="form-control" rows="8">@string.Join("\n", Model.ObjectiveItems ?? new List<string>())</textarea>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-bold"><i class="fas fa-list mr-1 text-info"></i>Sub Objectives / Bullet Points</label>
+                        <div class="col-md-6">
+                            <label class="font-weight-bold text-info">Sub Objectives / Bullets</label>
                             <small class="text-muted d-block mb-2">One per line</small>
-                            <textarea name="SubObjectiveItems" class="form-control" rows="8">@string.Join("\n", Model.SubObjectiveItems)</textarea>
+                            <textarea name="SubObjectiveItems" class="form-control" rows="8">@string.Join("\n", Model.SubObjectiveItems ?? new List<string>())</textarea>
                         </div>
                     </div>
                 </div>
-            </div>
- 
-            <!-- TAB 4: IMAGES -->
-            <div class="tab-pane fade" id="images">
-                @{
-                    void ImageField(string label, string inputName, string? existing)
-                    {
-                        <div class="form-group">
-                            <label class="font-weight-bold">@label</label>
-                            @if (!string.IsNullOrEmpty(existing))
+
+                <div class="tab-pane fade" id="images" role="tabpanel">
+                    <div class="row">
+                        @{
+                            void ImageField(string label, string inputName, string? path)
                             {
-                                <div class="mb-2">
-                                    <img src="@existing" class="img-thumbnail" style="max-height:80px;" />
-                                    <small class="text-muted d-block">Current</small>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold">@label</label>
+                                    <div class="border p-2 rounded bg-light">
+                                        @if (!string.IsNullOrEmpty(path))
+                                        {
+                                            <img src="@path" class="img-thumbnail mb-2 d-block" style="max-height:80px;" />
+                                        }
+                                        <input type="file" name="@inputName" class="form-control-file" />
+                                    </div>
                                 </div>
                             }
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input" name="@inputName" accept="image/*"
-                                       onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose...'" />
-                                <label class="custom-file-label">@(string.IsNullOrEmpty(existing) ? "Choose image..." : "Replace...")</label>
-                            </div>
-                        </div>
-                    }
-                }
-                <div class="row">
-                    <div class="col-md-6">
-                        @{
-                            ImageField("Title / Banner Image", "TitleImage", Model.ExistingTitleImagePath);
-                        }
-                        @{
+                            ImageField("Banner Image", "TitleImage", Model.ExistingTitleImagePath);
                             ImageField("Measure Image", "MeasureImage", Model.ExistingMeasureImagePath);
-                        }
-                    </div>
-                    <div class="col-md-6">
-                        @{
                             ImageField("Sub Objectives Image", "SubObjImage", Model.ExistingSubObjImagePath);
-                        }
-                        @{
-                            ImageField("Bullet Points Image", "BulletPointsImage", Model.ExistingBulletPointsImagePath);
+                            ImageField("Page Flyer", "PageFlyer", Model.ExistingPageFlyerPath);
                         }
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        @{
-                            ImageField("Page Flyer (PDF or Image)", "PageFlyer", Model.ExistingPageFlyerPath);
+
+                <div class="tab-pane fade" id="tabs" role="tabpanel">
+                    <div class="row">
+                        @foreach (var p in new[] { "TabAbout", "TabVisionMission", "TabObjectives", "TabMembers", "TabActivities", "TabDocuments", "TabLink" })
+                        {
+                            <div class="col-md-4 mb-3">
+                                <label class="font-weight-bold">@p.Replace("Tab", "") Title</label>
+                                <input name="@p" value="@Model.GetType().GetProperty(p)?.GetValue(Model)" class="form-control" />
+                            </div>
                         }
                     </div>
                 </div>
+
             </div>
- 
-            <!-- TAB 5: TAB TITLES -->
-            <div class="tab-pane fade" id="tabs">
-                <p class="text-muted small mb-3">Customize the tab names shown on the public committee page.</p>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="TabAbout" class="font-weight-bold"></label>
-                            <input asp-for="TabAbout" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="TabVisionMission" class="font-weight-bold"></label>
-                            <input asp-for="TabVisionMission" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="TabObjectives" class="font-weight-bold"></label>
-                            <input asp-for="TabObjectives" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="TabMembers" class="font-weight-bold"></label>
-                            <input asp-for="TabMembers" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="TabActivities" class="font-weight-bold"></label>
-                            <input asp-for="TabActivities" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="TabDocuments" class="font-weight-bold"></label>
-                            <input asp-for="TabDocuments" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="TabLink" class="font-weight-bold"></label>
-                            <input asp-for="TabLink" class="form-control" />
-                        </div>
-                    </div>
-                </div>
-            </div>
- 
         </div>
- 
+
         <div class="card-footer d-flex justify-content-between">
-            <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left mr-2"></i>Back</a>
-            <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-2"></i>Save Changes</button>
+            <a asp-action="Index" class="btn btn-secondary">Back</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i>Save Changes</button>
         </div>
     </div>
 </form>
- 
-<!-- Quick Links -->
-<div class="card mt-3">
-    <div class="card-header bg-light">
-        <h6 class="card-title mb-0"><i class="fas fa-link mr-2"></i>Quick Links for: @Model.Title</h6>
-    </div>
-    <div class="card-body p-2">
-        <div class="row">
-            <div class="col-md-3 mb-2">
-                <a asp-action="Members" asp-route-id="@Model.Id"
-                       class="btn btn-outline-secondary btn-block btn-sm">
-                    <i class="fas fa-users d-block mb-1" style="font-size:18px;"></i>Members
+
+<div class="card mt-3 shadow-sm">
+    <div class="card-body p-3">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <a asp-action="Members" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-block">
+                    <i class="fas fa-users d-block mb-1"></i> Members
                 </a>
             </div>
-            <div class="col-md-3 mb-2">
+            <div class="col-md-3">
                 <a asp-controller="DynamicSection" asp-action="Index"
                        asp-route-pageType="2" asp-route-pageId="@Model.Id"
                        class="btn btn-outline-primary btn-block btn-sm">
                     <i class="fas fa-layer-group d-block mb-1" style="font-size:18px;"></i>Sections
                 </a>
             </div>
-            <div class="col-md-3 mb-2">
-                <a asp-controller="Activity" asp-action="Index"
-                       asp-route-committeeId="@Model.Id"
-                       class="btn btn-outline-success btn-block btn-sm">
-                    <i class="fas fa-calendar-alt d-block mb-1" style="font-size:18px;"></i>Activities
+            <div class="col-md-3">
+                <a asp-controller="Activity" asp-action="Index" asp-route-committeeId="@Model.Id" class="btn btn-outline-success btn-block">
+                    <i class="fas fa-calendar-alt d-block mb-1"></i> Activities
                 </a>
             </div>
-            <div class="col-md-3 mb-2">
-                <a asp-controller="Achievement" asp-action="Index"
-                       asp-route-committeeId="@Model.Id"
-                       class="btn btn-outline-warning btn-block btn-sm">
-                    <i class="fas fa-trophy d-block mb-1" style="font-size:18px;"></i>Achievements
+            <div class="col-md-3">
+                <a asp-controller="Achievement" asp-action="Index" asp-route-committeeId="@Model.Id" class="btn btn-outline-warning btn-block">
+                    <i class="fas fa-trophy d-block mb-1"></i> Achievements
                 </a>
             </div>
         </div>
     </div>
 </div>
- 
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
     <script>
+        // Ensure standard font size and tab switching
         const activeTab = localStorage.getItem('commActiveTab');
-        if (activeTab) { $(`a[href="${activeTab}"]`).tab('show'); }
+        if (activeTab) {
+        $(`#commTabs a[href="${activeTab}"]`).tab('show');
+        }
         $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
         localStorage.setItem('commActiveTab', $(e.target).attr('href'));
         });

@@ -99,25 +99,35 @@
                         <td>@dept.Intake</td>
                         <td>@dept.FacultyCount</td>
                         <td>
-                            @if (dept.IsActive)
-                            {
-                                <span class="badge badge-success">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-danger">Inactive</span>
-                            }
+                            <span class="badge @(dept.IsActive ? "badge-success" : "badge-danger")">
+                                @(dept.IsActive ? "Active" : "Inactive")
+                            </span>
                         </td>
-                        <td>
-                            <a asp-action="Edit" asp-route-id="@dept.DeptId"
-                                   class="btn btn-sm btn-info">
-                                <i class="fas fa-edit"></i> Edit
+
+                        <td class="d-flex align-items-center flex-wrap gap-1">
+
+                            <!-- ✏️ Edit -->
+                            <a asp-action="Edit"
+                                   asp-route-id="@dept.DeptId"
+                                   class="btn btn-sm btn-info mr-1">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            <!--Sections -->
+                            <a asp-controller="DynamicSection"
+                                   asp-action="Index"
+                                   asp-route-pageType="2"
+                                   asp-route-pageId="@dept.DeptId"
+                                   class="btn btn-sm btn-primary mr-1">
+                                <i class="fas fa-layer-group"></i>
                             </a>
 
                             @if (User.IsInRole("SuperAdmin"))
                             {
-                                <form asp-action="ToggleActive" method="post"
-                                      class="d-inline ml-1">
+                                <!--Toggle Active -->
+                                <form asp-action="ToggleActive"
+                                      method="post"
+                                      class="d-inline mr-1">
                                     <input type="hidden" name="id" value="@dept.DeptId" />
                                     <button type="submit"
                                             class="btn btn-sm @(dept.IsActive ? "btn-warning" : "btn-success")"
@@ -126,15 +136,19 @@
                                     </button>
                                 </form>
 
-                                <form asp-action="Delete" method="post"
-                                      class="d-inline ml-1">
+                                <!--Delete -->
+                                <form asp-action="Delete"
+                                      method="post"
+                                      class="d-inline">
                                     <input type="hidden" name="id" value="@dept.DeptId" />
-                                    <button type="submit" class="btn btn-sm btn-danger"
+                                    <button type="submit"
+                                            class="btn btn-sm btn-danger"
                                             onclick="return confirm('Delete this department? This cannot be undone.')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             }
+
                         </td>
                     </tr>
                 }
