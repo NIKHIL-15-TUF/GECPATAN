@@ -1,0 +1,116 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.PlacementStatisticListVM>
+@{
+    ViewData["Title"] = "Placement Statistics";
+}
+ 
+<div class="row mb-3">
+    <div class="col-md-8">
+        <form asp-action="Index" method="get" class="form-inline flex-wrap" style="gap:8px;">
+            <select name="branch" class="form-control form-control-sm"
+                    onchange="this.form.submit()">
+                <option value="">-- All Branches --</option>
+                @foreach (SelectListItem item in ViewBag.Branches)
+                {
+                    <option value="@item.Value"
+                            selected="@(item.Selected?"selected":null)">
+                        @item.Text
+                    </option>
+                }
+            </select>
+            <select name="year" class="form-control form-control-sm"
+                    onchange="this.form.submit()">
+                <option value="">-- All Years --</option>
+                @foreach (SelectListItem item in ViewBag.Years)
+                {
+                    <option value="@item.Value"
+                            selected="@(item.Selected?"selected":null)">
+                        @item.Text
+                    </option>
+                }
+            </select>
+        </form>
+    </div>
+    <div class="col-md-4 text-right">
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-2"></i>Add Record
+        </a>
+    </div>
+</div>
+ 
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th>Branch</th>
+                    <th width="80">Year</th>
+                    <th width="80">Passout</th>
+                    <th width="80">Placed</th>
+                    <th width="100">Placement %</th>
+                    <th width="80">Display</th>
+                    <th width="140">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="fas fa-chart-bar fa-2x mb-2 d-block"></i>
+                            No placement records yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td><strong>@p.BranchName</strong></td>
+                        <td>@p.Year</td>
+                        <td>@p.Passout</td>
+                        <td>@p.Placed</td>
+                        <td>
+                            <div class="progress" style="height:20px;">
+                                <div class="progress-bar bg-success"
+                                     role="progressbar"
+                                     style="width:@p.PlacementPercentage%">
+                                    @p.PlacementPercentage%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            @if (p.IsDisplay)
+                            {
+                                <span class="badge badge-success">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">No</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@p.Id"
+                               class="btn btn-sm btn-info">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form asp-action="ToggleDisplay" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@p.Id" />
+                                <button type="submit"
+                                        class="btn btn-sm @(p.IsDisplay?"btn-warning":"btn-success")"
+                                        title="Toggle display">
+                                    <i class="fas @(p.IsDisplay?"fa-eye-slash":"fa-eye")"></i>
+                                </button>
+                            </form>
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@p.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Delete?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

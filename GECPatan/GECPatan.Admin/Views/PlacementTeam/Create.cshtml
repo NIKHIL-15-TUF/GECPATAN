@@ -1,0 +1,116 @@
+﻿@model GECPatan.Admin.Models.ViewModels.PlacementTeamMemberVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Team Member" : "Add Team Member";
+    string action = isEdit ? "Edit" : "Create";
+}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title">
+                    <i class="fas fa-user-tie mr-2"></i>@ViewData["Title"]
+                </h3>
+            </div>
+            <form asp-action="@action" method="post" enctype="multipart/form-data">
+                @if (isEdit) { <input asp-for="Id" type="hidden" /> }
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+ 
+                    <!-- Photo -->
+                    <div class="form-group text-center">
+                        @if (!string.IsNullOrEmpty(Model.ExistingImagePath))
+                        {
+                            <img src="@Model.ExistingImagePath"
+                                 id="photoPreview"
+                                 class="img-thumbnail rounded-circle mb-2"
+                                 style="width:90px;height:90px;object-fit:cover;" />
+                        }
+                        else
+                        {
+                            <div class="bg-secondary rounded-circle d-inline-flex
+                                        align-items-center justify-content-center mb-2"
+                                 style="width:90px;height:90px;">
+                                <i class="fas fa-user fa-2x text-white"></i>
+                            </div>
+                            <img id="photoPreview" src="#"
+                                 class="img-thumbnail rounded-circle mb-2 d-none"
+                                 style="width:90px;height:90px;object-fit:cover;" />
+                        }
+                        <div class="custom-file mt-2">
+                            <input type="file" class="custom-file-input" name="Photo"
+                                   accept="image/*"
+                                   onchange="previewPhoto(this)" />
+                            <label class="custom-file-label" style="font-size:12px;">
+                                @(string.IsNullOrEmpty(Model.ExistingImagePath)
+                                    ? "Upload photo" : "Change photo")
+                            </label>
+                        </div>
+                    </div>
+ 
+                    <div class="form-group">
+                        <label asp-for="Name" class="font-weight-bold"></label>
+                        <input asp-for="Name" class="form-control"
+                               placeholder="Full name" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Designation" class="font-weight-bold"></label>
+                        <input asp-for="Designation" class="form-control"
+                               placeholder="e.g. Training & Placement Officer" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Email" class="font-weight-bold"></label>
+                        <input asp-for="Email" class="form-control"
+                               type="email"
+                               placeholder="email@gecpatan.ac.in" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Mobile" class="font-weight-bold"></label>
+                        <input asp-for="Mobile" class="form-control"
+                               placeholder="+91 9876543210" />
+                    </div>
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input asp-for="IsVisible" type="checkbox"
+                                   class="custom-control-input" id="isVisible" />
+                            <label class="custom-control-label" for="isVisible">
+                                Visible on website
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+ 
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function previewPhoto(input) {
+            const preview = document.getElementById('photoPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+                input.nextElementSibling.textContent = input.files[0].name;
+            }
+        }
+    </script>
+}

@@ -1,0 +1,209 @@
+﻿@model GECPatan.Admin.Models.ViewModels.PlacementStatisticVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Placement Record" : "Add Placement Record";
+    string action = isEdit ? "Edit" : "Create";
+}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-bar mr-2"></i>@ViewData["Title"]
+                </h3>
+            </div>
+            <form asp-action="@action" method="post">
+                @if (isEdit) { <input asp-for="Id" type="hidden" /> }
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+ 
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <label asp-for="BranchName" class="font-weight-bold"></label>
+                                <input asp-for="BranchName" class="form-control"
+                                       placeholder="e.g. Computer Engineering" />
+                                <span asp-validation-for="BranchName"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label asp-for="BranchId" class="font-weight-bold">Branch ID</label>
+                                <input asp-for="BranchId" class="form-control"
+                                       type="number" min="1"
+                                       placeholder="e.g. 2" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label asp-for="Year" class="font-weight-bold"></label>
+                                <input asp-for="Year" class="form-control"
+                                       placeholder="e.g. 2024-25" />
+                                <span asp-validation-for="Year" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <hr />
+                    <h6 class="font-weight-bold text-muted mb-3">
+                        <i class="fas fa-users mr-2"></i>Placement Numbers
+                    </h6>
+ 
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label asp-for="Passout" class="font-weight-bold"></label>
+                                <input asp-for="Passout" class="form-control"
+                                       type="number" min="0"
+                                       oninput="autoCalc()" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label asp-for="Placed" class="font-weight-bold"></label>
+                                <input asp-for="Placed" class="form-control"
+                                       type="number" min="0"
+                                       oninput="autoCalc()" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label asp-for="HigherStudy" class="font-weight-bold"></label>
+                                <input asp-for="HigherStudy" class="form-control"
+                                       type="number" min="0" />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label asp-for="Business" class="font-weight-bold"></label>
+                                <input asp-for="Business" class="form-control"
+                                       type="number" min="0" />
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="AverageCTC" class="font-weight-bold"></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">₹</span>
+                                    </div>
+                                    <input asp-for="AverageCTC" class="form-control"
+                                           type="number" min="0"
+                                           placeholder="Annual LPA" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="PlacementPercentage" class="font-weight-bold"></label>
+                                <div class="input-group">
+                                    <input asp-for="PlacementPercentage" class="form-control"
+                                           id="placementPct" type="number"
+                                           min="0" max="100" step="0.01"
+                                           placeholder="Auto-calculated" />
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    Auto-calculated if left 0
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mt-4">
+                                <div class="custom-control custom-switch">
+                                    <input asp-for="IsDisplay" type="checkbox"
+                                           class="custom-control-input" id="isDisplay" />
+                                    <label class="custom-control-label" for="isDisplay">
+                                        Show in charts
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+ 
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    <i class="fas fa-check text-success mr-1"></i>
+                    <strong>Branch ID</strong> must match the department ID in the system.
+                </p>
+                <p class="small text-muted mb-2">
+                    <i class="fas fa-check text-success mr-1"></i>
+                    <strong>Placement %</strong> is auto-calculated from Passout and Placed.
+                    You can override it manually.
+                </p>
+                <p class="small text-muted mb-0">
+                    <i class="fas fa-check text-success mr-1"></i>
+                    <strong>Average CTC</strong> is in Lakhs Per Annum (LPA).
+                </p>
+            </div>
+        </div>
+ 
+        <!-- Live Preview -->
+        <div class="card mt-3">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-calculator mr-2 text-warning"></i>Live Preview
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-1">
+                    Placement %:
+                    <strong id="previewPct" class="text-success">—</strong>
+                </p>
+                <div class="progress" style="height:10px;">
+                    <div class="progress-bar bg-success" id="previewBar"
+                         style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function autoCalc() {
+            const passout = parseInt(document.getElementById('Passout')?.value) || 0;
+            const placed  = parseInt(document.getElementById('Placed')?.value)  || 0;
+ 
+            if (passout > 0) {
+                const pct = Math.round((placed / passout) * 10000) / 100;
+                document.getElementById('placementPct').value = pct;
+                document.getElementById('previewPct').textContent = pct + '%';
+                document.getElementById('previewBar').style.width = pct + '%';
+            }
+        }
+ 
+        // Run on load for edit page
+        window.addEventListener('DOMContentLoaded', autoCalc);
+    </script>
+}

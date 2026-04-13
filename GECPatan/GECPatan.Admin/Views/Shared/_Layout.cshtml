@@ -190,8 +190,23 @@
                                 <p>Program Intake</p>
                             </a>
                         </li>
-
+                        <li class="nav-header">Placement</li>
+                        <li class="nav-item">
+                            <a asp-controller="Placement" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Placement" ? "active" : "")">
+                                <i class="nav-icon fas fa-chart-line"></i>
+                                <p>Placement Statistics</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="PlacementTeam" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "PlacementTeam" ? "active" : "")">
+                                <i class="nav-icon fas fa-user-graduate"></i>
+                                <p>Placement Team</p>
+                            </a>
+                        </li>
                         <!-- 🔴 Logout -->
+                        <li class="nav-header">Logout</li>
                         <li class="nav-item">
                             <form asp-controller="Account" asp-action="Logout" method="post">
                                 <button type="submit" class="nav-link btn btn-link text-left">
@@ -200,7 +215,6 @@
                                 </button>
                             </form>
                         </li> 
-
                     </ul>
                 </nav>
 
