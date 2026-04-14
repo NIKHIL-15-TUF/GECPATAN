@@ -205,6 +205,22 @@
                                 <p>Placement Team</p>
                             </a>
                         </li>
+                        <li class="nav-header">STUDENT CORNER</li>
+                        <li class="nav-item">
+                            <a asp-controller="StudentClub" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "StudentClub" ? "active" : "")">
+                                <i class="nav-icon fas fa-users"></i>
+                                <p>Student Clubs</p>
+                            </a>
+                        </li>
+                        <li class="nav-header">FACILITIES</li>
+                        <li class="nav-item">
+                            <a asp-controller="Facility" asp-action="Index"
+                                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Facility" ? "active" : "")">
+                                <i class="nav-icon fas fa-building"></i>
+                                <p>Facility Pages</p>
+                            </a>
+                        </li>
                         <!-- 🔴 Logout -->
                         <li class="nav-header">Logout</li>
                         <li class="nav-item">

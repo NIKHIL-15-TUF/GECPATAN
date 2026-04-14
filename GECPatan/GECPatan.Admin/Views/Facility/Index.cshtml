@@ -1,0 +1,59 @@
+﻿@{
+    ViewData["Title"] = "Facilities";
+    var list = ViewBag.FacilityList as IEnumerable<dynamic>;
+}
+<div class="row mb-3">
+    <div class="col-12">
+        <p class="text-muted">
+            Manage content for each facility page. Click <strong>Edit</strong> to
+            update the page content and add custom sections.
+        </p>
+    </div>
+</div>
+<div class="row">
+    @if (list != null)
+    {
+        @foreach (var item in list)
+        {
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas @GetFacilityIcon(item.Type.ToString()) fa-3x mb-3 text-primary"></i>
+                        <h6 class="card-title">@item.Display</h6>
+                        @if ((bool)item.HasData)
+                        {
+                            <span class="badge badge-success mb-2">Configured</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-secondary mb-2">Not set</span>
+                        }
+                    </div>
+                    <div class="card-footer py-2">
+                        <a asp-action="Edit" asp-route-type="@item.Type"
+                               class="btn btn-sm btn-info btn-block">
+                            <i class="fas fa-edit mr-1"></i>Edit Page
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+ 
+@functions {
+    string GetFacilityIcon(string type) => type switch
+    {
+        "Hostel" => "fa-building",
+        "Library" => "fa-book",
+        "Medical" => "fa-heartbeat",
+        "Transportation" => "fa-bus",
+        "Gymkhana" => "fa-running",
+        "Auditorium" => "fa-theater-masks",
+        "Canteen" => "fa-utensils",
+        "StudentSection" => "fa-users",
+        "CentreOfExcellence" => "fa-star",
+        "ISRO" => "fa-rocket",
+        _ => "fa-cog"
+    };
+}
