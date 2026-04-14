@@ -221,6 +221,35 @@
                                 <p>Facility Pages</p>
                             </a>
                         </li>
+                         <li class="nav-header">ADMINISTRATION</li>
+                        <li class="nav-item">
+                            <a asp-controller="Principal" asp-action="Index"
+                               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Principal" ? "active" : "")">
+                                <i class="nav-icon fas fa-user-tie"></i>
+                                <p>Principal Profile</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Contact" asp-action="Index"
+                               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Contact" ? "active" : "")">
+                                <i class="nav-icon fas fa-phone-alt"></i>
+                                <p>Contact Info</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Gallery" asp-action="Index"
+                               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Gallery" ? "active" : "")">
+                                <i class="nav-icon fas fa-images"></i>
+                                <p>Gallery</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Alumni" asp-action="Index"
+                               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Alumni" ? "active" : "")">
+                                <i class="nav-icon fas fa-user-graduate"></i>
+                                <p>Alumni</p>
+                            </a>
+                        </li>
                         <!-- 🔴 Logout -->
                         <li class="nav-header">Logout</li>
                         <li class="nav-item">

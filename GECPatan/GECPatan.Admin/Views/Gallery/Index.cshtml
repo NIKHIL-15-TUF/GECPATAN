@@ -1,0 +1,138 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.GalleryImageListVM>
+@{
+    ViewData["Title"] = "Gallery";
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+    string? current = ViewBag.Category as string;
+}
+ 
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="btn-group flex-wrap" style="gap:4px;">
+            <a asp-action="Index"
+                   class="btn btn-sm @(string.IsNullOrEmpty(current) ? "btn-primary" : "btn-outline-primary")">
+                All (@Model.Count)
+            </a>
+            @foreach (var cat in categories)
+            {
+                <a asp-action="Index" asp-route-category="@cat"
+                       class="btn btn-sm @(current == cat ? "btn-primary" : "btn-outline-primary")">
+                    @cat
+                </a>
+            }
+        </div>
+    </div>
+    <div class="col-md-6 text-right">
+        <button type="button" class="btn btn-primary"
+                data-toggle="modal" data-target="#uploadModal">
+            <i class="fas fa-upload mr-2"></i>Upload Images
+        </button>
+    </div>
+</div>
+ 
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#1a237e;color:#fff;">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload mr-2"></i>Upload Gallery Images
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <form asp-action="Upload" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Category</label>
+                        <input name="category" class="form-control"
+                               placeholder="e.g. Sports, Cultural, Academic, NSS"
+                               value="@current" />
+                        <small class="text-muted">
+                            Group images by category for easy filtering.
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Caption (optional)</label>
+                        <input name="caption" class="form-control"
+                               placeholder="Common caption for all uploaded images" />
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Images</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input"
+                                   name="files" multiple accept="image/*"
+                                   onchange="this.nextElementSibling.textContent=this.files.length+' image(s) selected'" />
+                            <label class="custom-file-label">Choose images...</label>
+                        </div>
+                        <small class="text-muted">Hold Ctrl to select multiple images.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload mr-2"></i>Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+ 
+<!-- Gallery Grid -->
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="fas fa-images fa-3x mb-3 d-block"></i>
+            No images yet. Click <strong>Upload Images</strong> to add some.
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var img in Model)
+        {
+            <div class="col-md-2 col-4 mb-3">
+                <div class="card @(!img.IsVisible ? "border-secondary" : "")">
+                    <img src="@img.ImagePath" class="card-img-top"
+                         style="height:100px;object-fit:cover;" />
+                    <div class="card-body p-1">
+                        @if (!string.IsNullOrEmpty(img.Caption))
+                        {
+                            <small class="text-muted d-block text-truncate"
+                                   style="font-size:10px;">@img.Caption</small>
+                        }
+                        @if (!string.IsNullOrEmpty(img.Category))
+                        {
+                            <span class="badge badge-info"
+                                  style="font-size:9px;">@img.Category</span>
+                        }
+                    </div>
+                    <div class="card-footer p-1 d-flex justify-content-center"
+                         style="gap:2px;">
+                        <form asp-action="ToggleVisible" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@img.Id" />
+                            <button type="submit"
+                                    class="btn btn-xs @(img.IsVisible ? "btn-warning" : "btn-success") px-1">
+                                <i class="fas @(img.IsVisible ? "fa-eye-slash" : "fa-eye")"
+                                   style="font-size:9px;"></i>
+                            </button>
+                        </form>
+                        <form asp-action="Delete" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@img.Id" />
+                            <button type="submit" class="btn btn-xs btn-danger px-1"
+                                    onclick="return confirm('Delete image?')">
+                                <i class="fas fa-trash" style="font-size:9px;"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

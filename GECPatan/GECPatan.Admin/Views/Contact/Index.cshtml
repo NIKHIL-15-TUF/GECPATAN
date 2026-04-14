@@ -1,0 +1,159 @@
+﻿@model GECPatan.Admin.Models.ViewModels.ContactVM
+@{
+    ViewData["Title"] = "Contact Information";
+}
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Index" method="post">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+            }
+ 
+            <div class="card mb-3">
+                <div class="card-header" style="background:#1a237e;color:#fff;">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-map-marker-alt mr-2"></i>Address & Phone
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label asp-for="Address" class="font-weight-bold"></label>
+                        <textarea asp-for="Address" class="form-control" rows="3"
+                                  placeholder="Full postal address..."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Phone1" class="font-weight-bold"></label>
+                                <input asp-for="Phone1" class="form-control"
+                                       placeholder="+91 2734 253030" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Phone2" class="font-weight-bold"></label>
+                                <input asp-for="Phone2" class="form-control"
+                                       placeholder="Alternate number" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Email1" class="font-weight-bold"></label>
+                                <input asp-for="Email1" class="form-control"
+                                       placeholder="principal@gecpatan.ac.in" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Email2" class="font-weight-bold"></label>
+                                <input asp-for="Email2" class="form-control"
+                                       placeholder="office@gecpatan.ac.in" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="MapEmbedUrl" class="font-weight-bold"></label>
+                        <textarea asp-for="MapEmbedUrl" class="form-control" rows="3"
+                                  placeholder="Google Maps embed URL or iframe src..."></textarea>
+                        <small class="text-muted">
+                            Go to Google Maps → Share → Embed a map → Copy the src URL only
+                        </small>
+                    </div>
+                </div>
+            </div>
+ 
+            <div class="card mb-3">
+                <div class="card-header" style="background:#1a237e;color:#fff;">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-share-alt mr-2"></i>Social Media
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="font-weight-bold">
+                                    <i class="fab fa-facebook text-primary mr-1"></i>Facebook
+                                </label>
+                                <input asp-for="FacebookUrl" class="form-control"
+                                       placeholder="https://facebook.com/..." />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="font-weight-bold">
+                                    <i class="fab fa-twitter text-info mr-1"></i>Twitter
+                                </label>
+                                <input asp-for="TwitterUrl" class="form-control"
+                                       placeholder="https://twitter.com/..." />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="font-weight-bold">
+                                    <i class="fab fa-youtube text-danger mr-1"></i>YouTube
+                                </label>
+                                <input asp-for="YoutubeUrl" class="form-control"
+                                       placeholder="https://youtube.com/..." />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="font-weight-bold">
+                                    <i class="fab fa-linkedin text-primary mr-1"></i>LinkedIn
+                                </label>
+                                <input asp-for="LinkedinUrl" class="form-control"
+                                       placeholder="https://linkedin.com/..." />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="font-weight-bold">
+                                    <i class="fab fa-instagram text-danger mr-1"></i>Instagram
+                                </label>
+                                <input asp-for="InstagramUrl" class="form-control"
+                                       placeholder="https://instagram.com/..." />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+ 
+            <div class="text-right">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-2"></i>Save Contact Info
+                </button>
+            </div>
+        </form>
+    </div>
+ 
+    <!-- Map Preview -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-map mr-2 text-info"></i>Map Preview
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                @if (!string.IsNullOrEmpty(Model.MapEmbedUrl))
+                {
+                    <iframe src="@Model.MapEmbedUrl"
+                            style="width:100%;height:250px;border:0;"
+                            allowfullscreen loading="lazy">
+                    </iframe>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-map-marker-alt fa-3x mb-2 d-block"></i>
+                        Enter a Map Embed URL to preview
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
