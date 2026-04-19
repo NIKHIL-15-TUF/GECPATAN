@@ -91,4 +91,58 @@ namespace GECPatan.Admin.Models.Domain
         [MaxLength(500)]
         public string? MapEmbedUrl { get; set; }
     }
+    // CONTENT PAGE (standalone TinyMCE pages)
+    public class ContentPage : BaseEntity
+    {
+        public int Id { get; set; }
+
+        [Required, MaxLength(300)]
+        public string Title { get; set; } = string.Empty;
+
+        // Auto generated from title e.g. nirf-report-2025
+        [MaxLength(300)]
+        public string Slug { get; set; } = string.Empty;
+
+        public string? HtmlContent { get; set; }
+
+        [MaxLength(200)]
+        public string? CreatedBy { get; set; }
+
+        public bool IsVisible { get; set; } = true;
+    }
+    // AUDIT LOG
+    public class AuditLog
+    {
+        public int Id { get; set; }
+
+        [MaxLength(200)]
+        public string? UserId { get; set; }
+
+        [MaxLength(200)]
+        public string? UserName { get; set; }
+
+        [MaxLength(100)]
+        public string? UserRole { get; set; }
+
+        // Created / Updated / Deleted / Login
+        [MaxLength(50)]
+        public string Action { get; set; } = string.Empty;
+
+        // Faculty / Department / NewsItem etc.
+        [MaxLength(100)]
+        public string? Module { get; set; }
+
+        public int? RecordId { get; set; }
+
+        [MaxLength(300)]
+        public string? RecordName { get; set; }
+
+        // JSON string of changes
+        public string? Details { get; set; }
+
+        public DateTime Timestamp { get; set; } = DateTime.Now;
+
+        [MaxLength(50)]
+        public string? IpAddress { get; set; }
+    }
 }

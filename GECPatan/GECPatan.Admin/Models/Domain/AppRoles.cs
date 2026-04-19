@@ -10,6 +10,8 @@
         public const string Faculty = "Faculty";
         public const string ContentEditor = "ContentEditor";
         public const string PlacementOfficer = "PlacementOfficer";
+        public const string GrievanceCoordinator = "GrievanceCoordinator";
+        public const string CommitteeHead = "CommitteeHead";
 
         // All roles as array for seeding.
         public static readonly string[] AllRoles = new[]
@@ -19,7 +21,45 @@
             HOD,
             Faculty,
             ContentEditor,
-            PlacementOfficer
+            PlacementOfficer,
+            GrievanceCoordinator,
+            CommitteeHead
+
+        };
+        // Teaching designations (IsTeaching = true)
+        public static readonly string[] TeachingDesignations = new[]
+        {
+            "Professor",
+            "Associate Professor",
+            "Assistant Professor"
+        };
+
+        // Non-teaching designations (IsTeaching = false)
+        public static readonly string[] NonTeachingDesignations = new[]
+        {
+            "Lab Assistant",
+            "Technical Assistant",
+            "Senior Technical Assistant",
+            "Clerk",
+            "Other"
+        };
+
+        // All designations combined
+        public static readonly string[] AllDesignations =
+            TeachingDesignations.Concat(NonTeachingDesignations).ToArray();
+
+        // Qualification options for dropdown
+        public static readonly string[] QualificationOptions = new[]
+        {
+            "PhD",
+            "Pursuing PhD",
+            "ME / MTech",
+            "BE / BTech",
+            "MCA",
+            "MSc",
+            "BSc",
+            "Diploma",
+            "Other"
         };
     }
 }

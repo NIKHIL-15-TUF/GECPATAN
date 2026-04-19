@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GECPatan.Admin.Models.Domain
 {
@@ -14,76 +15,83 @@ namespace GECPatan.Admin.Models.Domain
 
         public int DisplayOrder { get; set; } = 0;
         public bool IsVisible { get; set; } = true;
-
+        
         // Navigation
         [ValidateNever]
         public ICollection<DocumentYearSection> YearSections { get; set; }
             = new List<DocumentYearSection>();
     }
 
-    // DOCUMENT YEAR SECTION
-    // (e.g. "2024-25", "2023-24")
     public class DocumentYearSection : BaseEntity
     {
         public int Id { get; set; }
+        public int CategoryId { get; set; }
 
-        [Required, MaxLength(20)]
+        [ForeignKey("CategoryId")]
+        public DocumentCategory? Category { get; set; }
+
+        [MaxLength(20)]
         public string Year { get; set; } = string.Empty;
 
         public int DisplayOrder { get; set; } = 0;
-        public bool IsVisible { get; set; } = true;
 
-        // FK
-        public int DocumentCategoryId { get; set; }
-
-        [ValidateNever]
-        public DocumentCategory? DocumentCategory { get; set; }
-
-        // Navigation
-        [ValidateNever]
         public ICollection<DocumentFile> Files { get; set; }
             = new List<DocumentFile>();
     }
 
-    // DOCUMENT FILE
     public class DocumentFile : BaseEntity
     {
         public int Id { get; set; }
+        public int YearSectionId { get; set; }
 
-        [Required, MaxLength(300)]
+        [ForeignKey("YearSectionId")]
+        public DocumentYearSection? YearSection { get; set; }
+
+        [MaxLength(300)]
         public string Title { get; set; } = string.Empty;
 
         public string? FilePath { get; set; }
-
-        [MaxLength(20)]
-        public string FileType { get; set; } = "PDF";
-
-        public string? MonthYear { get; set; }
-        public string? UploadDate { get; set; }
-
-        public bool IsVisible { get; set; } = true;
         public int DisplayOrder { get; set; } = 0;
-
-        // FK
-        public int DocumentYearSectionId { get; set; }
-
-        [ValidateNever]
-        public DocumentYearSection? DocumentYearSection { get; set; }
+        public bool IsVisible { get; set; } = true;
     }
-    // TENDER
-    public class Tender : BaseEntity
+
+    // TENDER — PARENT-CHILD RESTRUCTURE
+    // T1 (Parent): TenderCategory — ID | Title
+    // T2 (Child):  TenderDocument — DocTitle | DocID | ValidFrom | ValidTo | Path | IsVisible
+    public class TenderCategory : BaseEntity
     {
         public int Id { get; set; }
 
         [Required, MaxLength(300)]
         public string Title { get; set; } = string.Empty;
 
-        public string? FilePath { get; set; }
-        public string? UploadDate { get; set; }
-
-        public bool IsVisible { get; set; } = true;
         public int DisplayOrder { get; set; } = 0;
+        public bool IsVisible { get; set; } = true;
+
+        public ICollection<TenderDocument> Documents { get; set; }
+            = new List<TenderDocument>();
     }
+
+    public class TenderDocument : BaseEntity
+    {
+        public int Id { get; set; }
+
+        public int TenderCategoryId { get; set; }
+
+        [ForeignKey("TenderCategoryId")]
+        public TenderCategory? TenderCategory { get; set; }
+
+        [Required, MaxLength(300)]
+        public string DocTitle { get; set; } = string.Empty;
+
+        // Valid from/to dates
+        public DateTime? ValidFrom { get; set; }
+        public DateTime? ValidTo { get; set; }
+
+        public string? FilePath { get; set; }
+        public bool IsVisible { get; set; } = true;
+    }
+
     // IMPORTANT DOCUMENT
     public class ImportantDocument : BaseEntity
     {
@@ -92,17 +100,16 @@ namespace GECPatan.Admin.Models.Domain
         [Required, MaxLength(300)]
         public string Title { get; set; } = string.Empty;
 
-        public string? FilePath { get; set; }
-
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string FileType { get; set; } = "PDF";
 
-        public string? UploadDate { get; set; }
+        // Changed from string to DateTime?
+        public DateTime? UploadDate { get; set; }
 
+        public string? FilePath { get; set; }
         public bool IsVisible { get; set; } = true;
         public int DisplayOrder { get; set; } = 0;
     }
-
     // MOU DOCUMENT
     public class MoUDocument : BaseEntity
     {
@@ -111,9 +118,10 @@ namespace GECPatan.Admin.Models.Domain
         [Required, MaxLength(300)]
         public string Title { get; set; } = string.Empty;
 
-        public string? FilePath { get; set; }
+        [MaxLength(50)]
         public string? MonthYear { get; set; }
 
+        public string? FilePath { get; set; }
         public bool IsVisible { get; set; } = true;
         public int DisplayOrder { get; set; } = 0;
     }

@@ -21,7 +21,9 @@ namespace GECPatan.Admin.Models.Domain
 
         // Profile photo path (optional).
         public string? ProfileImagePath { get; set; }
-
+        
+        // Force password change on first login
+        public bool MustChangePassword { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? LastLoginDate { get; set; }
     }

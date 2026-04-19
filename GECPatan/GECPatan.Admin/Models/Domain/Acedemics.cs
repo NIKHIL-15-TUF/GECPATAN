@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GECPatan.Admin.Models.Domain
 {
@@ -9,13 +10,9 @@ namespace GECPatan.Admin.Models.Domain
 
         [Required, MaxLength(300)]
         public string Title { get; set; } = string.Empty;
-
         public string? FilePath { get; set; }
         public string? UploadDate { get; set; }
-
-        // Optional: link to a specific dept
         public int? DeptId { get; set; }
-
         public bool IsVisible { get; set; } = true;
         public int DisplayOrder { get; set; } = 0;
     }
@@ -26,10 +23,8 @@ namespace GECPatan.Admin.Models.Domain
 
         [Required, MaxLength(300)]
         public string Title { get; set; } = string.Empty;
-
         public string? FilePath { get; set; }
         public string? UploadDate { get; set; }
-
         public bool IsVisible { get; set; } = true;
         public int DisplayOrder { get; set; } = 0;
     }
@@ -43,13 +38,8 @@ namespace GECPatan.Admin.Models.Domain
 
         [MaxLength(200)]
         public string? PrincipalInvestigator { get; set; }
-
-        [MaxLength(50)]
-        public string? StartDate { get; set; }
-
-        [MaxLength(50)]
-        public string? CompletionDate { get; set; }
-
+        public DateTime? StartDate { get; set; }
+        public DateTime? CompletionDate { get; set; }
         [MaxLength(100)]
         public string? Duration { get; set; }
 
@@ -62,19 +52,24 @@ namespace GECPatan.Admin.Models.Domain
         public bool IsVisible { get; set; } = true;
         public int DisplayOrder { get; set; } = 0;
     }
-    // PROGRAM INTAKE
+
+    // PROGRAM INTAKE 
     public class ProgramIntake : BaseEntity
     {
         public int Id { get; set; }
 
-        [Required, MaxLength(200)]
-        public string ProgramName { get; set; } = string.Empty;
+        // Which department
+        public int DeptId { get; set; }
 
+        [ForeignKey("DeptId")]
+        public Department? Department { get; set; }
+
+        // Which academic year e.g. 2025
+        public int IntakeYear { get; set; }
+
+        // Number of seats
         public int Intake { get; set; }
 
-        [MaxLength(20)]
-        public string? CourseCode { get; set; }
-
-        public int DisplayOrder { get; set; } = 0;
+        public bool IsVisible { get; set; } = true;
     }
 }
