@@ -2,14 +2,11 @@
 @{
     ViewData["Title"] = "Departments";
 }
-
 <div class="row mb-3">
     <div class="col-12 d-flex justify-content-between align-items-center">
-        <div>
-            <span class="badge badge-info px-3 py-2" style="font-size:13px;">
-                @Model.Count Department(s)
-            </span>
-        </div>
+        <span class="badge badge-info px-3 py-2" style="font-size:13px;">
+            @Model.Count Department(s)
+        </span>
         @if (User.IsInRole("SuperAdmin"))
         {
             <a asp-action="Create" class="btn btn-primary">
@@ -18,18 +15,18 @@
         }
     </div>
 </div>
-
 <div class="card">
     <div class="card-body p-0">
         <table class="table table-hover mb-0">
-            <thead style="background:#1a237e; color:#fff;">
+            <thead style="background:#1a237e;color:#fff;">
                 <tr>
-                    <th width="50">Order</th>
+                    <th width="60">Order</th>
                     <th width="60">Image</th>
-                    <th>Department Name</th>
+                    <th>Name</th>
                     <th width="80">Code</th>
                     <th width="80">Intake</th>
                     <th width="80">Faculty</th>
+                    <th width="80">Labs</th>
                     <th width="80">Status</th>
                     <th width="180">Actions</th>
                 </tr>
@@ -38,9 +35,9 @@
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">
+                        <td colspan="9" class="text-center py-4 text-muted">
                             <i class="fas fa-building fa-2x mb-2 d-block"></i>
-                            No departments yet. Click "Add Department" to create one.
+                            No departments yet.
                         </td>
                     </tr>
                 }
@@ -51,14 +48,14 @@
                             @if (User.IsInRole("SuperAdmin"))
                             {
                                 <div class="d-flex flex-column" style="gap:2px;">
-                                    <form asp-action="Reorder" method="post" class="d-inline">
+                                    <form asp-action="Reorder" method="post">
                                         <input type="hidden" name="id" value="@dept.DeptId" />
                                         <input type="hidden" name="direction" value="up" />
                                         <button type="submit" class="btn btn-xs btn-light border px-2 py-1">
                                             <i class="fas fa-chevron-up" style="font-size:10px;"></i>
                                         </button>
                                     </form>
-                                    <form asp-action="Reorder" method="post" class="d-inline">
+                                    <form asp-action="Reorder" method="post">
                                         <input type="hidden" name="id" value="@dept.DeptId" />
                                         <input type="hidden" name="direction" value="down" />
                                         <button type="submit" class="btn btn-xs btn-light border px-2 py-1">
@@ -67,16 +64,11 @@
                                     </form>
                                 </div>
                             }
-                            else
-                            {
-                                <span class="text-muted">@dept.DisplayOrder</span>
-                            }
                         </td>
                         <td>
                             @if (!string.IsNullOrEmpty(dept.TitleImagePath))
                             {
-                                <img src="@dept.TitleImagePath"
-                                     class="img-thumbnail"
+                                <img src="@dept.TitleImagePath" class="img-thumbnail"
                                      style="width:45px;height:45px;object-fit:cover;" />
                             }
                             else
@@ -87,68 +79,55 @@
                                 </div>
                             }
                         </td>
-                        <td>
-                            <strong>@dept.Name</strong>
-                        </td>
+                        <td><strong>@dept.Name</strong></td>
                         <td>
                             @if (!string.IsNullOrEmpty(dept.ShortCode))
                             {
                                 <span class="badge badge-secondary">@dept.ShortCode</span>
                             }
                         </td>
-                        <td>@dept.Intake</td>
-                        <td>@dept.FacultyCount</td>
                         <td>
-                            <span class="badge @(dept.IsActive ? "badge-success" : "badge-danger")">
-                                @(dept.IsActive ? "Active" : "Inactive")
-                            </span>
+                            <span class="badge badge-light border">@dept.Intake</span>
                         </td>
-
-                        <td class="d-flex align-items-center flex-wrap gap-1">
-
-                            <!-- ✏️ Edit -->
-                            <a asp-action="Edit"
-                                   asp-route-id="@dept.DeptId"
-                                   class="btn btn-sm btn-info mr-1">
-                                <i class="fas fa-edit"></i>
+                        <td>
+                            <span class="badge badge-success">@dept.FacultyCount</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-info">@dept.LabCount</span>
+                        </td>
+                        <td>
+                            @if (dept.IsActive)
+                            {
+                                <span class="badge badge-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-danger">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@dept.DeptId"
+                                   class="btn btn-sm btn-info mb-1">
+                                <i class="fas fa-edit"></i> Edit
                             </a>
-
-                            <!--Sections -->
-                            <a asp-controller="DynamicSection"
-                                   asp-action="Index"
-                                   asp-route-pageType="1"
-                                   asp-route-pageId="@dept.DeptId"
-                                   class="btn btn-sm btn-primary mr-1">
-                                <i class="fas fa-layer-group"></i>
-                            </a>
-
                             @if (User.IsInRole("SuperAdmin"))
                             {
-                                <!--Toggle Active -->
-                                <form asp-action="ToggleActive"
-                                      method="post"
-                                      class="d-inline mr-1">
+                                <form asp-action="ToggleActive" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@dept.DeptId" />
                                     <button type="submit"
-                                            class="btn btn-sm @(dept.IsActive ? "btn-warning" : "btn-success")"
-                                            onclick="return confirm('Are you sure?')">
+                                            class="btn btn-sm @(dept.IsActive ? "btn-warning" : "btn-success") mb-1"
+                                            onclick="return confirm('Toggle status?')">
                                         <i class="fas @(dept.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
                                     </button>
                                 </form>
-
-                                <!--Delete -->
-                                <form asp-action="Delete"
-                                      method="post"
-                                      class="d-inline">
+                                <form asp-action="Delete" method="post" class="d-inline">
                                     <input type="hidden" name="id" value="@dept.DeptId" />
-                                    <button type="submit"
-                                            class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Delete this department? This cannot be undone.')">
+                                    <button type="submit" class="btn btn-sm btn-danger mb-1"
+                                            onclick="return confirm('Delete?')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             }
-
                         </td>
                     </tr>
                 }

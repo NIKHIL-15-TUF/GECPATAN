@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace GECPatan.Admin.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+        //IdentityRole<string>, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

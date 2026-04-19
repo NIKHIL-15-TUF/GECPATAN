@@ -1,418 +1,366 @@
-﻿//using GECPatan.Admin.Data;
-//using GECPatan.Admin.Models.Domain;
-//using GECPatan.Admin.Models.ViewModels;
-//using Microsoft.AspNetCore.Authorization;
-//using Microsoft.AspNetCore.Mvc;
-//using Microsoft.EntityFrameworkCore;
+﻿using GECPatan.Admin.Data;
+using GECPatan.Admin.Models.Domain;
+using GECPatan.Admin.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-//namespace GECPatan.Admin.Controllers
-//{
-//    [Authorize(Roles = "SuperAdmin,Principal,HOD")]
-//    public class DepartmentController : Controller
-//    {
-//        private readonly ApplicationDbContext _context;
-//        private readonly IWebHostEnvironment _env;
+namespace GECPatan.Admin.Controllers
+{
+    [Authorize(Roles = "SuperAdmin,HOD,ContentEditor,Principal")]
+    public class DepartmentController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-//        public DepartmentController(
-//            ApplicationDbContext context,
-//            IWebHostEnvironment env)
-//        {
-//            _context = context;
-//            _env = env;
-//        }
+        public DepartmentController(ApplicationDbContext context, IWebHostEnvironment env)
+        {
+            _context = context;
+            _env = env;
+        }
 
-//        // ── INDEX ─────────────────────────────────────────
-//        public async Task<IActionResult> Index()
-//        {
-//            ViewData["Title"] = "Departments";
+        // ── INDEX ─────────────────────────────────────────
+        public async Task<IActionResult> Index()
+        {
+            ViewData["Title"] = "Departments";
 
-//            var departments = await _context.Departments
-//                .OrderBy(d => d.DisplayOrder)
-//                .ThenBy(d => d.Name)
-//                .Select(d => new DepartmentListVM
-//                {
-//                    DeptId = d.DeptId,
-//                    Name = d.Name,
-//                    ShortCode = d.ShortCode,
-//                    //Intake = d.Intake,
-//                    //FacultyCount = d.FacultyCount,
-//                    IsActive = d.IsActive,
-//                    DisplayOrder = d.DisplayOrder,
-//                    TitleImagePath = d.TitleImagePath
-//                })
-//                .ToListAsync();
+            var depts = await _context.Departments
+                .Include(d => d.Faculties)
+                .Include(d => d.Labs)
+                .OrderBy(d => d.DisplayOrder)
+                .ToListAsync();
 
-//            return View(departments);
-//        }
+            // Get intake per dept (latest year)
+            var intakes = await _context.ProgramIntakes
+                .GroupBy(p => p.DeptId)
+                .Select(g => new { DeptId = g.Key, Total = g.Sum(p => p.Intake) })
+                .ToListAsync();
 
-//        // ── CREATE GET ────────────────────────────────────
-//        [Authorize(Roles = "SuperAdmin")]
-//        public IActionResult Create()
-//        {
-//            ViewData["Title"] = "Add Department";
-//            return View(new DepartmentCreateVM());
-//        }
+            var list = depts.Select(d => new DepartmentListVM
+            {
+                DeptId = (int)d.DeptId,
+                Name = d.Name,
+                ShortCode = d.ShortCode,
+                TitleImagePath = d.TitleImagePath,
+                IsActive = d.IsActive,
+                DisplayOrder = d.DisplayOrder,
+                FacultyCount = d.Faculties.Count(f => f.IsActive),
+                LabCount = d.Labs.Count,
+                Intake = intakes.FirstOrDefault(i => i.DeptId == d.DeptId)?.Total ?? 0
+            }).ToList();
 
-//        // ── CREATE POST ───────────────────────────────────
-//        [HttpPost]
-//        [ValidateAntiForgeryToken]
-//        [Authorize(Roles = "SuperAdmin")]
-//        public async Task<IActionResult> Create(
-//            DepartmentCreateVM model,
-//            IFormFile? TitleImage,
-//            IFormFile? HODImage)
-//        {
-//            ViewData["Title"] = "Add Department";
+            return View(list);
+        }
 
-//            if (!ModelState.IsValid)
-//                return View(model);
+        // ── CREATE GET ────────────────────────────────────
+        [Authorize(Roles = "SuperAdmin")]
+        public IActionResult Create()
+        {
+            ViewData["Title"] = "Add Department";
+            return View(new DepartmentCreateVM());
+        }
 
-//            var dept = new Department
-//            {
-//                Name = model.Name,
-//                ShortCode = model.ShortCode,
-//                About = model.About,
-//                //Intake = model.Intake,
-//                //FacultyCount = model.FacultyCount,
-//                //LabCount = model.LabCount,
-//                AnnualPlacement = model.AnnualPlacement,
-//                //HODName = model.HODName,
-//                //HODMessage = model.HODMessage,
-//                Tagline = model.Tagline,
-//                ShowIntake = model.ShowIntake,
-//                DisplayOrder = model.DisplayOrder,
-//                IsActive = true
-//            };
+        // ── CREATE POST ───────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> Create(DepartmentCreateVM model, IFormFile? TitleImage)
+        {
+            ViewData["Title"] = "Add Department";
+            if (!ModelState.IsValid) return View(model);
 
-//            // Handle title image upload
-//            if (TitleImage != null && TitleImage.Length > 0)
-//                dept.TitleImagePath = await SaveFileAsync(TitleImage, "departments");
+            var dept = new Department
+            {
+                Name = model.Name,
+                ShortCode = model.ShortCode,
+                About = model.About,
+                Tagline = model.Tagline,
+                AnnualPlacement = model.AnnualPlacement,
+                ShowIntake = model.ShowIntake,
+                DisplayOrder = model.DisplayOrder,
+                IsActive = true
+            };
 
-//            _context.Departments.Add(dept);
-//            await _context.SaveChangesAsync();
+            if (TitleImage != null && TitleImage.Length > 0)
+                dept.TitleImagePath = await SaveFileAsync(TitleImage, "departments");
 
-//            TempData["Success"] = $"Department '{dept.Name}' created successfully.";
-//            return RedirectToAction(nameof(Index));
-//        }
+            _context.Departments.Add(dept);
+            await _context.SaveChangesAsync();
 
-//        // ── EDIT GET ──────────────────────────────────────
-//        public async Task<IActionResult> Edit(int id)
-//        {
-//            ViewData["Title"] = "Edit Department";
+            TempData["Success"] = $"Department '{dept.Name}' created.";
+            return RedirectToAction(nameof(Index));
+        }
 
-//            var dept = await _context.Departments
-//                .Include(d => d.Visions)
-//                .Include(d => d.Missions)
-//                .Include(d => d.PEOs)
-//                .Include(d => d.PSOs)
-//                .FirstOrDefaultAsync(d => d.DeptId == id);
+        // ── EDIT GET ──────────────────────────────────────
+        public async Task<IActionResult> Edit(int id)
+        {
+            ViewData["Title"] = "Edit Department";
 
-//            if (dept == null)
-//                return NotFound();
+            var d = await _context.Departments
+                .Include(x => x.Faculties)
+                .Include(x => x.Labs)
+                .Include(x => x.BannerImages)
+                .Include(x => x.Visions)
+                .Include(x => x.Missions)
+                .Include(x => x.PEOs)
+                .Include(x => x.PSOs)
+                .FirstOrDefaultAsync(x => x.DeptId == id);
 
-//            // HOD restriction - can only edit own dept
-//            if (User.IsInRole(AppRoles.HOD))
-//            {
-//                var currentUser = await GetCurrentUserAsync();
-//                if (currentUser?.DeptId != id)
-//                    return Forbid();
-//            }
+            if (d == null) return NotFound();
 
-//            var vm = new DepartmentEditVM
-//            {
-//                DeptId = dept.DeptId,
-//                Name = dept.Name,
-//                ShortCode = dept.ShortCode,
-//                About = dept.About,
-//                Intake = dept.Intake,
-//                FacultyCount = dept.FacultyCount,
-//                LabCount = dept.LabCount,
-//                AnnualPlacement = dept.AnnualPlacement,
-//                HODName = dept.HODName,
-//                HODMessage = dept.HODMessage,
-//                Tagline = dept.Tagline,
-//                ShowIntake = dept.ShowIntake,
-//                DisplayOrder = dept.DisplayOrder,
-//                ExistingTitleImagePath = dept.TitleImagePath,
-//                ExistingHODImagePath = dept.HODImagePath,
-//                VisionItems = dept.Visions
-//                    .OrderBy(v => v.DisplayOrder)
-//                    .Select(v => v.VisionText).ToList(),
-//                MissionItems = dept.Missions
-//                    .OrderBy(m => m.DisplayOrder)
-//                    .Select(m => m.MissionText).ToList(),
-//                PEOItems = dept.PEOs
-//                    .OrderBy(p => p.DisplayOrder)
-//                    .Select(p => p.PEOText).ToList(),
-//                PSOItems = dept.PSOs
-//                    .OrderBy(p => p.DisplayOrder)
-//                    .Select(p => p.PSOText).ToList()
-//            };
+            // HOD can only edit their own dept
+            if (User.IsInRole(AppRoles.HOD))
+            {
+                var currentUser = await GetCurrentUserAsync();
+                if (currentUser?.DeptId != id) return Forbid();
+            }
 
-//            return View(vm);
-//        }
+            // Auto-calculate intake for latest year
+            var intake = await _context.ProgramIntakes
+                .Where(p => p.DeptId == id)
+                .SumAsync(p => (int?)p.Intake) ?? 0;
 
-//        // ── EDIT POST ─────────────────────────────────────
-//        [HttpPost]
-//        [ValidateAntiForgeryToken]
-//        public async Task<IActionResult> Edit(
-//            int id,
-//            DepartmentEditVM model,
-//            IFormFile? TitleImage,
-//            IFormFile? HODImage,
-//            string? VisionItems,
-//            string? MissionItems,
-//            string? PEOItems,
-//            string? PSOItems)
-//        {
-//            ViewData["Title"] = "Edit Department";
+            var vm = new DepartmentEditVM
+            {
+                DeptId = (int)d.DeptId,
+                Name = d.Name,
+                ShortCode = d.ShortCode,
+                About = d.About,
+                Tagline = d.Tagline,
+                AnnualPlacement = d.AnnualPlacement,
+                ShowIntake = d.ShowIntake,
+                DisplayOrder = d.DisplayOrder,
+                FacultyCount = d.Faculties.Count(f => f.IsActive),
+                LabCount = d.Labs.Count,
+                Intake = intake,
+                ExistingTitleImagePath = d.TitleImagePath,
+                ExistingBannerImages = d.BannerImages
+                                          .OrderBy(b => b.DisplayOrder)
+                                          .Select(b => b.ImagePath)
+                                          .ToList(),
+                VisionItems = d.Visions.OrderBy(v => v.DisplayOrder).Select(v => v.VisionText).ToList(),
+                MissionItems = d.Missions.OrderBy(m => m.DisplayOrder).Select(m => m.MissionText).ToList(),
+                PEOItems = d.PEOs.OrderBy(p => p.DisplayOrder).Select(p => p.PEOText).ToList(),
+                PSOItems = d.PSOs.OrderBy(p => p.DisplayOrder).Select(p => p.PSOText).ToList()
+            };
 
-//            if (id != model.DeptId)
-//                return NotFound();
+            return View(vm);
+        }
 
-//            if (!ModelState.IsValid)
-//                return View(model);
+        // ── EDIT POST ─────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, DepartmentEditVM model,
+            IFormFile? TitleImage, List<IFormFile>? BannerImages,
+            string? VisionItems, string? MissionItems,
+            string? PEOItems, string? PSOItems)
+        {
+            ViewData["Title"] = "Edit Department";
+            if (id != model.DeptId) return NotFound();
+            if (!ModelState.IsValid) return View(model);
 
-//            // HOD restriction
-//            if (User.IsInRole(AppRoles.HOD))
-//            {
-//                var currentUser = await GetCurrentUserAsync();
-//                if (currentUser?.DeptId != id)
-//                    return Forbid();
-//            }
+            var d = await _context.Departments
+                .Include(x => x.BannerImages)
+                .Include(x => x.Visions)
+                .Include(x => x.Missions)
+                .Include(x => x.PEOs)
+                .Include(x => x.PSOs)
+                .FirstOrDefaultAsync(x => x.DeptId == id);
 
-//            var dept = await _context.Departments
-//                .Include(d => d.Visions)
-//                .Include(d => d.Missions)
-//                .Include(d => d.PEOs)
-//                .Include(d => d.PSOs)
-//                .FirstOrDefaultAsync(d => d.DeptId == id);
+            if (d == null) return NotFound();
 
-//            if (dept == null)
-//                return NotFound();
+            d.Name = model.Name;
+            d.ShortCode = model.ShortCode;
+            d.About = model.About;
+            d.Tagline = model.Tagline;
+            d.AnnualPlacement = model.AnnualPlacement;
+            d.ShowIntake = model.ShowIntake;
+            d.DisplayOrder = model.DisplayOrder;
 
-//            // Update basic fields
-//            dept.Name = model.Name;
-//            dept.ShortCode = model.ShortCode;
-//            dept.About = model.About;
-//            dept.Intake = model.Intake;
-//            dept.FacultyCount = model.FacultyCount;
-//            dept.LabCount = model.LabCount;
-//            dept.AnnualPlacement = model.AnnualPlacement;
-//            dept.HODName = model.HODName;
-//            dept.HODMessage = model.HODMessage;
-//            dept.Tagline = model.Tagline;
-//            dept.ShowIntake = model.ShowIntake;
-//            dept.DisplayOrder = model.DisplayOrder;
+            // Title image
+            if (TitleImage != null && TitleImage.Length > 0)
+            {
+                DeleteFile(d.TitleImagePath);
+                d.TitleImagePath = await SaveFileAsync(TitleImage, "departments");
+            }
 
-//            // Handle image uploads
-//            if (TitleImage != null && TitleImage.Length > 0)
-//            {
-//                DeleteFile(dept.TitleImagePath);
-//                dept.TitleImagePath = await SaveFileAsync(TitleImage, "departments");
-//            }
+            // Banner images — add new ones
+            if (BannerImages != null && BannerImages.Any())
+            {
+                int order = d.BannerImages.Any()
+                    ? d.BannerImages.Max(b => b.DisplayOrder) + 1 : 0;
 
-//            if (HODImage != null && HODImage.Length > 0)
-//            {
-//                DeleteFile(dept.HODImagePath);
-//                dept.HODImagePath = await SaveFileAsync(HODImage, "departments");
-//            }
+                foreach (var img in BannerImages)
+                {
+                    if (img.Length > 0)
+                    {
+                        _context.DepartmentImages.Add(new DepartmentBannerImage
+                        {
+                            DeptId = id,
+                            ImagePath = await SaveFileAsync(img, "departments"),
+                            DisplayOrder = order++
+                        });
+                    }
+                }
+            }
 
-//            // Update Vision items
-//            _context.DepartmentVisions.RemoveRange(dept.Visions);
-//            if (!string.IsNullOrEmpty(VisionItems))
-//            {
-//                var visions = VisionItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-//                for (int i = 0; i < visions.Length; i++)
-//                {
-//                    var text = visions[i].Trim();
-//                    if (!string.IsNullOrEmpty(text))
-//                    {
-//                        _context.DepartmentVisions.Add(new DepartmentVision
-//                        {
-//                            DeptId = id,
-//                            VisionText = text,
-//                            DisplayOrder = i
-//                        });
-//                    }
-//                }
-//            }
+            // Vision
+            _context.DepartmentVisions.RemoveRange(d.Visions);
+            if (!string.IsNullOrEmpty(VisionItems))
+            {
+                var items = VisionItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                for (int i = 0; i < items.Length; i++)
+                    if (!string.IsNullOrWhiteSpace(items[i]))
+                        _context.DepartmentVisions.Add(new DepartmentVision
+                        {
+                            DeptId = id,
+                            VisionText = items[i].Trim(),
+                            DisplayOrder = i
+                        });
+            }
 
-//            // Update Mission items
-//            _context.DepartmentMissions.RemoveRange(dept.Missions);
-//            if (!string.IsNullOrEmpty(MissionItems))
-//            {
-//                var missions = MissionItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-//                for (int i = 0; i < missions.Length; i++)
-//                {
-//                    var text = missions[i].Trim();
-//                    if (!string.IsNullOrEmpty(text))
-//                    {
-//                        _context.DepartmentMissions.Add(new DepartmentMission
-//                        {
-//                            DeptId = id,
-//                            MissionText = text,
-//                            DisplayOrder = i
-//                        });
-//                    }
-//                }
-//            }
+            // Mission
+            _context.DepartmentMissions.RemoveRange(d.Missions);
+            if (!string.IsNullOrEmpty(MissionItems))
+            {
+                var items = MissionItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                for (int i = 0; i < items.Length; i++)
+                    if (!string.IsNullOrWhiteSpace(items[i]))
+                        _context.DepartmentMissions.Add(new DepartmentMission
+                        {
+                            DeptId = id,
+                            MissionText = items[i].Trim(),
+                            DisplayOrder = i
+                        });
+            }
 
-//            // Update PEO items
-//            _context.DepartmentPEOs.RemoveRange(dept.PEOs);
-//            if (!string.IsNullOrEmpty(PEOItems))
-//            {
-//                var peos = PEOItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-//                for (int i = 0; i < peos.Length; i++)
-//                {
-//                    var text = peos[i].Trim();
-//                    if (!string.IsNullOrEmpty(text))
-//                    {
-//                        _context.DepartmentPEOs.Add(new DepartmentPEO
-//                        {
-//                            DeptId = id,
-//                            PEOText = text,
-//                            DisplayOrder = i
-//                        });
-//                    }
-//                }
-//            }
+            // PEOs
+            _context.DepartmentPEOs.RemoveRange(d.PEOs);
+            if (!string.IsNullOrEmpty(PEOItems))
+            {
+                var items = PEOItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                for (int i = 0; i < items.Length; i++)
+                    if (!string.IsNullOrWhiteSpace(items[i]))
+                        _context.DepartmentPEOs.Add(new DepartmentPEO
+                        {
+                            DeptId = id,
+                            PEOText = items[i].Trim(),
+                            DisplayOrder = i
+                        });
+            }
 
-//            // Update PSO items
-//            _context.DepartmentPSOs.RemoveRange(dept.PSOs);
-//            if (!string.IsNullOrEmpty(PSOItems))
-//            {
-//                var psos = PSOItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-//                for (int i = 0; i < psos.Length; i++)
-//                {
-//                    var text = psos[i].Trim();
-//                    if (!string.IsNullOrEmpty(text))
-//                    {
-//                        _context.DepartmentPSOs.Add(new DepartmentPSO
-//                        {
-//                            DeptId = id,
-//                            PSOText = text,
-//                            DisplayOrder = i
-//                        });
-//                    }
-//                }
-//            }
+            // PSOs
+            _context.DepartmentPSOs.RemoveRange(d.PSOs);
+            if (!string.IsNullOrEmpty(PSOItems))
+            {
+                var items = PSOItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                for (int i = 0; i < items.Length; i++)
+                    if (!string.IsNullOrWhiteSpace(items[i]))
+                        _context.DepartmentPSOs.Add(new DepartmentPSO
+                        {
+                            DeptId = id,
+                            PSOText = items[i].Trim(),
+                            DisplayOrder = i
+                        });
+            }
 
-//            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Department '{d.Name}' updated.";
+            return RedirectToAction(nameof(Index));
+        }
 
-//            TempData["Success"] = $"Department '{dept.Name}' updated successfully.";
-//            return RedirectToAction(nameof(Index));
-//        }
+        // ── DELETE BANNER IMAGE ───────────────────────────
+        [HttpPost]
+        public async Task<IActionResult> DeleteBannerImage(int id, int deptId)
+        {
+            var img = await _context.DepartmentImages.FindAsync(id);
+            if (img != null)
+            {
+                DeleteFile(img.ImagePath);
+                img.IsDeleted = true;
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Edit), new { id = deptId });
+        }
 
-//        // ── TOGGLE ACTIVE ─────────────────────────────────
-//        [HttpPost]
-//        [Authorize(Roles = "SuperAdmin")]
-//        public async Task<IActionResult> ToggleActive(int id)
-//        {
-//            var dept = await _context.Departments.FindAsync(id);
-//            if (dept == null)
-//                return NotFound();
+        // ── TOGGLE ACTIVE ─────────────────────────────────
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            var d = await _context.Departments.FindAsync(id);
+            if (d == null) return NotFound();
+            d.IsActive = !d.IsActive;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"'{d.Name}' " + (d.IsActive ? "activated" : "deactivated") + ".";
+            return RedirectToAction(nameof(Index));
+        }
 
-//            dept.IsActive = !dept.IsActive;
-//            await _context.SaveChangesAsync();
+        // ── DELETE ────────────────────────────────────────
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var d = await _context.Departments.FindAsync(id);
+            if (d == null) return NotFound();
+            d.IsDeleted = true;
+            d.IsActive = false;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Department '{d.Name}' deleted.";
+            return RedirectToAction(nameof(Index));
+        }
 
-//            TempData["Success"] = $"Department '{dept.Name}' " +
-//                (dept.IsActive ? "activated" : "deactivated") + ".";
-//            return RedirectToAction(nameof(Index));
-//        }
+        // ── REORDER ───────────────────────────────────────
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> Reorder(int id, string direction)
+        {
+            var d = await _context.Departments.FindAsync(id);
+            if (d == null) return NotFound();
 
-//        // ── DELETE (SOFT) ─────────────────────────────────
-//        [HttpPost]
-//        [Authorize(Roles = "SuperAdmin")]
-//        public async Task<IActionResult> Delete(int id)
-//        {
-//            var dept = await _context.Departments.FindAsync(id);
-//            if (dept == null)
-//                return NotFound();
+            if (direction == "up")
+            {
+                var above = await _context.Departments
+                    .Where(x => x.DisplayOrder == d.DisplayOrder - 1)
+                    .FirstOrDefaultAsync();
+                if (above != null) { above.DisplayOrder++; d.DisplayOrder--; }
+            }
+            else
+            {
+                var below = await _context.Departments
+                    .Where(x => x.DisplayOrder == d.DisplayOrder + 1)
+                    .FirstOrDefaultAsync();
+                if (below != null) { below.DisplayOrder--; d.DisplayOrder++; }
+            }
 
-//            dept.IsDeleted = true;
-//            dept.IsActive = false;
-//            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
 
-//            TempData["Success"] = $"Department '{dept.Name}' deleted.";
-//            return RedirectToAction(nameof(Index));
-//        }
+        // ── HELPERS ───────────────────────────────────────
+        private async Task<string> SaveFileAsync(IFormFile file, string folder)
+        {
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
+            Directory.CreateDirectory(uploadsFolder);
+            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+            var filePath = Path.Combine(uploadsFolder, fileName);
+            using var stream = new FileStream(filePath, FileMode.Create);
+            await file.CopyToAsync(stream);
+            return $"/uploads/{folder}/{fileName}";
+        }
 
-//        // ── REORDER ───────────────────────────────────────
-//        [HttpPost]
-//        [Authorize(Roles = "SuperAdmin")]
-//        public async Task<IActionResult> Reorder(int id, string direction)
-//        {
-//            var dept = await _context.Departments.FindAsync(id);
-//            if (dept == null)
-//                return NotFound();
+        private void DeleteFile(string? filePath)
+        {
+            if (string.IsNullOrEmpty(filePath)) return;
+            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
+            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
+        }
 
-//            if (direction == "up" && dept.DisplayOrder > 0)
-//            {
-//                var above = await _context.Departments
-//                    .Where(d => d.DisplayOrder == dept.DisplayOrder - 1)
-//                    .FirstOrDefaultAsync();
-//                if (above != null)
-//                {
-//                    above.DisplayOrder++;
-//                    dept.DisplayOrder--;
-//                }
-//            }
-//            else if (direction == "down")
-//            {
-//                var below = await _context.Departments
-//                    .Where(d => d.DisplayOrder == dept.DisplayOrder + 1)
-//                    .FirstOrDefaultAsync();
-//                if (below != null)
-//                {
-//                    below.DisplayOrder--;
-//                    dept.DisplayOrder++;
-//                }
-//            }
-
-//            await _context.SaveChangesAsync();
-//            return RedirectToAction(nameof(Index));
-//        }
-
-//        // ── HELPERS ───────────────────────────────────────
-//        private async Task<string> SaveFileAsync(IFormFile file, string folder)
-//        {
-//            var uploadsFolder = Path.Combine(
-//                _env.WebRootPath, "uploads", folder);
-
-//            Directory.CreateDirectory(uploadsFolder);
-
-//            var fileName = Guid.NewGuid().ToString()
-//                + Path.GetExtension(file.FileName);
-
-//            var filePath = Path.Combine(uploadsFolder, fileName);
-
-//            using var stream = new FileStream(filePath, FileMode.Create);
-//            await file.CopyToAsync(stream);
-
-//            return $"/uploads/{folder}/{fileName}";
-//        }
-
-//        private void DeleteFile(string? filePath)
-//        {
-//            if (string.IsNullOrEmpty(filePath)) return;
-
-//            var fullPath = Path.Combine(
-//                _env.WebRootPath,
-//                filePath.TrimStart('/'));
-
-//            if (System.IO.File.Exists(fullPath))
-//                System.IO.File.Delete(fullPath);
-//        }
-
-//        private async Task<ApplicationUser?> GetCurrentUserAsync()
-//        {
-//            var userId = User.FindFirst(
-//                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-//            if (userId == null) return null;
-
-//            return await _context.Users.FindAsync(userId);
-//        }
-//    }
-//}
+        private async Task<ApplicationUser?> GetCurrentUserAsync()
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return null;
+            return await _context.Users.FindAsync(userId);
+        }
+    }
+}
