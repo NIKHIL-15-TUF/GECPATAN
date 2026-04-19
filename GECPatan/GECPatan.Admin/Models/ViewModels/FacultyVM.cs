@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using GECPatan.Admin.Models.Domain;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace GECPatan.Admin.Models.ViewModels
 {
@@ -35,21 +36,23 @@ namespace GECPatan.Admin.Models.ViewModels
         [DataType(DataType.Date)]
         public DateTime DateOfJoining { get; set; } = DateTime.Today;
 
-        public string? Qualification { get; set; }
+        // Qualification REMOVED from here
+        // Use FacultyQualification sub-section instead
 
         [Display(Name = "Area of Interest")]
         public string? AreaOfInterest { get; set; }
 
         public string? Website { get; set; }
 
-        [Display(Name = "Is Teaching Staff")]
+        // IsTeaching auto-set from Designation — not editable
         public bool IsTeaching { get; set; } = true;
 
         [Display(Name = "Seniority Order")]
         public int SeniorityOrder { get; set; } = 0;
 
-        // For dropdown
+        // Dropdowns
         public List<SelectListItem> Departments { get; set; } = new();
+        public List<SelectListItem> Designations { get; set; } = new();
     }
 
     public class FacultyEditVM : FacultyCreateVM
@@ -64,6 +67,7 @@ namespace GECPatan.Admin.Models.ViewModels
     {
         public int FacultyQualificationId { get; set; }
 
+        // Dropdown: PhD / Pursuing PhD / ME/MTech / BE/BTech
         [Required(ErrorMessage = "Degree is required")]
         [MaxLength(200)]
         public string Degree { get; set; } = string.Empty;
@@ -76,6 +80,8 @@ namespace GECPatan.Admin.Models.ViewModels
 
         public string? Specialization { get; set; }
         public int FacultyId { get; set; }
+
+        public List<SelectListItem> DegreeOptions { get; set; } = new();
     }
 
     public class ExperienceVM
@@ -90,8 +96,16 @@ namespace GECPatan.Admin.Models.ViewModels
         [MaxLength(300)]
         public string Organization { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        public string? Duration { get; set; }
+        // Changed: Duration → FromDate + ToDate
+        [Display(Name = "From Date")]
+        [DataType(DataType.Date)]
+        public DateTime? FromDate { get; set; }
+
+        [Display(Name = "To Date")]
+        [DataType(DataType.Date)]
+        public DateTime? ToDate { get; set; }
+        // ToDate null = Present
+
         public int FacultyId { get; set; }
     }
 
@@ -106,8 +120,15 @@ namespace GECPatan.Admin.Models.ViewModels
         [MaxLength(300)]
         public string? OrganizedBy { get; set; }
 
-        [MaxLength(100)]
-        public string? Date { get; set; }
+        // Changed: Date → FromDate + ToDate
+        [Display(Name = "From Date")]
+        [DataType(DataType.Date)]
+        public DateTime? FromDate { get; set; }
+
+        [Display(Name = "To Date")]
+        [DataType(DataType.Date)]
+        public DateTime? ToDate { get; set; }
+
         public int FacultyId { get; set; }
     }
 
