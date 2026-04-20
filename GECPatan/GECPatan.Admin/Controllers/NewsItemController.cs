@@ -3,6 +3,7 @@ using GECPatan.Admin.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace GECPatan.Admin.Controllers
@@ -30,7 +31,8 @@ namespace GECPatan.Admin.Controllers
                 {
                     Id = n.Id,
                     Title = n.Title,
-                    PublishDate = n.PublishDate.HasValue ? n.PublishDate.Value.ToString("dd MMM yyyy") : "",
+                    PublishDate = n.PublishDate.HasValue
+                                    ? n.PublishDate.Value.ToString("dd MMM yyyy") : "",
                     ThumbnailPath = n.ThumbnailPath,
                     IsVisible = n.IsVisible,
                     ShowInMarquee = n.ShowInMarquee,
@@ -41,18 +43,23 @@ namespace GECPatan.Admin.Controllers
             return View(items);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             ViewData["Title"] = "Add News";
-            return View(new NewsItemVM { PublishDate = DateTime.Today });
+            return View(await BuildVM(new NewsItemVM
+            {
+                PublishDate = DateTime.Today
+            }));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(NewsItemVM model, IFormFile? Banner, IFormFile? Thumbnail)
+        public async Task<IActionResult> Create(NewsItemVM model,
+            IFormFile? Banner, IFormFile? Thumbnail)
         {
             ViewData["Title"] = "Add News";
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                return View(await BuildVM(model));
 
             var news = new NewsItem
             {
@@ -60,8 +67,11 @@ namespace GECPatan.Admin.Controllers
                 Description = model.Description,
                 PublishDate = model.PublishDate,
                 ExternalLink = model.ExternalLink,
-                ControllerName = model.ControllerName,
-                ActionName = model.ActionName,
+                // Store dept/committee link instead of controller/action
+                ControllerName = model.LinkDeptId.HasValue
+                                  ? "Department" : (model.LinkCommitteeId.HasValue ? "CampusCommittee" : null),
+                ActionName = model.LinkDeptId.HasValue
+                                  ? model.LinkDeptId.ToString() : (model.LinkCommitteeId.HasValue ? model.LinkCommitteeId.ToString() : null),
                 IsVisible = model.IsVisible,
                 ShowInMarquee = model.ShowInMarquee
             };
@@ -115,28 +125,40 @@ namespace GECPatan.Admin.Controllers
             ViewBag.ExistingImages = n.Images.OrderBy(i => i.DisplayOrder).ToList();
             ViewBag.ExistingFiles = n.Files.OrderBy(f => f.DisplayOrder).ToList();
 
-            return View(new NewsItemVM
+            // Parse back dept/committee from stored ControllerName/ActionName
+            int? linkDeptId = null;
+            int? linkCommitteeId = null;
+            if (n.ControllerName == "Department" && int.TryParse(n.ActionName, out int dId))
+                linkDeptId = dId;
+            else if (n.ControllerName == "CampusCommittee" && int.TryParse(n.ActionName, out int cId))
+                linkCommitteeId = cId;
+
+            var vm = new NewsItemVM
             {
                 Id = n.Id,
                 Title = n.Title,
                 Description = n.Description,
                 PublishDate = n.PublishDate,
                 ExternalLink = n.ExternalLink,
-                ControllerName = n.ControllerName,
-                ActionName = n.ActionName,
+                LinkDeptId = linkDeptId,
+                LinkCommitteeId = linkCommitteeId,
                 IsVisible = n.IsVisible,
                 ShowInMarquee = n.ShowInMarquee,
                 ExistingBannerPath = n.BannerImagePath,
                 ExistingThumbnailPath = n.ThumbnailPath
-            });
+            };
+
+            return View(await BuildVM(vm));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, NewsItemVM model, IFormFile? Banner, IFormFile? Thumbnail)
+        public async Task<IActionResult> Edit(int id, NewsItemVM model,
+            IFormFile? Banner, IFormFile? Thumbnail)
         {
             ViewData["Title"] = "Edit News";
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                return View(await BuildVM(model));
 
             var n = await _context.NewsItems
                 .Include(x => x.Images)
@@ -148,25 +170,43 @@ namespace GECPatan.Admin.Controllers
             n.Description = model.Description;
             n.PublishDate = model.PublishDate;
             n.ExternalLink = model.ExternalLink;
-            n.ControllerName = model.ControllerName;
-            n.ActionName = model.ActionName;
             n.IsVisible = model.IsVisible;
             n.ShowInMarquee = model.ShowInMarquee;
 
-            if (Banner != null && Banner.Length > 0) { DeleteFile(n.BannerImagePath); n.BannerImagePath = await SaveFileAsync(Banner, "news"); }
-            if (Thumbnail != null && Thumbnail.Length > 0) { DeleteFile(n.ThumbnailPath); n.ThumbnailPath = await SaveFileAsync(Thumbnail, "news"); }
+            // Store dept/committee link
+            n.ControllerName = model.LinkDeptId.HasValue
+                               ? "Department"
+                               : (model.LinkCommitteeId.HasValue ? "CampusCommittee" : null);
+            n.ActionName = model.LinkDeptId.HasValue
+                               ? model.LinkDeptId.ToString()
+                               : (model.LinkCommitteeId.HasValue ? model.LinkCommitteeId.ToString() : null);
 
-            // Add new images
+            if (Banner != null && Banner.Length > 0)
+            { DeleteFile(n.BannerImagePath); n.BannerImagePath = await SaveFileAsync(Banner, "news"); }
+            if (Thumbnail != null && Thumbnail.Length > 0)
+            { DeleteFile(n.ThumbnailPath); n.ThumbnailPath = await SaveFileAsync(Thumbnail, "news"); }
+
             int imgOrder = n.Images.Any() ? n.Images.Max(i => i.DisplayOrder) + 1 : 0;
             foreach (var file in Request.Form.Files.Where(f => f.Name == "Images"))
                 if (file.Length > 0)
-                    _context.NewsItemImages.Add(new NewsItemImage { NewsItemId = id, ImagePath = await SaveFileAsync(file, "news"), DisplayOrder = imgOrder++ });
+                    _context.NewsItemImages.Add(new NewsItemImage
+                    {
+                        NewsItemId = id,
+                        ImagePath = await SaveFileAsync(file, "news"),
+                        DisplayOrder = imgOrder++
+                    });
 
-            // Add new files
             int fileOrder = n.Files.Any() ? n.Files.Max(f => f.DisplayOrder) + 1 : 0;
             foreach (var file in Request.Form.Files.Where(f => f.Name == "Files"))
                 if (file.Length > 0)
-                    _context.NewsItemFiles.Add(new NewsItemFile { NewsItemId = id, FilePath = await SaveFileAsync(file, "news"), Title = Path.GetFileNameWithoutExtension(file.FileName), FileType = "PDF", DisplayOrder = fileOrder++ });
+                    _context.NewsItemFiles.Add(new NewsItemFile
+                    {
+                        NewsItemId = id,
+                        FilePath = await SaveFileAsync(file, "news"),
+                        Title = Path.GetFileNameWithoutExtension(file.FileName),
+                        FileType = "PDF",
+                        DisplayOrder = fileOrder++
+                    });
 
             await _context.SaveChangesAsync();
             TempData["Success"] = "News item updated.";
@@ -208,6 +248,28 @@ namespace GECPatan.Admin.Controllers
             var f = await _context.NewsItemFiles.FindAsync(id);
             if (f != null) { DeleteFile(f.FilePath); f.IsDeleted = true; await _context.SaveChangesAsync(); }
             return RedirectToAction(nameof(Edit), new { id = newsId });
+        }
+
+        // ── HELPERS ───────────────────────────────────────
+        private async Task<NewsItemVM> BuildVM(NewsItemVM vm)
+        {
+            vm.Departments = await _context.Departments
+                .OrderBy(d => d.Name)
+                .Select(d => new SelectListItem
+                {
+                    Value = d.DeptId.ToString(),
+                    Text = d.Name
+                }).ToListAsync();
+
+            vm.Committees = await _context.CampusCommittees
+                .OrderBy(c => c.Title)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.Title
+                }).ToListAsync();
+
+            return vm;
         }
 
         private async Task<string> SaveFileAsync(IFormFile file, string folder)

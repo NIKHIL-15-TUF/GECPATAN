@@ -1,18 +1,18 @@
-﻿@* @model GECPatan.Admin.Models.ViewModels.TenderCategoryVM
+﻿@model GECPatan.Admin.Models.ViewModels.TenderCategoryVM
 @{
     bool isEdit = Model.Id > 0;
-    ViewData["Title"] = isEdit ? "Edit Tender" : "Add Tender";
+    ViewData["Title"] = isEdit ? "Edit Category" : "Add Tender Category";
     string action = isEdit ? "Edit" : "Create";
 }
 <div class="row">
-    <div class="col-md-7">
+    <div class="col-md-6">
         <div class="card">
             <div class="card-header" style="background:#1a237e;color:#fff;">
                 <h3 class="card-title">
-                    <i class="fas fa-file-contract mr-2"></i>@ViewData["Title"]
+                    <i class="fas fa-folder-open mr-2"></i>@ViewData["Title"]
                 </h3>
             </div>
-            <form asp-action="@action" method="post" enctype="multipart/form-data">
+            <form asp-action="@action" method="post">
                 @if (isEdit)
                 {
                     <input asp-for="Id" type="hidden" />
@@ -25,36 +25,21 @@
                     <div class="form-group">
                         <label asp-for="Title" class="font-weight-bold"></label>
                         <input asp-for="Title" class="form-control"
-                               placeholder="Tender title..." />
+                               placeholder="e.g. Civil Works 2025, IT Equipment" />
                         <span asp-validation-for="Title" class="text-danger small"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="UploadDate" class="font-weight-bold"></label>
-                        <input asp-for="UploadDate" class="form-control"
-                               placeholder="e.g. 15 Jan 2025" />
-                    </div>
-                    <div class="form-group">
-                        <label class="font-weight-bold">Tender File (PDF)</label>
-                        @if (!string.IsNullOrEmpty(Model.ExistingFilePath))
-                        {
-                            <div class="mb-2 d-flex align-items-center">
-                                <i class="fas fa-file-pdf text-danger mr-2 fa-lg"></i>
-                                <a href="@Model.ExistingFilePath" target="_blank">Current File</a>
-                            </div>
-                        }
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" name="TenderFile" accept=".pdf"
-                                   onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose PDF...'" />
-                            <label class="custom-file-label">
-                                @(string.IsNullOrEmpty(Model.ExistingFilePath) ? "Choose PDF..." : "Replace PDF...")
-                            </label>
-                        </div>
+                        <label asp-for="DisplayOrder" class="font-weight-bold"></label>
+                        <input asp-for="DisplayOrder" class="form-control"
+                               type="number" min="0" />
                     </div>
                     <div class="form-group">
                         <div class="custom-control custom-switch">
                             <input asp-for="IsVisible" type="checkbox"
                                    class="custom-control-input" id="isVisible" />
-                            <label class="custom-control-label" for="isVisible">Visible on website</label>
+                            <label class="custom-control-label" for="isVisible">
+                                Visible on website
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -69,4 +54,8 @@
             </form>
         </div>
     </div>
-</div> *@
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+}

@@ -1,12 +1,11 @@
-﻿
-@model GECPatan.Admin.Models.ViewModels.NewsItemVM
+﻿@model GECPatan.Admin.Models.ViewModels.NewsItemVM
 @using GECPatan.Admin.Models.Domain
 @{
     bool isEdit = Model.Id > 0;
     ViewData["Title"] = isEdit ? "Edit News" : "Add News";
     string action = isEdit ? "Edit" : "Create";
     var existingImages = ViewBag.ExistingImages as List<NewsItemImage> ?? new();
-    var existingFiles  = ViewBag.ExistingFiles  as List<NewsItemFile>  ?? new();
+    var existingFiles = ViewBag.ExistingFiles as List<NewsItemFile> ?? new();
 }
 <div class="card">
     <div class="card-header" style="background:#1a237e;color:#fff;">
@@ -15,23 +14,29 @@
         </h3>
     </div>
     <form asp-action="@action" method="post" enctype="multipart/form-data">
-        @if (isEdit) { <input asp-for="Id" type="hidden" /> }
+        @if (isEdit)
+        {
+            <input asp-for="Id" type="hidden" />
+        }
         <div class="card-body">
             @if (!ViewData.ModelState.IsValid)
             {
                 <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
             }
+ 
             <div class="form-group">
                 <label asp-for="Title" class="font-weight-bold"></label>
                 <textarea asp-for="Title" class="form-control" rows="2"
                           placeholder="News headline..."></textarea>
                 <span asp-validation-for="Title" class="text-danger small"></span>
             </div>
+ 
             <div class="form-group">
                 <label class="font-weight-bold">Description</label>
                 <textarea asp-for="Description" class="form-control" rows="5"
                           placeholder="Full news description..."></textarea>
             </div>
+ 
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
@@ -53,12 +58,14 @@
                         <div class="custom-control custom-switch">
                             <input asp-for="ShowInMarquee" type="checkbox"
                                    class="custom-control-input" id="showMarquee" />
-                            <label class="custom-control-label" for="showMarquee">Show in Marquee</label>
+                            <label class="custom-control-label" for="showMarquee">
+                                Show in Marquee
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
-
+ 
             <!-- Banner + Thumbnail -->
             <div class="row">
                 <div class="col-md-6">
@@ -68,67 +75,91 @@
                         {
                             <div class="mb-2">
                                 <img src="@Model.ExistingBannerPath" class="img-thumbnail"
-                                     style="max-height:80px;" />
+                                     style="max-height:70px;" />
                             </div>
                         }
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" name="Banner" accept="image/*"
+                            <input type="file" class="custom-file-input" name="Banner"
+                                   accept="image/*"
                                    onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose...'" />
                             <label class="custom-file-label">
-                                @(string.IsNullOrEmpty(Model.ExistingBannerPath) ? "Choose banner..." : "Replace banner...")
+                                @(string.IsNullOrEmpty(Model.ExistingBannerPath)
+                                    ? "Choose banner..." : "Replace banner...")
                             </label>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="font-weight-bold">Thumbnail Image</label>
+                        <label class="font-weight-bold">Thumbnail</label>
                         @if (!string.IsNullOrEmpty(Model.ExistingThumbnailPath))
                         {
                             <div class="mb-2">
                                 <img src="@Model.ExistingThumbnailPath" class="img-thumbnail"
-                                     style="max-height:80px;" />
+                                     style="max-height:70px;" />
                             </div>
                         }
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" name="Thumbnail" accept="image/*"
+                            <input type="file" class="custom-file-input" name="Thumbnail"
+                                   accept="image/*"
                                    onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose...'" />
                             <label class="custom-file-label">
-                                @(string.IsNullOrEmpty(Model.ExistingThumbnailPath) ? "Choose thumbnail..." : "Replace thumbnail...")
+                                @(string.IsNullOrEmpty(Model.ExistingThumbnailPath)
+                                    ? "Choose thumbnail..." : "Replace thumbnail...")
                             </label>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- External Link -->
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="ExternalLink" class="font-weight-bold"></label>
-                        <input asp-for="ExternalLink" class="form-control" placeholder="https://..." />
+ 
+            <!-- Link to Dept OR Committee OR External -->
+            <div class="card bg-light mb-3">
+                <div class="card-body py-2">
+                    <label class="font-weight-bold mb-2">
+                        <i class="fas fa-link mr-1"></i>Link this news to:
+                    </label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group mb-0">
+                                <label asp-for="LinkDeptId" class="small font-weight-bold"></label>
+                                <select asp-for="LinkDeptId" asp-items="Model.Departments"
+                                        class="form-control form-control-sm">
+                                    <option value="">-- None --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-0">
+                                <label asp-for="LinkCommitteeId" class="small font-weight-bold"></label>
+                                <select asp-for="LinkCommitteeId" asp-items="Model.Committees"
+                                        class="form-control form-control-sm">
+                                    <option value="">-- None --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-0">
+                                <label asp-for="ExternalLink" class="small font-weight-bold"></label>
+                                <input asp-for="ExternalLink" class="form-control form-control-sm"
+                                       placeholder="https://..." />
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label asp-for="ControllerName" class="font-weight-bold"></label>
-                        <input asp-for="ControllerName" class="form-control" placeholder="e.g. Institute" />
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label asp-for="ActionName" class="font-weight-bold"></label>
-                        <input asp-for="ActionName" class="form-control" placeholder="e.g. NEWS" />
-                    </div>
+                    <small class="text-muted">
+                        Select at most one link. Department or Committee opens that page.
+                        External opens the URL directly.
+                    </small>
                 </div>
             </div>
-
+ 
             <hr />
-
+ 
             <!-- Existing Images -->
             @if (existingImages.Any())
             {
-                <label class="font-weight-bold">Current Images (@existingImages.Count)</label>
+                <label class="font-weight-bold">
+                    Current Images (@existingImages.Count)
+                </label>
                 <div class="row mb-3">
                     @foreach (var img in existingImages)
                     {
@@ -147,9 +178,11 @@
                     }
                 </div>
             }
-
+ 
             <div class="form-group">
-                <label class="font-weight-bold">@(isEdit ? "Add More Images" : "Images")</label>
+                <label class="font-weight-bold">
+                    @(isEdit ? "Add More Images" : "Images")
+                </label>
                 <div class="custom-file">
                     <input type="file" class="custom-file-input" name="Images"
                            multiple accept="image/*"
@@ -157,15 +190,18 @@
                     <label class="custom-file-label">Choose images (multiple)...</label>
                 </div>
             </div>
-
+ 
             <!-- Existing Files -->
             @if (existingFiles.Any())
             {
-                <label class="font-weight-bold">Current Files (@existingFiles.Count)</label>
+                <label class="font-weight-bold">
+                    Current Files (@existingFiles.Count)
+                </label>
                 <ul class="list-group mb-3">
                     @foreach (var f in existingFiles)
                     {
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <li class="list-group-item d-flex justify-content-between
+                            align-items-center py-2">
                             <div>
                                 <i class="fas fa-file-pdf text-danger mr-2"></i>
                                 <a href="@f.FilePath" target="_blank">@f.Title</a>
@@ -182,14 +218,16 @@
                     }
                 </ul>
             }
-
+ 
             <div class="form-group">
-                <label class="font-weight-bold">@(isEdit ? "Add More Files (PDF)" : "Files (PDF)")</label>
+                <label class="font-weight-bold">
+                    @(isEdit ? "Add More Files (PDF)" : "Files (PDF)")
+                </label>
                 <div class="custom-file">
                     <input type="file" class="custom-file-input" name="Files"
                            multiple accept=".pdf"
                            onchange="this.nextElementSibling.textContent=this.files.length+' file(s) selected'" />
-                    <label class="custom-file-label">Choose PDF files (multiple)...</label>
+                    <label class="custom-file-label">Choose PDF files...</label>
                 </div>
             </div>
         </div>

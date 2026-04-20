@@ -1,0 +1,124 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.TenderCategoryVM>
+@{
+    ViewData["Title"] = "Tenders";
+}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <span class="badge badge-info px-3 py-2" style="font-size:13px;">
+            @Model.Count Category(ies)
+        </span>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i>Add Tender Category
+        </a>
+    </div>
+</div>
+ 
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="fas fa-file-contract fa-3x mb-3 d-block"></i>
+            No tender categories yet. Click <strong>Add Tender Category</strong>.
+        </div>
+    </div>
+}
+ 
+@foreach (var cat in Model)
+{
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center"
+             style="background:#f8f9fa;">
+            <div>
+                <h6 class="mb-0 font-weight-bold">
+                    <i class="fas fa-folder-open mr-2 text-warning"></i>
+                    @cat.Title
+                    @if (!cat.IsVisible)
+                    {
+                        <span class="badge badge-secondary ml-2">Hidden</span>
+                    }
+                </h6>
+                <small class="text-muted">@cat.Documents.Count document(s)</small>
+            </div>
+            <div class="d-flex" style="gap:6px;">
+                <a asp-action="Documents" asp-route-categoryId="@cat.Id"
+                   class="btn btn-sm btn-primary">
+                    <i class="fas fa-file-alt mr-1"></i>Manage Docs
+                </a>
+                <a asp-action="Edit" asp-route-id="@cat.Id"
+                   class="btn btn-sm btn-info">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <form asp-action="ToggleVisible" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@cat.Id" />
+                    <button type="submit"
+                            class="btn btn-sm @(cat.IsVisible?"btn-warning":"btn-success")">
+                        <i class="fas @(cat.IsVisible?"fa-eye-slash":"fa-eye")"></i>
+                    </button>
+                </form>
+                <form asp-action="Delete" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@cat.Id" />
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm('Delete category and all its documents?')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+ 
+        @if (cat.Documents.Any())
+        {
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Document Title</th>
+                            <th width="130">Valid From</th>
+                            <th width="130">Valid To</th>
+                            <th width="80">File</th>
+                            <th width="80">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var doc in cat.Documents)
+                        {
+                            <tr>
+                                <td>@doc.DocTitle</td>
+                                <td>
+                                    <small>
+                                        @(doc.ValidFrom.HasValue
+                                            ? doc.ValidFrom.Value.ToString("dd MMM yyyy") : "—")
+                                    </small>
+                                </td>
+                                <td>
+                                    <small>
+                                        @(doc.ValidTo.HasValue
+                                            ? doc.ValidTo.Value.ToString("dd MMM yyyy") : "—")
+                                    </small>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(doc.ExistingFilePath))
+                                    {
+                                        <a href="@doc.ExistingFilePath" target="_blank"
+                                           class="btn btn-xs btn-outline-danger">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                    }
+                                </td>
+                                <td>
+                                    @if (doc.IsVisible)
+                                    {
+                                        <span class="badge badge-success">Visible</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-secondary">Hidden</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
