@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace GECPatan.Admin.Models.ViewModels
 {
@@ -9,7 +10,6 @@ namespace GECPatan.Admin.Models.ViewModels
         public string? Tagline { get; set; }
         public string? TitleImagePath { get; set; }
         public bool IsActive { get; set; }
-        public bool IsDeleted { get; set; }
         public int DisplayOrder { get; set; }
         public int MemberCount { get; set; }
     }
@@ -20,15 +20,17 @@ namespace GECPatan.Admin.Models.ViewModels
         [MaxLength(200)]
         public string Title { get; set; } = string.Empty;
 
+        // About is now RTE — stored as HTML
         public string? About { get; set; }
         public string? Tagline { get; set; }
         public string? Measures { get; set; }
         public string? Message { get; set; }
         public string? BlogLink { get; set; }
         public string? Link { get; set; }
-        public string? Account { get; set; }
-        public string? NationalTaskForce { get; set; }
 
+        // Account field REMOVED as per meeting notes
+
+        public string? NationalTaskForce { get; set; }
         public bool ShowDocument { get; set; } = false;
         public bool TableView { get; set; } = false;
         public int DisplayOrder { get; set; } = 0;
@@ -58,9 +60,13 @@ namespace GECPatan.Admin.Models.ViewModels
         public List<string> SubObjectiveItems { get; set; } = new();
     }
 
+    // Member VM — supports Faculty dropdown + manual entry
     public class CommitteeMemberVM
     {
         public int Id { get; set; }
+
+        // If FacultyId selected → auto-fill details
+        public int? FacultyId { get; set; }
 
         [Required(ErrorMessage = "Name is required")]
         [MaxLength(200)]
@@ -68,8 +74,6 @@ namespace GECPatan.Admin.Models.ViewModels
 
         [MaxLength(200)]
         public string? Position { get; set; }
-
-        public string? ImagePath { get; set; }
 
         [MaxLength(200)]
         public string? Email { get; set; }
@@ -82,6 +86,8 @@ namespace GECPatan.Admin.Models.ViewModels
 
         public int DisplayOrder { get; set; } = 0;
         public int CommitteeId { get; set; }
-        public string? ExistingImagePath { get; set; }
+
+        // For dropdown
+        public List<SelectListItem> FacultyList { get; set; } = new();
     }
 }

@@ -3,6 +3,7 @@ using GECPatan.Admin.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace GECPatan.Admin.Controllers
@@ -19,11 +20,9 @@ namespace GECPatan.Admin.Controllers
             _env = env;
         }
 
-        // ── INDEX ─────────────────────────────────────────
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Campus Committees";
-
             var committees = await _context.CampusCommittees
                 .Include(c => c.Members)
                 .OrderBy(c => c.DisplayOrder)
@@ -38,11 +37,9 @@ namespace GECPatan.Admin.Controllers
                     MemberCount = c.Members.Count
                 })
                 .ToListAsync();
-
             return View(committees);
         }
 
-        // ── CREATE GET ────────────────────────────────────
         [Authorize(Roles = "SuperAdmin")]
         public IActionResult Create()
         {
@@ -50,7 +47,6 @@ namespace GECPatan.Admin.Controllers
             return View(new CommitteeCreateVM());
         }
 
-        // ── CREATE POST ───────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "SuperAdmin")]
@@ -68,7 +64,6 @@ namespace GECPatan.Admin.Controllers
                 Message = model.Message,
                 BlogLink = model.BlogLink,
                 Link = model.Link,
-                Account = model.Account,
                 NationalTaskForce = model.NationalTaskForce,
                 ShowDocument = model.ShowDocument,
                 TableView = model.TableView,
@@ -88,26 +83,22 @@ namespace GECPatan.Admin.Controllers
 
             _context.CampusCommittees.Add(committee);
             await _context.SaveChangesAsync();
-
             TempData["Success"] = $"Committee '{committee.Title}' created.";
             return RedirectToAction(nameof(Index));
         }
 
-        // ── EDIT GET ──────────────────────────────────────
         public async Task<IActionResult> Edit(int id)
         {
             ViewData["Title"] = "Edit Committee";
-
             var c = await _context.CampusCommittees
                 .Include(x => x.Visions)
                 .Include(x => x.Missions)
                 .Include(x => x.Objectives)
                 .Include(x => x.SubObjectives)
                 .FirstOrDefaultAsync(x => x.Id == id);
-
             if (c == null) return NotFound();
 
-            var vm = new CommitteeEditVM
+            return View(new CommitteeEditVM
             {
                 Id = c.Id,
                 Title = c.Title,
@@ -117,7 +108,6 @@ namespace GECPatan.Admin.Controllers
                 Message = c.Message,
                 BlogLink = c.BlogLink,
                 Link = c.Link,
-                Account = c.Account,
                 NationalTaskForce = c.NationalTaskForce,
                 ShowDocument = c.ShowDocument,
                 TableView = c.TableView,
@@ -138,12 +128,9 @@ namespace GECPatan.Admin.Controllers
                 MissionItems = c.Missions.OrderBy(m => m.DisplayOrder).Select(m => m.MissionText).ToList(),
                 ObjectiveItems = c.Objectives.OrderBy(o => o.DisplayOrder).Select(o => o.ObjectiveText).ToList(),
                 SubObjectiveItems = c.SubObjectives.OrderBy(s => s.DisplayOrder).Select(s => s.SubObjectiveText).ToList()
-            };
-
-            return View(vm);
+            });
         }
 
-        // ── EDIT POST ─────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, CommitteeEditVM model,
@@ -162,7 +149,6 @@ namespace GECPatan.Admin.Controllers
                 .Include(x => x.Objectives)
                 .Include(x => x.SubObjectives)
                 .FirstOrDefaultAsync(x => x.Id == id);
-
             if (c == null) return NotFound();
 
             c.Title = model.Title;
@@ -172,7 +158,6 @@ namespace GECPatan.Admin.Controllers
             c.Message = model.Message;
             c.BlogLink = model.BlogLink;
             c.Link = model.Link;
-            c.Account = model.Account;
             c.NationalTaskForce = model.NationalTaskForce;
             c.ShowDocument = model.ShowDocument;
             c.TableView = model.TableView;
@@ -185,7 +170,6 @@ namespace GECPatan.Admin.Controllers
             c.TabDocuments = model.TabDocuments;
             c.TabLink = model.TabLink;
 
-            // Images
             if (TitleImage != null && TitleImage.Length > 0) { DeleteFile(c.TitleImagePath); c.TitleImagePath = await SaveFileAsync(TitleImage, "committees"); }
             if (MeasureImage != null && MeasureImage.Length > 0) { DeleteFile(c.MeasureImagePath); c.MeasureImagePath = await SaveFileAsync(MeasureImage, "committees"); }
             if (SubObjImage != null && SubObjImage.Length > 0) { DeleteFile(c.SubObjImagePath); c.SubObjImagePath = await SaveFileAsync(SubObjImage, "committees"); }
@@ -195,49 +179,28 @@ namespace GECPatan.Admin.Controllers
             // Vision
             _context.CommitteeVisions.RemoveRange(c.Visions);
             if (!string.IsNullOrEmpty(VisionItems))
-            {
-                var items = VisionItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                for (int i = 0; i < items.Length; i++)
-                    if (!string.IsNullOrWhiteSpace(items[i]))
-                        _context.CommitteeVisions.Add(new CommitteeVision { CommitteeId = id, VisionText = items[i].Trim(), DisplayOrder = i });
-            }
+                SaveList(VisionItems, i => _context.CommitteeVisions.Add(new CommitteeVision { CommitteeId = id, VisionText = i.Trim(), DisplayOrder = 0 }));
 
             // Mission
             _context.CommitteeMissions.RemoveRange(c.Missions);
             if (!string.IsNullOrEmpty(MissionItems))
-            {
-                var items = MissionItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                for (int i = 0; i < items.Length; i++)
-                    if (!string.IsNullOrWhiteSpace(items[i]))
-                        _context.CommitteeMissions.Add(new CommitteeMission { CommitteeId = id, MissionText = items[i].Trim(), DisplayOrder = i });
-            }
+                SaveList(MissionItems, i => _context.CommitteeMissions.Add(new CommitteeMission { CommitteeId = id, MissionText = i.Trim(), DisplayOrder = 0 }));
 
             // Objectives
             _context.CommitteeObjectives.RemoveRange(c.Objectives);
             if (!string.IsNullOrEmpty(ObjectiveItems))
-            {
-                var items = ObjectiveItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                for (int i = 0; i < items.Length; i++)
-                    if (!string.IsNullOrWhiteSpace(items[i]))
-                        _context.CommitteeObjectives.Add(new CommitteeObjective { CommitteeId = id, ObjectiveText = items[i].Trim(), DisplayOrder = i });
-            }
+                SaveList(ObjectiveItems, i => _context.CommitteeObjectives.Add(new CommitteeObjective { CommitteeId = id, ObjectiveText = i.Trim(), DisplayOrder = 0 }));
 
             // SubObjectives
             _context.CommitteeSubObjectives.RemoveRange(c.SubObjectives);
             if (!string.IsNullOrEmpty(SubObjectiveItems))
-            {
-                var items = SubObjectiveItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                for (int i = 0; i < items.Length; i++)
-                    if (!string.IsNullOrWhiteSpace(items[i]))
-                        _context.CommitteeSubObjectives.Add(new CommitteeSubObjective { CommitteeId = id, SubObjectiveText = items[i].Trim(), DisplayOrder = i });
-            }
+                SaveList(SubObjectiveItems, i => _context.CommitteeSubObjectives.Add(new CommitteeSubObjective { CommitteeId = id, SubObjectiveText = i.Trim(), DisplayOrder = 0 }));
 
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Committee '{c.Title}' updated.";
             return RedirectToAction(nameof(Index));
         }
 
-        // ── TOGGLE ACTIVE ─────────────────────────────────
         [HttpPost]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> ToggleActive(int id)
@@ -250,23 +213,19 @@ namespace GECPatan.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ── DELETE ────────────────────────────────────────
         [HttpPost]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
             var c = await _context.CampusCommittees.FindAsync(id);
             if (c == null) return NotFound();
-            c.IsDeleted = true;
-            c.IsActive = false;
+            c.IsDeleted = true; c.IsActive = false;
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Committee '{c.Title}' deleted.";
             return RedirectToAction(nameof(Index));
         }
 
-        // ══════════════════════════════════════════════════
-        // MEMBERS
-        // ══════════════════════════════════════════════════
+        // ── MEMBERS ───────────────────────────────────────
         public async Task<IActionResult> Members(int id)
         {
             ViewData["Title"] = "Committee Members";
@@ -281,7 +240,38 @@ namespace GECPatan.Admin.Controllers
                 .OrderBy(m => m.DisplayOrder)
                 .ToListAsync();
 
+            // Faculty dropdown for adding members
+            ViewBag.FacultyList = await _context.Faculties
+                .Where(f => f.IsActive)
+                .OrderBy(f => f.Name)
+                .Select(f => new SelectListItem
+                {
+                    Value = f.FacultyId.ToString(),
+                    Text = $"{f.Name} ({f.Designation})"
+                })
+                .ToListAsync();
+
             return View(members);
+        }
+
+        // Get faculty details for AJAX auto-fill
+        [HttpGet]
+        public async Task<IActionResult> GetFacultyDetails(int facultyId)
+        {
+            var f = await _context.Faculties
+                .Include(x => x.Department)
+                .Include(x => x.PersonalDetail)
+                .FirstOrDefaultAsync(x => x.FacultyId == facultyId);
+
+            if (f == null) return NotFound();
+
+            return Json(new
+            {
+                name = f.Name,
+                department = f.Department?.Name ?? "",
+                email = f.PersonalDetail?.Email ?? "",
+                contact = f.PersonalDetail?.Contact ?? ""
+            });
         }
 
         [HttpPost]
@@ -303,6 +293,13 @@ namespace GECPatan.Admin.Controllers
 
                 if (MemberPhoto != null && MemberPhoto.Length > 0)
                     member.ImagePath = await SaveFileAsync(MemberPhoto, "committees");
+                else if (model.FacultyId.HasValue)
+                {
+                    // Use faculty photo if available
+                    var f = await _context.Faculties.FindAsync(model.FacultyId.Value);
+                    if (f?.ImagePath != null)
+                        member.ImagePath = f.ImagePath;
+                }
 
                 _context.CommitteeMembers.Add(member);
                 await _context.SaveChangesAsync();
@@ -321,6 +318,14 @@ namespace GECPatan.Admin.Controllers
         }
 
         // ── HELPERS ───────────────────────────────────────
+        private void SaveList(string raw, Action<string> addItem)
+        {
+            int order = 0;
+            foreach (var line in raw.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                if (!string.IsNullOrWhiteSpace(line))
+                    addItem(line);
+        }
+
         private async Task<string> SaveFileAsync(IFormFile file, string folder)
         {
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);

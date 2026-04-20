@@ -4,10 +4,12 @@
     ViewData["Title"] = "Committee Members";
     int committeeId = ViewBag.CommitteeId;
     string committeeTitle = ViewBag.CommitteeTitle ?? "";
+    var facultyList = ViewBag.FacultyList as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+                        ?? new();
 }
- 
 <div class="d-flex align-items-center mb-3">
-    <a asp-action="Edit" asp-route-id="@committeeId" class="btn btn-secondary btn-sm mr-3">
+    <a asp-action="Edit" asp-route-id="@committeeId"
+           class="btn btn-secondary btn-sm mr-3">
         <i class="fas fa-arrow-left"></i>
     </a>
     <div>
@@ -15,48 +17,80 @@
         <small class="text-muted">@committeeTitle</small>
     </div>
 </div>
- 
 <div class="row">
     <!-- Add Member Form -->
-    <div class="col-md-4">
+    <div class="col-md-5">
         <div class="card">
             <div class="card-header" style="background:#1a237e;color:#fff;">
-                <h6 class="card-title mb-0"><i class="fas fa-plus mr-2"></i>Add Member</h6>
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-plus mr-2"></i>Add Member
+                </h6>
             </div>
             <form asp-action="AddMember" method="post" enctype="multipart/form-data">
                 <div class="card-body">
                     <input type="hidden" name="CommitteeId" value="@committeeId" />
+ 
+                    <!-- Faculty Dropdown -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">
+                            Select Faculty
+                            <small class="text-muted">(or fill manually below)</small>
+                        </label>
+                        <select id="facultyDropdown" class="form-control"
+                                onchange="onFacultySelect(this.value)">
+                            <option value="">-- Select Faculty --</option>
+                            <option value="other">-- Other (manual entry) --</option>
+                            @foreach (var f in facultyList)
+                            {
+                                <option value="@f.Value">@f.Text</option>
+                            }
+                        </select>
+                        <input type="hidden" name="FacultyId" id="facultyIdInput" />
+                    </div>
+ 
+                    <hr class="my-2" />
+ 
                     <div class="form-group">
                         <label class="font-weight-bold">Name <span class="text-danger">*</span></label>
-                        <input name="Name" class="form-control" placeholder="Full name" required />
+                        <input name="Name" id="memberName" class="form-control"
+                               placeholder="Full name" required />
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Position</label>
-                        <input name="Position" class="form-control" placeholder="e.g. Chairperson, Secretary" />
+                        <input name="Position" class="form-control"
+                               placeholder="e.g. Chairperson, Secretary" />
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Department</label>
-                        <input name="Department" class="form-control" placeholder="Department name" />
+                        <input name="Department" id="memberDept" class="form-control"
+                               placeholder="Department name" />
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Email</label>
-                        <input name="Email" class="form-control" type="email" placeholder="email@gecpatan.ac.in" />
+                        <input name="Email" id="memberEmail" class="form-control"
+                               type="email" placeholder="email@gecpatan.ac.in" />
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Contact</label>
-                        <input name="Contact" class="form-control" placeholder="+91 9876543210" />
+                        <input name="Contact" id="memberContact" class="form-control"
+                               placeholder="+91 9876543210" />
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Photo</label>
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" name="MemberPhoto" accept="image/*"
-                                   onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose photo...'" />
+                            <input type="file" class="custom-file-input"
+                                   name="MemberPhoto" accept="image/*"
+                                   onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose...'" />
                             <label class="custom-file-label">Choose photo...</label>
                         </div>
+                        <small class="text-muted">
+                            Leave blank to use faculty photo automatically.
+                        </small>
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Display Order</label>
-                        <input name="DisplayOrder" class="form-control" type="number" value="@Model.Count" min="0" />
+                        <input name="DisplayOrder" class="form-control"
+                               type="number" value="@Model.Count" min="0" />
                     </div>
                 </div>
                 <div class="card-footer">
@@ -69,7 +103,7 @@
     </div>
  
     <!-- Members List -->
-    <div class="col-md-8">
+    <div class="col-md-7">
         <div class="card">
             <div class="card-header bg-light">
                 <h6 class="card-title mb-0">
@@ -89,7 +123,7 @@
                                 <th width="50">Photo</th>
                                 <th>Name</th>
                                 <th>Position</th>
-                                <th>Department</th>
+                                <th>Dept</th>
                                 <th width="60"></th>
                             </tr>
                         </thead>
@@ -100,14 +134,18 @@
                                     <td>
                                         @if (!string.IsNullOrEmpty(m.ImagePath))
                                         {
-                                            <img src="@m.ImagePath" class="img-thumbnail rounded-circle"
+                                            <img src="@m.ImagePath"
+                                                 class="img-thumbnail rounded-circle"
                                                  style="width:35px;height:35px;object-fit:cover;" />
                                         }
                                         else
                                         {
-                                            <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
+                                            <div class="bg-secondary rounded-circle
+                                                d-inline-flex align-items-center
+                                                justify-content-center"
                                                  style="width:35px;height:35px;">
-                                                <i class="fas fa-user text-white" style="font-size:12px;"></i>
+                                                <i class="fas fa-user text-white"
+                                                   style="font-size:12px;"></i>
                                             </div>
                                         }
                                     </td>
@@ -123,9 +161,10 @@
                                     <td>
                                         <form asp-action="DeleteMember" method="post">
                                             <input type="hidden" name="id" value="@m.Id" />
-                                            <input type="hidden" name="committeeId" value="@committeeId" />
+                                            <input type="hidden" name="committeeId"
+                                                   value="@committeeId" />
                                             <button type="submit" class="btn btn-xs btn-danger"
-                                                    onclick="return confirm('Remove member?')">
+                                                    onclick="return confirm('Remove?')">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </form>
@@ -139,3 +178,33 @@
         </div>
     </div>
 </div>
+ 
+@section Scripts {
+    <script>
+        async function onFacultySelect(val) {
+            const hiddenInput = document.getElementById('facultyIdInput');
+ 
+            // Clear fields first
+            document.getElementById('memberName').value    = '';
+            document.getElementById('memberDept').value    = '';
+            document.getElementById('memberEmail').value   = '';
+            document.getElementById('memberContact').value = '';
+            hiddenInput.value = '';
+ 
+            if (!val || val === 'other') return;
+ 
+            hiddenInput.value = val;
+ 
+            try {
+                const res  = await fetch(`/CampusCommittee/GetFacultyDetails?facultyId=${val}`);
+                const data = await res.json();
+                document.getElementById('memberName').value    = data.name    || '';
+                document.getElementById('memberDept').value    = data.department || '';
+                document.getElementById('memberEmail').value   = data.email   || '';
+                document.getElementById('memberContact').value = data.contact || '';
+            } catch(e) {
+                console.error('Failed to fetch faculty details', e);
+            }
+        }
+    </script>
+}
