@@ -36,7 +36,6 @@ namespace GECPatan.Admin.Data
         public DbSet<FacultyPublication> FacultyPublications { get; set; }
 
         // CAMPUS COMMITTEES
-        // ── COMMITTEES ────────────────────────────────────
         public DbSet<CampusCommittee> CampusCommittees { get; set; }
         public DbSet<CommitteeVision> CommitteeVisions { get; set; }
         public DbSet<CommitteeMission> CommitteeMissions { get; set; }
@@ -86,7 +85,11 @@ namespace GECPatan.Admin.Data
         // PLACEMENT
         public DbSet<PlacementStatistic> PlacementStatistics { get; set; }
         public DbSet<PlacementTeamMember> PlacementTeamMembers { get; set; }
-
+        //Falities
+        public DbSet<Facility> Facilities { get; set; }
+        public DbSet<FacilityVision> FacilityVision { get; set; }
+        public DbSet<FacilityMission> FacilityMissions { get; set; }
+        public DbSet<FacilityMember> FacilityMembers { get; set; }
         // STUDENT & CLUBS
         public DbSet<StudentClub> StudentClubs { get; set; }
         public DbSet<ClubImage> ClubImages { get; set; }

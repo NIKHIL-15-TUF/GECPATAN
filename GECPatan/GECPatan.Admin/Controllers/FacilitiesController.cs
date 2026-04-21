@@ -13,134 +13,276 @@ namespace GECPatan.Admin.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
 
-        // Facility types managed here
-        private static readonly string[] FacilityTypes = new[]
-        {
-            "Hostel", "Library", "Medical", "Transportation",
-            "Gymkhana", "Auditorium", "Canteen", "StudentSection",
-            "CentreOfExcellence", "ISRO"
-        };
-
         public FacilityController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
             _env = env;
         }
 
+        // ── INDEX ─────────────────────────────────────────
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Facilities";
-
-            // Show all facility types — create if not exists
-            var facilities = await _context.SiteSettings
-                .Where(s => s.Group == "Facility")
+            var facilities = await _context.Facilities
+                .Include(f => f.Members)
+                .OrderBy(f => f.DisplayOrder)
                 .ToListAsync();
 
-            // Build list of facility pages
-            var list = FacilityTypes.Select(ft => new
+            var list = new List<FacilityListVM>();
+            foreach (var f in facilities)
             {
-                Type = ft,
-                Display = System.Text.RegularExpressions.Regex.Replace(ft, "([A-Z])", " $1").Trim(),
-                HasData = facilities.Any(f => f.Key == $"Facility_{ft}_Title")
-            }).ToList();
+                var sectionCount = await _context.DynamicSections
+                    .CountAsync(s => s.PageType == PageType.Facility && s.PageId == f.Id);
 
-            ViewBag.FacilityList = list;
-            return View();
+                list.Add(new FacilityListVM
+                {
+                    Id = f.Id,
+                    Title = f.Title,
+                    Tagline = f.Tagline,
+                    TitleImagePath = f.TitleImagePath,
+                    IsActive = f.IsActive,
+                    DisplayOrder = f.DisplayOrder,
+                    MemberCount = f.Members.Count,
+                    SectionCount = sectionCount
+                });
+            }
+
+            return View(list);
         }
 
-        public async Task<IActionResult> Edit(string type)
+        // ── CREATE ────────────────────────────────────────
+        [Authorize(Roles = "SuperAdmin")]
+        public IActionResult Create()
         {
-            ViewData["Title"] = $"Edit {type} Page";
-
-            // Load settings for this facility
-            string prefix = $"Facility_{type}_";
-            var settings = await _context.SiteSettings
-                .Where(s => s.Key.StartsWith(prefix))
-                .ToDictionaryAsync(s => s.Key, s => s.Value);
-
-            var vm = new FacilityVM
-            {
-                FacilityType = type,
-                Title = settings.GetValueOrDefault($"{prefix}Title", type),
-                Tagline = settings.GetValueOrDefault($"{prefix}Tagline"),
-                About = settings.GetValueOrDefault($"{prefix}About"),
-                VisionItems = settings.GetValueOrDefault($"{prefix}Vision"),
-                MissionItems = settings.GetValueOrDefault($"{prefix}Mission"),
-                ExistingTitleImagePath = settings.GetValueOrDefault($"{prefix}TitleImage")
-            };
-
-            // Load dynamic sections count
-            ViewBag.SectionCount = await _context.DynamicSections
-                .Where(s => s.PageType == PageType.Facility &&
-                            s.PageId == GetFacilityId(type))
-                .CountAsync();
-            ViewBag.FacilityId = GetFacilityId(type);
-
-            return View(vm);
+            ViewData["Title"] = "Add Facility";
+            return View(new FacilityCreateVM());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string type, FacilityVM model, IFormFile? TitleImage)
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> Create(FacilityCreateVM model, IFormFile? TitleImage)
         {
-            ViewData["Title"] = $"Edit {type} Page";
+            ViewData["Title"] = "Add Facility";
             if (!ModelState.IsValid) return View(model);
 
-            string prefix = $"Facility_{type}_";
+            int maxOrder = await _context.Facilities
+                .Select(f => (int?)f.DisplayOrder).MaxAsync() ?? -1;
 
-            await UpsertSetting($"{prefix}Title", model.Title, "Facility");
-            await UpsertSetting($"{prefix}Tagline", model.Tagline, "Facility");
-            await UpsertSetting($"{prefix}About", model.About, "Facility");
-            await UpsertSetting($"{prefix}Vision", model.VisionItems, "Facility");
-            await UpsertSetting($"{prefix}Mission", model.MissionItems, "Facility");
+            var facility = new Facility
+            {
+                Title = model.Title,
+                Tagline = model.Tagline,
+                About = model.About,
+                DisplayOrder = maxOrder + 1,
+                IsActive = true
+            };
 
             if (TitleImage != null && TitleImage.Length > 0)
-            {
-                var path = await SaveFileAsync(TitleImage, "facilities");
-                await UpsertSetting($"{prefix}TitleImage", path, "Facility");
-            }
+                facility.TitleImagePath = await SaveFileAsync(TitleImage, "facilities");
 
+            _context.Facilities.Add(facility);
             await _context.SaveChangesAsync();
-            TempData["Success"] = $"{type} page updated.";
+
+            TempData["Success"] = $"Facility '{facility.Title}' created.";
             return RedirectToAction(nameof(Index));
         }
 
-        // ── HELPERS ───────────────────────────────────────
-        private async Task UpsertSetting(string key, string? value, string group)
+        // ── EDIT ──────────────────────────────────────────
+        public async Task<IActionResult> Edit(int id)
         {
-            var existing = await _context.SiteSettings
-                .FirstOrDefaultAsync(s => s.Key == key);
+            ViewData["Title"] = "Edit Facility";
+            var f = await _context.Facilities
+                .Include(x => x.Members)
+                .Include(x => x.Visions)
+                .Include(x => x.Missions)
+                .FirstOrDefaultAsync(x => x.Id == id);
 
-            if (existing == null)
+            if (f == null) return NotFound();
+
+            var sectionCount = await _context.DynamicSections
+                .CountAsync(s => s.PageType == PageType.Facility && s.PageId == id);
+
+            return View(new FacilityEditVM
             {
-                _context.SiteSettings.Add(new SiteSetting
-                {
-                    Key = key,
-                    Value = value,
-                    Group = group
-                });
+                Id = f.Id,
+                Title = f.Title,
+                Tagline = f.Tagline,
+                About = f.About,
+                DisplayOrder = f.DisplayOrder,
+                ExistingTitleImagePath = f.TitleImagePath,
+                MemberCount = f.Members.Count,
+                SectionCount = sectionCount,
+                VisionItems = f.Visions.OrderBy(v => v.DisplayOrder).Select(v => v.VisionText).ToList(),
+                MissionItems = f.Missions.OrderBy(m => m.DisplayOrder).Select(m => m.MissionText).ToList()
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, FacilityEditVM model,
+            IFormFile? TitleImage, string? VisionItems, string? MissionItems)
+        {
+            ViewData["Title"] = "Edit Facility";
+            if (!ModelState.IsValid) return View(model);
+
+            var f = await _context.Facilities
+                .Include(x => x.Visions)
+                .Include(x => x.Missions)
+                .FirstOrDefaultAsync(x => x.Id == id);
+            if (f == null) return NotFound();
+
+            f.Title = model.Title;
+            f.Tagline = model.Tagline;
+            f.About = model.About;
+            f.DisplayOrder = model.DisplayOrder;
+
+            if (TitleImage != null && TitleImage.Length > 0)
+            {
+                DeleteFile(f.TitleImagePath);
+                f.TitleImagePath = await SaveFileAsync(TitleImage, "facilities");
+            }
+
+            // Vision
+            _context.FacilityVision.RemoveRange(f.Visions);
+            if (!string.IsNullOrEmpty(VisionItems))
+            {
+                int i = 0;
+                foreach (var line in VisionItems.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                    if (!string.IsNullOrWhiteSpace(line))
+                        _context.FacilityVision.Add(new FacilityVision
+                        {
+                            FacilityId = id,
+                            VisionText = line.Trim(),
+                            DisplayOrder = i++
+                        });
+            }
+
+            // Mission
+            _context.FacilityMissions.RemoveRange(f.Missions);
+            if (!string.IsNullOrEmpty(MissionItems))
+            {
+                int i = 0;
+                foreach (var line in MissionItems.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                    if (!string.IsNullOrWhiteSpace(line))
+                        _context.FacilityMissions.Add(new FacilityMission
+                        {
+                            FacilityId = id,
+                            MissionText = line.Trim(),
+                            DisplayOrder = i++
+                        });
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Facility '{f.Title}' updated.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ── TOGGLE / DELETE ───────────────────────────────
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            var f = await _context.Facilities.FindAsync(id);
+            if (f == null) return NotFound();
+            f.IsActive = !f.IsActive;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"'{f.Title}' " + (f.IsActive ? "activated" : "deactivated") + ".";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var f = await _context.Facilities.FindAsync(id);
+            if (f == null) return NotFound();
+            DeleteFile(f.TitleImagePath);
+            f.IsDeleted = true;
+            f.IsActive = false;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Facility '{f.Title}' deleted.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ── REORDER ───────────────────────────────────────
+        [HttpPost]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> Reorder(int id, string direction)
+        {
+            var f = await _context.Facilities.FindAsync(id);
+            if (f == null) return NotFound();
+            if (direction == "up")
+            {
+                var above = await _context.Facilities
+                    .Where(x => x.DisplayOrder == f.DisplayOrder - 1).FirstOrDefaultAsync();
+                if (above != null) { above.DisplayOrder++; f.DisplayOrder--; }
             }
             else
             {
-                existing.Value = value;
+                var below = await _context.Facilities
+                    .Where(x => x.DisplayOrder == f.DisplayOrder + 1).FirstOrDefaultAsync();
+                if (below != null) { below.DisplayOrder--; f.DisplayOrder++; }
             }
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
-        private static int GetFacilityId(string type) => type switch
+        // ── MEMBERS ───────────────────────────────────────
+        public async Task<IActionResult> Members(int id)
         {
-            "Hostel" => 1001,
-            "Library" => 1002,
-            "Medical" => 1003,
-            "Transportation" => 1004,
-            "Gymkhana" => 1005,
-            "Auditorium" => 1006,
-            "Canteen" => 1007,
-            "StudentSection" => 1008,
-            "CentreOfExcellence" => 1009,
-            "ISRO" => 1010,
-            _ => 1000
-        };
+            ViewData["Title"] = "Facility Members";
+            var facility = await _context.Facilities.FindAsync(id);
+            if (facility == null) return NotFound();
 
+            ViewBag.FacilityId = id;
+            ViewBag.FacilityTitle = facility.Title;
+
+            var members = await _context.FacilityMembers
+                .Where(m => m.FacilityId == id)
+                .OrderBy(m => m.DisplayOrder)
+                .ToListAsync();
+
+            return View(members);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddMember(FacilityMemberVM model, IFormFile? Photo)
+        {
+            if (ModelState.IsValid)
+            {
+                var member = new FacilityMember
+                {
+                    FacilityId = model.FacilityId,
+                    Name = model.Name,
+                    Position = model.Position,
+                    Department = model.Department,
+                    Email = model.Email,
+                    Contact = model.Contact,
+                    DisplayOrder = model.DisplayOrder
+                };
+
+                if (Photo != null && Photo.Length > 0)
+                    member.ImagePath = await SaveFileAsync(Photo, "facilities");
+
+                _context.FacilityMembers.Add(member);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Member added.";
+            }
+            return RedirectToAction(nameof(Members), new { id = model.FacilityId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteMember(int id, int facilityId)
+        {
+            var m = await _context.FacilityMembers.FindAsync(id);
+            if (m != null) { m.IsDeleted = true; await _context.SaveChangesAsync(); }
+            return RedirectToAction(nameof(Members), new { id = facilityId });
+        }
+
+        // ── HELPERS ───────────────────────────────────────
         private async Task<string> SaveFileAsync(IFormFile file, string folder)
         {
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
@@ -150,6 +292,13 @@ namespace GECPatan.Admin.Controllers
             using var stream = new FileStream(filePath, FileMode.Create);
             await file.CopyToAsync(stream);
             return $"/uploads/{folder}/{fileName}";
+        }
+
+        private void DeleteFile(string? filePath)
+        {
+            if (string.IsNullOrEmpty(filePath)) return;
+            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
+            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
         }
     }
 }
