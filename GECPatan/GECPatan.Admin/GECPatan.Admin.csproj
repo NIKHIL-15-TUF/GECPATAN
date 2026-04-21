@@ -27,7 +27,6 @@
 
   <ItemGroup>
     <Folder Include="Helpers\" />
-    <Folder Include="Services\" />
     <Folder Include="wwwroot\adminlte\" />
     <Folder Include="wwwroot\uploads\faculty\" />
     <Folder Include="wwwroot\uploads\committee\" />

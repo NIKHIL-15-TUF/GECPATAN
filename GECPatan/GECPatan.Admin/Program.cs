@@ -2,6 +2,7 @@ using GECPatan.Admin.Data;
 using GECPatan.Admin.Models.Domain;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,7 +48,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-
+//Audit-Log
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<GECPatan.Admin.Services.AuditService>();
 // ── MVC ───────────────────────────────────────────────
 builder.Services.AddControllersWithViews();
 
