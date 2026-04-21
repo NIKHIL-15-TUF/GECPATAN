@@ -1,0 +1,118 @@
+﻿@model GECPatan.Admin.Models.ViewModels.ContentPageCreateVM
+@{
+    ViewData["Title"] = "Create Page";
+}
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <h3 class="card-title">
+            <i class="fas fa-file-alt mr-2"></i>New Content Page
+        </h3>
+    </div>
+    <form asp-action="Create" method="post">
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+            }
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title" class="form-control"
+                               placeholder="e.g. NIRF Report 2025"
+                               oninput="generateSlug(this.value)" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="Slug" class="font-weight-bold">
+                            URL Slug
+                            <small class="text-muted">(auto-generated)</small>
+                        </label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">/page/</span>
+                            </div>
+                            <input asp-for="Slug" class="form-control"
+                                   id="slugInput"
+                                   placeholder="nirf-report-2025" />
+                        </div>
+                        <span asp-validation-for="Slug" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+ 
+            <!-- TinyMCE Editor -->
+            <div class="form-group">
+                <label class="font-weight-bold">Page Content</label>
+                <small class="text-muted d-block mb-1">
+                    Use the editor below to add text, images, tables, or paste from Word.
+                </small>
+                <textarea asp-for="HtmlContent" id="contentEditor"
+                          class="form-control" rows="15"
+                          placeholder="Start writing your page content here..."></textarea>
+            </div>
+ 
+            <div class="form-group">
+                <div class="custom-control custom-switch">
+                    <input asp-for="IsVisible" type="checkbox"
+                           class="custom-control-input" id="isVisible" />
+                    <label class="custom-control-label" for="isVisible">
+                        Publish immediately
+                        <small class="text-muted">
+                            (unchecked = save as draft)
+                        </small>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-2"></i>Save Page
+            </button>
+        </div>
+    </form>
+</div>
+@section Scripts {
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js"
+            referrerpolicy="origin"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        tinymce.init({
+            selector: '#contentEditor',
+            plugins: 'link lists code image table wordcount',
+            toolbar: 'undo redo | formatselect | ' +
+                     'bold italic underline | ' +
+                     'alignleft aligncenter alignright | ' +
+                     'bullist numlist | link image table | code',
+            height: 500,
+            menubar: true,
+            promotion: false,
+            branding: false,
+            image_upload_url: '/Upload/TinyMceUpload',
+            automatic_uploads: true,
+            setup: function(editor) {
+                editor.on('change', function() { tinymce.triggerSave(); });
+            }
+        });
+ 
+        document.querySelector('form').addEventListener('submit', function() {
+            tinymce.triggerSave();
+        });
+ 
+        function generateSlug(title) {
+            const slug = title
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^a-z0-9\-]/g, '')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+            document.getElementById('slugInput').value = slug;
+        }
+    </script>
+}

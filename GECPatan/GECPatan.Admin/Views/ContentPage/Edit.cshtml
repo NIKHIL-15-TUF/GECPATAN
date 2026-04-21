@@ -1,0 +1,113 @@
+﻿@model GECPatan.Admin.Models.ViewModels.ContentPageEditVM
+@{
+    ViewData["Title"] = "Edit Page";
+}
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="card-title mb-0">
+                <i class="fas fa-file-alt mr-2"></i>@Model.Title
+            </h3>
+            <div class="d-flex align-items-center" style="gap:8px;">
+                <span class="badge badge-light" style="font-size:11px;">
+                    <i class="fas fa-link mr-1"></i>@Model.GeneratedUrl
+                </span>
+                <a asp-action="Preview" asp-route-id="@Model.Id" target="_blank"
+                   class="btn btn-sm btn-light">
+                    <i class="fas fa-eye mr-1"></i>Preview
+                </a>
+            </div>
+        </div>
+    </div>
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+        <input asp-for="Id" type="hidden" />
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+            }
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="Slug" class="font-weight-bold">
+                            URL Slug
+                        </label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">/page/</span>
+                            </div>
+                            <input asp-for="Slug" class="form-control" />
+                        </div>
+                        <span asp-validation-for="Slug" class="text-danger small"></span>
+                        <small class="text-warning">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            Changing the slug changes the URL. Update any existing links.
+                        </small>
+                    </div>
+                </div>
+            </div>
+ 
+            <!-- TinyMCE Editor -->
+            <div class="form-group">
+                <label class="font-weight-bold">Page Content</label>
+                <textarea asp-for="HtmlContent" id="contentEditor"
+                          class="form-control" rows="15"></textarea>
+            </div>
+ 
+            <div class="form-group">
+                <div class="custom-control custom-switch">
+                    <input asp-for="IsVisible" type="checkbox"
+                           class="custom-control-input" id="isVisible" />
+                    <label class="custom-control-label" for="isVisible">
+                        Published
+                        <small class="text-muted">(uncheck to save as draft)</small>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+@section Scripts {
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js"
+            referrerpolicy="origin"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        tinymce.init({
+            selector: '#contentEditor',
+            plugins: 'link lists code image table wordcount',
+            toolbar: 'undo redo | formatselect | ' +
+                     'bold italic underline | ' +
+                     'alignleft aligncenter alignright | ' +
+                     'bullist numlist | link image table | code',
+            height: 550,
+            menubar: true,
+            promotion: false,
+            branding: false,
+            image_upload_url: '/Upload/TinyMceUpload',
+            automatic_uploads: true,
+            setup: function(editor) {
+                editor.on('change', function() { tinymce.triggerSave(); });
+            }
+        });
+ 
+        document.querySelector('form').addEventListener('submit', function() {
+            tinymce.triggerSave();
+        });
+    </script>
+}   
