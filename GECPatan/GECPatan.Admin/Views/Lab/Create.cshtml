@@ -1,0 +1,149 @@
+﻿@model GECPatan.Admin.Models.ViewModels.LabCreateVM
+@{
+    ViewData["Title"] = "Add Lab";
+}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title">
+                    <i class="fas fa-flask mr-2"></i>Add Lab
+                </h3>
+            </div>
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <label asp-for="LabName" class="font-weight-bold"></label>
+                                <input asp-for="LabName" class="form-control"
+                                       placeholder="e.g. Computer Lab 1, Network Lab" />
+                                <span asp-validation-for="LabName"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label asp-for="DeptId" class="font-weight-bold"></label>
+                                <select asp-for="DeptId" asp-items="Model.Departments"
+                                        class="form-control">
+                                    <option value="">-- Select --</option>
+                                </select>
+                                <span asp-validation-for="DeptId"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div class="form-group">
+                        <label class="font-weight-bold">About / Description</label>
+                        <small class="text-muted d-block mb-1">
+                            Use the editor to add lab details, equipment list etc.
+                        </small>
+                        <textarea asp-for="About" id="aboutEditor"
+                                  class="form-control" rows="10"
+                                  placeholder="Lab description..."></textarea>
+                    </div>
+ 
+                    <div class="form-group">
+                        <label class="font-weight-bold">
+                            Lab Images (Carousel)
+                        </label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input"
+                                   name="Images" multiple accept="image/*"
+                                   onchange="this.nextElementSibling.textContent=
+                                             this.files.length+' image(s) selected'" />
+                            <label class="custom-file-label">
+                                Choose images (multiple allowed)...
+                            </label>
+                        </div>
+                        <small class="text-muted">
+                            Multiple images are shown as a carousel on the frontend.
+                        </small>
+                    </div>
+ 
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="DisplayOrder"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="DisplayOrder" class="form-control"
+                                       type="number" min="0" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mt-4">
+                                <div class="custom-control custom-switch">
+                                    <input asp-for="IsVisible" type="checkbox"
+                                           class="custom-control-input" id="isVisible" />
+                                    <label class="custom-control-label" for="isVisible">
+                                        Visible on website
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save Lab
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    <i class="fas fa-check text-success mr-1"></i>
+                    Upload multiple images — they appear as a carousel.
+                </p>
+                <p class="small text-muted mb-2">
+                    <i class="fas fa-check text-success mr-1"></i>
+                    Use the RTE editor to add equipment lists, rules etc.
+                </p>
+                <p class="small text-muted mb-0">
+                    <i class="fas fa-check text-success mr-1"></i>
+                    Labs are shown on the Department page automatically.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js"
+            referrerpolicy="origin"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        tinymce.init({
+            selector: '#aboutEditor',
+            plugins: 'link lists table code',
+            toolbar: 'undo redo | formatselect | bold italic | bullist numlist | link table | code',
+            height: 350,
+            menubar: false,
+            promotion: false,
+            branding: false,
+            setup: function(editor) {
+                editor.on('change', function() { tinymce.triggerSave(); });
+            }
+        });
+        document.querySelector('form').addEventListener('submit', function() {
+            tinymce.triggerSave();
+        });
+    </script>
+}

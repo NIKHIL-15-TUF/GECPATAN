@@ -1,0 +1,148 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.TimetableListVM>
+@{
+    ViewData["Title"] = "Timetables";
+}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <form asp-action="Index" method="get"
+              class="form-inline flex-wrap" style="gap:8px;">
+            <select name="deptId" class="form-control form-control-sm"
+                    onchange="this.form.submit()">
+                <option value="">-- All Departments --</option>
+                @foreach (SelectListItem item in ViewBag.Departments)
+                {
+                    <option value="@item.Value"
+                            selected="@(item.Selected?"selected":null)">
+                        @item.Text
+                    </option>
+                }
+            </select>
+            <select name="year" class="form-control form-control-sm"
+                    onchange="this.form.submit()">
+                <option value="">-- All Years --</option>
+                @foreach (var y in ViewBag.Years as SelectList ?? new SelectList(new int[] { }))
+                {
+                    <option value="@y.Value"
+                            selected="@(y.Selected?"selected":null)">
+                        @y.Text
+                    </option>
+                }
+            </select>
+        </form>
+    </div>
+    <div class="col-md-4 text-right">
+        <a asp-action="Create"
+               asp-route-deptId="@ViewBag.SelectedDeptId"
+               class="btn btn-primary btn-sm">
+            <i class="fas fa-upload mr-2"></i>Upload Timetable
+        </a>
+    </div>
+</div>
+ 
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th>Department</th>
+                    <th width="80">Year</th>
+                    <th width="120">Semester</th>
+                    <th width="130">Uploaded</th>
+                    <th width="80">File</th>
+                    <th width="80">Latest</th>
+                    <th width="80">Status</th>
+                    <th width="130">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="fas fa-calendar fa-2x mb-2 d-block"></i>
+                            No timetables yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var tt in Model)
+                {
+                    <tr class="@(!tt.IsLatest ? "text-muted" : "")">
+                        <td>
+                            <strong>@tt.DeptName</strong>
+                        </td>
+                        <td>@tt.Year</td>
+                        <td>
+                            <span class="badge @(tt.SemesterType == 1 ? "badge-primary" : "badge-info")">
+                                @(tt.SemesterType == 1 ? "Odd" : "Even")
+                            </span>
+                            <span class="ml-1">Sem @tt.Semester</span>
+                        </td>
+                        <td>
+                            <small>
+                                @tt.UploadedDate.ToString("dd MMM yyyy")
+                            </small>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(tt.FilePath))
+                            {
+                                <a href="@tt.FilePath" target="_blank"
+                                       class="btn btn-xs btn-outline-primary">
+                                    <i class="fas fa-file mr-1"></i>View
+                                </a>
+                            }
+                        </td>
+                        <td>
+                            @if (tt.IsLatest)
+                            {
+                                <span class="badge badge-success">Latest</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Old</span>
+                            }
+                        </td>
+                        <td>
+                            @if (tt.IsVisible)
+                            {
+                                <span class="badge badge-success">Visible</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Hidden</span>
+                            }
+                        </td>
+                        <td>
+                            <form asp-action="ToggleVisible" method="post"
+                                  class="d-inline">
+                                <input type="hidden" name="id" value="@tt.Id" />
+                                <button type="submit"
+                                        class="btn btn-sm @(tt.IsVisible ? "btn-warning" : "btn-success")">
+                                    <i class="fas @(tt.IsVisible ? "fa-eye-slash" : "fa-eye")"></i>
+                                </button>
+                            </form>
+                            @if (!tt.IsLatest && User.IsInRole("SuperAdmin"))
+                            {
+                                <form asp-action="Delete" method="post"
+                                      class="d-inline">
+                                    <input type="hidden" name="id" value="@tt.Id" />
+                                    <button type="submit"
+                                            class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Delete old timetable?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+ 
+<div class="alert alert-info mt-3 mb-0">
+    <i class="fas fa-info-circle mr-2"></i>
+    <strong>Note:</strong> Uploading a new timetable for the same
+    department + semester automatically marks the previous one as "Old".
+    Latest files cannot be deleted — old files can be removed by SuperAdmin.
+</div>

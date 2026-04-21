@@ -1,0 +1,142 @@
+﻿@using GECPatan.Admin.Models.Domain
+@model GECPatan.Admin.Models.ViewModels.LabEditVM
+@{
+    ViewData["Title"] = "Edit Lab";
+    var existingImages = ViewBag.ExistingImages as List<LabImage> ?? new();
+}
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <h3 class="card-title">
+            <i class="fas fa-flask mr-2"></i>Edit Lab — @Model.LabName
+        </h3>
+    </div>
+    <form asp-action="Edit" asp-route-id="@Model.LabId"
+          method="post" enctype="multipart/form-data">
+        <input asp-for="LabId" type="hidden" />
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+            }
+            <div class="row">
+                <div class="col-md-7">
+                    <div class="form-group">
+                        <label asp-for="LabName" class="font-weight-bold"></label>
+                        <input asp-for="LabName" class="form-control" />
+                        <span asp-validation-for="LabName"
+                              class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="form-group">
+                        <label asp-for="DeptId" class="font-weight-bold"></label>
+                        <select asp-for="DeptId" asp-items="Model.Departments"
+                                class="form-control">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+ 
+            <div class="form-group">
+                <label class="font-weight-bold">About / Description</label>
+                <textarea asp-for="About" id="aboutEditor"
+                          class="form-control" rows="10"></textarea>
+            </div>
+ 
+            <!-- Existing Images -->
+            @if (existingImages.Any())
+            {
+                <label class="font-weight-bold">
+                    Current Images (@existingImages.Count)
+                </label>
+                <div class="row mb-3">
+                    @foreach (var img in existingImages)
+                    {
+                        <div class="col-md-2 col-4 mb-2 text-center">
+                            <img src="@img.ImagePath" class="img-thumbnail"
+                                 style="height:80px;object-fit:cover;width:100%;" />
+                            <form asp-action="DeleteImage" method="post" class="mt-1">
+                                <input type="hidden" name="id"
+                                       value="@img.LabImageId" />
+                                <input type="hidden" name="labId"
+                                       value="@Model.LabId" />
+                                <button type="submit"
+                                        class="btn btn-xs btn-danger btn-block"
+                                        onclick="return confirm('Remove?')">
+                                    <i class="fas fa-times mr-1"></i>Remove
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+ 
+            <div class="form-group">
+                <label class="font-weight-bold">Add More Images</label>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input"
+                           name="Images" multiple accept="image/*"
+                           onchange="this.nextElementSibling.textContent=
+                                     this.files.length+' image(s) selected'" />
+                    <label class="custom-file-label">
+                        Choose images...
+                    </label>
+                </div>
+            </div>
+ 
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="DisplayOrder"
+                               class="font-weight-bold"></label>
+                        <input asp-for="DisplayOrder" class="form-control"
+                               type="number" min="0" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mt-4">
+                        <div class="custom-control custom-switch">
+                            <input asp-for="IsVisible" type="checkbox"
+                                   class="custom-control-input" id="isVisible" />
+                            <label class="custom-control-label" for="isVisible">
+                                Visible on website
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+@section Scripts {
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js"
+            referrerpolicy="origin"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        tinymce.init({
+            selector: '#aboutEditor',
+            plugins: 'link lists table code',
+            toolbar: 'undo redo | formatselect | bold italic | bullist numlist | link table | code',
+            height: 400,
+            menubar: false,
+            promotion: false,
+            branding: false,
+            setup: function(editor) {
+                editor.on('change', function() { tinymce.triggerSave(); });
+            }
+        });
+        document.querySelector('form').addEventListener('submit', function() {
+            tinymce.triggerSave();
+        });
+    </script>
+}

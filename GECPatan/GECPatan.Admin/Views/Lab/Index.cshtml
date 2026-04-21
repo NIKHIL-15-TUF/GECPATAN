@@ -1,0 +1,128 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.LabListVM>
+@{
+    ViewData["Title"] = "Labs";
+}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form asp-action="Index" method="get" class="form-inline">
+            <label class="mr-2 font-weight-bold">Department:</label>
+            <select name="deptId" class="form-control form-control-sm mr-2"
+                    onchange="this.form.submit()">
+                <option value="">-- All --</option>
+                @foreach (SelectListItem item in ViewBag.Departments)
+                {
+                    <option value="@item.Value"
+                            selected="@(item.Selected?"selected":null)">
+                        @item.Text
+                    </option>
+                }
+            </select>
+        </form>
+    </div>
+    <div class="col-md-6 text-right">
+        <span class="badge badge-info px-3 py-2 mr-2"
+              style="font-size:13px;">@Model.Count Lab(s)</span>
+        <a asp-action="Create"
+               asp-route-deptId="@ViewBag.SelectedDeptId"
+               class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-2"></i>Add Lab
+        </a>
+    </div>
+</div>
+ 
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th width="60">Order</th>
+                    <th>Lab Name</th>
+                    <th width="180">Department</th>
+                    <th width="80">Images</th>
+                    <th width="80">Status</th>
+                    <th width="180">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="fas fa-flask fa-2x mb-2 d-block"></i>
+                            No labs yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var lab in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex flex-column" style="gap:2px;">
+                                <form asp-action="Reorder" method="post">
+                                    <input type="hidden" name="id" value="@lab.LabId" />
+                                    <input type="hidden" name="direction" value="up" />
+                                    <button type="submit"
+                                            class="btn btn-xs btn-light border px-2 py-1">
+                                        <i class="fas fa-chevron-up"
+                                           style="font-size:10px;"></i>
+                                    </button>
+                                </form>
+                                <form asp-action="Reorder" method="post">
+                                    <input type="hidden" name="id" value="@lab.LabId" />
+                                    <input type="hidden" name="direction" value="down" />
+                                    <button type="submit"
+                                            class="btn btn-xs btn-light border px-2 py-1">
+                                        <i class="fas fa-chevron-down"
+                                           style="font-size:10px;"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                        <td><strong>@lab.LabName</strong></td>
+                        <td>
+                            <span class="badge badge-light border">
+                                @lab.DeptName
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-success">
+                                @lab.ImageCount 🖼
+                            </span>
+                        </td>
+                        <td>
+                            @if (lab.IsVisible)
+                            {
+                                <span class="badge badge-success">Visible</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Hidden</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@lab.LabId"
+                                   class="btn btn-sm btn-info mb-1">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <form asp-action="ToggleVisible" method="post"
+                                  class="d-inline">
+                                <input type="hidden" name="id" value="@lab.LabId" />
+                                <button type="submit"
+                                        class="btn btn-sm @(lab.IsVisible ? "btn-warning" : "btn-success") mb-1">
+                                    <i class="fas @(lab.IsVisible ? "fa-eye-slash" : "fa-eye")"></i>
+                                </button>
+                            </form>
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@lab.LabId" />
+                                <button type="submit" class="btn btn-sm btn-danger mb-1"
+                                        onclick="return confirm('Delete lab?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
