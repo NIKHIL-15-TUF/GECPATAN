@@ -1,23 +1,16 @@
 ﻿@model GECPatan.Admin.Models.ViewModels.StudentClubCreateVM
 @{
-    bool isEdit = (Model as GECPatan.Admin.Models.ViewModels.StudentClubEditVM)?.Id > 0;
-    ViewData["Title"] = isEdit ? "Edit Club" : "Add Club";
-    string action = isEdit ? "Edit" : "Create";
-    int editId = (Model as GECPatan.Admin.Models.ViewModels.StudentClubEditVM)?.Id ?? 0;
+    ViewData["Title"] = "Add Club";
 }
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-7">
         <div class="card">
             <div class="card-header" style="background:#1a237e;color:#fff;">
                 <h3 class="card-title">
-                    <i class="fas fa-users mr-2"></i>@ViewData["Title"]
+                    <i class="fas fa-users mr-2"></i>Add Student Club
                 </h3>
             </div>
-            <form asp-action="@action" method="post">
-                @if (isEdit)
-                {
-                    <input type="hidden" name="Id" value="@editId" />
-                }
+            <form asp-action="Create" method="post">
                 <div class="card-body">
                     @if (!ViewData.ModelState.IsValid)
                     {
@@ -37,51 +30,25 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label asp-for="Icon" class="font-weight-bold">
-                                    Font Awesome Icon Class
-                                </label>
-                                <input asp-for="Icon" class="form-control"
-                                       placeholder="e.g. fas fa-code"
-                                       oninput="updateIconPreview(this.value)" />
-                                <small class="text-muted">
-                                    Preview: <i id="iconPreview" class="fas fa-users ml-1"></i>
-                                </small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
                                 <label asp-for="BlogLink" class="font-weight-bold"></label>
                                 <input asp-for="BlogLink" class="form-control"
                                        placeholder="https://..." />
                             </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label asp-for="DisplayOrder" class="font-weight-bold"></label>
                                 <input asp-for="DisplayOrder" class="form-control"
                                        type="number" min="0" />
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group mt-4">
                                 <div class="custom-control custom-switch">
                                     <input asp-for="IsVisible" type="checkbox"
                                            class="custom-control-input" id="isVisible" />
                                     <label class="custom-control-label" for="isVisible">
-                                        Visible on website
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group mt-4">
-                                <div class="custom-control custom-switch">
-                                    <input asp-for="IsDynamic" type="checkbox"
-                                           class="custom-control-input" id="isDynamic" />
-                                    <label class="custom-control-label" for="isDynamic">
-                                        Dynamic Page
+                                        Visible
                                     </label>
                                 </div>
                             </div>
@@ -99,30 +66,20 @@
             </form>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-5">
         <div class="card">
             <div class="card-header bg-light">
                 <h6 class="card-title mb-0">
-                    <i class="fas fa-info-circle mr-2 text-info"></i>Tips
+                    <i class="fas fa-info-circle mr-2 text-info"></i>Next Steps
                 </h6>
             </div>
             <div class="card-body">
-                <p class="small text-muted mb-2">
-                    <i class="fas fa-check text-success mr-1"></i>
-                    After creating, add <strong>Members</strong> and <strong>Sections</strong>
-                    from the club list.
-                </p>
-                <p class="small text-muted mb-2">
-                    <i class="fas fa-check text-success mr-1"></i>
-                    Icon: use any
-                    <a href="https://fontawesome.com/icons" target="_blank">Font Awesome</a>
-                    class e.g. <code>fas fa-code</code>
-                </p>
-                <p class="small text-muted mb-0">
-                    <i class="fas fa-check text-success mr-1"></i>
-                    Enable <strong>Dynamic Page</strong> if this club has its own
-                    dedicated page via Dynamic Sections.
-                </p>
+                <p class="small text-muted mb-2">After creating go to Edit to:</p>
+                <ul class="small text-muted pl-3 mb-0">
+                    <li>Upload club images (carousel)</li>
+                    <li>Add members</li>
+                    <li>Add custom sections</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -130,11 +87,4 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
-    <script>
-        function updateIconPreview(iconClass) {
-        const preview = document.getElementById('iconPreview');
-        preview.className = iconClass || 'fas fa-users';
-        }
-        updateIconPreview('@Model.Icon');
-    </script>
 }

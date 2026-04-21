@@ -2,11 +2,12 @@
 @model List<ClubMember>
 @{
     ViewData["Title"] = "Club Members";
-    int clubId        = ViewBag.ClubId;
-    string clubTitle  = ViewBag.ClubTitle ?? "";
+    int clubId = ViewBag.ClubId;
+    string clubTitle = ViewBag.ClubTitle ?? "";
 }
 <div class="d-flex align-items-center mb-3">
-    <a asp-action="Edit" asp-route-id="@clubId" class="btn btn-secondary btn-sm mr-3">
+    <a asp-action="Edit" asp-route-id="@clubId"
+           class="btn btn-secondary btn-sm mr-3">
         <i class="fas fa-arrow-left"></i>
     </a>
     <div>
@@ -22,12 +23,15 @@
                     <i class="fas fa-plus mr-2"></i>Add Member
                 </h6>
             </div>
-            <form asp-action="AddMember" method="post" enctype="multipart/form-data">
+            <form asp-action="AddMember" method="post">
                 <div class="card-body">
                     <input type="hidden" name="ClubId" value="@clubId" />
                     <div class="form-group">
-                        <label class="font-weight-bold">Name <span class="text-danger">*</span></label>
-                        <input name="Name" class="form-control" placeholder="Full name" required />
+                        <label class="font-weight-bold">
+                            Name <span class="text-danger">*</span>
+                        </label>
+                        <input name="Name" class="form-control"
+                               placeholder="Full name" required />
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Position</label>
@@ -36,22 +40,11 @@
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Department</label>
-                        <input name="Department" class="form-control"
-                               placeholder="Department" />
+                        <input name="Department" class="form-control" />
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Email</label>
-                        <input name="Email" class="form-control" type="email"
-                               placeholder="email@gecpatan.ac.in" />
-                    </div>
-                    <div class="form-group">
-                        <label class="font-weight-bold">Photo</label>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input"
-                                   name="MemberPhoto" accept="image/*"
-                                   onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose...'" />
-                            <label class="custom-file-label">Choose photo...</label>
-                        </div>
+                        <input name="Email" class="form-control" type="email" />
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Order</label>
@@ -84,7 +77,6 @@
                     <table class="table table-sm mb-0">
                         <thead class="thead-light">
                             <tr>
-                                <th width="50">Photo</th>
                                 <th>Name</th>
                                 <th>Position</th>
                                 <th>Dept</th>
@@ -96,29 +88,8 @@
                             {
                                 <tr>
                                     <td>
-                                        @if (!string.IsNullOrEmpty(m.ImagePath))
-                                        {
-                                            <img src="@m.ImagePath"
-                                                 class="img-thumbnail rounded-circle"
-                                                 style="width:35px;height:35px;object-fit:cover;" />
-                                        }
-                                        else
-                                        {
-                                            <div class="bg-secondary rounded-circle
-                                                        d-inline-flex align-items-center
-                                                        justify-content-center"
-                                                 style="width:35px;height:35px;">
-                                                <i class="fas fa-user text-white"
-                                                   style="font-size:12px;"></i>
-                                            </div>
-                                        }
-                                    </td>
-                                    <td>
                                         <strong>@m.Name</strong>
-                                        @if (!string.IsNullOrEmpty(m.Email))
-                                        {
-                                            <small class="text-muted d-block">@m.Email</small>
-                                        }
+                                        <small class="text-muted d-block">@m.Email</small>
                                     </td>
                                     <td>@m.Position</td>
                                     <td><small>@m.Department</small></td>

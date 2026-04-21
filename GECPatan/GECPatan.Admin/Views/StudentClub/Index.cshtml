@@ -17,9 +17,9 @@
         <table class="table table-hover mb-0">
             <thead style="background:#1a237e;color:#fff;">
                 <tr>
-                    <th width="60">Icon</th>
                     <th>Club Name</th>
-                    <th width="80">Members</th>
+                    <th width="90">Images</th>
+                    <th width="90">Members</th>
                     <th width="80">Status</th>
                     <th width="230">Actions</th>
                 </tr>
@@ -37,17 +37,12 @@
                 @foreach (var c in Model)
                 {
                     <tr>
-                        <td class="text-center">
-                            @if (!string.IsNullOrEmpty(c.Icon))
-                            {
-                                <i class="@c.Icon fa-lg text-primary"></i>
-                            }
-                            else
-                            {
-                                <i class="fas fa-users fa-lg text-muted"></i>
-                            }
-                        </td>
                         <td><strong>@c.Title</strong></td>
+                        <td>
+                            <span class="badge badge-success">
+                                @c.ImageCount 🖼
+                            </span>
+                        </td>
                         <td>
                             <span class="badge badge-secondary">@c.MemberCount</span>
                         </td>

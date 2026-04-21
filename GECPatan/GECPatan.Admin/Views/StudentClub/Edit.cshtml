@@ -1,128 +1,149 @@
-﻿@model GECPatan.Admin.Models.ViewModels.StudentClubCreateVM
+﻿@model GECPatan.Admin.Models.ViewModels.StudentClubEditVM
 @{
-    bool isEdit = (Model as GECPatan.Admin.Models.ViewModels.StudentClubEditVM)?.Id > 0;
-    ViewData["Title"] = isEdit ? "Edit Club" : "Add Club";
-    string action = isEdit ? "Edit" : "Create";
-    int editId = (Model as GECPatan.Admin.Models.ViewModels.StudentClubEditVM)?.Id ?? 0;
+    ViewData["Title"] = "Edit Club";
 }
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header" style="background:#1a237e;color:#fff;">
-                <h3 class="card-title">
-                    <i class="fas fa-users mr-2"></i>@ViewData["Title"]
-                </h3>
-            </div>
-            <form asp-action="@action" method="post">
-                @if (isEdit)
-                {
-                    <input type="hidden" name="Id" value="@editId" />
-                }
-                <div class="card-body">
-                    @if (!ViewData.ModelState.IsValid)
-                    {
-                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
-                    }
-                    <div class="form-group">
-                        <label asp-for="Title" class="font-weight-bold"></label>
-                        <input asp-for="Title" class="form-control"
-                               placeholder="e.g. Code Hives, GDG on Campus" />
-                        <span asp-validation-for="Title" class="text-danger small"></span>
-                    </div>
-                    <div class="form-group">
-                        <label class="font-weight-bold">About</label>
-                        <textarea asp-for="About" class="form-control" rows="4"
-                                  placeholder="About this club..."></textarea>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label asp-for="Icon" class="font-weight-bold">
-                                    Font Awesome Icon Class
-                                </label>
-                                <input asp-for="Icon" class="form-control"
-                                       placeholder="e.g. fas fa-code"
-                                       oninput="updateIconPreview(this.value)" />
-                                <small class="text-muted">
-                                    Preview: <i id="iconPreview" class="fas fa-users ml-1"></i>
-                                </small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label asp-for="BlogLink" class="font-weight-bold"></label>
-                                <input asp-for="BlogLink" class="form-control"
-                                       placeholder="https://..." />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label asp-for="DisplayOrder" class="font-weight-bold"></label>
-                                <input asp-for="DisplayOrder" class="form-control"
-                                       type="number" min="0" />
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group mt-4">
-                                <div class="custom-control custom-switch">
-                                    <input asp-for="IsVisible" type="checkbox"
-                                           class="custom-control-input" id="isVisible" />
-                                    <label class="custom-control-label" for="isVisible">
-                                        Visible on website
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group mt-4">
-                                <div class="custom-control custom-switch">
-                                    <input asp-for="IsDynamic" type="checkbox"
-                                           class="custom-control-input" id="isDynamic" />
-                                    <label class="custom-control-label" for="isDynamic">
-                                        Dynamic Page
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer d-flex justify-content-between">
-                    <a asp-action="Index" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left mr-2"></i>Back
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-2"></i>Save Club
-                    </button>
-                </div>
-            </form>
-        </div>
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <h3 class="card-title">
+            <i class="fas fa-users mr-2"></i>Edit Club — @Model.Title
+        </h3>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-light">
-                <h6 class="card-title mb-0">
-                    <i class="fas fa-info-circle mr-2 text-info"></i>Tips
-                </h6>
+    <form asp-action="Edit" asp-route-id="@Model.Id"
+          method="post" enctype="multipart/form-data">
+        <input asp-for="Id" type="hidden" />
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+            }
+            <div class="form-group">
+                <label asp-for="Title" class="font-weight-bold"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
             </div>
-            <div class="card-body">
-                <p class="small text-muted mb-2">
-                    <i class="fas fa-check text-success mr-1"></i>
-                    After creating, add <strong>Members</strong> and <strong>Sections</strong>
-                    from the club list.
-                </p>
-                <p class="small text-muted mb-2">
-                    <i class="fas fa-check text-success mr-1"></i>
-                    Icon: use any
-                    <a href="https://fontawesome.com/icons" target="_blank">Font Awesome</a>
-                    class e.g. <code>fas fa-code</code>
-                </p>
-                <p class="small text-muted mb-0">
-                    <i class="fas fa-check text-success mr-1"></i>
-                    Enable <strong>Dynamic Page</strong> if this club has its own
-                    dedicated page via Dynamic Sections.
-                </p>
+            <div class="form-group">
+                <label class="font-weight-bold">About</label>
+                <textarea asp-for="About" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="BlogLink" class="font-weight-bold"></label>
+                        <input asp-for="BlogLink" class="form-control"
+                               placeholder="https://..." />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label asp-for="DisplayOrder" class="font-weight-bold"></label>
+                        <input asp-for="DisplayOrder" class="form-control"
+                               type="number" min="0" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group mt-4">
+                        <div class="custom-control custom-switch">
+                            <input asp-for="IsVisible" type="checkbox"
+                                   class="custom-control-input" id="isVisible" />
+                            <label class="custom-control-label" for="isVisible">
+                                Visible
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <!-- Club Images (carousel) -->
+            <label class="font-weight-bold">
+                Club Images (Carousel)
+                <small class="text-muted ml-1">
+                    (@Model.ExistingImages.Count current)
+                </small>
+            </label>
+            <small class="text-muted d-block mb-2">
+                <i class="fas fa-info-circle mr-1"></i>
+                These images are shown as a carousel on the public website.
+            </small>
+
+            @if (Model.ExistingImages.Any())
+            {
+                <div class="row mb-3">
+                    @foreach (var img in Model.ExistingImages)
+                    {
+                        <div class="col-md-3 col-6 mb-2 text-center">
+                            <img src="@img.ImagePath" class="img-thumbnail"
+                                 style="height:80px;object-fit:cover;width:100%;" />
+                            <small class="text-muted d-block text-truncate"
+                                   style="font-size:10px;">@img.Caption</small>
+                            <form asp-action="DeleteImage" method="post" class="mt-1">
+                                <input type="hidden" name="imageId" value="@img.Id" />
+                                <input type="hidden" name="clubId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-xs btn-danger btn-block"
+                                        onclick="return confirm('Remove image?')">
+                                    <i class="fas fa-times mr-1"></i>Remove
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="form-group">
+                <label class="font-weight-bold">Add More Images</label>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" name="NewImages"
+                           multiple accept="image/*"
+                           onchange="this.nextElementSibling.textContent=this.files.length+' image(s) selected'" />
+                    <label class="custom-file-label">
+                        Choose images (multiple allowed)...
+                    </label>
+                </div>
+                <small class="text-muted">Hold Ctrl to select multiple.</small>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Quick Links -->
+<div class="card mt-3">
+    <div class="card-header bg-light">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-link mr-2"></i>Quick Links
+        </h6>
+    </div>
+    <div class="card-body p-2">
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <a asp-action="Members" asp-route-id="@Model.Id"
+                       class="btn btn-outline-secondary btn-block btn-sm">
+                    <i class="fas fa-users d-block mb-1" style="font-size:18px;"></i>
+                    Members
+                </a>
+            </div>
+            <div class="col-md-4 mb-2">
+                <a asp-controller="DynamicSection" asp-action="Index"
+                       asp-route-pageType="4" asp-route-pageId="@Model.Id"
+                       class="btn btn-outline-primary btn-block btn-sm">
+                    <i class="fas fa-layer-group d-block mb-1" style="font-size:18px;"></i>
+                    Sections
+                </a>
+            </div>
+            <div class="col-md-4 mb-2">
+                <a asp-controller="Activity" asp-action="Index"
+                       class="btn btn-outline-success btn-block btn-sm">
+                    <i class="fas fa-calendar-alt d-block mb-1" style="font-size:18px;"></i>
+                    Activities
+                </a>
             </div>
         </div>
     </div>
@@ -130,11 +151,4 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
-    <script>
-        function updateIconPreview(iconClass) {
-        const preview = document.getElementById('iconPreview');
-        preview.className = iconClass || 'fas fa-users';
-        }
-        updateIconPreview('@Model.Icon');
-    </script>
 }
