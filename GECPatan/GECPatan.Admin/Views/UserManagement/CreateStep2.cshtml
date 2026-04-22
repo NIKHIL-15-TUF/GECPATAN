@@ -1,0 +1,104 @@
+﻿@model GECPatan.Admin.Models.ViewModels.UserStep2VM
+@{
+    ViewData["Title"] = "Create User — Step 2";
+}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+ 
+        <!-- Progress -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="badge badge-primary px-3 py-2 mr-2">Step 2 of 3</div>
+            <div class="progress flex-fill" style="height:8px;">
+                <div class="progress-bar" style="width:66%"></div>
+            </div>
+        </div>
+ 
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-key mr-2"></i>Set Credentials
+                    </h3>
+                    <span class="badge badge-warning">@Model.Role</span>
+                </div>
+            </div>
+            <form asp-action="CreateStep2Post" method="post">
+                <input asp-for="Role" type="hidden" />
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+                    <div class="form-group">
+                        <label asp-for="FullName" class="font-weight-bold"></label>
+                        <input asp-for="FullName" class="form-control"
+                               placeholder="e.g. Dr. John Smith" autofocus />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Email" class="font-weight-bold"></label>
+                        <input asp-for="Email" class="form-control" type="email"
+                               placeholder="name@gecpatan.ac.in" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                        <small class="text-muted">
+                            <i class="fas fa-lock mr-1"></i>
+                            Email cannot be changed after creation.
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Password" class="font-weight-bold"></label>
+                        <div class="input-group">
+                            <input asp-for="Password" class="form-control"
+                                   type="password" id="passwordInput"
+                                   placeholder="Minimum 8 characters" />
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePassword('passwordInput',this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ConfirmPassword" class="font-weight-bold"></label>
+                        <input asp-for="ConfirmPassword" class="form-control"
+                               type="password"
+                               placeholder="Re-enter password" />
+                        <span asp-validation-for="ConfirmPassword"
+                              class="text-danger small"></span>
+                    </div>
+                    <div class="alert alert-info py-2">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <small>
+                            The user will be <strong>forced to change</strong> this password
+                            on their first login.
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Create" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        Next <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const isText = input.type === 'text';
+        input.type = isText ? 'password' : 'text';
+        btn.innerHTML = isText
+        ? '<i class="fas fa-eye"></i>'
+        : '<i class="fas fa-eye-slash"></i>';
+        }
+    </script>
+}

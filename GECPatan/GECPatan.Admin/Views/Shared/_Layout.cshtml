@@ -75,6 +75,15 @@
                                 <p>Content Pages</p>
                             </a>
                         </li>
+                        @if (User.IsInRole("SuperAdmin"))
+                        {
+                            <li class="nav-item">
+                                <a asp-controller="UserManagement" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>Users</p>
+                                </a>
+                            </li>
+                        }
                         <li class="nav-item">
                             <a asp-controller="Faculty" asp-action="Index" class="nav-link">
                                 <i class="nav-icon fas fa-users"></i>

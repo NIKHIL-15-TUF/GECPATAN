@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="Views\Account\AccessDenied.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.5">
@@ -33,10 +29,6 @@
     <Folder Include="wwwroot\uploads\documents\" />
     <Folder Include="wwwroot\uploads\news\" />
     <Folder Include="wwwroot\uploads\slider\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Views\Account\AccessDenied.cshtml" />
   </ItemGroup>
 
 </Project>

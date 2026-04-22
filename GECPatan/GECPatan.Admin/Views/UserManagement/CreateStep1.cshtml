@@ -1,0 +1,111 @@
+﻿@model GECPatan.Admin.Models.ViewModels.UserStep1VM
+@using GECPatan.Admin.Models.Domain
+@{
+    ViewData["Title"] = "Create User — Step 1";
+}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+ 
+        <!-- Progress -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="badge badge-primary px-3 py-2 mr-2">Step 1 of 3</div>
+            <div class="progress flex-fill" style="height:8px;">
+                <div class="progress-bar" style="width:33%"></div>
+            </div>
+        </div>
+ 
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-user-tag mr-2"></i>Select Role
+                </h3>
+            </div>
+            <form asp-action="CreateStep1" method="post">
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+                    <p class="text-muted mb-3">
+                        Select the role for the new user. The role determines what they
+                        can access in the admin panel.
+                    </p>
+                    <div class="row">
+                        @{
+                            var roles = new[]
+                            {
+                                new { Role = AppRoles.SuperAdmin,           Icon = "fa-crown",           Color = "danger",    Desc = "Full access to everything. Only 1 allowed." },
+                                new { Role = AppRoles.Principal,            Icon = "fa-user-tie",         Color = "primary",   Desc = "View all departments, manage principal page. Only 1 allowed." },
+                                new { Role = AppRoles.HOD,                  Icon = "fa-chalkboard-teacher",Color = "success",  Desc = "Manage their assigned department and faculty." },
+                                new { Role = AppRoles.Faculty,              Icon = "fa-user-graduate",    Color = "info",      Desc = "Edit own faculty profile and sub-sections." },
+                                new { Role = AppRoles.ContentEditor,        Icon = "fa-edit",             Color = "warning",   Desc = "Add/edit news, content pages, activities." },
+                                new { Role = AppRoles.PlacementOfficer,     Icon = "fa-briefcase",        Color = "secondary", Desc = "Manage placement cell data." },
+                                new { Role = AppRoles.GrievanceCoordinator, Icon = "fa-hands-helping",    Color = "dark",      Desc = "Manage grievance system (future)." },
+                                new { Role = AppRoles.CommitteeHead,        Icon = "fa-users-cog",        Color = "secondary", Desc = "Manage their assigned committee." }
+                            };
+                        }
+                        @foreach (var r in roles)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <label class="w-100 cursor-pointer">
+                                    <input type="radio" asp-for="Role"
+                                           value="@r.Role"
+                                           class="d-none role-radio"
+                                           onchange="selectRole(this)" />
+                                    <div class="card role-card border-2"
+                                         id="card-@r.Role"
+                                         style="cursor:pointer;transition:all 0.2s;">
+                                        <div class="card-body py-2 d-flex align-items-center">
+                                            <div class="mr-3">
+                                                <span class="badge badge-@r.Color p-2"
+                                                      style="font-size:18px;width:40px;height:40px;
+                                                             display:flex;align-items:center;
+                                                             justify-content:center;">
+                                                    <i class="fas @r.Icon"></i>
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <strong class="d-block">@r.Role</strong>
+                                                <small class="text-muted">@r.Desc</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        }
+                    </div>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        Next <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function selectRole(radio) {
+            document.querySelectorAll('.role-card').forEach(c => {
+                c.style.border = '2px solid #dee2e6';
+                c.style.background = '';
+            });
+            const card = document.getElementById('card-' + radio.value);
+            if (card) {
+                card.style.border = '2px solid #1a237e';
+                card.style.background = '#e8eaf6';
+            }
+        }
+        // Restore selection on page load
+        document.querySelectorAll('.role-radio:checked').forEach(r => selectRole(r));
+    </script>
+    <style>
+        .role-card { border: 2px solid #dee2e6; }
+        .role-card:hover { border-color: #1a237e !important; }
+    </style>
+}

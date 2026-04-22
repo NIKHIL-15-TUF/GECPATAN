@@ -1,0 +1,114 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.UserListVM>
+@{
+    ViewData["Title"] = "User Management";
+}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <span class="badge badge-info px-3 py-2" style="font-size:13px;">
+            @Model.Count User(s)
+        </span>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-user-plus mr-2"></i>Create User
+        </a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead style="background:#1a237e;color:#fff;">
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th width="130">Role</th>
+                    <th>Assignment</th>
+                    <th width="80">Status</th>
+                    <th width="80">Password</th>
+                    <th width="200">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr class="@(!u.IsActive ? "table-secondary" : "")">
+                        <td>
+                            <strong>@u.FullName</strong>
+                            <small class="text-muted d-block">
+                                Created @u.CreatedDate.ToString("dd MMM yyyy")
+                            </small>
+                        </td>
+                        <td><small>@u.Email</small></td>
+                        <td>
+                            @{
+                                var roleColor = u.Role switch {
+                                    "SuperAdmin"           => "badge-danger",
+                                    "Principal"            => "badge-primary",
+                                    "HOD"                  => "badge-success",
+                                    "Faculty"              => "badge-info",
+                                    "ContentEditor"        => "badge-warning",
+                                    "PlacementOfficer"     => "badge-secondary",
+                                    "GrievanceCoordinator" => "badge-dark",
+                                    "CommitteeHead"        => "badge-light text-dark",
+                                    _                      => "badge-secondary"
+                                };
+                            }
+                            <span class="badge @roleColor">@u.Role</span>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(u.Assignment))
+                            {
+                                <small class="text-muted">@u.Assignment</small>
+                            }
+                            else
+                            {
+                                <small class="text-muted">—</small>
+                            }
+                        </td>
+                        <td>
+                            @if (u.IsActive)
+                            {
+                                <span class="badge badge-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-danger">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            @if (u.MustChangePassword)
+                            {
+                                <span class="badge badge-warning"
+                                      title="User must change password on next login">
+                                    <i class="fas fa-key"></i> Pending
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-success">OK</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@u.Id"
+                               class="btn btn-xs btn-info mb-1">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a asp-action="ResetPassword" asp-route-id="@u.Id"
+                               class="btn btn-xs btn-warning mb-1"
+                               title="Reset Password">
+                                <i class="fas fa-key"></i>
+                            </a>
+                            <form asp-action="ToggleActive" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@u.Id" />
+                                <button type="submit"
+                                        class="btn btn-xs @(u.IsActive?"btn-secondary":"btn-success") mb-1"
+                                        title="@(u.IsActive?"Deactivate":"Activate")"
+                                        onclick="return confirm('@(u.IsActive?"Deactivate":"Activate") this user?')">
+                                    <i class="fas @(u.IsActive?"fa-user-slash":"fa-user-check")"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

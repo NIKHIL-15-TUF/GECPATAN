@@ -1,30 +1,27 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using NuGet.Protocol.Plugins;
+using System.ComponentModel.DataAnnotations;
 
 namespace GECPatan.Admin.Models.Domain
 {
-    public class ApplicationUser :IdentityUser
+    public class ApplicationUser : IdentityUser  // ← IdentityUser not IdentityUser<string>
     {
-        public string FullName { get; set; } = string.Empty;
-        // Department the user belongs to.
-        // Null for SuperAdmin, Principal, ContentEditor.
+        public string? FullName { get; set; }
+
         public int? DeptId { get; set; }
-        public Department? Department { get; set; }
+        public Department? Department { get; set; }   // ← navigation property needed by DbContext
 
-        // Linked faculty record.
-        // Only set when user role is Faculty or HOD
         public int? FacultyId { get; set; }
-        public Faculty? Faculty { get; set; }
+        public Faculty? Faculty { get; set; }         // ← navigation property needed by DbContext
 
-        // Is this account active?
+        public int? CommitteeId { get; set; }         // ← was missing
+        public int? FacilityId { get; set; }          // ← was missing
+
         public bool IsActive { get; set; } = true;
+        public bool MustChangePassword { get; set; } = true;  // ← was missing
 
-        // Profile photo path (optional).
-        public string? ProfileImagePath { get; set; }
-        
-        // Force password change on first login
-        public bool MustChangePassword { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public DateTime? LastLoginDate { get; set; }
+
+        [MaxLength(200)]
+        public string? CreatedBy { get; set; }         // ← was missing
     }
 }

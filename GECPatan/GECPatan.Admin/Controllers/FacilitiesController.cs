@@ -144,13 +144,13 @@ namespace GECPatan.Admin.Controllers
             }
 
             // Vision
-            _context.FacilityVision.RemoveRange(f.Visions);
+            _context.FacilityVisions.RemoveRange(f.Visions);
             if (!string.IsNullOrEmpty(VisionItems))
             {
                 int i = 0;
                 foreach (var line in VisionItems.Split('\n', StringSplitOptions.RemoveEmptyEntries))
                     if (!string.IsNullOrWhiteSpace(line))
-                        _context.FacilityVision.Add(new FacilityVision
+                        _context.FacilityVisions.Add(new FacilityVision
                         {
                             FacilityId = id,
                             VisionText = line.Trim(),

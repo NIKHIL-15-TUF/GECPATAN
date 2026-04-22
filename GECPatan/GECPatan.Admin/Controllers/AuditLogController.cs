@@ -37,7 +37,7 @@ namespace GECPatan.Admin.Controllers
             // Query with filters
             var query = _context.AuditLogs.AsQueryable();
 
-            if (string.IsNullOrEmpty(filter.UserName))
+            if (!string.IsNullOrEmpty(filter.UserName))
                 query = query.Where(a => a.UserName != null &&
                                     a.UserName.Contains(filter.UserName));
 

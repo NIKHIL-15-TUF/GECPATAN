@@ -1,0 +1,119 @@
+﻿@model GECPatan.Admin.Models.ViewModels.UserStep3VM
+@{
+    ViewData["Title"] = "Create User — Step 3";
+    bool needsDept      = Model.Role == "HOD";
+    bool needsCommittee = Model.Role == "CommitteeHead";
+    bool needsFaculty   = Model.Role == "Faculty";
+}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+ 
+        <!-- Progress -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="badge badge-success px-3 py-2 mr-2">Step 3 of 3</div>
+            <div class="progress flex-fill" style="height:8px;">
+                <div class="progress-bar bg-success" style="width:100%"></div>
+            </div>
+        </div>
+ 
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-link mr-2"></i>Assign to
+                    </h3>
+                    <span class="badge badge-warning">@Model.Role</span>
+                </div>
+            </div>
+            <form asp-action="CreateStep3Post" method="post">
+                <input asp-for="Role"     type="hidden" />
+                <input asp-for="FullName" type="hidden" />
+                <input asp-for="Email"    type="hidden" />
+                <input asp-for="Password" type="hidden" />
+ 
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+ 
+                    <div class="alert alert-info py-2 mb-3">
+                        <i class="fas fa-user mr-2"></i>
+                        Creating account for <strong>@Model.FullName</strong>
+                        (@Model.Email) as <strong>@Model.Role</strong>
+                    </div>
+ 
+                    @if (needsDept)
+                    {
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                Assign to Department
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="DeptId" asp-items="Model.Departments"
+                                    class="form-control">
+                                <option value="">-- Select Department --</option>
+                            </select>
+                            <span asp-validation-for="DeptId" class="text-danger small"></span>
+                            <small class="text-muted">
+                                This HOD will manage the selected department.
+                            </small>
+                        </div>
+                    }
+ 
+                    @if (needsCommittee)
+                    {
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                Assign to Committee
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="CommitteeId" asp-items="Model.Committees"
+                                    class="form-control">
+                                <option value="">-- Select Committee --</option>
+                            </select>
+                            <span asp-validation-for="CommitteeId"
+                                  class="text-danger small"></span>
+                            <small class="text-muted">
+                                This user will manage the selected committee.
+                            </small>
+                        </div>
+                    }
+ 
+                    @if (needsFaculty)
+                    {
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                Link to Faculty Profile
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="FacultyId" asp-items="Model.Faculties"
+                                    class="form-control">
+                                <option value="">-- Select Faculty Profile --</option>
+                            </select>
+                            <span asp-validation-for="FacultyId"
+                                  class="text-danger small"></span>
+                            <small class="text-muted">
+                                Links this login account to the faculty data record.
+                            </small>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="CreateStep2"
+                       asp-route-role="@Model.Role"
+                       class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-user-plus mr-2"></i>Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+}

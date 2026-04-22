@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 namespace GECPatan.Admin.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
-        //IdentityRole<string>, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -71,6 +70,8 @@ namespace GECPatan.Admin.Data
         public DbSet<DocumentCategory> DocumentCategories { get; set; }
         public DbSet<DocumentYearSection> DocumentYearSections { get; set; }
         public DbSet<DocumentFile> DocumentFiles { get; set; }
+        // Add after TenderDocuments line:
+        //public DbSet<Tender> Tenders { get; set; }
         public DbSet<TenderCategory> TenderCategories { get; set; }
         public DbSet<TenderDocument> TenderDocuments { get; set; }
         public DbSet<ImportantDocument> ImportantDocuments { get; set; }
@@ -87,7 +88,7 @@ namespace GECPatan.Admin.Data
         public DbSet<PlacementTeamMember> PlacementTeamMembers { get; set; }
         //Falities
         public DbSet<Facility> Facilities { get; set; }
-        public DbSet<FacilityVision> FacilityVision { get; set; }
+        public DbSet<FacilityVision> FacilityVisions { get; set; }
         public DbSet<FacilityMission> FacilityMissions { get; set; }
         public DbSet<FacilityMember> FacilityMembers { get; set; }
         // STUDENT & CLUBS
