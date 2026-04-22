@@ -1,0 +1,281 @@
+﻿@model GECPatan.Admin.Models.ViewModels.HomePageSettingsVM
+@{
+    ViewData["Title"] = "Home Page Settings";
+}
+<form asp-action="HomePageSettings" method="post" enctype="multipart/form-data">
+ 
+    <ul class="nav nav-tabs mb-0" id="settingsTabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#vision">
+                <i class="fas fa-eye mr-1"></i>Vision & Mission
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#principal">
+                <i class="fas fa-user-tie mr-1"></i>Principal
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#college">
+                <i class="fas fa-university mr-1"></i>College Info
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#social">
+                <i class="fas fa-share-alt mr-1"></i>Social & Contact
+            </a>
+        </li>
+    </ul>
+ 
+    <div class="tab-content card" style="border-top:none;border-radius:0 0 8px 8px;">
+        <div class="card-body">
+ 
+            <!-- TAB 1: VISION & MISSION -->
+            <div class="tab-pane fade show active" id="vision">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Vision" class="font-weight-bold">
+                                <i class="fas fa-eye mr-1 text-primary"></i>
+                                Institute Vision
+                            </label>
+                            <textarea asp-for="Vision" id="visionEditor"
+                                      class="form-control" rows="10"
+                                      placeholder="Enter institute vision statement..."></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Mission" class="font-weight-bold">
+                                <i class="fas fa-rocket mr-1 text-success"></i>
+                                Institute Mission
+                            </label>
+                            <textarea asp-for="Mission" id="missionEditor"
+                                      class="form-control" rows="10"
+                                      placeholder="Enter institute mission statement..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info py-2">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <small>
+                        These appear in the Vision & Mission section on the home page.
+                        Use the editor for rich text formatting.
+                    </small>
+                </div>
+            </div>
+ 
+            <!-- TAB 2: PRINCIPAL -->
+            <div class="tab-pane fade" id="principal">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="PrincipalName"
+                                           class="font-weight-bold"></label>
+                                    <input asp-for="PrincipalName" class="form-control"
+                                           placeholder="e.g. Dr. A.B. Patel" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="PrincipalDesignation"
+                                           class="font-weight-bold"></label>
+                                    <input asp-for="PrincipalDesignation"
+                                           class="form-control"
+                                           placeholder="e.g. Principal, GEC Patan" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="PrincipalMessage" class="font-weight-bold">
+                                Principal's Message
+                            </label>
+                            <textarea asp-for="PrincipalMessage"
+                                      id="principalMsgEditor"
+                                      class="form-control" rows="8"
+                                      placeholder="Principal's message to students..."></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        @if (!string.IsNullOrEmpty(Model.ExistingPrincipalPhoto))
+                        {
+                            <img src="@Model.ExistingPrincipalPhoto"
+                                 class="img-thumbnail rounded-circle mb-3"
+                                 style="width:150px;height:150px;object-fit:cover;" />
+                            <small class="text-muted d-block">Current photo</small>
+                        }
+                        else
+                        {
+                            <div class="bg-secondary rounded-circle d-inline-flex
+                                        align-items-center justify-content-center mb-3"
+                                 style="width:150px;height:150px;">
+                                <i class="fas fa-user fa-4x text-white"></i>
+                            </div>
+                        }
+                        <div class="custom-file mt-2">
+                            <input type="file" class="custom-file-input"
+                                   name="PrincipalPhoto" accept="image/*"
+                                   onchange="previewPhoto(this)" />
+                            <label class="custom-file-label" style="font-size:11px;">
+                                @(string.IsNullOrEmpty(Model.ExistingPrincipalPhoto)
+                                    ? "Upload Photo" : "Replace Photo")
+                            </label>
+                        </div>
+                        <img id="photoPreview" src="#"
+                             class="img-thumbnail rounded-circle mt-2 d-none"
+                             style="width:100px;height:100px;object-fit:cover;" />
+                    </div>
+                </div>
+            </div>
+ 
+            <!-- TAB 3: COLLEGE INFO -->
+            <div class="tab-pane fade" id="college">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="EstablishedYear"
+                                   class="font-weight-bold"></label>
+                            <input asp-for="EstablishedYear" class="form-control"
+                                   placeholder="e.g. 1984" />
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label asp-for="CollegeTagline"
+                                   class="font-weight-bold"></label>
+                            <input asp-for="CollegeTagline" class="form-control"
+                                   placeholder="e.g. Shaping Engineers, Building Nation" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+ 
+            <!-- TAB 4: SOCIAL & CONTACT -->
+            <div class="tab-pane fade" id="social">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="font-weight-bold mb-3">
+                            <i class="fas fa-share-alt mr-2"></i>Social Media
+                        </h6>
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fab fa-facebook text-primary mr-1"></i>Facebook
+                            </label>
+                            <input asp-for="FacebookUrl" class="form-control"
+                                   placeholder="https://facebook.com/gecpatan" />
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fab fa-twitter text-info mr-1"></i>Twitter
+                            </label>
+                            <input asp-for="TwitterUrl" class="form-control"
+                                   placeholder="https://twitter.com/gecpatan" />
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fab fa-youtube text-danger mr-1"></i>YouTube
+                            </label>
+                            <input asp-for="YouTubeUrl" class="form-control"
+                                   placeholder="https://youtube.com/" />
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fab fa-linkedin text-primary mr-1"></i>LinkedIn
+                            </label>
+                            <input asp-for="LinkedInUrl" class="form-control"
+                                   placeholder="https://linkedin.com/school/gecpatan" />
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fab fa-instagram text-danger mr-1"></i>Instagram
+                            </label>
+                            <input asp-for="InstagramUrl" class="form-control"
+                                   placeholder="https://instagram.com/gecpatan" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="font-weight-bold mb-3">
+                            <i class="fas fa-address-card mr-2"></i>Contact Info
+                        </h6>
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fas fa-phone mr-1"></i>Phone
+                            </label>
+                            <input asp-for="Phone" class="form-control"
+                                   placeholder="+91 2734 253030" />
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fas fa-envelope mr-1"></i>Email
+                            </label>
+                            <input asp-for="Email" class="form-control"
+                                   placeholder="principal@gecpatan.ac.in" />
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                <i class="fas fa-map-marker-alt mr-1"></i>Address
+                            </label>
+                            <textarea asp-for="Address" class="form-control"
+                                      rows="4"
+                                      placeholder="GEC Patan, Patan, Gujarat - 384265"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+ 
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-2"></i>Save All Settings
+            </button>
+        </div>
+    </div>
+</form>
+ 
+@section Scripts {
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js"
+            referrerpolicy="origin"></script>
+    <script>
+        tinymce.init({
+            selector: '#visionEditor, #missionEditor, #principalMsgEditor',
+            plugins: 'link lists',
+            toolbar: 'bold italic | bullist numlist | link',
+            height: 250,
+            menubar: false,
+            promotion: false,
+            branding: false,
+            setup: function(editor) {
+                editor.on('change', function() { tinymce.triggerSave(); });
+            }
+        });
+ 
+        document.querySelector('form').addEventListener('submit', function() {
+            tinymce.triggerSave();
+        });
+ 
+        function previewPhoto(input) {
+            const preview = document.getElementById('photoPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+                input.nextElementSibling.textContent = input.files[0].name;
+            }
+        }
+ 
+        // Tab memory
+        const activeTab = localStorage.getItem('settingsTab');
+        if (activeTab) $(`a[href="${activeTab}"]`).tab('show');
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+            localStorage.setItem('settingsTab', $(e.target).attr('href'));
+        });
+    </script>
+}

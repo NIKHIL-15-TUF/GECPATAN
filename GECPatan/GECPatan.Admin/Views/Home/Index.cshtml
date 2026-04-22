@@ -1,100 +1,204 @@
-﻿@{
+﻿@model GECPatan.Admin.Models.ViewModels.DashboardVM
+@{
     ViewData["Title"] = "Dashboard";
 }
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="card" style="border-left:4px solid #1a237e;">
-            <div class="card-body py-3">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-university fa-2x mr-3" style="color:#1a237e"></i>
-                    <div>
-                        <h5 class="mb-0" style="color:#1a237e">Welcome, @User.Identity?.Name</h5>
-                        <small class="text-muted">Government Engineering College, Patan — Admin Panel</small>
+ 
+<!-- Alerts -->
+@if (Model.Alerts.Any())
+{
+    foreach (var alert in Model.Alerts)
+    {
+        <div class="alert alert-warning alert-dismissible fade show py-2 mb-3">
+            <i class="fas fa-exclamation-triangle mr-2"></i>@alert
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    }
+}
+ 
+<!-- Stats Row -->
+<div class="row">
+    <div class="row">
+        @{
+            void StatCard(string label, int count, string icon,
+                          string color, string ctrl, string action)
+            {
+                var url = Url.Action(action, ctrl);
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="small-box bg-@color">
+                        <div class="inner">
+                            <h3>@count</h3>
+                            <p>@label</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas @icon"></i>
+                        </div>
+                        <a href="@url" class="small-box-footer">
+                            Manage <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+
+        @{
+            StatCard("Departments", Model.DepartmentCount, "fa-building", "primary", "Department", "Index");
+        }
+        @{
+            StatCard("Faculty", Model.FacultyCount, "fa-chalkboard-teacher", "success", "Faculty", "Index");
+        }
+        @{
+            StatCard("Committees", Model.CommitteeCount, "fa-users", "warning", "CampusCommittee", "Index");
+        }
+        @{
+            StatCard("News & Notices", Model.NewsCount, "fa-newspaper", "info", "NewsItem", "Index");
+        }
+        @{
+            StatCard("Activities", Model.ActivityCount, "fa-calendar-alt", "success", "Activity", "Index");
+        }
+        @{
+            StatCard("Achievements", Model.AchievementCount, "fa-trophy", "warning", "Achievement", "Index");
+        }
+        @{
+            StatCard("Student Clubs", Model.StudentClubCount, "fa-star", "danger", "StudentClub", "Index");
+        }
+        @{
+            StatCard("Facilities", Model.FacilityCount, "fa-building", "secondary", "Facility", "Index");
+        }
+        @{
+            StatCard("Alumni", Model.AlumniCount, "fa-user-graduate", "info", "Alumni", "Index");
+        }
+        @{
+            StatCard("Content Pages", Model.ContentPageCount, "fa-file-alt", "primary", "ContentPage", "Index");
+        }
+
+        @if (User.IsInRole("SuperAdmin"))
+        {
+            StatCard("Users", Model.UserCount, "fa-users-cog", "danger", "UserManagement", "Index");
+        }
+    </div>
+    @if (User.IsInRole("SuperAdmin"))
+    {
+        StatCard("Users", Model.UserCount, "fa-users-cog", "danger", "UserManagement", "Index");
+    }
+</div>
+ 
+<!-- Quick Actions + Recent Activity -->
+<div class="row">
+ 
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt mr-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body p-2">
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <a asp-controller="NewsItem" asp-action="Create"
+                           class="btn btn-outline-info btn-block btn-sm">
+                            <i class="fas fa-plus mr-1"></i>Add News
+                        </a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a asp-controller="Faculty" asp-action="Create"
+                           class="btn btn-outline-success btn-block btn-sm">
+                            <i class="fas fa-plus mr-1"></i>Add Faculty
+                        </a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a asp-controller="Activity" asp-action="Create"
+                           class="btn btn-outline-warning btn-block btn-sm">
+                            <i class="fas fa-plus mr-1"></i>Add Activity
+                        </a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a asp-controller="ContentPage" asp-action="Create"
+                           class="btn btn-outline-primary btn-block btn-sm">
+                            <i class="fas fa-plus mr-1"></i>New Page
+                        </a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a asp-controller="TenderCategory" asp-action="Create"
+                           class="btn btn-outline-secondary btn-block btn-sm">
+                            <i class="fas fa-plus mr-1"></i>Add Tender
+                        </a>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <a asp-controller="Home" asp-action="HomePageSettings"
+                           class="btn btn-outline-danger btn-block btn-sm">
+                            <i class="fas fa-home mr-1"></i>Home Settings
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<div class="row">
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-info">
-            <div class="inner"><h3>5</h3><p>Departments</p></div>
-            <div class="icon"><i class="fas fa-building"></i></div>
-            <a asp-controller="Department" asp-action="Index" class="small-box-footer">Manage <i class="fas fa-arrow-circle-right"></i></a>
-        </div>
-    </div>
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-success">
-            <div class="inner"><h3>-</h3><p>Faculty Members</p></div>
-            <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div>
-            <a asp-controller="Faculty" asp-action="Index" class="small-box-footer">Manage <i class="fas fa-arrow-circle-right"></i></a>
-        </div>
-    </div>
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-warning">
-            <div class="inner"><h3>-</h3><p>Committees</p></div>
-            <div class="icon"><i class="fas fa-users"></i></div>
-            <a asp-controller="CampusCommittee" asp-action="Index" class="small-box-footer">Manage <i class="fas fa-arrow-circle-right"></i></a>
-        </div>
-    </div>
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-danger">
-            <div class="inner"><h3>-</h3><p>News Items</p></div>
-            <div class="icon"><i class="fas fa-newspaper"></i></div>
-            <a asp-controller="NewsItem" asp-action="Index" class="small-box-footer">Manage <i class="fas fa-arrow-circle-right"></i></a>
-        </div>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-6">
+ 
+    <!-- Recent Activity -->
+    <div class="col-md-8">
         <div class="card">
             <div class="card-header" style="background:#1a237e;color:#fff;">
-                <h3 class="card-title"><i class="fas fa-bolt mr-2"></i>Quick Actions</h3>
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-history mr-2"></i>Recent Activity
+                </h6>
             </div>
             <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><a asp-controller="Faculty" asp-action="Create" class="text-decoration-none"><i class="fas fa-user-plus mr-2 text-success"></i>Add New Faculty</a></li>
-                    <li class="list-group-item"><a asp-controller="Department" asp-action="Create" class="text-decoration-none"><i class="fas fa-plus-circle mr-2 text-info"></i>Add Department</a></li>
-                    <li class="list-group-item"><a asp-controller="NewsItem" asp-action="Index" class="text-decoration-none"><i class="fas fa-newspaper mr-2 text-warning"></i>Post News</a></li>
-                    <li class="list-group-item"><a asp-controller="Activity" asp-action="Index" class="text-decoration-none"><i class="fas fa-calendar-plus mr-2 text-primary"></i>Add Activity</a></li>
-                    <li class="list-group-item"><a asp-controller="Achievement" asp-action="Index" class="text-decoration-none"><i class="fas fa-trophy mr-2 text-danger"></i>Add Achievement</a></li>
-                </ul>
+                @if (!Model.RecentLogs.Any())
+                {
+                    <p class="text-muted text-center py-3">
+                        No activity recorded yet.
+                    </p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            @foreach (var log in Model.RecentLogs)
+                            {
+                                <tr>
+                                    <td width="120">
+                                        <small class="text-muted">@log.TimeAgo</small>
+                                    </td>
+                                    <td width="120">
+                                        <small><strong>@log.UserName</strong></small>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var badgeColor = log.Action switch {
+                                                "Created" => "success",
+                                                "Updated" => "info",
+                                                "Deleted" => "danger",
+                                                "Login"   => "primary",
+                                                _         => "secondary"
+                                            };
+                                        }
+                                        <span class="badge badge-@badgeColor"
+                                              style="font-size:10px;">
+                                            @log.Action
+                                        </span>
+                                        <small class="ml-1">
+                                            @log.Module — @log.Record
+                                        </small>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
             </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header" style="background:#1a237e;color:#fff;">
-                <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>System Info</h3>
-            </div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span><i class="fas fa-user mr-2 text-muted"></i>Logged in as</span>
-                        <strong>@User.Identity?.Name</strong>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span><i class="fas fa-shield-alt mr-2 text-muted"></i>Role</span>
-                        <strong>
-                            @(User.IsInRole("SuperAdmin") ? "Super Admin" :
-                              User.IsInRole("Principal") ? "Principal" :
-                              User.IsInRole("HOD") ? "HOD" :
-                              User.IsInRole("Faculty") ? "Faculty" :
-                              User.IsInRole("ContentEditor") ? "Content Editor" :
-                              User.IsInRole("PlacementOfficer") ? "Placement Officer" : "Unknown")
-                        </strong>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span><i class="fas fa-clock mr-2 text-muted"></i>Server Time</span>
-                        <strong>@DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")</strong>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span><i class="fas fa-database mr-2 text-muted"></i>Database</span>
-                        <strong class="text-success">Connected</strong>
-                    </li>
-                </ul>
-            </div>
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Principal"))
+            {
+                <div class="card-footer py-1 text-right">
+                    <a asp-controller="AuditLog" asp-action="Index"
+                       class="btn btn-xs btn-link">
+                        View all logs →
+                    </a>
+                </div>
+            }
         </div>
     </div>
 </div>

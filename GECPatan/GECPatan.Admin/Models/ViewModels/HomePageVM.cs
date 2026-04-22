@@ -100,4 +100,94 @@ namespace GECPatan.Admin.Models.ViewModels
         public bool IsVisible { get; set; } = true;
         public string? ExistingLogoPath { get; set; }
     }
+    public class DashboardVM
+    {
+        // Counts
+        public int DepartmentCount { get; set; }
+        public int FacultyCount { get; set; }
+        public int CommitteeCount { get; set; }
+        public int NewsCount { get; set; }
+        public int ActivityCount { get; set; }
+        public int AchievementCount { get; set; }
+        public int StudentClubCount { get; set; }
+        public int AlumniCount { get; set; }
+        public int ContentPageCount { get; set; }
+        public int UserCount { get; set; }
+        public int FacilityCount { get; set; }
+
+        // Recent activity
+        public List<RecentActivityVM> RecentLogs { get; set; } = new();
+
+        // Quick alerts
+        public List<string> Alerts { get; set; } = new();
+    }
+
+    public class RecentActivityVM
+    {
+        public string? UserName { get; set; }
+        public string? Action { get; set; }
+        public string? Module { get; set; }
+        public string? Record { get; set; }
+        public string? TimeAgo { get; set; }
+    }
+
+    // ── HOME PAGE SETTINGS ────────────────────────────────
+    public class HomePageSettingsVM
+    {
+        // Vision & Mission
+        [Display(Name = "Institute Vision")]
+        public string? Vision { get; set; }
+
+        [Display(Name = "Institute Mission")]
+        public string? Mission { get; set; }
+
+        // Principal Message
+        [Display(Name = "Principal Name")]
+        [MaxLength(200)]
+        public string? PrincipalName { get; set; }
+
+        [Display(Name = "Principal Designation")]
+        [MaxLength(200)]
+        public string? PrincipalDesignation { get; set; }
+
+        [Display(Name = "Principal Message")]
+        public string? PrincipalMessage { get; set; }
+
+        [Display(Name = "Principal Photo")]
+        public string? ExistingPrincipalPhoto { get; set; }
+
+        // College Info
+        [Display(Name = "College Established Year")]
+        public string? EstablishedYear { get; set; }
+
+        [Display(Name = "College Tagline")]
+        [MaxLength(300)]
+        public string? CollegeTagline { get; set; }
+
+        // Social Media
+        [Display(Name = "Facebook URL")]
+        public string? FacebookUrl { get; set; }
+
+        [Display(Name = "Twitter URL")]
+        public string? TwitterUrl { get; set; }
+
+        [Display(Name = "YouTube URL")]
+        public string? YouTubeUrl { get; set; }
+
+        [Display(Name = "LinkedIn URL")]
+        public string? LinkedInUrl { get; set; }
+
+        [Display(Name = "Instagram URL")]
+        public string? InstagramUrl { get; set; }
+
+        // Contact
+        [Display(Name = "Phone")]
+        public string? Phone { get; set; }
+
+        [Display(Name = "Email")]
+        public string? Email { get; set; }
+
+        [Display(Name = "Address")]
+        public string? Address { get; set; }
+    }
 }
