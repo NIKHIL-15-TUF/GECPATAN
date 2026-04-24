@@ -54,7 +54,7 @@ namespace GECPatan.Admin.Controllers
                 query = query.Where(a => a.Timestamp <=
                     filter.DateTo.Value.AddDays(1));
 
-            filter.Logs = await query
+            filter.Logs =await _context.AuditLogs
                 .OrderByDescending(a => a.Timestamp)
                 .Take(500) // Show max 500 at a time
                 .Select(a => new AuditLogListVM
