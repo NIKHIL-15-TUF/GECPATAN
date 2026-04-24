@@ -26,13 +26,15 @@ namespace GECPatan.Admin.Controllers
             _context = context;
         }
 
-        // ── INDEX ─────────────────────────────────────────
+        // ══════════════════════════════════════════════════
+        // INDEX
+        // ══════════════════════════════════════════════════
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "User Management";
 
             var users = await _context.Users
-                .Cast<ApplicationUser>()
+                .OfType<ApplicationUser>()
                 .OrderBy(u => u.FullName)
                 .ToListAsync();
 
@@ -41,8 +43,8 @@ namespace GECPatan.Admin.Controllers
             {
                 var roles = await _userManager.GetRolesAsync(u);
                 var role = roles.FirstOrDefault() ?? "—";
-
                 string assignment = "";
+
                 if (u.DeptId.HasValue)
                 {
                     var dept = await _context.Departments.FindAsync(u.DeptId.Value);
@@ -57,6 +59,16 @@ namespace GECPatan.Admin.Controllers
                 {
                     var fac = await _context.Facilities.FindAsync(u.FacilityId.Value);
                     assignment = fac?.Title ?? "";
+                }
+                else if (u.FacultyId.HasValue)
+                {
+                    var fac = await _context.Faculties.FindAsync(u.FacultyId.Value);
+                    assignment = fac?.Name ?? "";
+                }
+                else if (u.ContentPageId.HasValue)
+                {
+                    var page = await _context.ContentPages.FindAsync(u.ContentPageId.Value);
+                    assignment = page != null ? $"Page: {page.Title}" : "";
                 }
 
                 list.Add(new UserListVM
@@ -76,13 +88,15 @@ namespace GECPatan.Admin.Controllers
         }
 
         // ══════════════════════════════════════════════════
-        // 5-STEP USER CREATION FLOW
+        // STEP 1 — SELECT ROLE
         // ══════════════════════════════════════════════════
-
-        // ── STEP 1: SELECT ROLE ───────────────────────────
         public IActionResult Create()
         {
-            ViewData["Title"] = "Create User — Step 1: Select Role";
+            ViewData["Title"] = "Create User — Step 1";
+            TempData.Remove("UserRole");
+            TempData.Remove("UserFullName");
+            TempData.Remove("UserEmail");
+            TempData.Remove("UserPassword");
             return View("CreateStep1", new UserStep1VM());
         }
 
@@ -90,19 +104,23 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult CreateStep1(UserStep1VM model)
         {
-            if (!ModelState.IsValid)
-            {
-                ViewData["Title"] = "Create User — Step 1: Select Role";
-                return View(model);
-            }
-            return RedirectToAction(nameof(CreateStep2),
-                new { role = model.Role });
+            ViewData["Title"] = "Create User — Step 1";
+            if (!ModelState.IsValid) return View(model);
+
+            TempData["UserRole"] = model.Role;
+            return RedirectToAction(nameof(CreateStep2));
         }
 
-        // ── STEP 2: CREDENTIALS ───────────────────────────
-        public IActionResult CreateStep2(string role)
+        // ══════════════════════════════════════════════════
+        // STEP 2 — CREDENTIALS
+        // ══════════════════════════════════════════════════
+        public IActionResult CreateStep2()
         {
-            ViewData["Title"] = $"Create User — Step 2: Credentials ({role})";
+            var role = TempData.Peek("UserRole")?.ToString();
+            if (string.IsNullOrEmpty(role))
+                return RedirectToAction(nameof(Create));
+
+            ViewData["Title"] = $"Create User — Step 2 ({role})";
             return View(new UserStep2VM { Role = role });
         }
 
@@ -110,74 +128,80 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateStep2Post(UserStep2VM model)
         {
-            ViewData["Title"] = $"Create User — Step 2: Credentials ({model.Role})";
+            ViewData["Title"] = $"Create User — Step 2 ({model.Role})";
+            TempData["UserRole"] = model.Role;
 
-            // Check email uniqueness
             var existing = await _userManager.FindByEmailAsync(model.Email);
             if (existing != null)
-                ModelState.AddModelError("Email",
-                    "This email is already registered.");
+                ModelState.AddModelError("Email", "This email is already registered.");
 
-            // SuperAdmin: only 1 allowed
             if (model.Role == AppRoles.SuperAdmin)
             {
                 var admins = await _userManager.GetUsersInRoleAsync(AppRoles.SuperAdmin);
                 if (admins.Count >= 1)
-                    ModelState.AddModelError("",
-                        "Only one SuperAdmin is allowed.");
+                    ModelState.AddModelError("", "Only one SuperAdmin is allowed.");
             }
 
-            // Principal: only 1 allowed
             if (model.Role == AppRoles.Principal)
             {
                 var principals = await _userManager.GetUsersInRoleAsync(AppRoles.Principal);
                 if (principals.Count >= 1)
-                    ModelState.AddModelError("",
-                        "Only one Principal account is allowed.");
+                    ModelState.AddModelError("", "Only one Principal account is allowed.");
             }
 
             if (!ModelState.IsValid) return View("CreateStep2", model);
 
-            // Roles that need assignment → go to step 3
+            // Store in TempData — safe for special chars
+            TempData["UserRole"] = model.Role;
+            TempData["UserFullName"] = model.FullName;
+            TempData["UserEmail"] = model.Email;
+            TempData["UserPassword"] = model.Password;
+
+            // These roles need Step 3 assignment
             var rolesNeedingAssignment = new[]
             {
                 AppRoles.HOD,
                 AppRoles.CommitteeHead,
-                AppRoles.Faculty
+                AppRoles.Faculty,
+                AppRoles.ContentEditor
             };
 
             if (rolesNeedingAssignment.Contains(model.Role))
-            {
-                return RedirectToAction(nameof(CreateStep3), new
-                {
-                    role = model.Role,
-                    fullName = model.FullName,
-                    email = model.Email,
-                    password = model.Password
-                });
-            }
+                return RedirectToAction(nameof(CreateStep3));
 
-            // Roles that don't need assignment → create directly
-            return await CreateUser(model.Role, model.FullName,
-                model.Email, model.Password,
-                null, null, null, null);
+            // No assignment needed — create directly
+            return await CreateUserFromTempData();
         }
 
-        // ── STEP 3: ASSIGNMENT ────────────────────────────
-        public async Task<IActionResult> CreateStep3(string role,
-            string fullName, string email, string password)
+        // ══════════════════════════════════════════════════
+        // STEP 3 — ASSIGNMENT
+        // ══════════════════════════════════════════════════
+        public async Task<IActionResult> CreateStep3()
         {
-            ViewData["Title"] = $"Create User — Step 3: Assignment ({role})";
+            var role = TempData.Peek("UserRole")?.ToString();
+            var fullName = TempData.Peek("UserFullName")?.ToString();
+            var email = TempData.Peek("UserEmail")?.ToString();
+            var password = TempData.Peek("UserPassword")?.ToString();
+
+            if (string.IsNullOrEmpty(role) ||
+                string.IsNullOrEmpty(email) ||
+                string.IsNullOrEmpty(password))
+            {
+                TempData["Error"] = "Session expired. Please start again.";
+                return RedirectToAction(nameof(Create));
+            }
+
+            ViewData["Title"] = $"Create User — Step 3 ({role})";
 
             var vm = new UserStep3VM
             {
                 Role = role,
-                FullName = fullName,
+                FullName = fullName ?? "",
                 Email = email,
                 Password = password
             };
 
-            await PopulateAssignmentDropdowns(vm);
+            await PopulateAssignmentDropdowns(vm, role);
             return View(vm);
         }
 
@@ -185,9 +209,15 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateStep3Post(UserStep3VM model)
         {
-            ViewData["Title"] = $"Create User — Step 3: Assignment ({model.Role})";
+            ViewData["Title"] = $"Create User — Step 3 ({model.Role})";
 
-            // Validate assignment based on role
+            // Keep TempData alive for validation failures
+            TempData["UserRole"] = model.Role;
+            TempData["UserFullName"] = model.FullName;
+            TempData["UserEmail"] = model.Email;
+            TempData["UserPassword"] = model.Password;
+
+            // Role-specific validation
             if (model.Role == AppRoles.HOD && !model.DeptId.HasValue)
                 ModelState.AddModelError("DeptId",
                     "Please select a department for HOD.");
@@ -200,22 +230,64 @@ namespace GECPatan.Admin.Controllers
                 ModelState.AddModelError("FacultyId",
                     "Please select a faculty profile.");
 
+            // ContentEditor — ContentPageId is optional, no validation needed
+
             if (!ModelState.IsValid)
             {
-                await PopulateAssignmentDropdowns(model);
+                await PopulateAssignmentDropdowns(model, model.Role);
                 return View(model);
             }
 
-            return await CreateUser(model.Role, model.FullName,
-                model.Email, model.Password,
-                model.DeptId, model.CommitteeId,
-                model.FacultyId, model.FacilityId);
+            return await CreateUser(
+                role: model.Role,
+                fullName: model.FullName,
+                email: model.Email,
+                password: model.Password,
+                deptId: model.DeptId,
+                committeeId: model.CommitteeId,
+                facultyId: model.FacultyId,
+                facilityId: model.FacilityId,
+                contentPageId: model.ContentPageId  // ← properly passed
+            );
         }
 
-        // ── CREATE USER HELPER ────────────────────────────
+        // ══════════════════════════════════════════════════
+        // CREATE USER — from TempData (no assignment roles)
+        // ══════════════════════════════════════════════════
+        private async Task<IActionResult> CreateUserFromTempData()
+        {
+            var role = TempData["UserRole"]?.ToString() ?? "";
+            var fullName = TempData["UserFullName"]?.ToString() ?? "";
+            var email = TempData["UserEmail"]?.ToString() ?? "";
+            var password = TempData["UserPassword"]?.ToString() ?? "";
+
+            // No assignment for these roles
+            return await CreateUser(
+                role: role,
+                fullName: fullName,
+                email: email,
+                password: password,
+                deptId: null,
+                committeeId: null,
+                facultyId: null,
+                facilityId: null,
+                contentPageId: null
+            );
+        }
+
+        // ══════════════════════════════════════════════════
+        // CREATE USER — core method (all params explicit)
+        // ══════════════════════════════════════════════════
         private async Task<IActionResult> CreateUser(
-            string role, string fullName, string email, string password,
-            int? deptId, int? committeeId, int? facultyId, int? facilityId)
+            string role,
+            string fullName,
+            string email,
+            string password,
+            int? deptId,
+            int? committeeId,
+            int? facultyId,
+            int? facilityId,
+            int? contentPageId)   // ← in signature, no more 'model' reference
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
@@ -223,13 +295,15 @@ namespace GECPatan.Admin.Controllers
             {
                 UserName = email,
                 Email = email,
+                EmailConfirmed = true,
                 FullName = fullName,
                 DeptId = deptId,
                 CommitteeId = committeeId,
                 FacultyId = facultyId,
                 FacilityId = facilityId,
+                ContentPageId = contentPageId,   // ← properly set
                 IsActive = true,
-                MustChangePassword = true,   // Force password change on first login
+                MustChangePassword = true,
                 CreatedDate = DateTime.Now,
                 CreatedBy = currentUser?.Email
             };
@@ -238,51 +312,62 @@ namespace GECPatan.Admin.Controllers
 
             if (!result.Succeeded)
             {
-                TempData["Error"] = string.Join(", ",
+                TempData["Error"] = string.Join(" | ",
                     result.Errors.Select(e => e.Description));
                 return RedirectToAction(nameof(Create));
             }
 
-            // Assign role
+            // Ensure role exists then assign
             if (!await _roleManager.RoleExistsAsync(role))
                 await _roleManager.CreateAsync(new IdentityRole(role));
 
             await _userManager.AddToRoleAsync(user, role);
 
+            // Clear TempData
+            TempData.Remove("UserRole");
+            TempData.Remove("UserFullName");
+            TempData.Remove("UserEmail");
+            TempData.Remove("UserPassword");
+
             TempData["Success"] =
-                $"User '{fullName}' created with role '{role}'. " +
+                $"✅ User '{fullName}' created with role '{role}'. " +
                 "They will be prompted to change their password on first login.";
 
             return RedirectToAction(nameof(Index));
         }
 
-        // ── EDIT ──────────────────────────────────────────
+        // ══════════════════════════════════════════════════
+        // EDIT USER
+        // ══════════════════════════════════════════════════
         public async Task<IActionResult> Edit(string id)
         {
             ViewData["Title"] = "Edit User";
-            var u = await _userManager.FindByIdAsync(id);
-            if (u == null) return NotFound();
 
-            var appUser = u as ApplicationUser;
+            var appUser = await _context.Users
+                .OfType<ApplicationUser>()
+                .FirstOrDefaultAsync(u => u.Id == id);
+
             if (appUser == null) return NotFound();
 
             var roles = await _userManager.GetRolesAsync(appUser);
+            var role = roles.FirstOrDefault();
 
             var vm = new UserEditVM
             {
                 Id = appUser.Id,
                 FullName = appUser.FullName ?? "",
                 Email = appUser.Email,
-                Role = roles.FirstOrDefault(),
+                Role = role,
                 DeptId = appUser.DeptId,
                 CommitteeId = appUser.CommitteeId,
                 FacultyId = appUser.FacultyId,
                 FacilityId = appUser.FacilityId,
+                ContentPageId = appUser.ContentPageId,
                 IsActive = appUser.IsActive,
                 MustChangePassword = appUser.MustChangePassword
             };
 
-            await PopulateEditDropdowns(vm);
+            await PopulateEditDropdowns(vm, role);
             return View(vm);
         }
 
@@ -291,9 +376,10 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Edit(string id, UserEditVM model)
         {
             ViewData["Title"] = "Edit User";
+
             if (!ModelState.IsValid)
             {
-                await PopulateEditDropdowns(model);
+                await PopulateEditDropdowns(model, model.Role);
                 return View(model);
             }
 
@@ -303,22 +389,31 @@ namespace GECPatan.Admin.Controllers
 
             if (appUser == null) return NotFound();
 
-            // Email + Dept CANNOT be changed (view only)
             appUser.FullName = model.FullName;
             appUser.DeptId = model.DeptId;
             appUser.CommitteeId = model.CommitteeId;
             appUser.FacultyId = model.FacultyId;
             appUser.FacilityId = model.FacilityId;
+            appUser.ContentPageId = model.ContentPageId;
             appUser.IsActive = model.IsActive;
             appUser.MustChangePassword = model.MustChangePassword;
 
-            await _userManager.UpdateAsync(appUser);
+            var result = await _userManager.UpdateAsync(appUser);
+
+            if (!result.Succeeded)
+            {
+                TempData["Error"] = string.Join(" | ",
+                    result.Errors.Select(e => e.Description));
+                return View(model);
+            }
 
             TempData["Success"] = $"User '{appUser.FullName}' updated.";
             return RedirectToAction(nameof(Index));
         }
 
-        // ── TOGGLE ACTIVE ─────────────────────────────────
+        // ══════════════════════════════════════════════════
+        // TOGGLE ACTIVE
+        // ══════════════════════════════════════════════════
         [HttpPost]
         public async Task<IActionResult> ToggleActive(string id)
         {
@@ -328,7 +423,6 @@ namespace GECPatan.Admin.Controllers
 
             if (appUser == null) return NotFound();
 
-            // Cannot deactivate yourself
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser?.Id == id)
             {
@@ -344,19 +438,23 @@ namespace GECPatan.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ── RESET PASSWORD ────────────────────────────────
+        // ══════════════════════════════════════════════════
+        // RESET PASSWORD
+        // ══════════════════════════════════════════════════
         public async Task<IActionResult> ResetPassword(string id)
         {
             ViewData["Title"] = "Reset Password";
-            var u = await _userManager.FindByIdAsync(id);
-            if (u == null) return NotFound();
 
-            var appUser = u as ApplicationUser;
+            var appUser = await _context.Users
+                .OfType<ApplicationUser>()
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (appUser == null) return NotFound();
 
             return View(new ResetPasswordVM
             {
                 UserId = id,
-                UserName = appUser?.FullName ?? u.Email
+                UserName = appUser.FullName ?? appUser.Email ?? ""
             });
         }
 
@@ -370,7 +468,6 @@ namespace GECPatan.Admin.Controllers
             var u = await _userManager.FindByIdAsync(model.UserId);
             if (u == null) return NotFound();
 
-            // Remove existing password and set new one
             var token = await _userManager.GeneratePasswordResetTokenAsync(u);
             var result = await _userManager.ResetPasswordAsync(u, token, model.NewPassword);
 
@@ -381,8 +478,10 @@ namespace GECPatan.Admin.Controllers
                 return View(model);
             }
 
-            // Force user to change password on next login
-            var appUser = u as ApplicationUser;
+            var appUser = await _context.Users
+                .OfType<ApplicationUser>()
+                .FirstOrDefaultAsync(x => x.Id == model.UserId);
+
             if (appUser != null)
             {
                 appUser.MustChangePassword = true;
@@ -395,109 +494,132 @@ namespace GECPatan.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ── HELPERS ───────────────────────────────────────
-        private async Task PopulateAssignmentDropdowns(UserStep3VM vm)
+        // ══════════════════════════════════════════════════
+        // HELPERS
+        // ══════════════════════════════════════════════════
+        private async Task PopulateAssignmentDropdowns(UserStep3VM vm, string role)
         {
-            // Departments — exclude already assigned to an HOD
-            var assignedDeptIds = await _context.Users
-                .OfType<ApplicationUser>()
-                .Where(u => u.DeptId != null)
-                .Select(u => u.DeptId!.Value)
-                .ToListAsync();
+            // HOD → Department (unassigned only)
+            if (role == AppRoles.HOD)
+            {
+                var assignedDeptIds = await _context.Users
+                    .OfType<ApplicationUser>()
+                    .Where(u => u.DeptId != null)
+                    .Select(u => u.DeptId!.Value)
+                    .ToListAsync();
 
-            vm.Departments = await _context.Departments
-                .Where(d => !assignedDeptIds.Contains((int)d.DeptId))
-                .OrderBy(d => d.Name)
-                .Select(d => new SelectListItem
-                {
-                    Value = d.DeptId.ToString(),
-                    Text = d.Name
-                }).ToListAsync();
+                vm.Departments = await _context.Departments
+                    .Where(d => d.IsActive && !assignedDeptIds.Contains((int)d.DeptId))
+                    .OrderBy(d => d.Name)
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.DeptId.ToString(),
+                        Text = d.Name
+                    }).ToListAsync();
+            }
 
-            // Committees — exclude already assigned
-            var assignedCommitteeIds = await _context.Users
-                .OfType<ApplicationUser>()
-                .Where(u => u.CommitteeId != null)
-                .Select(u => u.CommitteeId!.Value)
-                .ToListAsync();
+            // CommitteeHead → Committee (unassigned only)
+            if (role == AppRoles.CommitteeHead)
+            {
+                var assignedCommIds = await _context.Users
+                    .OfType<ApplicationUser>()
+                    .Where(u => u.CommitteeId != null)
+                    .Select(u => u.CommitteeId!.Value)
+                    .ToListAsync();
 
-            vm.Committees = await _context.CampusCommittees
-                .Where(c => !assignedCommitteeIds.Contains(c.Id))
-                .OrderBy(c => c.Title)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.Id.ToString(),
-                    Text = c.Title
-                }).ToListAsync();
+                vm.Committees = await _context.CampusCommittees
+                    .Where(c => !assignedCommIds.Contains(c.Id))
+                    .OrderBy(c => c.Title)
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Title
+                    }).ToListAsync();
+            }
 
-            // Faculties — exclude already linked to a user
-            var assignedFacultyIds = await _context.Users
-                .OfType<ApplicationUser>()
-                .Where(u => u.FacultyId != null)
-                .Select(u => u.FacultyId!.Value)
-                .ToListAsync();
+            // Faculty → Faculty profile (unlinked only)
+            if (role == AppRoles.Faculty)
+            {
+                var assignedFacultyIds = await _context.Users
+                    .OfType<ApplicationUser>()
+                    .Where(u => u.FacultyId != null)
+                    .Select(u => u.FacultyId!.Value)
+                    .ToListAsync();
 
-            vm.Faculties = await _context.Faculties
-                .Include(f => f.Department)
-                .Where(f => !assignedFacultyIds.Contains(f.FacultyId))
-                .OrderBy(f => f.Name)
-                .Select(f => new SelectListItem
-                {
-                    Value = f.FacultyId.ToString(),
-                    Text = f.Name + " (" +
-                        (f.Department != null ? f.Department.Name : "") + ")"
-                }).ToListAsync();
+                vm.Faculties = await _context.Faculties
+                    .Include(f => f.Department)
+                    .Where(f => f.IsActive && !assignedFacultyIds.Contains(f.FacultyId))
+                    .OrderBy(f => f.Name)
+                    .Select(f => new SelectListItem
+                    {
+                        Value = f.FacultyId.ToString(),
+                        Text = f.Name +
+                            (f.Department != null ? $" ({f.Department.Name})" : "")
+                    }).ToListAsync();
+            }
 
-            // Facilities — exclude already assigned
-            var assignedFacilityIds = await _context.Users
-                .OfType<ApplicationUser>()
-                .Where(u => u.FacilityId != null)
-                .Select(u => u.FacilityId!.Value)
-                .ToListAsync();
-
-            vm.Facilities = await _context.Facilities
-                .Where(f => !assignedFacilityIds.Contains(f.Id))
-                .OrderBy(f => f.Title)
-                .Select(f => new SelectListItem
-                {
-                    Value = f.Id.ToString(),
-                    Text = f.Title
-                }).ToListAsync();
+            // ContentEditor → Content Page (optional, all pages shown)
+            if (role == AppRoles.ContentEditor)
+            {
+                vm.ContentPages = await _context.ContentPages
+                    .OrderBy(p => p.Title)
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.Id.ToString(),
+                        Text = p.Title
+                    }).ToListAsync();
+            }
         }
-        private async Task PopulateEditDropdowns(UserEditVM vm)
+
+        private async Task PopulateEditDropdowns(UserEditVM vm, string? role)
         {
-            vm.Departments = await _context.Departments
-                .OrderBy(d => d.Name)
-                .Select(d => new SelectListItem
-                {
-                    Value = d.DeptId.ToString(),
-                    Text = d.Name
-                }).ToListAsync();
+            if (role == AppRoles.HOD)
+            {
+                vm.Departments = await _context.Departments
+                    .Where(d => d.IsActive)
+                    .OrderBy(d => d.Name)
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.DeptId.ToString(),
+                        Text = d.Name
+                    }).ToListAsync();
+            }
 
-            vm.Committees = await _context.CampusCommittees
-                .OrderBy(c => c.Title)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.Id.ToString(),
-                    Text = c.Title
-                }).ToListAsync();
+            if (role == AppRoles.CommitteeHead)
+            {
+                vm.Committees = await _context.CampusCommittees
+                    .OrderBy(c => c.Title)
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Title
+                    }).ToListAsync();
+            }
 
-            vm.Faculties = await _context.Faculties
-                .Include(f => f.Department)
-                .OrderBy(f => f.Name)
-                .Select(f => new SelectListItem
-                {
-                    Value = f.FacultyId.ToString(),
-                    Text = f.Name
-                }).ToListAsync();
+            if (role == AppRoles.Faculty)
+            {
+                vm.Faculties = await _context.Faculties
+                    .Include(f => f.Department)
+                    .Where(f => f.IsActive)
+                    .OrderBy(f => f.Name)
+                    .Select(f => new SelectListItem
+                    {
+                        Value = f.FacultyId.ToString(),
+                        Text = f.Name +
+                            (f.Department != null ? $" ({f.Department.Name})" : "")
+                    }).ToListAsync();
+            }
 
-            vm.Facilities = await _context.Facilities
-                .OrderBy(f => f.Title)
-                .Select(f => new SelectListItem
-                {
-                    Value = f.Id.ToString(),
-                    Text = f.Title
-                }).ToListAsync();
+            if (role == AppRoles.ContentEditor)
+            {
+                vm.ContentPages = await _context.ContentPages
+                    .OrderBy(p => p.Title)
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.Id.ToString(),
+                        Text = p.Title
+                    }).ToListAsync();
+            }
         }
     }
 }

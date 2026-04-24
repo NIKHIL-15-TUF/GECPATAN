@@ -13,8 +13,9 @@ namespace GECPatan.Admin.Models.Domain
         public int? FacultyId { get; set; }
         public Faculty? Faculty { get; set; }         // ← navigation property needed by DbContext
 
-        public int? CommitteeId { get; set; }         // ← was missing
-        public int? FacilityId { get; set; }          // ← was missing
+        public int? CommitteeId { get; set; }         
+        public int? FacilityId { get; set; }          
+        public int? ContentPageId{ get; set;}
 
         public bool IsActive { get; set; } = true;
         public bool MustChangePassword { get; set; } = true;  // ← was missing

@@ -64,12 +64,15 @@ namespace GECPatan.Admin.Models.ViewModels
         public int? CommitteeId { get; set; }
         public int? FacultyId { get; set; }
         public int? FacilityId { get; set; }
+        public int? ContentPageId { get; set; }
+
 
         // Dropdowns
         public List<SelectListItem> Departments { get; set; } = new();
         public List<SelectListItem> Committees { get; set; } = new();
         public List<SelectListItem> Faculties { get; set; } = new();
         public List<SelectListItem> Facilities { get; set; } = new();
+        public List<SelectListItem> ContentPages {  get; set; } = new();
     }
 
     // ── EDIT USER ─────────────────────────────────────────
@@ -90,7 +93,7 @@ namespace GECPatan.Admin.Models.ViewModels
         public int? CommitteeId { get; set; }
         public int? FacultyId { get; set; }
         public int? FacilityId { get; set; }
-
+        public int? ContentPageId { get; set; }
         public bool IsActive { get; set; }
         public bool MustChangePassword { get; set; }
 
@@ -99,6 +102,9 @@ namespace GECPatan.Admin.Models.ViewModels
         public List<SelectListItem> Committees { get; set; } = new();
         public List<SelectListItem> Faculties { get; set; } = new();
         public List<SelectListItem> Facilities { get; set; } = new();
+        public List<SelectListItem> ContentPages { get; set; } = new();
+
+
     }
 
     // ── RESET PASSWORD ────────────────────────────────────
