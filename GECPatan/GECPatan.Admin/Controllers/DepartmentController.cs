@@ -86,7 +86,8 @@ namespace GECPatan.Admin.Controllers
 
             _context.Departments.Add(dept);
             await _context.SaveChangesAsync();
-
+            // Audit log
+            await WriteAuditLog("Created", "Department", (int)dept.DeptId,dept.Name);
             TempData["Success"] = $"Department '{dept.Name}' created.";
             return RedirectToAction(nameof(Index));
         }
@@ -265,6 +266,8 @@ namespace GECPatan.Admin.Controllers
             }
 
             await _context.SaveChangesAsync();
+            // Audit log
+            await WriteAuditLog("Edited", "Department", (int)d.DeptId, d.Name);
             TempData["Success"] = $"Department '{d.Name}' updated.";
             return RedirectToAction(nameof(Index));
         }
@@ -306,6 +309,7 @@ namespace GECPatan.Admin.Controllers
             d.IsDeleted = true;
             d.IsActive = false;
             await _context.SaveChangesAsync();
+            await WriteAuditLog("Deleted", "Department", (int)d.DeptId, d.Name);
             TempData["Success"] = $"Department '{d.Name}' deleted.";
             return RedirectToAction(nameof(Index));
         }
@@ -361,6 +365,27 @@ namespace GECPatan.Admin.Controllers
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return null;
             return await _context.Users.FindAsync(userId);
+        }
+        private async Task WriteAuditLog(string action, string module, int recordId, string recordName)
+        {
+            var userName = User.Identity?.Name ?? "Unknown";
+            var role = User.Claims
+                .FirstOrDefault(c => c.Type ==
+                    System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+
+            _context.AuditLogs.Add(new AuditLog
+            {
+                UserId = User.FindFirst(
+                    System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+                UserName = userName,
+                UserRole = role,
+                Action = action,
+                Module = module,
+                RecordId = recordId,
+                RecordName = recordName,
+                Timestamp = DateTime.Now
+            });
+            await _context.SaveChangesAsync();
         }
     }
 }
