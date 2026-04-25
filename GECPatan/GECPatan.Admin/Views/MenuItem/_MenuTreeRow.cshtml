@@ -1,4 +1,4 @@
-﻿using GECPatan.Admin.Migrations;
+﻿@* using GECPatan.Admin.Migrations;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using Newtonsoft.Json.Linq;
@@ -147,7 +147,7 @@ using static System.Net.Mime.MediaTypeNames;
 </ tr >
 
 @* Recursively render children *@
-@foreach(var child in item.Children)
+@* @foreach(var child in item.Children)
 {
     @await Html.PartialAsync("_MenuTreeRow", (child, menuType))
-}
+} *@ 

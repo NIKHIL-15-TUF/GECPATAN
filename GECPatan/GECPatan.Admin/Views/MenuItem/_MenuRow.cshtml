@@ -1,0 +1,182 @@
+﻿@model GECPatan.Admin.Models.ViewModels.MenuItemTreeVM
+@{
+    var item = Model;
+    var menuType = (string)(ViewData["menuType"] ?? "Main");
+    int pad = item.Level * 28;
+ 
+    // Badge + link description
+    string badgeClass, badgeIcon, badgeLabel, linkDesc;
+    switch (item.LinkType)
+    {
+        case "dynamic":
+            badgeClass = "badge-success";
+            badgeIcon = "fa-database";
+            badgeLabel = "Dynamic";
+            linkDesc = $"{item.DynamicType}: {item.DynamicLabel}";
+            break;
+        case "internal":
+            badgeClass = "badge-primary";
+            badgeIcon = "fa-link";
+            badgeLabel = "Internal";
+            linkDesc = $"{item.ControllerName}/{item.ActionName}";
+            break;
+        case "external":
+            badgeClass = "badge-info";
+            badgeIcon = "fa-external-link-alt";
+            badgeLabel = item.ExternalLink?.StartsWith("http") == true
+                ? "URL" : "PDF";
+            linkDesc = item.ExternalLink?.Length > 40
+                ? item.ExternalLink[..40] + "…"
+                : item.ExternalLink ?? "";
+            break;
+        default:
+            badgeClass = "badge-secondary";
+            badgeIcon = "fa-ban";
+            badgeLabel = "Container";
+            linkDesc = item.Children.Count > 0
+                ? $"{item.Children.Count} child item(s)"
+                : "No link";
+            break;
+    }
+ 
+    string rowBg = !item.IsVisible
+        ? "background:#f8f9fa;color:#adb5bd;"
+        : item.Level == 0
+            ? "background:#eef0fb;"
+            : item.Level == 1 ? "" : "background:#fafafa;";
+}
+ 
+<tr style="@rowBg">
+    <td>
+        <div style="padding-left:@(pad)px;display:flex;align-items:center;gap:6px;">
+            @if (item.Level == 0)
+            {
+                <i class="fas fa-chevron-right text-primary"
+                   style="font-size:11px;"></i>
+            }
+            else if (item.Level == 1)
+            {
+                <i class="fas fa-minus text-muted"
+                   style="font-size:9px;"></i>
+            }
+            else
+            {
+                <i class="fas fa-angle-right text-muted"
+                   style="font-size:9px;"></i>
+            }
+ 
+            <strong style="font-size:@(item.Level == 0 ? "14px" : "12px");">
+                @item.MenuText
+            </strong>
+ 
+            @if (!string.IsNullOrEmpty(item.CssClass))
+            {
+                <span class="badge badge-warning"
+                      style="font-size:9px;">@item.CssClass</span>
+            }
+            @if (item.OpenInNewTab)
+            {
+                <i class="fas fa-external-link-alt text-muted"
+                   style="font-size:9px;" title="Opens in new tab"></i>
+            }
+        </div>
+    </td>
+    <td>
+        <span class="badge @badgeClass" style="font-size:9px;">
+            <i class="fas @badgeIcon mr-1"></i>@badgeLabel
+        </span>
+    </td>
+    <td>
+        <small class="text-muted" style="font-size:11px;word-break:break-all;">
+            @linkDesc
+        </small>
+    </td>
+    <td>
+        <div class="d-flex align-items-center" style="gap:3px;">
+            <small class="text-muted mr-1">@(item.Position + 1)</small>
+            @if (!item.IsFirst)
+            {
+                <form asp-action="Reorder" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@item.Id" />
+                    <input type="hidden" name="dir" value="up" />
+                    <button type="submit"
+                            class="btn btn-xs btn-light border py-0 px-1">
+                        <i class="fas fa-chevron-up"
+                           style="font-size:8px;"></i>
+                    </button>
+                </form>
+            }
+            @if (!item.IsLast)
+            {
+                <form asp-action="Reorder" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@item.Id" />
+                    <input type="hidden" name="dir" value="down" />
+                    <button type="submit"
+                            class="btn btn-xs btn-light border py-0 px-1">
+                        <i class="fas fa-chevron-down"
+                           style="font-size:8px;"></i>
+                    </button>
+                </form>
+            }
+        </div>
+    </td>
+    <td>
+        @if (item.IsVisible)
+        {
+            <span class="badge badge-success"
+                  style="font-size:9px;">Visible</span>
+        }
+        else
+        {
+            <span class="badge badge-warning"
+                  style="font-size:9px;">Hidden</span>
+        }
+    </td>
+    <td>
+        <div class="d-flex flex-wrap" style="gap:3px;">
+ 
+            @* Add Child (max 3 levels) *@
+            @if (item.Level < 2)
+            {
+                <a asp-action="Create"
+                       asp-route-parentId="@item.Id"
+                       asp-route-menuType="@menuType"
+                       class="btn btn-xs btn-success"
+                       title="Add child item">
+                    <i class="fas fa-plus"></i>
+                </a>
+            }
+ 
+            <a asp-action="Edit" asp-route-id="@item.Id"
+                   class="btn btn-xs btn-info" title="Edit">
+                <i class="fas fa-edit"></i>
+            </a>
+ 
+            <form asp-action="ToggleVisible" method="post"
+                  class="d-inline">
+                <input type="hidden" name="id" value="@item.Id" />
+                <button type="submit"
+                        class="btn btn-xs @(item.IsVisible ? "btn-warning" : "btn-success")"
+                        title="@(item.IsVisible ? "Hide" : "Show")">
+                    <i class="fas @(item.IsVisible ? "fa-eye-slash" : "fa-eye")"></i>
+                </button>
+            </form>
+ 
+            <form asp-action="Delete" method="post" class="d-inline">
+                <input type="hidden" name="id" value="@item.Id" />
+                <button type="submit"
+                        class="btn btn-xs btn-danger"
+                        title="Delete"
+                        onclick="return confirm('Delete &quot;@item.MenuText&quot;?@(item.Children.Any() ? " It has child items!" : "")')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
+    </td>
+</tr>
+ 
+@* Recursively render children *@
+@foreach (var child in item.Children)
+{
+    @await Html.PartialAsync("_MenuRow", child, ViewData)
+}

@@ -69,6 +69,7 @@ using (var scope = app.Services.CreateScope())
         var config = services.GetRequiredService<IConfiguration>();
         await context.Database.MigrateAsync();
         await RoleSeeder.SeedAsync(userManager, roleManager, config);
+        await MenuItemSeeder.SeedAsync(context); 
     }
     catch (Exception ex)
     {

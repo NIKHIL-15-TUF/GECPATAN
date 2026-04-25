@@ -2,8 +2,8 @@
 @{
     bool isEdit = Model.Id > 0;
     ViewData["Title"] = isEdit ? "Edit Menu Item" : "Add Menu Item";
-    string action = isEdit ? "Edit" : "Create";
 }
+ 
 <div class="row">
     <div class="col-md-8">
         <div class="card">
@@ -12,7 +12,7 @@
                     <i class="fas fa-bars mr-2"></i>@ViewData["Title"]
                 </h3>
             </div>
-            <form asp-action="@action" method="post">
+            <form asp-action="@(isEdit?"Edit":"Create")" method="post">
                 @if (isEdit)
                 {
                     <input asp-for="Id" type="hidden" />
@@ -20,140 +20,143 @@
                 <div class="card-body">
                     @if (!ViewData.ModelState.IsValid)
                     {
-                        <div class="alert alert-danger">
+                        <div class="alert alert-danger py-2">
                             @Html.ValidationSummary(false)
                         </div>
                     }
  
-                    <!-- Basic Info -->
+                    <!-- Row 1: Text + Section -->
                     <div class="row">
                         <div class="col-md-8">
                             <div class="form-group">
-                                <label asp-for="MenuText"
-                                       class="font-weight-bold"></label>
+                                <label asp-for="MenuText" class="font-weight-bold"></label>
                                 <input asp-for="MenuText" class="form-control"
-                                       placeholder="e.g. About Us, Departments" />
+                                       placeholder="e.g. About Us" autofocus />
                                 <span asp-validation-for="MenuText"
                                       class="text-danger small"></span>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label asp-for="MenuType"
-                                       class="font-weight-bold"></label>
+                                <label asp-for="MenuType" class="font-weight-bold"></label>
                                 <select asp-for="MenuType" class="form-control">
-                                    <option value="Main">Main Navigation</option>
+                                    <option value="Main">Main Navbar</option>
                                     <option value="Footer">Footer</option>
                                 </select>
                             </div>
                         </div>
                     </div>
  
+                    <!-- Row 2: Parent + Position -->
                     <div class="row">
                         <div class="col-md-8">
                             <div class="form-group">
-                                <label asp-for="ParentId"
-                                       class="font-weight-bold"></label>
+                                <label asp-for="ParentId" class="font-weight-bold"></label>
                                 <select asp-for="ParentId"
-                                        asp-items="Model.ParentItems"
+                                        asp-items="Model.ParentOptions"
                                         class="form-control">
                                 </select>
                                 <small class="text-muted">
-                                    Select parent or leave as
-                                    Top Level for navbar items.
+                                    Choose parent or leave as Top Level
                                 </small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label asp-for="Position"
-                                       class="font-weight-bold"></label>
+                                <label asp-for="Position" class="font-weight-bold"></label>
                                 <input asp-for="Position" class="form-control"
                                        type="number" min="0" />
-                                <small class="text-muted">
-                                    Lower = appears first.
-                                </small>
+                                <small class="text-muted">0 = first</small>
                             </div>
                         </div>
                     </div>
  
                     <hr />
  
-                    <!-- Link Type Selector -->
-                    <div class="form-group">
-                        <label class="font-weight-bold">
-                            Link Type
-                            <span class="text-danger">*</span>
-                        </label>
-                        <div class="row mt-1">
-                            @{
-                                var types = new[]
-                                {
-                                    new { Val="none",     Icon="fa-ban",
-                                          Label="No Link",
-                                          Desc="Parent container only (has children)" },
-                                    new { Val="internal", Icon="fa-link",
-                                          Label="Internal Page",
-                                          Desc="Links to a page in this website" },
-                                    new { Val="dynamic",  Icon="fa-database",
-                                          Label="Dynamic Page",
-                                          Desc="Links to a Department/Committee/Facility etc." },
-                                    new { Val="external", Icon="fa-external-link-alt",
-                                          Label="External / PDF",
-                                          Desc="External URL or PDF file path" }
-                                };
-                            }
-                            @foreach (var t in types)
+                    <!-- LINK TYPE CARDS -->
+                    <label class="font-weight-bold d-block mb-2">
+                        Link Type <span class="text-danger">*</span>
+                    </label>
+                    <div class="row mb-3">
+                        @{
+                            var ltypes = new[]
                             {
-                                <div class="col-md-6 col-6 mb-2">
-                                    <label class="w-100" style="cursor:pointer;">
-                                        <input type="radio" asp-for="LinkType"
-                                               value="@t.Val"
-                                               class="d-none link-type-radio"
-                                               onchange="onLinkTypeChange('@t.Val')" />
-                                        <div class="card link-type-card"
-                                             id="card-@t.Val"
-                                             style="cursor:pointer;border:2px solid #dee2e6;
-                                            transition:all 0.15s;">
-                                            <div class="card-body py-2 px-3">
-                                                <i class="fas @t.Icon mr-2
-                                                text-primary"></i>
-                                                <strong style="font-size:12px;">
-                                                    @t.Label
-                                                </strong>
-                                                <small class="text-muted d-block"
-                                                       style="font-size:10px;">
-                                                    @t.Desc
-                                                </small>
+                        ("none",     "fa-ban",              "No Link / Container",
+                         "Use for items that only group children together.",
+                         "secondary"),
+                        ("internal", "fa-link",             "Internal Page",
+                         "Link to any page on this website by Controller + Action.",
+                         "primary"),
+                        ("dynamic",  "fa-database",         "Dynamic Page",
+                         "Auto-links to a Department, Committee, Facility etc.",
+                         "success"),
+                        ("external", "fa-external-link-alt","External / PDF",
+                         "Link to an external website URL or PDF file path.",
+                         "info")
+                    };
+                        }
+                        @foreach (var (val, icon, label, desc, color) in ltypes)
+                        {
+                            <div class="col-md-6 mb-2">
+                                <label class="w-100 mb-0" style="cursor:pointer;">
+                                    <input type="radio" asp-for="LinkType"
+                                           value="@val"
+                                           class="d-none lt-radio"
+                                           onchange="switchLinkType('@val')" />
+                                    <div class="card lt-card h-100"
+                                         id="lt-@val"
+                                         style="cursor:pointer;border:2px solid #dee2e6;">
+                                        <div class="card-body py-2 px-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas @icon text-@color mr-2"
+                                                   style="font-size:18px;width:24px;"></i>
+                                                <div>
+                                                    <strong style="font-size:12px;">
+                                                        @label
+                                                    </strong>
+                                                    <small class="text-muted d-block"
+                                                           style="font-size:10px;line-height:1.3;">
+                                                        @desc
+                                                    </small>
+                                                </div>
                                             </div>
                                         </div>
-                                    </label>
-                                </div>
-                            }
-                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        }
                     </div>
  
-                    <!-- INTERNAL LINK SECTION -->
-                    <div id="section-internal" class="link-section d-none">
-                        <div class="card bg-light mb-3">
+                    <!-- INTERNAL FIELDS -->
+                    <div id="fields-internal" class="lt-fields d-none">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white py-1">
+                                <small class="font-weight-bold">
+                                    <i class="fas fa-link mr-1"></i>Internal Page Route
+                                </small>
+                            </div>
                             <div class="card-body py-2">
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-6">
                                         <div class="form-group mb-0">
-                                            <label asp-for="ControllerName"
-                                                   class="font-weight-bold small"></label>
+                                            <label class="small font-weight-bold">
+                                                Controller Name
+                                            </label>
                                             <input asp-for="ControllerName"
-                                                   class="form-control"
-                                                   placeholder="e.g. Department, Institute" />
+                                                   class="form-control form-control-sm"
+                                                   placeholder="e.g. PlacementCell" />
+                                            <span asp-validation-for="ControllerName"
+                                                  class="text-danger small"></span>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-6">
                                         <div class="form-group mb-0">
-                                            <label asp-for="ActionName"
-                                                   class="font-weight-bold small"></label>
+                                            <label class="small font-weight-bold">
+                                                Action Name
+                                            </label>
                                             <input asp-for="ActionName"
-                                                   class="form-control"
-                                                   placeholder="e.g. Index, AboutUs" />
+                                                   class="form-control form-control-sm"
+                                                   placeholder="e.g. Index" />
                                         </div>
                                     </div>
                                 </div>
@@ -161,63 +164,93 @@
                         </div>
                     </div>
  
-                    <!-- DYNAMIC LINK SECTION -->
-                    <div id="section-dynamic" class="link-section d-none">
-                        <div class="card bg-light mb-3">
+                    <!-- DYNAMIC FIELDS -->
+                    <div id="fields-dynamic" class="lt-fields d-none">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white py-1">
+                                <small class="font-weight-bold">
+                                    <i class="fas fa-database mr-1"></i>
+                                    Dynamic Page Link
+                                </small>
+                            </div>
                             <div class="card-body py-2">
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label class="font-weight-bold small">
-                                                Dynamic Type
+                                            <label class="small font-weight-bold">
+                                                Type <span class="text-danger">*</span>
                                             </label>
                                             <select asp-for="DynamicType"
-                                                    class="form-control"
-                                                    id="dynamicTypeSelect"
-                                                    onchange="loadDynamicIds(this.value)">
+                                                    class="form-control form-control-sm"
+                                                    id="dynTypeSelect"
+                                                    onchange="onDynTypeChange(this.value)">
                                                 <option value="">
                                                     -- Select Type --
                                                 </option>
-                                                <option value="Department">Department</option>
-                                                <option value="Committee">Committee</option>
-                                                <option value="Facility">Facility</option>
-                                                <option value="Club">Student Club</option>
-                                                <option value="ContentPage">Content Page</option>
-                                                <option value="Document">Document Category</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold small">
-                                                Select Item
-                                            </label>
-                                            <select id="dynamicIdSelect"
-                                                    name="DynamicId"
-                                                    class="form-control">
-                                                <option value="">
-                                                    -- Select Dynamic Type first --
+                                                <option value="Department">
+                                                    Department
+                                                </option>
+                                                <option value="Committee">
+                                                    Committee / Cell
+                                                </option>
+                                                <option value="Facility">
+                                                    Facility
+                                                </option>
+                                                <option value="Club">
+                                                    Student Club
+                                                </option>
+                                                <option value="Document">
+                                                    Document Category
+                                                </option>
+                                                <option value="ContentPage">
+                                                    Content Page
                                                 </option>
                                             </select>
+                                            <span asp-validation-for="DynamicType"
+                                                  class="text-danger small"></span>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label class="font-weight-bold small">
-                                                Controller / Action
+                                            <label class="small font-weight-bold">
+                                                Select Item <span class="text-danger">*</span>
+                                            </label>
+                                            <select id="dynIdSelect"
+                                                    name="DynamicId"
+                                                    class="form-control form-control-sm">
+                                                <option value="">
+                                                    -- Select type first --
+                                                </option>
+                                                @foreach (var opt in Model.DynamicIdOptions)
+                                                {
+                                                    <option value="@opt.Value"
+                                                            selected="@(opt.Value == Model.DynamicId?.ToString())">
+                                                        @opt.Text
+                                                    </option>
+                                                }
+                                            </select>
+                                            <span asp-validation-for="DynamicId"
+                                                  class="text-danger small"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="small font-weight-bold">
+                                                Route
+                                                <small class="text-muted">(auto-fills)</small>
                                             </label>
                                             <div class="input-group input-group-sm">
                                                 <input asp-for="ControllerName"
+                                                       id="dynCtrl"
                                                        class="form-control"
-                                                       id="dynController"
                                                        placeholder="Controller" />
                                                 <input asp-for="ActionName"
-                                                       class="form-control"
                                                        id="dynAction"
+                                                       class="form-control"
                                                        placeholder="Action" />
                                             </div>
                                             <small class="text-muted">
-                                                Auto-fills on type select.
+                                                Can override if needed.
                                             </small>
                                         </div>
                                     </div>
@@ -226,36 +259,40 @@
                         </div>
                     </div>
  
-                    <!-- EXTERNAL LINK SECTION -->
-                    <div id="section-external" class="link-section d-none">
-                        <div class="card bg-light mb-3">
+                    <!-- EXTERNAL FIELDS -->
+                    <div id="fields-external" class="lt-fields d-none">
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white py-1">
+                                <small class="font-weight-bold">
+                                    <i class="fas fa-external-link-alt mr-1"></i>
+                                    External URL or PDF Path
+                                </small>
+                            </div>
                             <div class="card-body py-2">
                                 <div class="form-group mb-0">
-                                    <label asp-for="Link"
-                                           class="font-weight-bold small"></label>
-                                    <input asp-for="Link" class="form-control"
-                                           placeholder="https://... or /DataFiles/..." />
+                                    <input asp-for="ExternalLink"
+                                           class="form-control"
+                                           placeholder="https://example.com  or  /DataFiles/Documents/file.pdf" />
+                                    <span asp-validation-for="ExternalLink"
+                                          class="text-danger small"></span>
                                     <small class="text-muted">
-                                        For PDF files use path like
-                                        /DataFiles/Documents/file.pdf
+                                        For PDFs stored in the project use path like
+                                        <code>/DataFiles/Documents/file.pdf</code>
                                     </small>
                                 </div>
                             </div>
                         </div>
                     </div>
  
-                    <hr />
- 
-                    <!-- Options -->
+                    <!-- Options row -->
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label asp-for="CssClass"
-                                       class="font-weight-bold"></label>
+                                <label asp-for="CssClass" class="font-weight-bold"></label>
                                 <input asp-for="CssClass" class="form-control"
                                        placeholder="e.g. MenuOrange" />
                                 <small class="text-muted">
-                                    Optional CSS class for styling.
+                                    Optional. Adds CSS class to &lt;li&gt; element.
                                 </small>
                             </div>
                         </div>
@@ -267,7 +304,7 @@
                                            id="isVisible" />
                                     <label class="custom-control-label"
                                            for="isVisible">
-                                        Visible in menu
+                                        Show in menu
                                     </label>
                                 </div>
                             </div>
@@ -294,61 +331,56 @@
                         <i class="fas fa-arrow-left mr-2"></i>Back
                     </a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-2"></i>Save
+                        <i class="fas fa-save mr-2"></i>
+                        @(isEdit ? "Save Changes" : "Add Item")
                     </button>
                 </div>
             </form>
         </div>
     </div>
  
-    <!-- Help Panel -->
+    <!-- Guide panel -->
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-light">
                 <h6 class="card-title mb-0">
-                    <i class="fas fa-question-circle mr-2 text-info"></i>
-                    Link Type Guide
+                    <i class="fas fa-info-circle mr-2 text-primary"></i>
+                    Quick Guide
                 </h6>
             </div>
             <div class="card-body p-0">
                 <div class="p-2 border-bottom">
-                    <strong class="small d-block">
-                        <i class="fas fa-ban text-muted mr-1"></i>No Link
-                    </strong>
-                    <small class="text-muted">
-                        Use for parent items that only contain children.
-                        e.g. "Departments", "Institute"
-                    </small>
+                    <strong class="small">🚫 No Link / Container</strong>
+                    <p class="small text-muted mb-0">
+                        For items like "Departments" or "Institute" that
+                        don't open a page themselves but contain sub-items.
+                    </p>
                 </div>
                 <div class="p-2 border-bottom">
-                    <strong class="small d-block">
-                        <i class="fas fa-link text-primary mr-1"></i>Internal Page
-                    </strong>
-                    <small class="text-muted">
-                        Links to a specific page on this website.
-                        Enter Controller + Action name.
-                        e.g. Controller: PlacementCell, Action: Index
-                    </small>
+                    <strong class="small">🔗 Internal Page</strong>
+                    <p class="small text-muted mb-0">
+                        Enter the <strong>Controller</strong> and
+                        <strong>Action</strong> of the page.<br />
+                        e.g. Controller: <code>PlacementCell</code>
+                        Action: <code>Index</code>
+                    </p>
                 </div>
                 <div class="p-2 border-bottom">
-                    <strong class="small d-block">
-                        <i class="fas fa-database text-success mr-1"></i>Dynamic Page
-                    </strong>
-                    <small class="text-muted">
-                        Select from Departments, Committees, Facilities etc.
-                        Controller/Action auto-fills.
-                        DynamicId is set automatically.
-                    </small>
+                    <strong class="small">🗄️ Dynamic Page</strong>
+                    <p class="small text-muted mb-0">
+                        Select a Department, Committee, Facility etc.
+                        from the dropdown. Controller &amp; Action
+                        fill automatically.
+                    </p>
                 </div>
                 <div class="p-2">
-                    <strong class="small d-block">
-                        <i class="fas fa-external-link-alt text-info mr-1"></i>External / PDF
-                    </strong>
-                    <small class="text-muted">
-                        External website URL or PDF file path.
-                        e.g. https://gtu.ac.in or
-                        /DataFiles/Documents/file.pdf
-                    </small>
+                    <strong class="small">🌐 External / PDF</strong>
+                    <p class="small text-muted mb-0">
+                        Full URL like <code>https://gtu.ac.in</code>
+                        or PDF path like
+                        <code>/DataFiles/Documents/file.pdf</code>.
+                        Enable "Open in new tab" for external links.
+                    </p>
                 </div>
             </div>
         </div>
@@ -360,85 +392,88 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
     <script>
         // Default controller/action per dynamic type
-        const defaultRoutes = {
+        const dynRoutes = {
         'Department':  { ctrl: 'Department',      action: 'DepartmentDetails' },
-        'Committee':   { ctrl: 'CampusCommittee', action: 'CommitteePage' },
-        'Facility':    { ctrl: 'Facility',         action: 'FacilityPage' },
-        'Club':        { ctrl: 'StudentCorner',    action: 'ClubPage' },
-        'ContentPage': { ctrl: 'Page',             action: 'View' },
-        'Document':    { ctrl: 'Documents',        action: 'Index' }
+        'Committee':   { ctrl: 'CampusCommittee', action: 'CommitteePage'     },
+        'Facility':    { ctrl: 'Facility',         action: 'FacilityPage'      },
+        'Club':        { ctrl: 'StudentCorner',    action: 'ClubPage'          },
+        'Document':    { ctrl: 'Documents',        action: 'Index'             },
+        'ContentPage': { ctrl: 'Page',             action: 'View'              }
         };
  
-        function onLinkTypeChange(type) {
-        // Hide all sections
-        document.querySelectorAll('.link-section')
-        .forEach(s => s.classList.add('d-none'));
+        function switchLinkType(type) {
+        // Hide all field sections
+        document.querySelectorAll('.lt-fields')
+        .forEach(f => f.classList.add('d-none'));
  
-        // Deselect all cards
-        document.querySelectorAll('.link-type-card')
+        // Reset all card borders
+        document.querySelectorAll('.lt-card')
         .forEach(c => {
         c.style.border = '2px solid #dee2e6';
         c.style.background = '';
         });
  
-        // Highlight selected
-        const card = document.getElementById('card-' + type);
+        // Highlight selected card
+        const card = document.getElementById('lt-' + type);
         if (card) {
         card.style.border = '2px solid #1a237e';
-        card.style.background = '#e8eaf6';
+        card.style.background = '#eef0fb';
         }
  
-        // Show relevant section
-        if (type !== 'none') {
-        const section = document.getElementById('section-' + type);
-        if (section) section.classList.remove('d-none');
-        }
+        // Show relevant fields
+        const sec = document.getElementById('fields-' + type);
+        if (sec) sec.classList.remove('d-none');
         }
  
-        async function loadDynamicIds(type) {
-        const select = document.getElementById('dynamicIdSelect');
-        select.innerHTML = '<option>Loading...</option>';
+        async function onDynTypeChange(type) {
+        const sel   = document.getElementById('dynIdSelect');
+        const ctrl  = document.getElementById('dynCtrl');
+        const act   = document.getElementById('dynAction');
  
-        // Auto-fill controller/action
-        const route = defaultRoutes[type];
+        sel.innerHTML = '<option>Loading…</option>';
+        sel.disabled  = true;
+ 
+        // Auto-fill route
+        const route = dynRoutes[type];
         if (route) {
-        document.getElementById('dynController').value = route.ctrl;
-        document.getElementById('dynAction').value     = route.action;
+        ctrl.value = route.ctrl;
+        act.value  = route.action;
         }
  
         try {
-        const res  = await fetch(`/MenuItem/GetDynamicIds?type=${type}`);
+        const res  = await fetch(
+        `/MenuItem/GetDynamicOptions?type=${type}`);
         const data = await res.json();
-        select.innerHTML = '<option value="">-- Select --</option>';
+ 
+        sel.innerHTML = '<option value="">-- Select --</option>';
         data.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item.id;
-        opt.textContent = item.text;
-        // Pre-select if editing
-        if (item.id == @(Model.DynamicId?.ToString() ?? "null"))
-        opt.selected = true;
-        select.appendChild(opt);
+        const opt      = document.createElement('option');
+        opt.value      = item.id;
+        opt.textContent= item.text;
+        sel.appendChild(opt);
         });
+        sel.disabled = false;
         } catch(e) {
-        select.innerHTML = '<option>Error loading</option>';
+        sel.innerHTML = '<option>Error loading items</option>';
+        sel.disabled  = false;
         }
         }
  
-        // Init on page load
+        // ── Init ────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', function() {
-        const currentType = '@Model.LinkType';
-        onLinkTypeChange(currentType);
+        const current = '@Model.LinkType';
+        switchLinkType(current);
  
-        // If editing with dynamic type, load the IDs
+        // If editing dynamic — restore the select
         const dynType = '@Model.DynamicType';
-        if (dynType && currentType === 'dynamic') {
-        loadDynamicIds(dynType);
-        }
- 
-        // Restore selected radio
-        document.querySelectorAll('.link-type-radio').forEach(r => {
-        if (r.checked) onLinkTypeChange(r.value);
+        if (dynType && current === 'dynamic') {
+        document.getElementById('dynCtrl').value   = '@Model.ControllerName';
+        document.getElementById('dynAction').value = '@Model.ActionName';
+        onDynTypeChange(dynType).then(() => {
+        const sel = document.getElementById('dynIdSelect');
+        sel.value = '@Model.DynamicId';
         });
+        }
         });
     </script>
 }

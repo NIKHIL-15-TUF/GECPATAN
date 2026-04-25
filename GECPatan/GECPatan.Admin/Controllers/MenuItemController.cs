@@ -14,25 +14,51 @@ namespace GECPatan.Admin.Controllers
         private readonly ApplicationDbContext _context;
 
         public MenuItemController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+            => _context = context;
 
-        // ── INDEX — Tree View ─────────────────────────────
+        // ── INDEX ─────────────────────────────────────────
         public async Task<IActionResult> Index(string menuType = "Main")
         {
             ViewData["Title"] = menuType == "Footer"
                 ? "Footer Menu" : "Navigation Menu";
             ViewBag.MenuType = menuType;
-            ViewBag.IsFooter = menuType == "Footer";
 
-            var allItems = await _context.MenuItems
-                .Where(m => m.MenuType == menuType)
+            var all = await _context.MenuItems
+                .Where(m => m.MenuType == menuType && !m.IsDeleted)
                 .OrderBy(m => m.Position)
                 .ToListAsync();
 
-            // Build tree
-            var tree = BuildTree(allItems, null);
+            // Resolve dynamic labels
+            var deptMap = await _context.Departments
+                .ToDictionaryAsync(d => d.DeptId, d => d.Name);
+            var commMap = await _context.CampusCommittees
+                .ToDictionaryAsync(c => c.Id, c => c.Title);
+            var facMap = await _context.Facilities
+                .ToDictionaryAsync(f => f.Id, f => f.Title);
+            var clubMap = await _context.StudentClubs
+                .ToDictionaryAsync(c => c.Id, c => c.Title);
+            var docMap = await _context.DocumentCategories
+                .ToDictionaryAsync(d => d.Id, d => d.Title);
+            var pageMap = await _context.ContentPages
+                .ToDictionaryAsync(p => p.Id, p => p.Title);
+
+            string ResolveLabel(MenuItem m)
+            {
+                if (!m.DynamicId.HasValue) return "";
+                int id = m.DynamicId.Value;
+                return m.DynamicType switch
+                {
+                    "Department" => deptMap.GetValueOrDefault(id) ?? $"#{id}",
+                    "Committee" => commMap.GetValueOrDefault(id) ?? $"#{id}",
+                    "Facility" => facMap.GetValueOrDefault(id) ?? $"#{id}",
+                    "Club" => clubMap.GetValueOrDefault(id) ?? $"#{id}",
+                    "Document" => docMap.GetValueOrDefault(id) ?? $"#{id}",
+                    "ContentPage" => pageMap.GetValueOrDefault(id) ?? $"#{id}",
+                    _ => $"#{id}"
+                };
+            }
+
+            var tree = BuildTree(all, null, 0, ResolveLabel);
             return View(tree);
         }
 
@@ -46,8 +72,8 @@ namespace GECPatan.Admin.Controllers
                 ParentId = parentId,
                 MenuType = menuType
             };
-            await PopulateDropdowns(vm, menuType);
-            return View(vm);
+            await LoadParentOptions(vm, menuType);
+            return View("Form", vm);
         }
 
         // ── CREATE POST ───────────────────────────────────
@@ -56,25 +82,26 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Create(MenuItemFormVM model)
         {
             ViewData["Title"] = "Add Menu Item";
+            await ValidateForm(model);
             if (!ModelState.IsValid)
             {
-                await PopulateDropdowns(model, model.MenuType);
-                return View(model);
+                await LoadParentOptions(model, model.MenuType);
+                await LoadDynamicOptions(model);
+                return View("Form", model);
             }
 
-            // Get max position for same parent
             int maxPos = await _context.MenuItems
-                .Where(m => m.ParentId == model.ParentId &&
-                            m.MenuType == model.MenuType)
+                .Where(m => m.ParentId == model.ParentId
+                         && m.MenuType == model.MenuType
+                         && !m.IsDeleted)
                 .Select(m => (int?)m.Position).MaxAsync() ?? -1;
 
-            var item = MapFormToEntity(model);
+            var item = BuildEntity(model);
             item.Position = maxPos + 1;
-
             _context.MenuItems.Add(item);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Menu item '{item.MenuText}' added.";
+            TempData["Success"] = $"'{item.MenuText}' added.";
             return RedirectToAction(nameof(Index),
                 new { menuType = model.MenuType });
         }
@@ -86,9 +113,10 @@ namespace GECPatan.Admin.Controllers
             var item = await _context.MenuItems.FindAsync(id);
             if (item == null) return NotFound();
 
-            var vm = MapEntityToForm(item);
-            await PopulateDropdowns(vm, item.MenuType);
-            return View(vm);
+            var vm = EntityToForm(item);
+            await LoadParentOptions(vm, item.MenuType);
+            await LoadDynamicOptions(vm);
+            return View("Form", vm);
         }
 
         // ── EDIT POST ─────────────────────────────────────
@@ -97,25 +125,24 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Edit(int id, MenuItemFormVM model)
         {
             ViewData["Title"] = "Edit Menu Item";
+            await ValidateForm(model);
+
+            // Circular check
+            if (model.ParentId == id)
+                ModelState.AddModelError("ParentId",
+                    "An item cannot be its own parent.");
+
             if (!ModelState.IsValid)
             {
-                await PopulateDropdowns(model, model.MenuType);
-                return View(model);
+                await LoadParentOptions(model, model.MenuType);
+                await LoadDynamicOptions(model);
+                return View("Form", model);
             }
 
             var item = await _context.MenuItems.FindAsync(id);
             if (item == null) return NotFound();
 
-            // Prevent circular parent (item cannot be its own parent)
-            if (model.ParentId == id)
-            {
-                ModelState.AddModelError("ParentId",
-                    "An item cannot be its own parent.");
-                await PopulateDropdowns(model, model.MenuType);
-                return View(model);
-            }
-
-            UpdateEntityFromForm(item, model);
+            UpdateEntity(item, model);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"'{item.MenuText}' updated.";
@@ -131,6 +158,8 @@ namespace GECPatan.Admin.Controllers
             if (item == null) return NotFound();
             item.IsVisible = !item.IsVisible;
             await _context.SaveChangesAsync();
+            TempData["Success"] = $"'{item.MenuText}' "
+                + (item.IsVisible ? "shown" : "hidden") + ".";
             return RedirectToAction(nameof(Index),
                 new { menuType = item.MenuType });
         }
@@ -141,51 +170,49 @@ namespace GECPatan.Admin.Controllers
         {
             var item = await _context.MenuItems.FindAsync(id);
             if (item == null) return NotFound();
+            string mType = item.MenuType;
 
-            // Check for children
-            var hasChildren = await _context.MenuItems
-                .AnyAsync(m => m.ParentId == id);
+            bool hasChildren = await _context.MenuItems
+                .AnyAsync(m => m.ParentId == id && !m.IsDeleted);
 
             if (hasChildren)
             {
                 TempData["Error"] =
-                    "Cannot delete — this item has child items. " +
-                    "Delete or move children first.";
+                    $"Cannot delete '{item.MenuText}' — "
+                    + "it has child items. Remove children first.";
                 return RedirectToAction(nameof(Index),
-                    new { menuType = item.MenuType });
+                    new { menuType = mType });
             }
 
-            string menuType = item.MenuType;
             item.IsDeleted = true;
             await _context.SaveChangesAsync();
-
             TempData["Success"] = $"'{item.MenuText}' deleted.";
             return RedirectToAction(nameof(Index),
-                new { menuType });
+                new { menuType = mType });
         }
 
         // ── REORDER ───────────────────────────────────────
         [HttpPost]
-        public async Task<IActionResult> Reorder(int id, string direction)
+        public async Task<IActionResult> Reorder(int id, string dir)
         {
             var item = await _context.MenuItems.FindAsync(id);
             if (item == null) return NotFound();
 
             var siblings = await _context.MenuItems
-                .Where(m => m.ParentId == item.ParentId &&
-                            m.MenuType == item.MenuType &&
-                            !m.IsDeleted)
+                .Where(m => m.ParentId == item.ParentId
+                         && m.MenuType == item.MenuType
+                         && !m.IsDeleted)
                 .OrderBy(m => m.Position)
                 .ToListAsync();
 
             int idx = siblings.FindIndex(m => m.Id == id);
 
-            if (direction == "up" && idx > 0)
+            if (dir == "up" && idx > 0)
             {
                 siblings[idx].Position--;
                 siblings[idx - 1].Position++;
             }
-            else if (direction == "down" && idx < siblings.Count - 1)
+            else if (dir == "down" && idx < siblings.Count - 1)
             {
                 siblings[idx].Position++;
                 siblings[idx + 1].Position--;
@@ -196,10 +223,9 @@ namespace GECPatan.Admin.Controllers
                 new { menuType = item.MenuType });
         }
 
-        // ── GET DYNAMIC IDs (AJAX) ────────────────────────
-        // Returns IDs for selected dynamic type
+        // ── GET DYNAMIC OPTIONS (AJAX) ────────────────────
         [HttpGet]
-        public async Task<IActionResult> GetDynamicIds(string type)
+        public async Task<IActionResult> GetDynamicOptions(string type)
         {
             var items = type switch
             {
@@ -226,247 +252,265 @@ namespace GECPatan.Admin.Controllers
                     .Select(c => new { id = c.Id, text = c.Title })
                     .ToListAsync<object>(),
 
-                "ContentPage" => await _context.ContentPages
-                    .Where(p => p.IsVisible)
-                    .OrderBy(p => p.Title)
-                    .Select(p => new { id = p.Id, text = p.Title })
-                    .ToListAsync<object>(),
-
                 "Document" => await _context.DocumentCategories
                     .Where(d => d.IsVisible)
                     .OrderBy(d => d.Title)
                     .Select(d => new { id = d.Id, text = d.Title })
                     .ToListAsync<object>(),
 
+                "ContentPage" => await _context.ContentPages
+                    .Where(p => p.IsVisible)
+                    .OrderBy(p => p.Title)
+                    .Select(p => new { id = p.Id, text = p.Title })
+                    .ToListAsync<object>(),
+
                 _ => new List<object>()
             };
-
             return Json(items);
         }
 
         // ══════════════════════════════════════════════════
-        // TREE BUILDER
+        // PRIVATE HELPERS
         // ══════════════════════════════════════════════════
         private static List<MenuItemTreeVM> BuildTree(
-            List<MenuItem> allItems, int? parentId, int level = 0)
+            List<MenuItem> all, int? parentId, int level,
+            Func<MenuItem, string> resolveLabel)
         {
-            return allItems
+            var siblings = all
                 .Where(m => m.ParentId == parentId)
                 .OrderBy(m => m.Position)
-                .Select(m => new MenuItemTreeVM
-                {
-                    Id = m.Id,
-                    MenuText = m.MenuText,
-                    ParentId = m.ParentId,
-                    ControllerName = m.ControllerName,
-                    ActionName = m.ActionName,
-                    DynamicId = m.DynamicId,
-                    DynamicType = m.DynamicType,
-                    Link = m.Link,
-                    CssClass = m.CssClass,
-                    MenuType = m.MenuType,
-                    Position = m.Position,
-                    IsVisible = m.IsVisible,
-                    OpenInNewTab = m.OpenInNewTab,
-                    Level = level,
-                    Children = BuildTree(allItems, m.Id, level + 1)
-                }).ToList();
+                .ToList();
+
+            return siblings.Select((m, idx) => new MenuItemTreeVM
+            {
+                Id = m.Id,
+                MenuText = m.MenuText,
+                ParentId = m.ParentId,
+                LinkType = m.LinkType,
+                ControllerName = m.ControllerName,
+                ActionName = m.ActionName,
+                DynamicId = m.DynamicId,
+                DynamicType = m.DynamicType,
+                DynamicLabel = resolveLabel(m),
+                ExternalLink = m.ExternalLink,
+                CssClass = m.CssClass,
+                MenuType = m.MenuType,
+                Position = m.Position,
+                IsVisible = m.IsVisible,
+                OpenInNewTab = m.OpenInNewTab,
+                Level = level,
+                IsFirst = idx == 0,
+                IsLast = idx == siblings.Count - 1,
+                Children = BuildTree(all, m.Id, level + 1, resolveLabel)
+            }).ToList();
         }
 
-        // ══════════════════════════════════════════════════
-        // HELPERS
-        // ══════════════════════════════════════════════════
-        private async Task PopulateDropdowns(
+        private async Task LoadParentOptions(
             MenuItemFormVM vm, string menuType)
         {
-            // Parent items — only Level 1 and Level 2 can be parents
-            // (max 3 levels deep)
-            var allItems = await _context.MenuItems
-                .Where(m => m.MenuType == menuType && !m.IsDeleted)
+            var all = await _context.MenuItems
+                .Where(m => m.MenuType == menuType
+                         && !m.IsDeleted
+                         && m.Id != vm.Id)
                 .OrderBy(m => m.Position)
                 .ToListAsync();
 
-            // Build flat list with indentation
-            var parentOptions = new List<SelectListItem>
+            var opts = new List<SelectListItem>
             {
-                new SelectListItem { Value = "", Text = "— Top Level (No Parent) —" }
+                new() { Value = "", Text = "— Top Level (no parent) —" }
             };
 
-            foreach (var top in allItems.Where(m => m.ParentId == null)
-                .OrderBy(m => m.Position))
+            // Level 1 items
+            foreach (var top in all.Where(m => m.ParentId == null))
             {
-                parentOptions.Add(new SelectListItem
+                opts.Add(new SelectListItem
                 {
                     Value = top.Id.ToString(),
                     Text = top.MenuText
                 });
-
-                // Level 2 items can also be parents (for 3-level menus)
-                foreach (var child in allItems
-                    .Where(m => m.ParentId == top.Id)
-                    .OrderBy(m => m.Position))
+                // Level 2 items (can also be parents for 3rd level)
+                foreach (var sub in all.Where(m => m.ParentId == top.Id))
                 {
-                    parentOptions.Add(new SelectListItem
+                    opts.Add(new SelectListItem
                     {
-                        Value = child.Id.ToString(),
-                        Text = $"    └─ {child.MenuText}"
+                        Value = sub.Id.ToString(),
+                        Text = $"  └─ {sub.MenuText}"
                     });
                 }
             }
 
-            vm.ParentItems = parentOptions;
-
-            // Dynamic dropdowns
-            vm.DepartmentItems = await _context.Departments
-                .Where(d => d.IsActive)
-                .OrderBy(d => d.Name)
-                .Select(d => new SelectListItem
-                {
-                    Value = d.DeptId.ToString(),
-                    Text = d.Name
-                }).ToListAsync();
-
-            vm.CommitteeItems = await _context.CampusCommittees
-                .OrderBy(c => c.Title)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.Id.ToString(),
-                    Text = c.Title
-                }).ToListAsync();
-
-            vm.FacilityItems = await _context.Facilities
-                .Where(f => f.IsActive)
-                .OrderBy(f => f.Title)
-                .Select(f => new SelectListItem
-                {
-                    Value = f.Id.ToString(),
-                    Text = f.Title
-                }).ToListAsync();
-
-            vm.ClubItems = await _context.StudentClubs
-                .Where(c => c.IsVisible)
-                .OrderBy(c => c.Title)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.Id.ToString(),
-                    Text = c.Title
-                }).ToListAsync();
-
-            vm.ContentPageItems = await _context.ContentPages
-                .Where(p => p.IsVisible)
-                .OrderBy(p => p.Title)
-                .Select(p => new SelectListItem
-                {
-                    Value = p.Id.ToString(),
-                    Text = p.Title
-                }).ToListAsync();
-
-            vm.DocumentCatItems = await _context.DocumentCategories
-                .Where(d => d.IsVisible)
-                .OrderBy(d => d.Title)
-                .Select(d => new SelectListItem
-                {
-                    Value = d.Id.ToString(),
-                    Text = d.Title
-                }).ToListAsync();
+            vm.ParentOptions = opts;
         }
 
-        private static MenuItem MapFormToEntity(MenuItemFormVM vm)
+        private async Task LoadDynamicOptions(MenuItemFormVM vm)
         {
-            var item = new MenuItem
+            if (string.IsNullOrEmpty(vm.DynamicType) ||
+                vm.LinkType != "dynamic")
             {
-                MenuText = vm.MenuText,
-                ParentId = vm.ParentId,
-                MenuType = vm.MenuType,
-                IsVisible = vm.IsVisible,
-                Position = vm.Position,
-                CssClass = vm.CssClass,
-                OpenInNewTab = vm.OpenInNewTab
-            };
-            ApplyLinkType(item, vm);
-            return item;
-        }
-
-        private static void UpdateEntityFromForm(
-            MenuItem item, MenuItemFormVM vm)
-        {
-            item.MenuText = vm.MenuText;
-            item.ParentId = vm.ParentId;
-            item.MenuType = vm.MenuType;
-            item.IsVisible = vm.IsVisible;
-            item.Position = vm.Position;
-            item.CssClass = vm.CssClass;
-            item.OpenInNewTab = vm.OpenInNewTab;
-            ApplyLinkType(item, vm);
-        }
-
-        private static void ApplyLinkType(MenuItem item, MenuItemFormVM vm)
-        {
-            switch (vm.LinkType)
-            {
-                case "internal":
-                    item.ControllerName = vm.ControllerName;
-                    item.ActionName = vm.ActionName;
-                    item.DynamicId = null;
-                    item.DynamicType = null;
-                    item.Link = null;
-                    break;
-
-                case "dynamic":
-                    item.ControllerName = vm.ControllerName;
-                    item.ActionName = vm.ActionName;
-                    item.DynamicType = vm.DynamicType;
-                    item.DynamicId = vm.DynamicId;
-                    item.Link = null;
-                    break;
-
-                case "external":
-                    item.Link = vm.Link;
-                    item.ControllerName = null;
-                    item.ActionName = null;
-                    item.DynamicId = null;
-                    item.DynamicType = null;
-                    break;
-
-                case "none":
-                default:
-                    item.ControllerName = null;
-                    item.ActionName = null;
-                    item.DynamicId = null;
-                    item.DynamicType = null;
-                    item.Link = null;
-                    break;
+                vm.DynamicIdOptions = new();
+                return;
             }
+            vm.DynamicIdOptions = await GetDynamicList(vm.DynamicType);
         }
 
-        private static MenuItemFormVM MapEntityToForm(MenuItem item)
+        private async Task<List<SelectListItem>> GetDynamicList(string type)
         {
-            // Detect link type
-            string linkType = "none";
-            if (!string.IsNullOrEmpty(item.Link))
-                linkType = "external";
-            else if (item.DynamicId.HasValue)
-                linkType = "dynamic";
-            else if (!string.IsNullOrEmpty(item.ControllerName))
-                linkType = "internal";
-
-            return new MenuItemFormVM
+            return type switch
             {
-                Id = item.Id,
-                MenuText = item.MenuText,
-                ParentId = item.ParentId,
-                LinkType = linkType,
-                ControllerName = item.ControllerName,
-                ActionName = item.ActionName,
-                DynamicType = item.DynamicType,
-                DynamicId = item.DynamicId,
-                Link = item.Link,
-                CssClass = item.CssClass,
-                MenuType = item.MenuType,
-                Position = item.Position,
-                IsVisible = item.IsVisible,
-                OpenInNewTab = item.OpenInNewTab
+                "Department" => await _context.Departments
+                    .Where(d => d.IsActive).OrderBy(d => d.Name)
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.DeptId.ToString(),
+                        Text = d.Name
+                    }).ToListAsync(),
+
+                "Committee" => await _context.CampusCommittees
+                    .OrderBy(c => c.Title)
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Title
+                    }).ToListAsync(),
+
+                "Facility" => await _context.Facilities
+                    .Where(f => f.IsActive).OrderBy(f => f.Title)
+                    .Select(f => new SelectListItem
+                    {
+                        Value = f.Id.ToString(),
+                        Text = f.Title
+                    }).ToListAsync(),
+
+                "Club" => await _context.StudentClubs
+                    .Where(c => c.IsVisible).OrderBy(c => c.Title)
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Title
+                    }).ToListAsync(),
+
+                "Document" => await _context.DocumentCategories
+                    .Where(d => d.IsVisible).OrderBy(d => d.Title)
+                    .Select(d => new SelectListItem
+                    {
+                        Value = d.Id.ToString(),
+                        Text = d.Title
+                    }).ToListAsync(),
+
+                "ContentPage" => await _context.ContentPages
+                    .Where(p => p.IsVisible).OrderBy(p => p.Title)
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.Id.ToString(),
+                        Text = p.Title
+                    }).ToListAsync(),
+
+                _ => new List<SelectListItem>()
             };
         }
+
+        private Task ValidateForm(MenuItemFormVM m)
+        {
+            if (m.LinkType == "internal" &&
+                string.IsNullOrWhiteSpace(m.ControllerName))
+                ModelState.AddModelError("ControllerName",
+                    "Controller name is required for Internal links.");
+
+            if (m.LinkType == "dynamic")
+            {
+                if (string.IsNullOrWhiteSpace(m.DynamicType))
+                    ModelState.AddModelError("DynamicType",
+                        "Please select a dynamic type.");
+                if (!m.DynamicId.HasValue)
+                    ModelState.AddModelError("DynamicId",
+                        "Please select an item.");
+            }
+
+            if (m.LinkType == "external" &&
+                string.IsNullOrWhiteSpace(m.ExternalLink))
+                ModelState.AddModelError("ExternalLink",
+                    "URL or PDF path is required for External links.");
+
+            return Task.CompletedTask;
+        }
+
+        private static string DefaultController(string? type) => type switch
+        {
+            "Department" => "Department",
+            "Committee" => "CampusCommittee",
+            "Facility" => "Facility",
+            "Club" => "StudentCorner",
+            "Document" => "Documents",
+            "ContentPage" => "Page",
+            _ => ""
+        };
+
+        private static string DefaultAction(string? type) => type switch
+        {
+            "Department" => "DepartmentDetails",
+            "Committee" => "CommitteePage",
+            "Facility" => "FacilityPage",
+            "Club" => "ClubPage",
+            "Document" => "Index",
+            "ContentPage" => "View",
+            _ => ""
+        };
+
+        private static MenuItem BuildEntity(MenuItemFormVM m) =>
+            new()
+            {
+                MenuText = m.MenuText,
+                ParentId = m.ParentId == 0 ? null : m.ParentId,
+                LinkType = m.LinkType,
+                ControllerName = m.LinkType is "internal" or "dynamic"
+                    ? m.ControllerName : null,
+                ActionName = m.LinkType is "internal" or "dynamic"
+                    ? m.ActionName : null,
+                DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null,
+                DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null,
+                ExternalLink = m.LinkType == "external" ? m.ExternalLink : null,
+                CssClass = m.CssClass,
+                MenuType = m.MenuType,
+                Position = m.Position,
+                IsVisible = m.IsVisible,
+                OpenInNewTab = m.OpenInNewTab
+            };
+
+        private static void UpdateEntity(MenuItem e, MenuItemFormVM m)
+        {
+            e.MenuText = m.MenuText;
+            e.ParentId = m.ParentId == 0 ? null : m.ParentId;
+            e.LinkType = m.LinkType;
+            e.ControllerName = m.LinkType is "internal" or "dynamic"
+                ? m.ControllerName : null;
+            e.ActionName = m.LinkType is "internal" or "dynamic"
+                ? m.ActionName : null;
+            e.DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null;
+            e.DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null;
+            e.ExternalLink = m.LinkType == "external" ? m.ExternalLink : null;
+            e.CssClass = m.CssClass;
+            e.MenuType = m.MenuType;
+            e.Position = m.Position;
+            e.IsVisible = m.IsVisible;
+            e.OpenInNewTab = m.OpenInNewTab;
+        }
+
+        private static MenuItemFormVM EntityToForm(MenuItem m) => new()
+        {
+            Id = m.Id,
+            MenuText = m.MenuText,
+            ParentId = m.ParentId,
+            LinkType = m.LinkType,
+            ControllerName = m.ControllerName,
+            ActionName = m.ActionName,
+            DynamicType = m.DynamicType,
+            DynamicId = m.DynamicId,
+            ExternalLink = m.ExternalLink,
+            CssClass = m.CssClass,
+            MenuType = m.MenuType,
+            Position = m.Position,
+            IsVisible = m.IsVisible,
+            OpenInNewTab = m.OpenInNewTab
+        };
     }
 }

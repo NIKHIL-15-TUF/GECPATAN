@@ -6,223 +6,307 @@ namespace GECPatan.Admin.Data
 {
     public static class MenuItemSeeder
     {
-        public static async Task SeedAsync(ApplicationDbContext context)
+        public static async Task SeedAsync(ApplicationDbContext db)
         {
-            // Skip if already seeded
-            if (await context.MenuItems.AnyAsync()) return;
+            if (await db.MenuItems.AnyAsync()) return;
 
-            var items = new List<MenuItem>
-            {
-                // ── LEVEL 1 ──────────────────────────────
-                new() { Id=1,  MenuText="Home",
-                    ControllerName="Home", ActionName="Index",
-                    MenuType="Main", Position=1, IsVisible=true },
+            // Helper
+            MenuItem M(string text, int? parentId, string linkType,
+                string? ctrl = null, string? action = null,
+                int? dynId = null, string? dynType = null,
+                string? link = null, int pos = 0,
+                bool visible = true, bool newTab = false,
+                string menuType = "Main", string? css = null)
+                => new()
+                {
+                    MenuText = text,
+                    ParentId = parentId,
+                    LinkType = linkType,
+                    ControllerName = ctrl,
+                    ActionName = action,
+                    DynamicId = dynId,
+                    DynamicType = dynType,
+                    ExternalLink = link,
+                    Position = pos,
+                    IsVisible = visible,
+                    OpenInNewTab = newTab,
+                    MenuType = menuType,
+                    CssClass = css
+                };
 
-                new() { Id=2,  MenuText="Institute",
-                    MenuType="Main", Position=2, IsVisible=true },
+            // ═══════════════════════════════════════════════
+            // LEVEL 1 — TOP NAVBAR
+            // ═══════════════════════════════════════════════
+            var home = M("Home", null, "internal", "Home", "Index", pos: 0);
+            var inst = M("Institute", null, "none", pos: 1);
+            var acad = M("Academics", null, "none", pos: 2);
+            var depts = M("Departments", null, "none", pos: 3);
+            var rnd = M("R&D", null, "none", pos: 4);
+            var stcorn = M("Student Corner", null, "none", pos: 5);
+            var place = M("Placement", null, "internal", "PlacementCell", "Index", pos: 6);
+            var admin = M("Administration", null, "none", pos: 7);
+            var dl = M("Downloads", null, "dynamic", "Documents", "TableView",
+                           dynId: 100, dynType: "Document", pos: 8);
+            var nba = M("NBA Data", null, "dynamic", "Documents", "TableView",
+                           pos: 9, css: "MenuOrange");
 
-                new() { Id=3,  MenuText="Academics",
-                    MenuType="Main", Position=3, IsVisible=true },
+            db.MenuItems.AddRange(
+                home, inst, acad, depts, rnd, stcorn, place, admin, dl, nba);
+            await db.SaveChangesAsync();
 
-                new() { Id=4,  MenuText="Departments",
-                    MenuType="Main", Position=4, IsVisible=true },
+            // ═══════════════════════════════════════════════
+            // INSTITUTE CHILDREN
+            // ═══════════════════════════════════════════════
+            db.MenuItems.AddRange(
+                M("About Us", inst.Id, "internal", "Institute", "AboutUs", pos: 0),
+                M("Governance", inst.Id, "external", link: "/ImpDocs/GEC_Organizational_Chart.pdf",
+                  newTab: true, pos: 1),
+                M("Mandatory Disclosure", inst.Id, "dynamic", "Documents", "Index",
+                  dynId: 30, dynType: "Document", pos: 2),
+                M("MoUs", inst.Id, "dynamic", "Documents", "TableView",
+                  dynId: 50, dynType: "Document", pos: 3),
+                M("Newsletter", inst.Id, "internal", "Institute", "NewsLetter", pos: 4),
+                M("RTI", inst.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 6, dynType: "Committee", pos: 5),
+                M("Information Booklet", inst.Id, "external",
+                  link: "/ImpDocs/Brochure_GECP.pdf", newTab: true, pos: 6)
+            );
 
-                new() { Id=6,  MenuText="R&D",
-                    MenuType="Main", Position=5, IsVisible=true },
+            // Facilities (sub-menu under Institute)
+            var facSub = M("Facilities", inst.Id, "none", pos: 7);
+            db.MenuItems.Add(facSub);
+            await db.SaveChangesAsync();
 
-                new() { Id=7,  MenuText="Student Corner",
-                    MenuType="Main", Position=6, IsVisible=true },
+            db.MenuItems.AddRange(
+                M("Library", facSub.Id, "internal", "Facilities", "Library", pos: 0),
+                M("Hostel", facSub.Id, "internal", "Facilities", "Hostel", pos: 1),
+                M("Medical Facility", facSub.Id, "internal", "Facilities", "MedicalFacility", pos: 2),
+                M("Transportation", facSub.Id, "internal", "Facilities", "MedicalFacility", pos: 3),
+                M("Central Facilities", facSub.Id, "internal", "Facilities", "CentralFacilities", pos: 4),
+                M("Center of Excellence", facSub.Id, "internal", "Facilities", "CenterOfExcellence", pos: 5)
+            );
 
-                new() { Id=8,  MenuText="Placement",
-                    ControllerName="PlacementCell", ActionName="Index",
-                    MenuType="Main", Position=7, IsVisible=true },
+            await db.SaveChangesAsync();
 
-                new() { Id=99, MenuText="Administration",
-                    MenuType="Main", Position=8, IsVisible=true },
+            // ═══════════════════════════════════════════════
+            // ACADEMICS CHILDREN
+            // ═══════════════════════════════════════════════
+            db.MenuItems.AddRange(
+                M("Academic Calendar", acad.Id, "internal", "Academics", "AcademicCalender", pos: 0),
+                M("Admission Process", acad.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 16, dynType: "Committee", pos: 1),
+                M("Courses & Intake", acad.Id, "internal", "Institute", "AboutUs", pos: 2),
+                M("Syllabus", acad.Id, "external",
+                  link: "https://syllabus.gtu.ac.in/Syllabus.aspx?tp=BE",
+                  newTab: true, pos: 3)
+            );
+            await db.SaveChangesAsync();
 
-                new() { Id=101,MenuText="Downloads",
-                    ControllerName="Documents", ActionName="TableView",
-                    DynamicId=100, DynamicType="Document",
-                    MenuType="Main", Position=9, IsVisible=true },
- 
-                // ── INSTITUTE CHILDREN ────────────────────
-                new() { ParentId=2, MenuText="About Us",
-                    ControllerName="Institute", ActionName="AboutUs",
-                    MenuType="Main", Position=1, IsVisible=true },
+            // ═══════════════════════════════════════════════
+            // DEPARTMENTS CHILDREN
+            // ═══════════════════════════════════════════════
+            db.MenuItems.AddRange(
+                M("Electronics & Communication", depts.Id, "dynamic",
+                  "Department", "DepartmentDetails", dynId: 1, dynType: "Department", pos: 0),
+                M("Computer Science & Engineering", depts.Id, "dynamic",
+                  "Department", "DepartmentDetails", dynId: 2, dynType: "Department", pos: 1),
+                M("Electrical Engineering", depts.Id, "dynamic",
+                  "Department", "DepartmentDetails", dynId: 3, dynType: "Department", pos: 2),
+                M("Mechanical Engineering", depts.Id, "dynamic",
+                  "Department", "DepartmentDetails", dynId: 5, dynType: "Department", pos: 3),
+                M("Science & Humanities", depts.Id, "dynamic",
+                  "Department", "DepartmentDetails", dynId: 6, dynType: "Department", pos: 4),
+                M("Applied Mechanics", depts.Id, "dynamic",
+                  "Department", "DepartmentDetails", dynId: 8, dynType: "Department", pos: 5)
+            );
 
-                new() { ParentId=2, MenuText="Mandatory Disclosure",
-                    ControllerName="Documents", ActionName="Index",
-                    DynamicId=30, DynamicType="Document",
-                    MenuType="Main", Position=2, IsVisible=true },
+            // Civil & Applied Mechanics container
+            var civilParent = M("Civil Engineering & Applied Mechanics",
+                depts.Id, "none", pos: 6);
+            db.MenuItems.Add(civilParent);
+            await db.SaveChangesAsync();
 
-                new() { ParentId=2, MenuText="Governance",
-                    Link="/ImpDocs/GEC_Organizational_Chart.pdf",
-                    OpenInNewTab=true,
-                    MenuType="Main", Position=3, IsVisible=true },
+            db.MenuItems.AddRange(
+                M("Civil Engineering", civilParent.Id, "dynamic",
+                  "Department", "DepartmentDetails", dynId: 4, dynType: "Department", pos: 0),
+                M("Applied Mechanics", civilParent.Id, "dynamic",
+                  "Department", "DepartmentDetails", dynId: 8, dynType: "Department", pos: 1)
+            );
+            await db.SaveChangesAsync();
 
-                new() { ParentId=2, MenuText="Newsletter",
-                    ControllerName="Institute", ActionName="NewsLetter",
-                    MenuType="Main", Position=4, IsVisible=true },
+            // ═══════════════════════════════════════════════
+            // R&D CHILDREN
+            // ═══════════════════════════════════════════════
+            db.MenuItems.AddRange(
+                M("Center of Excellence", rnd.Id, "internal", "Facilities", "CenterOfExcellence", pos: 0),
+                M("SSIP", rnd.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 2, dynType: "Committee", pos: 1),
+                M("Design & Tinkering Lab", rnd.Id, "internal", "Research", "DesignLab", pos: 2),
+                M("Research Grants", rnd.Id, "internal", "Academics", "ResearchGrants", pos: 3),
+                M("IIRS ISRO Nodal Centre", rnd.Id, "internal", "Facilities", "isro", pos: 4),
+                M("Patents", rnd.Id, "external",
+                  link: "/DataFiles/Documents/IPR/IPR Details.pdf", newTab: true, pos: 5)
+            );
+            await db.SaveChangesAsync();
 
-                new() { ParentId=2, MenuText="MoUs",
-                    ControllerName="Documents", ActionName="TableView",
-                    DynamicId=50, DynamicType="Document",
-                    MenuType="Main", Position=5, IsVisible=true },
+            // ═══════════════════════════════════════════════
+            // STUDENT CORNER CHILDREN
+            // ═══════════════════════════════════════════════
 
-                new() { ParentId=2, MenuText="RTI",
-                    ControllerName="CampusCommittee",
-                    ActionName="CommitteePage",
-                    DynamicId=6, DynamicType="Committee",
-                    MenuType="Main", Position=6, IsVisible=true },
+            // Student Support System sub-menu
+            var sss = M("Student Support System", stcorn.Id, "none", pos: 0);
+            db.MenuItems.Add(sss);
+            await db.SaveChangesAsync();
 
-                new() { ParentId=2, MenuText="Information Booklet",
-                    Link="/ImpDocs/Brochure_GECP.pdf",
-                    OpenInNewTab=true,
-                    MenuType="Main", Position=7, IsVisible=true },
- 
-                // ── DEPARTMENTS ───────────────────────────
-                new() { ParentId=4, MenuText="Electronics & Communication",
-                    ControllerName="Department",
-                    ActionName="DepartmentDetails",
-                    DynamicId=1, DynamicType="Department",
-                    MenuType="Main", Position=1, IsVisible=true },
+            db.MenuItems.AddRange(
+                M("Psychology Cell", sss.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 12, dynType: "Committee", pos: 0),
+                M("SC/ST Committee", sss.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 7, dynType: "Committee", pos: 1),
+                M("ICC", sss.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 13, dynType: "Committee", pos: 2),
+                M("OMBUDSMAN", sss.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 14, dynType: "Committee", pos: 3),
+                M("Student Counsellor", sss.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 5, dynType: "Committee", pos: 4),
+                M("National Task Force", sss.Id, "external",
+                  link: "/DataFiles/CampusCommittees/Psychology/NationalTaskForce.pdf",
+                  newTab: true, pos: 5),
+                M("Anti-Ragging Squad", sss.Id, "external",
+                  link: "/DataFiles/Documents/Student Suppot System/Anti Ragging Scaud.pdf",
+                  newTab: true, pos: 6),
+                M("Women Helpline", sss.Id, "external",
+                  link: "/DataFiles/Documents/Student Suppot System/Woman Helpline.pdf",
+                  newTab: true, pos: 7),
+                M("Industry Institute Cell", sss.Id, "external",
+                  link: "/DataFiles/Documents/Student Suppot System/Industry Institute Interaction Cell.pdf",
+                  newTab: true, pos: 8),
+                M("Post Grievance", sss.Id, "external",
+                  link: "/DataFiles/Documents/Grievance/Post_Grievance.pdf",
+                  newTab: true, pos: 9)
+            );
 
-                new() { ParentId=4, MenuText="Computer Science & Engineering",
-                    ControllerName="Department",
-                    ActionName="DepartmentDetails",
-                    DynamicId=2, DynamicType="Department",
-                    MenuType="Main", Position=2, IsVisible=true },
+            db.MenuItems.AddRange(
+                M("General Rules", stcorn.Id, "internal", "StudentCorner", "Rules", pos: 1),
+                M("Academic Rules", stcorn.Id, "external",
+                  link: "/DataFiles/Documents/Rules/General Rules and Regulations for Students.pdf",
+                  newTab: true, pos: 2),
+                M("NTPEL Local Chapter", stcorn.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 15, dynType: "Committee", pos: 3),
+                M("Time Table", stcorn.Id, "dynamic", "Documents", "Index",
+                  dynId: 60, dynType: "Document", pos: 4),
+                M("Enrollment Details", stcorn.Id, "dynamic", "Documents", "Index",
+                  dynId: 5, dynType: "Document", pos: 5),
+                M("Student Clubs", stcorn.Id, "internal", "StudentCorner", "StudentClubs", pos: 6),
+                M("Student Grade History", stcorn.Id, "external",
+                  link: "https://www.students.gtu.ac.in/Default.aspx", newTab: true, pos: 7),
+                M("Fees Portal", stcorn.Id, "external",
+                  link: "https://www.onlinesbi.sbi/sbicollect/icollecthome.htm",
+                  newTab: true, pos: 8)
+            );
+            await db.SaveChangesAsync();
 
-                new() { ParentId=4, MenuText="Electrical Engineering",
-                    ControllerName="Department",
-                    ActionName="DepartmentDetails",
-                    DynamicId=3, DynamicType="Department",
-                    MenuType="Main", Position=3, IsVisible=true },
+            // ═══════════════════════════════════════════════
+            // ADMINISTRATION CHILDREN
+            // ═══════════════════════════════════════════════
+            var adminRules = M("Administrative Rules", admin.Id, "none", pos: 2);
+            var commCell = M("Committees / Cell", admin.Id, "none", pos: 3);
+            db.MenuItems.AddRange(adminRules, commCell);
 
-                new() { ParentId=4, MenuText="Civil Engineering",
-                    ControllerName="Department",
-                    ActionName="DepartmentDetails",
-                    DynamicId=4, DynamicType="Department",
-                    MenuType="Main", Position=4, IsVisible=true },
+            db.MenuItems.AddRange(
+                M("Principal", admin.Id, "internal", "Administration", "Principal", pos: 0),
+                M("IQAC", admin.Id, "external",
+                  link: "/DataFiles/Documents/Rules/IQAC_GECP_2025_SIGNED.pdf",
+                  newTab: true, pos: 1),
+                M("Establishment Office", admin.Id, "internal", "Administration", "Esta", pos: 4),
+                M("Council of Heads", admin.Id, "internal", "Administration", "CoH", pos: 5),
+                M("Faculty Data Mgmt", admin.Id, "external",
+                  link: "/DataFiles/Documents/Rules/Standardized Data Management and Faculty Transparency.pdf",
+                  newTab: true, pos: 6),
+                M("Central Store", admin.Id, "internal", "Administration", "Central_Store", pos: 7)
+            );
+            await db.SaveChangesAsync();
 
-                new() { ParentId=4, MenuText="Mechanical Engineering",
-                    ControllerName="Department",
-                    ActionName="DepartmentDetails",
-                    DynamicId=5, DynamicType="Department",
-                    MenuType="Main", Position=5, IsVisible=true },
+            // Administrative Rules children
+            db.MenuItems.AddRange(
+                M("Institute Admin Rules", adminRules.Id, "external",
+                  link: "/DataFiles/Documents/Rules/1 Institute Administrative Rules.pdf",
+                  newTab: true, pos: 0),
+                M("Leave Rules", adminRules.Id, "external",
+                  link: "/DataFiles/Documents/Rules/LEAVE.pdf", newTab: true, pos: 1),
+                M("Pension Rules", adminRules.Id, "external",
+                  link: "/DataFiles/Documents/Rules/PENSION.pdf", newTab: true, pos: 2),
+                M("NPS", adminRules.Id, "external",
+                  link: "/DataFiles/Documents/Rules/NPS.pdf", newTab: true, pos: 3)
+            );
 
-                new() { ParentId=4, MenuText="Science & Humanities",
-                    ControllerName="Department",
-                    ActionName="DepartmentDetails",
-                    DynamicId=6, DynamicType="Department",
-                    MenuType="Main", Position=6, IsVisible=true },
+            // Committees / Cell children
+            db.MenuItems.AddRange(
+                M("Women Development Cell", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 1, dynType: "Committee", pos: 0),
+                M("SSIP", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 2, dynType: "Committee", pos: 1),
+                M("NSS", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 3, dynType: "Committee", pos: 2),
+                M("Anti Ragging Cell", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 4, dynType: "Committee", pos: 3),
+                M("Student Counsellor", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 5, dynType: "Committee", pos: 4),
+                M("SC/ST Committee", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 7, dynType: "Committee", pos: 5),
+                M("Student Section", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 8, dynType: "Committee", pos: 6),
+                M("Gymkhana", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 10, dynType: "Committee", pos: 7),
+                M("Psychology Cell", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
+                  dynId: 12, dynType: "Committee", pos: 8)
+            );
+            await db.SaveChangesAsync();
 
-                new() { ParentId=4, MenuText="Applied Mechanics",
-                    ControllerName="Department",
-                    ActionName="DepartmentDetails",
-                    DynamicId=8, DynamicType="Department",
-                    MenuType="Main", Position=7, IsVisible=true },
- 
-                // ── ACADEMICS ─────────────────────────────
-                new() { ParentId=3, MenuText="Academic Calendar",
-                    ControllerName="Academics",
-                    ActionName="AcademicCalender",
-                    MenuType="Main", Position=1, IsVisible=true },
+            // ═══════════════════════════════════════════════
+            // DOWNLOADS CHILDREN
+            // ═══════════════════════════════════════════════
+            db.MenuItems.Add(
+                M("Tenders", dl.Id, "internal", "Institute", "TendersTableView", pos: 0)
+            );
 
-                new() { ParentId=3, MenuText="Syllabus",
-                    Link="https://syllabus.gtu.ac.in/Syllabus.aspx?tp=BE",
-                    OpenInNewTab=true,
-                    MenuType="Main", Position=2, IsVisible=true },
+            // ═══════════════════════════════════════════════
+            // NBA DATA CHILDREN
+            // ═══════════════════════════════════════════════
+            var placementData = M("Placement Data", nba.Id, "none", pos: 2);
+            db.MenuItems.AddRange(
+                M("Faculty Information", nba.Id, "external",
+                  link: "/DataFiles/NBA/Faculty Information.pdf", newTab: true, pos: 0),
+                M("Mechanical Student Details", nba.Id, "external",
+                  link: "/DataFiles/NBA/Mechanical Student Details.pdf", newTab: true, pos: 1),
+                placementData
+            );
+            await db.SaveChangesAsync();
 
-                new() { ParentId=3, MenuText="Courses & Intake",
-                    ControllerName="Institute", ActionName="AboutUs",
-                    MenuType="Main", Position=3, IsVisible=true },
+            db.MenuItems.AddRange(
+                M("2022-2023", placementData.Id, "external",
+                  link: "/DataFiles/NBA/Placement_2022-2023.pdf", newTab: true, pos: 0),
+                M("2023-2024", placementData.Id, "external",
+                  link: "/DataFiles/NBA/Placement_2023-2024.pdf", newTab: true, pos: 1),
+                M("2024-2025", placementData.Id, "external",
+                  link: "/DataFiles/NBA/Placement_2024-2025.pdf", newTab: true, pos: 2)
+            );
 
-                new() { ParentId=3, MenuText="Research Grants",
-                    ControllerName="Academics", ActionName="ResearchGrants",
-                    MenuType="Main", Position=4, IsVisible=true },
- 
-                // ── R&D ───────────────────────────────────
-                new() { ParentId=6, MenuText="SSIP",
-                    ControllerName="CampusCommittee",
-                    ActionName="CommitteePage",
-                    DynamicId=2, DynamicType="Committee",
-                    MenuType="Main", Position=1, IsVisible=true },
+            // ═══════════════════════════════════════════════
+            // FOOTER MENU
+            // ═══════════════════════════════════════════════
+            db.MenuItems.AddRange(
+                M("Home", null, "internal", "Home", "Index", pos: 0, menuType: "Footer"),
+                M("About Us", null, "internal", "Institute", "AboutUs", pos: 1, menuType: "Footer"),
+                M("Departments", null, "none", pos: 2, menuType: "Footer"),
+                M("Placement", null, "internal", "PlacementCell", "Index", pos: 3, menuType: "Footer"),
+                M("Alumni", null, "internal", "Alumni", "Index", pos: 4, menuType: "Footer"),
+                M("Downloads", null, "dynamic", "Documents", "TableView",
+                  dynId: 100, dynType: "Document", pos: 5, menuType: "Footer"),
+                M("Contact", null, "internal", "Institute", "Contact", pos: 6, menuType: "Footer")
+            );
 
-                new() { ParentId=6, MenuText="Research Grants",
-                    ControllerName="Academics", ActionName="ResearchGrants",
-                    MenuType="Main", Position=2, IsVisible=true },
-
-                new() { ParentId=6, MenuText="Patents",
-                    Link="/DataFiles/Documents/IPR/IPR Details.pdf",
-                    OpenInNewTab=true,
-                    MenuType="Main", Position=3, IsVisible=true },
- 
-                // ── STUDENT CORNER ────────────────────────
-                new() { ParentId=7, MenuText="General Rules",
-                    ControllerName="StudentCorner", ActionName="Rules",
-                    MenuType="Main", Position=1, IsVisible=true },
-
-                new() { ParentId=7, MenuText="Time Table",
-                    ControllerName="Documents", ActionName="Index",
-                    DynamicId=60, DynamicType="Document",
-                    MenuType="Main", Position=2, IsVisible=true },
-
-                new() { ParentId=7, MenuText="Student Clubs",
-                    ControllerName="StudentCorner",
-                    ActionName="StudentClubs",
-                    MenuType="Main", Position=3, IsVisible=true },
- 
-                // ── ADMINISTRATION ────────────────────────
-                new() { ParentId=99, MenuText="Principal",
-                    ControllerName="Administration",
-                    ActionName="Principal",
-                    MenuType="Main", Position=1, IsVisible=true },
-
-                new() { ParentId=99, MenuText="IQAC",
-                    Link="/DataFiles/Documents/Rules/IQAC_GECP_2025_SIGNED.pdf",
-                    OpenInNewTab=true,
-                    MenuType="Main", Position=2, IsVisible=true },
-
-                new() { ParentId=99, MenuText="Establishment Office",
-                    ControllerName="Administration", ActionName="Esta",
-                    MenuType="Main", Position=3, IsVisible=true },
-
-                new() { ParentId=99, MenuText="Council of Heads",
-                    ControllerName="Administration", ActionName="CoH",
-                    MenuType="Main", Position=4, IsVisible=true },
- 
-                // ── FOOTER ────────────────────────────────
-                new() { MenuText="Home",
-                    ControllerName="Home", ActionName="Index",
-                    MenuType="Footer", Position=1, IsVisible=true },
-
-                new() { MenuText="About Us",
-                    ControllerName="Institute", ActionName="AboutUs",
-                    MenuType="Footer", Position=2, IsVisible=true },
-
-                new() { MenuText="Placement",
-                    ControllerName="PlacementCell", ActionName="Index",
-                    MenuType="Footer", Position=3, IsVisible=true },
-
-                new() { MenuText="Contact",
-                    ControllerName="Institute", ActionName="Contact",
-                    MenuType="Footer", Position=4, IsVisible=true },
-
-                new() { MenuText="Downloads",
-                    ControllerName="Documents", ActionName="TableView",
-                    MenuType="Footer", Position=5, IsVisible=true },
-
-                new() { MenuText="Alumni",
-                    ControllerName="Alumni", ActionName="Index",
-                    MenuType="Footer", Position=6, IsVisible=true },
-            };
-
-            // Use HasData-style insert with explicit IDs where set
-            foreach (var item in items)
-                context.MenuItems.Add(item);
-
-            await context.SaveChangesAsync();
+            await db.SaveChangesAsync();
         }
     }
 }

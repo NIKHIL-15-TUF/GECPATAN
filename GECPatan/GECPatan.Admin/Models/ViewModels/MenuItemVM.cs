@@ -1,29 +1,33 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
- 
+
 namespace GECPatan.Admin.Models.ViewModels
 {
-    // Used in tree view
+    // Full tree node — used in Index view
     public class MenuItemTreeVM
     {
         public int Id { get; set; }
         public string MenuText { get; set; } = string.Empty;
         public int? ParentId { get; set; }
+        public string LinkType { get; set; } = "none";
         public string? ControllerName { get; set; }
         public string? ActionName { get; set; }
         public int? DynamicId { get; set; }
         public string? DynamicType { get; set; }
-        public string? Link { get; set; }
+        public string? DynamicLabel { get; set; }  // resolved name
+        public string? ExternalLink { get; set; }
         public string? CssClass { get; set; }
         public string MenuType { get; set; } = "Main";
         public int Position { get; set; }
         public bool IsVisible { get; set; }
         public bool OpenInNewTab { get; set; }
         public int Level { get; set; } = 0;
+        public bool IsFirst { get; set; }
+        public bool IsLast { get; set; }
         public List<MenuItemTreeVM> Children { get; set; } = new();
     }
 
-    // Used in Create/Edit form
+    // Create / Edit form
     public class MenuItemFormVM
     {
         public int Id { get; set; }
@@ -33,39 +37,37 @@ namespace GECPatan.Admin.Models.ViewModels
         [Display(Name = "Menu Text")]
         public string MenuText { get; set; } = string.Empty;
 
-        [Display(Name = "Parent Menu")]
+        [Display(Name = "Parent Item")]
         public int? ParentId { get; set; }
 
-        // Link type selection
-        // "internal" = controller/action
-        // "dynamic"  = controller/action + dynamicId
-        // "external" = direct URL or PDF
-        // "none"     = just a parent container (no link)
         [Required]
         [Display(Name = "Link Type")]
         public string LinkType { get; set; } = "none";
 
-        [Display(Name = "Controller")]
+        // Internal
         [MaxLength(100)]
+        [Display(Name = "Controller")]
         public string? ControllerName { get; set; }
 
-        [Display(Name = "Action")]
         [MaxLength(100)]
+        [Display(Name = "Action")]
         public string? ActionName { get; set; }
 
-        [Display(Name = "Dynamic Type")]
+        // Dynamic
         [MaxLength(50)]
+        [Display(Name = "Dynamic Type")]
         public string? DynamicType { get; set; }
 
-        [Display(Name = "Dynamic ID")]
+        [Display(Name = "Select Item")]
         public int? DynamicId { get; set; }
 
-        [Display(Name = "URL / PDF Path")]
+        // External
         [MaxLength(500)]
-        public string? Link { get; set; }
+        [Display(Name = "URL / PDF Path")]
+        public string? ExternalLink { get; set; }
 
-        [Display(Name = "CSS Class")]
         [MaxLength(100)]
+        [Display(Name = "CSS Class")]
         public string? CssClass { get; set; }
 
         [Display(Name = "Menu Section")]
@@ -80,12 +82,7 @@ namespace GECPatan.Admin.Models.ViewModels
         public bool OpenInNewTab { get; set; } = false;
 
         // Dropdowns
-        public List<SelectListItem> ParentItems { get; set; } = new();
-        public List<SelectListItem> DepartmentItems { get; set; } = new();
-        public List<SelectListItem> CommitteeItems { get; set; } = new();
-        public List<SelectListItem> FacilityItems { get; set; } = new();
-        public List<SelectListItem> ClubItems { get; set; } = new();
-        public List<SelectListItem> ContentPageItems { get; set; } = new();
-        public List<SelectListItem> DocumentCatItems { get; set; } = new();
+        public List<SelectListItem> ParentOptions { get; set; } = new();
+        public List<SelectListItem> DynamicIdOptions { get; set; } = new();
     }
 }
