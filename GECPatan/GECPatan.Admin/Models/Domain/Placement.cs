@@ -32,8 +32,8 @@ namespace GECPatan.Admin.Models.Domain
         public string? ImagePath { get; set; }
         public int DisplayOrder { get; set; } = 0;
         public bool IsVisible { get; set; } = true;
-        public string? Email { get; internal set; }
-        public string? Mobile { get; internal set; }
+        //public string? Email { get; set; }
+        //public string? Mobile { get; set; }
     }
     // STUDENT CLUB
     public class StudentClub : BaseEntity

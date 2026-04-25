@@ -67,11 +67,11 @@ namespace GECPatan.Admin.Models.ViewModels
 
         [Display(Name = "Start Date")]
         [MaxLength(50)]
-        public string? StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
 
         [Display(Name = "Completion Date")]
         [MaxLength(50)]
-        public string? CompletionDate { get; set; }
+        public DateTime? CompletionDate { get; set; }
 
         [MaxLength(100)]
         public string? Duration { get; set; }

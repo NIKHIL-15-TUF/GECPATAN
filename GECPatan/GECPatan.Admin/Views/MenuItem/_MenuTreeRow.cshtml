@@ -1,0 +1,153 @@
+﻿using GECPatan.Admin.Migrations;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using Newtonsoft.Json.Linq;
+using System.Diagnostics.Metrics;
+using static System.Net.Mime.MediaTypeNames;
+
+@model (GECPatan.Admin.Models.ViewModels.MenuItemTreeVM Item, string MenuType)
+@{
+    var item = Model.Item;
+    var menuType = Model.MenuType;
+    var indent = item.Level * 24;
+
+    string linkTarget = "—";
+    string linkBadge = "badge-secondary";
+    string linkLabel = "None";
+
+    if (!string.IsNullOrEmpty(item.Link))
+    {
+        linkTarget = item.Link.Length > 35
+            ? item.Link[..35] + "…" : item.Link;
+        linkBadge = "badge-info";
+        linkLabel = "External";
+    }
+    else if (item.DynamicId.HasValue)
+    {
+        linkTarget = $"{item.ControllerName}/{item.ActionName} [{item.DynamicType} #{item.DynamicId}]";
+        linkBadge = "badge-success";
+        linkLabel = "Dynamic";
+    }
+    else if (!string.IsNullOrEmpty(item.ControllerName))
+    {
+        linkTarget = $"{item.ControllerName}/{item.ActionName}";
+        linkBadge = "badge-primary";
+        linkLabel = "Internal";
+    }
+}
+
+
+< tr class= "@(!item.IsVisible ? "table - secondary text - muted" : "")" >
+    < td >
+        < div style = "padding-left:@(indent)px;" >
+            @if(item.Level == 0)
+            {
+                < i class= "fas fa-caret-right text-primary mr-1" ></ i >
+            }
+            else if (item.Level == 1)
+{
+                < i class= "fas fa-minus text-muted mr-1"
+                   style = "font-size:10px;" ></ i >
+            }
+            else
+{
+                < i class= "fas fa-angle-right text-muted mr-1"
+                   style = "font-size:10px;" ></ i >
+            }
+            < strong style = "font-size:@(item.Level==0?"14px":item.Level==1?"13px":"12px");">
+                @item.MenuText
+            </strong>
+            @if (!string.IsNullOrEmpty(item.CssClass))
+            {
+                <span class= "badge badge-warning ml-1"
+                      style = "font-size:9px;" > @item.CssClass </span >
+            }
+            @if(item.OpenInNewTab)
+            {
+                < i class= "fas fa-external-link-alt text-muted ml-1"
+                   style = "font-size:10px;" title = "Opens in new tab" ></ i >
+            }
+        </ div >
+    </ td >
+    < td >
+        < span class= "badge @linkBadge" style = "font-size:9px;" >
+            @linkLabel
+        </ span >
+    </ td >
+    < td >
+        < small class= "text-muted text-truncate d-block"
+               style = "max-width:200px;font-size:11px;" >
+            @linkTarget
+        </ small >
+    </ td >
+    < td class= "text-center" >
+        < small class= "text-muted" > @item.Position </ small >
+    </ td >
+    < td >
+        @if(item.IsVisible)
+        {
+            < span class= "badge badge-success" style = "font-size:9px;" > Visible </ span >
+        }
+        else
+{
+            < span class= "badge badge-secondary" style = "font-size:9px;" > Hidden </ span >
+        }
+    </ td >
+    < td >
+        < div class= "d-flex flex-wrap" style = "gap:3px;" >
+            < !--Add child(only for level 0 and 1) -->
+            @if(item.Level < 2)
+            {
+                < a asp - action = "Create"
+                   asp - route - parentId = "@item.Id"
+                   asp - route - menuType = "@menuType"
+                   class= "btn btn-xs btn-success"
+                   title = "Add child item" >
+                    < i class= "fas fa-plus" ></ i >
+                </ a >
+            }
+            < a asp - action = "Edit" asp - route - id = "@item.Id"
+               class= "btn btn-xs btn-info" title = "Edit" >
+                < i class= "fas fa-edit" ></ i >
+            </ a >
+            < form asp - action = "Reorder" method = "post" class= "d-inline" >
+                < input type = "hidden" name = "id" value = "@item.Id" />
+                < input type = "hidden" name = "direction" value = "up" />
+                < button type = "submit" class= "btn btn-xs btn-light border"
+                        title = "Move Up" >
+                    < i class= "fas fa-chevron-up" style = "font-size:9px;" ></ i >
+                </ button >
+            </ form >
+            < form asp - action = "Reorder" method = "post" class= "d-inline" >
+                < input type = "hidden" name = "id" value = "@item.Id" />
+                < input type = "hidden" name = "direction" value = "down" />
+                < button type = "submit" class= "btn btn-xs btn-light border"
+                        title = "Move Down" >
+                    < i class= "fas fa-chevron-down" style = "font-size:9px;" ></ i >
+                </ button >
+            </ form >
+            < form asp - action = "ToggleVisible" method = "post" class= "d-inline" >
+                < input type = "hidden" name = "id" value = "@item.Id" />
+                < button type = "submit"
+                        class= "btn btn-xs @(item.IsVisible?"btn - warning":"btn - success")"
+                        title = "@(item.IsVisible?"Hide":"Show")">
+                    <i class= "fas @(item.IsVisible?"fa - eye - slash":"fa - eye")" ></ i >
+                </ button >
+            </ form >
+            < form asp - action = "Delete" method = "post" class= "d-inline" >
+                < input type = "hidden" name = "id" value = "@item.Id" />
+                < button type = "submit" class= "btn btn-xs btn-danger"
+                        title = "Delete"
+                        onclick = "return confirm('Delete @item.MenuText?@(item.Children.Any()?" WARNING: Has children!":"")')" >
+                    < i class= "fas fa-trash" ></ i >
+                </ button >
+            </ form >
+        </ div >
+    </ td >
+</ tr >
+
+@* Recursively render children *@
+@foreach(var child in item.Children)
+{
+    @await Html.PartialAsync("_MenuTreeRow", (child, menuType))
+}

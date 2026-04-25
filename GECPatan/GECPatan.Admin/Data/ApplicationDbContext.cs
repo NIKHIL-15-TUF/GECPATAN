@@ -104,6 +104,8 @@ namespace GECPatan.Admin.Data
         public DbSet<GalleryImage> GalleryImages { get; set; }
         public DbSet<ContactInfo> ContactInfos { get; set; }
         public DbSet<ContentPage> ContentPages { get; set; }
+        public DbSet<MenuItem> MenuItems { get; set; }
+
 
         // ── AUDIT LOG ─────────────────────────────────────
         public DbSet<AuditLog> AuditLogs { get; set; }
