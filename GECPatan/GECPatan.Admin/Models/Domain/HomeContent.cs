@@ -42,18 +42,34 @@ namespace GECPatan.Admin.Models.Domain
         [Required, MaxLength(500)]
         public string Title { get; set; } = string.Empty;
 
-        // 1 = Update, 2 = Activity
-        public int MarqueeType { get; set; } = 1;
+        // none / internal / dynamic / external
+        [MaxLength(20)]
+        public string LinkType { get; set; } = "none";
 
-        // File link (PDF etc.)
-        public string? FileLink { get; set; }
-
-        // Or page link (controller + action)
+        // Internal / Dynamic routing
+        [MaxLength(100)]
         public string? ControllerName { get; set; }
+
+        [MaxLength(100)]
         public string? ActionName { get; set; }
+
+        // Dynamic link
         public int? DynamicId { get; set; }
 
-        public bool IsFile { get; set; } = true;
+        [MaxLength(50)]
+        public string? DynamicType { get; set; }
+
+        // External URL
+        [MaxLength(500)]
+        public string? ExternalLink { get; set; }
+
+        // PDF / File upload
+        public string? FilePath { get; set; }
+
+        // Validity window
+        public DateTime? ValidFrom { get; set; }
+        public DateTime? ValidTo { get; set; }
+
         public int DisplayOrder { get; set; } = 0;
         public bool IsVisible { get; set; } = true;
     }

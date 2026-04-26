@@ -1,86 +1,204 @@
-﻿@using GECPatan.Admin.Models.Domain
-@model List<Marquee>
+﻿@model List<GECPatan.Admin.Models.ViewModels.MarqueeListVM>
 @{
-    ViewData["Title"] = "Marquee Items";
+    ViewData["Title"] = "Marquee / Notice Ticker";
+    var now = DateTime.Now;
 }
+ 
 <div class="row mb-3">
     <div class="col-12 d-flex justify-content-between align-items-center">
         <div>
-            <span class="badge badge-primary mr-2">Updates: @Model.Count(m => m.MarqueeType == 1)</span>
-            <span class="badge badge-info">Activities: @Model.Count(m => m.MarqueeType == 2)</span>
+            <span class="badge badge-info px-3 py-2" style="font-size:13px;">
+                @Model.Count Item(s)
+            </span>
+            <span class="badge badge-success ml-2 px-2 py-1">
+                @Model.Count(m => m.IsActive) Active
+            </span>
+            <span class="badge badge-warning ml-1 px-2 py-1">
+                @Model.Count(m => !m.IsActive) Inactive/Expired
+            </span>
         </div>
-        <a asp-action="Create" class="btn btn-primary">
+        <a asp-action="Create" class="btn btn-primary btn-sm">
             <i class="fas fa-plus mr-2"></i>Add Marquee Item
         </a>
     </div>
 </div>
+ 
+<!-- Live preview -->
+@if (Model.Any(m => m.IsActive))
+{
+    <div class="card mb-3 border-info">
+        <div class="card-header bg-info text-white py-1">
+            <small class="font-weight-bold">
+                <i class="fas fa-eye mr-1"></i>
+                Live Preview — This is how marquee appears on website
+            </small>
+        </div>
+        <div class="card-body py-2 bg-dark" style="overflow:hidden;">
+            <div class="marquee-preview" style="white-space:nowrap;
+                 overflow:hidden;color:#fff;font-size:14px;">
+                <span class="marquee-inner" style="display:inline-block;
+                      animation:marqueeScroll 20s linear infinite;">
+                    @foreach (var item in Model.Where(m => m.IsActive))
+                    {
+                        <span class="mx-4">
+                            <i class="fas fa-circle"
+                               style="font-size:6px;color:#ffc107;
+                                      vertical-align:middle;"></i>
+                            @item.Title
+                        </span>
+                    }
+                </span>
+            </div>
+        </div>
+    </div>
+}
+ 
 <div class="card">
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
+        <table class="table table-sm table-hover mb-0">
             <thead style="background:#1a237e;color:#fff;">
                 <tr>
+                    <th width="50">Order</th>
                     <th>Title</th>
-                    <th width="100">Type</th>
+                    <th width="100">Link Type</th>
+                    <th width="180">Links To</th>
+                    <th width="120">Valid From</th>
+                    <th width="120">Valid To</th>
                     <th width="80">Status</th>
-                    <th width="140">Actions</th>
+                    <th width="200">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="4" class="text-center py-4 text-muted">
-                            <i class="fas fa-scroll fa-2x mb-2 d-block"></i>No marquee items yet.
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="fas fa-bullhorn fa-2x mb-2 d-block"></i>
+                            No marquee items yet.
                         </td>
                     </tr>
                 }
-                @foreach (var m in Model)
+                @foreach (var item in Model)
                 {
-                    <tr>
+                    <tr class="@(!item.IsActive ? "table-secondary" : "")">
                         <td>
-                            <strong>@m.Title</strong>
-                            @if (!string.IsNullOrEmpty(m.FileLink))
+                            <div class="d-flex flex-column" style="gap:2px;">
+                                <form asp-action="Reorder" method="post">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="dir" value="up" />
+                                    <button type="submit"
+                                            class="btn btn-xs btn-light border px-2">
+                                        <i class="fas fa-chevron-up"
+                                           style="font-size:9px;"></i>
+                                    </button>
+                                </form>
+                                <form asp-action="Reorder" method="post">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="dir" value="down" />
+                                    <button type="submit"
+                                            class="btn btn-xs btn-light border px-2">
+                                        <i class="fas fa-chevron-down"
+                                           style="font-size:9px;"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>
+                            <strong style="font-size:13px;">@item.Title</strong>
+                        </td>
+                        <td>
+                            @{
+                                var (bc, bi, bl) = item.LinkType switch
+                                {
+                                    "internal" => ("badge-primary",   "fa-link",
+                                                   "Internal"),
+                                    "dynamic"  => ("badge-success",   "fa-database",
+                                                   "Dynamic"),
+                                    "external" => ("badge-info",      "fa-external-link-alt",
+                                                   "External"),
+                                    "file"     => ("badge-warning",   "fa-file-pdf",
+                                                   "File"),
+                                    _          => ("badge-secondary", "fa-ban",
+                                                   "No Link")
+                                };
+                            }
+                            <span class="badge @bc" style="font-size:9px;">
+                                <i class="fas @bi mr-1"></i>@bl
+                            </span>
+                        </td>
+                        <td>
+                            <small class="text-muted"
+                                   style="font-size:11px;word-break:break-all;">
+                                @item.LinkDescription
+                            </small>
+                        </td>
+                        <td>
+                            <small class="@(!item.ValidFrom.HasValue?"text-muted":"")">
+                                @(item.ValidFrom.HasValue
+                                    ? item.ValidFrom.Value.ToString("dd MMM yyyy")
+                                    : "Always")
+                            </small>
+                        </td>
+                        <td>
+                            @if (item.ValidTo.HasValue)
                             {
-                                <small class="text-muted d-block">
-                                    <i class="fas fa-file-pdf mr-1 text-danger"></i>@m.FileLink
+                                bool expired = item.ValidTo < DateTime.Now;
+                                <small class="@(expired?"text-danger font-weight-bold":"")">
+                                    @item.ValidTo.Value.ToString("dd MMM yyyy")
+                                    @if (expired)
+                                    {
+                                        <span class="badge badge-danger ml-1"
+                                              style="font-size:9px;">Expired</span>
+                                    }
                                 </small>
                             }
+                            else
+                            {
+                                <small class="text-muted">No expiry</small>
+                            }
                         </td>
                         <td>
-                            @if (m.MarqueeType == 1)
+                            @if (!item.IsVisible)
                             {
-                                <span class="badge badge-primary">Update</span>
+                                <span class="badge badge-secondary"
+                                      style="font-size:9px;">Hidden</span>
+                            }
+                            else if (item.ValidTo.HasValue &&
+                                     item.ValidTo < DateTime.Now)
+                            {
+                                <span class="badge badge-danger"
+                                      style="font-size:9px;">Expired</span>
+                            }
+                            else if (item.ValidFrom.HasValue &&
+                                     item.ValidFrom > DateTime.Now)
+                            {
+                                <span class="badge badge-warning"
+                                      style="font-size:9px;">Pending</span>
                             }
                             else
                             {
-                                <span class="badge badge-info">Activity</span>
+                                <span class="badge badge-success"
+                                      style="font-size:9px;">Active</span>
                             }
                         </td>
                         <td>
-                            @if (m.IsVisible)
-                            {
-                                <span class="badge badge-success">Visible</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-secondary">Hidden</span>
-                            }
-                        </td>
-                        <td>
-                            <a asp-action="Edit" asp-route-id="@m.Id"
-                               class="btn btn-sm btn-info">
+                            <a asp-action="Edit" asp-route-id="@item.Id"
+                               class="btn btn-xs btn-info">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <form asp-action="ToggleVisible" method="post" class="d-inline">
-                                <input type="hidden" name="id" value="@m.Id" />
+                            <form asp-action="ToggleVisible" method="post"
+                                  class="d-inline">
+                                <input type="hidden" name="id" value="@item.Id" />
                                 <button type="submit"
-                                        class="btn btn-sm @(m.IsVisible?"btn-warning":"btn-success")">
-                                    <i class="fas @(m.IsVisible?"fa-eye-slash":"fa-eye")"></i>
+                                        class="btn btn-xs @(item.IsVisible?"btn-warning":"btn-success")"
+                                        title="@(item.IsVisible?"Hide":"Show")">
+                                    <i class="fas @(item.IsVisible?"fa-eye-slash":"fa-eye")"></i>
                                 </button>
                             </form>
-                            <form asp-action="Delete" method="post" class="d-inline">
-                                <input type="hidden" name="id" value="@m.Id" />
-                                <button type="submit" class="btn btn-sm btn-danger"
+                            <form asp-action="Delete" method="post"
+                                  class="d-inline">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="btn btn-xs btn-danger"
                                         onclick="return confirm('Delete?')">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -92,3 +210,12 @@
         </table>
     </div>
 </div>
+ 
+@section Scripts {
+    <style>
+        @@keyframes marqueeScroll {
+            0%   { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+    </style>
+}

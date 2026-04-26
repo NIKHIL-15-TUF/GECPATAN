@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace GECPatan.Admin.Models.ViewModels
 {
@@ -32,35 +33,75 @@ namespace GECPatan.Admin.Models.ViewModels
         public bool IsVisible { get; set; } = true;
         public string? ExistingImagePath { get; set; }
     }
+    public class MarqueeListVM
+        {
+            public int Id { get; set; }
+            public string Title { get; set; } = string.Empty;
+            public string LinkType { get; set; } = "none";
+            public string? LinkDescription { get; set; }
+            public DateTime? ValidFrom { get; set; }
+            public DateTime? ValidTo { get; set; }
+            public bool IsVisible { get; set; }
+            public bool IsActive { get; set; }  // computed from dates
+            public int DisplayOrder { get; set; }
+        }
 
-    // ── MARQUEE ──
-    public class MarqueeVM
-    {
-        public int Id { get; set; }
+        public class MarqueeFormVM
+        {
+            public int Id { get; set; }
 
-        [Required(ErrorMessage = "Title is required")]
-        [MaxLength(500)]
-        public string Title { get; set; } = string.Empty;
+            [Required(ErrorMessage = "Title is required")]
+            [MaxLength(500)]
+            [Display(Name = "Marquee Text")]
+            public string Title { get; set; } = string.Empty;
 
-        [Display(Name = "Type")]
-        public int MarqueeType { get; set; } = 1;
+            [Required]
+            [Display(Name = "Link Type")]
+            public string LinkType { get; set; } = "none";
 
-        [Display(Name = "File Link (PDF URL)")]
-        public string? FileLink { get; set; }
+            // Internal
+            [MaxLength(100)]
+            [Display(Name = "Controller")]
+            public string? ControllerName { get; set; }
 
-        [Display(Name = "Controller Name")]
-        public string? ControllerName { get; set; }
+            [MaxLength(100)]
+            [Display(Name = "Action")]
+            public string? ActionName { get; set; }
 
-        [Display(Name = "Action Name")]
-        public string? ActionName { get; set; }
+            // Dynamic
+            [MaxLength(50)]
+            [Display(Name = "Dynamic Type")]
+            public string? DynamicType { get; set; }
 
-        [Display(Name = "Dynamic ID")]
-        public int? DynamicId { get; set; }
+            [Display(Name = "Select Item")]
+            public int? DynamicId { get; set; }
 
-        public bool IsFile { get; set; } = true;
-        public int DisplayOrder { get; set; } = 0;
-        public bool IsVisible { get; set; } = true;
-    }
+            // External
+            [MaxLength(500)]
+            [Display(Name = "External URL")]
+            public string? ExternalLink { get; set; }
+
+            // File
+            public string? ExistingFilePath { get; set; }
+
+            // Validity
+            [Display(Name = "Valid From")]
+            [DataType(DataType.Date)]
+            public DateTime? ValidFrom { get; set; }
+
+            [Display(Name = "Valid To")]
+            [DataType(DataType.Date)]
+            public DateTime? ValidTo { get; set; }
+
+            [Display(Name = "Display Order")]
+            public int DisplayOrder { get; set; } = 0;
+
+            public bool IsVisible { get; set; } = true;
+
+            // Dropdowns
+            public List<SelectListItem> DynamicIdOptions { get; set; } = new();
+        }
+    
 
     // ── TESTIMONIAL ────
     public class TestimonialVM
