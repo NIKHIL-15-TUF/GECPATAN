@@ -1,128 +1,194 @@
-﻿//using GECPatan.Admin.Data;
-//using GECPatan.Admin.Models.Domain;
-//using GECPatan.Admin.Models.ViewModels;
-//using Microsoft.AspNetCore.Authorization;
-//using Microsoft.AspNetCore.Mvc;
-//using Microsoft.EntityFrameworkCore;
+﻿using GECPatan.Admin.Data;
+using GECPatan.Admin.Models.Domain;
+using GECPatan.Admin.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
-//namespace GECPatan.Admin.Controllers
-//{
-//    [Authorize(Roles = "SuperAdmin,ContentEditor,Principal")]
-//    public class ProgramIntakeController : Controller
-//    {
-//        private readonly ApplicationDbContext _context;
+namespace GECPatan.Admin.Controllers
+{
+    [Authorize(Roles = "SuperAdmin,HOD,Principal")]
+    public class ProgramIntakeController : Controller
+    {
+        private readonly ApplicationDbContext _context;
 
-//        public ProgramIntakeController(ApplicationDbContext context)
-//        {
-//            _context = context;
-//        }
+        public ProgramIntakeController(ApplicationDbContext context)
+            => _context = context;
 
-//        public async Task<IActionResult> Index()
-//        {
-//            ViewData["Title"] = "Program Intake";
-//            var items = await _context.ProgramIntakes
-//                .OrderBy(p => p.DisplayOrder)
-//                .ToListAsync();
-//            return View(items);
-//        }
+        // ── INDEX — all depts with their latest intake ────
+        public async Task<IActionResult> Index()
+        {
+            ViewData["Title"] = "Program Intake";
 
-//        public IActionResult Create()
-//        {
-//            ViewData["Title"] = "Add Program";
-//            return View(new ProgramIntakeVM());
-//        }
+            var depts = await _context.Departments
+                .Where(d => d.IsActive)
+                .OrderBy(d => d.DisplayOrder)
+                .ToListAsync();
 
-//        [HttpPost]
-//        [ValidateAntiForgeryToken]
-//        public async Task<IActionResult> Create(ProgramIntakeVM model)
-//        {
-//            ViewData["Title"] = "Add Program";
-//            if (!ModelState.IsValid) return View(model);
+            var allIntakes = await _context.ProgramIntakes
+                .OrderByDescending(p => p.IntakeYear)
+                .ToListAsync();
 
-//            int maxOrder = await _context.ProgramIntakes
-//                .Select(p => (int?)p.DisplayOrder).MaxAsync() ?? -1;
+            var list = depts.Select(d =>
+            {
+                var deptIntakes = allIntakes
+                    .Where(p => p.DeptId == d.DeptId)
+                    .OrderByDescending(p => p.IntakeYear)
+                    .ToList();
 
-//            _context.ProgramIntakes.Add(new ProgramIntake
-//            {
-//                ProgramName = model.ProgramName,
-//                Intake = model.Intake,
-//                CourseCode = model.CourseCode,
-//                DisplayOrder = maxOrder + 1
-//            });
+                var latest = deptIntakes.FirstOrDefault();
 
-//            await _context.SaveChangesAsync();
-//            TempData["Success"] = "Program added.";
-//            return RedirectToAction(nameof(Index));
-//        }
+                return new ProgramIntakeIndexVM
+                {
+                    DeptId = (int)d.DeptId,
+                    DeptName = d.Name,
+                    LatestIntake = latest?.Intake ?? 0,
+                    LatestYear = latest?.IntakeYear ?? 0,
+                    Intakes = deptIntakes.Select(p => new ProgramIntakeRowVM
+                    {
+                        Id = p.Id,
+                        DeptId = p.DeptId,
+                        DeptName = d.Name,
+                        IntakeYear = p.IntakeYear,
+                        Intake = p.Intake,
+                        IsVisible = p.IsVisible,
+                        IsLatest = p == deptIntakes.First()
+                    }).ToList()
+                };
+            }).ToList();
 
-//        public async Task<IActionResult> Edit(int id)
-//        {
-//            ViewData["Title"] = "Edit Program";
-//            var p = await _context.ProgramIntakes.FindAsync(id);
-//            if (p == null) return NotFound();
+            return View(list);
+        }
 
-//            return View(new ProgramIntakeVM
-//            {
-//                Id = p.Id,
-//                ProgramName = p.ProgramName,
-//                Intake = p.Intake,
-//                CourseCode = p.CourseCode,
-//                DisplayOrder = p.DisplayOrder
-//            });
-//        }
+        // ── DEPT DETAIL — year-wise history for one dept ──
+        public async Task<IActionResult> Department(int deptId)
+        {
+            ViewData["Title"] = "Intake History";
 
-//        [HttpPost]
-//        [ValidateAntiForgeryToken]
-//        public async Task<IActionResult> Edit(int id, ProgramIntakeVM model)
-//        {
-//            ViewData["Title"] = "Edit Program";
-//            if (!ModelState.IsValid) return View(model);
+            var dept = await _context.Departments.FindAsync(deptId);
+            if (dept == null) return NotFound();
 
-//            var p = await _context.ProgramIntakes.FindAsync(id);
-//            if (p == null) return NotFound();
+            // HOD can only see their own dept
+            if (User.IsInRole(AppRoles.HOD))
+            {
+                var userId = User.FindFirst(
+                    System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var appUser = await _context.Users
+                    .OfType<ApplicationUser>()
+                    .FirstOrDefaultAsync(u => u.Id == userId);
+                if (appUser?.DeptId != deptId) return Forbid();
+            }
 
-//            p.ProgramName = model.ProgramName;
-//            p.Intake = model.Intake;
-//            p.CourseCode = model.CourseCode;
-//            p.DisplayOrder = model.DisplayOrder;
+            var intakes = await _context.ProgramIntakes
+                .Where(p => p.DeptId == deptId)
+                .OrderByDescending(p => p.IntakeYear)
+                .ToListAsync();
 
-//            await _context.SaveChangesAsync();
-//            TempData["Success"] = "Program updated.";
-//            return RedirectToAction(nameof(Index));
-//        }
+            var vm = new ProgramIntakeIndexVM
+            {
+                DeptId = (int)dept.DeptId,
+                DeptName = dept.Name,
+                LatestIntake = intakes.FirstOrDefault()?.Intake ?? 0,
+                LatestYear = intakes.FirstOrDefault()?.IntakeYear ?? 0,
+                Intakes = intakes.Select((p, idx) => new ProgramIntakeRowVM
+                {
+                    Id = p.Id,
+                    DeptId = p.DeptId,
+                    DeptName = dept.Name,
+                    IntakeYear = p.IntakeYear,
+                    Intake = p.Intake,
+                    IsVisible = p.IsVisible,
+                    IsLatest = idx == 0
+                }).ToList()
+            };
 
-//        [HttpPost]
-//        public async Task<IActionResult> Delete(int id)
-//        {
-//            var p = await _context.ProgramIntakes.FindAsync(id);
-//            if (p == null) return NotFound();
-//            p.IsDeleted = true;
-//            await _context.SaveChangesAsync();
-//            TempData["Success"] = "Program deleted.";
-//            return RedirectToAction(nameof(Index));
-//        }
+            ViewBag.AddVM = new ProgramIntakeFormVM
+            {
+                DeptId = deptId,
+                IntakeYear = DateTime.Now.Year,
+                Intake = intakes.FirstOrDefault()?.Intake ?? 60
+            };
 
-//        [HttpPost]
-//        public async Task<IActionResult> Reorder(int id, string direction)
-//        {
-//            var p = await _context.ProgramIntakes.FindAsync(id);
-//            if (p == null) return NotFound();
+            return View(vm);
+        }
 
-//            if (direction == "up")
-//            {
-//                var above = await _context.ProgramIntakes
-//                    .Where(x => x.DisplayOrder == p.DisplayOrder - 1).FirstOrDefaultAsync();
-//                if (above != null) { above.DisplayOrder++; p.DisplayOrder--; }
-//            }
-//            else
-//            {
-//                var below = await _context.ProgramIntakes
-//                    .Where(x => x.DisplayOrder == p.DisplayOrder + 1).FirstOrDefaultAsync();
-//                if (below != null) { below.DisplayOrder--; p.DisplayOrder++; }
-//            }
+        // ── ADD INTAKE (per dept) ─────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Add(ProgramIntakeFormVM model)
+        {
+            // Check duplicate year for same dept
+            bool exists = await _context.ProgramIntakes
+                .AnyAsync(p => p.DeptId == model.DeptId
+                            && p.IntakeYear == model.IntakeYear);
 
-//            await _context.SaveChangesAsync();
-//            return RedirectToAction(nameof(Index));
-//        }
-//    }
-//}
+            if (exists)
+                ModelState.AddModelError("IntakeYear",
+                    $"Intake for {model.IntakeYear} already exists for this department.");
+
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Please fix validation errors.";
+                return RedirectToAction(nameof(Department),
+                    new { deptId = model.DeptId });
+            }
+
+            _context.ProgramIntakes.Add(new ProgramIntake
+            {
+                DeptId = model.DeptId,
+                IntakeYear = model.IntakeYear,
+                Intake = model.Intake,
+                IsVisible = model.IsVisible
+            });
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] =
+                $"Intake {model.Intake} seats added for {model.IntakeYear}.";
+            return RedirectToAction(nameof(Department),
+                new { deptId = model.DeptId });
+        }
+
+        // ── EDIT (only latest year can be edited) ─────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, int intake)
+        {
+            var record = await _context.ProgramIntakes.FindAsync(id);
+            if (record == null) return NotFound();
+
+            // Verify it's the latest year for this dept
+            var latestYear = await _context.ProgramIntakes
+                .Where(p => p.DeptId == record.DeptId)
+                .MaxAsync(p => p.IntakeYear);
+
+            if (record.IntakeYear < latestYear)
+            {
+                TempData["Error"] =
+                    "Only the most recent year's intake can be edited.";
+                return RedirectToAction(nameof(Department),
+                    new { deptId = record.DeptId });
+            }
+
+            record.Intake = intake;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] =
+                $"Intake updated to {intake} seats for {record.IntakeYear}.";
+            return RedirectToAction(nameof(Department),
+                new { deptId = record.DeptId });
+        }
+
+        // ── TOGGLE VISIBLE ────────────────────────────────
+        [HttpPost]
+        public async Task<IActionResult> ToggleVisible(int id)
+        {
+            var record = await _context.ProgramIntakes.FindAsync(id);
+            if (record == null) return NotFound();
+            record.IsVisible = !record.IsVisible;
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Department),
+                new { deptId = record.DeptId });
+        }
+    }
+}

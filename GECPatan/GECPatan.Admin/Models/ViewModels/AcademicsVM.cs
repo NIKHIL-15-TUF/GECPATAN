@@ -89,22 +89,46 @@ namespace GECPatan.Admin.Models.ViewModels
     }
 
     // ── PROGRAM INTAKE ───
-    public class ProgramIntakeVM
+    public class ProgramIntakeIndexVM
+    {
+        public int DeptId { get; set; }
+        public string DeptName { get; set; } = string.Empty;
+        public List<ProgramIntakeRowVM> Intakes { get; set; } = new();
+        public int LatestIntake { get; set; }
+        public int LatestYear { get; set; }
+    }
+
+    public class ProgramIntakeRowVM
+    {
+        public int Id { get; set; }
+        public int DeptId { get; set; }
+        public string DeptName { get; set; } = string.Empty;
+        public int IntakeYear { get; set; }
+        public int Intake { get; set; }
+        public bool IsVisible { get; set; }
+        public bool IsLatest { get; set; }
+    }
+
+    public class ProgramIntakeFormVM
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Program name is required")]
-        [MaxLength(200)]
-        [Display(Name = "Program Name")]
-        public string ProgramName { get; set; } = string.Empty;
-
         [Required]
+        [Display(Name = "Department")]
+        public int DeptId { get; set; }
+
+        [Required(ErrorMessage = "Year is required")]
+        [Range(2000, 2100, ErrorMessage = "Enter a valid year")]
+        [Display(Name = "Academic Year")]
+        public int IntakeYear { get; set; } = DateTime.Now.Year;
+
+        [Required(ErrorMessage = "Intake is required")]
+        [Range(1, 1000, ErrorMessage = "Intake must be between 1 and 1000")]
+        [Display(Name = "Intake (Seats)")]
         public int Intake { get; set; }
 
-        [Display(Name = "Course Code")]
-        [MaxLength(20)]
-        public string? CourseCode { get; set; }
+        public bool IsVisible { get; set; } = true;
 
-        public int DisplayOrder { get; set; } = 0;
+        public List<SelectListItem> Departments { get; set; } = new();
     }
 }
