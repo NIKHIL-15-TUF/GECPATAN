@@ -19,7 +19,8 @@ namespace GECPatan.Admin.Models.Domain
         Department = 1,
         Committee = 2,
         Facility = 3,
-        Custom = 4
+        Custom = 4,
+        Principal = 5
     }
     // DYNAMIC SECTION
     public class DynamicSection : BaseEntity

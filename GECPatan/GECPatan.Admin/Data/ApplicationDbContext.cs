@@ -106,7 +106,15 @@ namespace GECPatan.Admin.Data
         public DbSet<ContentPage> ContentPages { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
 
-
+        // ── PRINCIPAL ─────────────────────────────────────
+        public DbSet<Principal> Principals { get; set; }
+        public DbSet<PrincipalQualification> PrincipalQualifications { get; set; }
+        public DbSet<PrincipalExperience> PrincipalExperiences { get; set; }
+        public DbSet<PrincipalPublication> PrincipalPublications { get; set; }
+        public DbSet<PrincipalBookPublication> PrincipalBookPublications { get; set; }
+        public DbSet<PrincipalExpertTalk> PrincipalExpertTalks { get; set; }
+        public DbSet<PrincipalAchievement> PrincipalAchievements { get; set; }
+        public DbSet<PrincipalMembership> PrincipalMemberships { get; set; }
         // ── AUDIT LOG ─────────────────────────────────────
         public DbSet<AuditLog> AuditLogs { get; set; }
 
@@ -187,6 +195,8 @@ namespace GECPatan.Admin.Data
             modelBuilder.Entity<ContentPage>()
                 .HasIndex(p => p.Slug)
                 .IsUnique();
+            modelBuilder.Entity<Principal>()
+                .HasQueryFilter(x => !x.IsDeleted);
             // ── RELATIONSHIPS ────────────────────────────────
 
             // Faculty → Department

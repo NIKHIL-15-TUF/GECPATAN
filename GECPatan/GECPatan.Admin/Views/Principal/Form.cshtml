@@ -1,0 +1,250 @@
+﻿@model GECPatan.Admin.Models.ViewModels.PrincipalFormVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Principal" : "Add Principal";
+}
+ 
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="card-title mb-0">
+                <i class="fas fa-user-tie mr-2"></i>@ViewData["Title"]
+            </h3>
+            @if (isEdit)
+            {
+                <a asp-action="Preview" asp-route-id="@Model.Id"
+                   target="_blank" class="btn btn-sm btn-light">
+                    <i class="fas fa-eye mr-1"></i>Preview
+                </a>
+            }
+        </div>
+    </div>
+    <form asp-action="@(isEdit?"Edit":"Create")" method="post"
+          enctype="multipart/form-data">
+        @if (isEdit) { <input asp-for="Id" type="hidden" /> }
+        <div class="card-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger py-2">
+                    @Html.ValidationSummary(false)
+                </div>
+            }
+ 
+            <div class="row">
+                <!-- Left: Fields -->
+                <div class="col-md-9">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="form-group">
+                                <label asp-for="Name"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="Name"
+                                       class="form-control"
+                                       placeholder="Dr. Full Name" />
+                                <span asp-validation-for="Name"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label asp-for="Designation"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="Designation"
+                                       class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label asp-for="Email"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="Email"
+                                       class="form-control" type="email"
+                                       placeholder="principal@gecpatan.ac.in" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="Contact"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="Contact"
+                                       class="form-control"
+                                       placeholder="+91 9876543210" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label asp-for="DateOfJoiningInstitute"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="DateOfJoiningInstitute"
+                                       class="form-control" type="date" />
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label asp-for="DateOfJoiningDept"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="DateOfJoiningDept"
+                                       class="form-control" type="date" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AreaOfInterest"
+                               class="font-weight-bold"></label>
+                        <input asp-for="AreaOfInterest"
+                               class="form-control"
+                               placeholder="e.g. Machine Learning, VLSI Design" />
+                    </div>
+                </div>
+ 
+                <!-- Right: Photo -->
+                <div class="col-md-3 text-center">
+                    @if (!string.IsNullOrEmpty(Model.ExistingPhotoPath))
+                    {
+                        <img src="@Model.ExistingPhotoPath"
+                             class="img-thumbnail rounded-circle mb-2"
+                             id="photoPreview"
+                             style="width:120px;height:120px;
+                                    object-fit:cover;" />
+                    }
+                    else
+                    {
+                        <div class="bg-secondary rounded-circle
+                                    d-inline-flex align-items-center
+                                    justify-content-center mb-2"
+                             style="width:120px;height:120px;">
+                            <i class="fas fa-user fa-4x text-white"></i>
+                        </div>
+                        <img id="photoPreview" src="#"
+                             class="img-thumbnail rounded-circle mb-2 d-none"
+                             style="width:120px;height:120px;
+                                    object-fit:cover;" />
+                    }
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input"
+                               name="Photo" accept="image/*"
+                               onchange="previewPhoto(this)" />
+                        <label class="custom-file-label"
+                               style="font-size:11px;">
+                            @(string.IsNullOrEmpty(Model.ExistingPhotoPath)
+                                ? "Upload Photo" : "Change Photo")
+                        </label>
+                    </div>
+                </div>
+            </div>
+ 
+            <!-- Message -->
+            <div class="form-group mt-2">
+                <label class="font-weight-bold">
+                    Message / About
+                    <small class="text-muted font-weight-normal">
+                        (shown on home page)
+                    </small>
+                </label>
+                <textarea asp-for="Message" id="messageEditor"
+                          class="form-control" rows="6"
+                          placeholder="Principal's message..."></textarea>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-2"></i>
+                @(isEdit ? "Save Changes" : "Save & Continue")
+            </button>
+        </div>
+    </form>
+</div>
+ 
+<!-- Sub-sections quick links (edit only) -->
+@if (isEdit)
+{
+    <div class="card mt-3">
+        <div class="card-header bg-light">
+            <h6 class="card-title mb-0">
+                <i class="fas fa-list mr-2"></i>
+                Complete Profile Sections
+            </h6>
+        </div>
+        <div class="card-body p-2">
+            <div class="row">
+                @{
+                    var sections = new[]
+                    {
+                        ("Qualifications",  "fa-graduation-cap","outline-primary"),
+                        ("Experience",      "fa-briefcase",     "outline-success"),
+                        ("Publications",    "fa-book-open",     "outline-info"),
+                        ("BookPublications","fa-book",          "outline-warning"),
+                        ("ExpertTalks",     "fa-chalkboard",    "outline-danger"),
+                        ("Achievements",    "fa-trophy",        "outline-primary"),
+                        ("Memberships",     "fa-id-badge",      "outline-secondary")
+                    };
+                }
+                @foreach (var (action, icon, color) in sections)
+                {
+                    <div class="col-md-3 col-6 mb-2">
+                        <a asp-action="@action"
+                           asp-route-id="@Model.Id"
+                           class="btn btn-@color btn-block btn-sm">
+                            <i class="fas @icon d-block mb-1"
+                               style="font-size:18px;"></i>
+                            @action.Replace("BookP", "Book P")
+                        </a>
+                    </div>
+                }
+                <div class="col-md-3 col-6 mb-2">
+                    <a asp-controller="DynamicSection"
+                       asp-action="Index"
+                       asp-route-pageType="5"
+                       asp-route-pageId="@Model.Id"
+                       class="btn btn-outline-dark btn-block btn-sm">
+                        <i class="fas fa-layer-group d-block mb-1"
+                           style="font-size:18px;"></i>
+                        Dynamic Sections
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+ 
+@section Scripts {
+    <script src="https://cdn.tiny.cloud/1/18c5arljshkibt2xb5jfkdlmr3uosv3lagdiujmk5c9jlv49/tinymce/6/tinymce.min.js"
+            referrerpolicy="origin"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        tinymce.init({
+            selector: '#messageEditor',
+            plugins: 'link lists',
+            toolbar: 'bold italic | bullist numlist | link',
+            height: 200,
+            menubar: false,
+            promotion: false,
+            branding: false,
+            setup: e => e.on('change', () => tinymce.triggerSave())
+        });
+        document.querySelector('form')
+            .addEventListener('submit', () => tinymce.triggerSave());
+ 
+        function previewPhoto(input) {
+            const preview = document.getElementById('photoPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+                input.nextElementSibling.textContent =
+                    input.files[0].name;
+            }
+        }
+    </script>
+}

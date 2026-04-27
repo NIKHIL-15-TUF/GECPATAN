@@ -1,0 +1,74 @@
+﻿@model GECPatan.Admin.Models.ViewModels.PrincipalTransferVM
+@{
+    ViewData["Title"] = "Transfer Principal";
+}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-exchange-alt mr-2"></i>
+                    Transfer / Replace Principal
+                </h3>
+            </div>
+            <form asp-action="Transfer" method="post">
+                <input asp-for="CurrentPrincipalId" type="hidden" />
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger py-2">
+                            @Html.ValidationSummary(false)
+                        </div>
+                    }
+ 
+                    <div class="alert alert-warning py-2 mb-3">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        You are marking
+                        <strong>@Model.CurrentPrincipalName</strong>
+                        as transferred. They will be moved to
+                        "Past Principals". This cannot be undone easily.
+                    </div>
+ 
+                    <div class="form-group">
+                        <label asp-for="TransferDate"
+                               class="font-weight-bold"></label>
+                        <input asp-for="TransferDate"
+                               class="form-control" type="date" />
+                        <span asp-validation-for="TransferDate"
+                              class="text-danger small"></span>
+                    </div>
+ 
+                    <div class="form-group">
+                        <label asp-for="TransferNote"
+                               class="font-weight-bold"></label>
+                        <textarea asp-for="TransferNote"
+                                  class="form-control" rows="3"
+                                  placeholder="e.g. Transferred to GTU headquarters, Ahmedabad"></textarea>
+                    </div>
+ 
+                    <div class="alert alert-info py-2 mb-0">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <small>
+                            After confirming, you will be redirected to
+                            add the new principal.
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-warning"
+                            onclick="return confirm('Confirm transfer of @Model.CurrentPrincipalName?')">
+                        <i class="fas fa-exchange-alt mr-2"></i>
+                        Confirm Transfer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+}

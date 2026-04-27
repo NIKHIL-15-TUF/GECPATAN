@@ -1,0 +1,162 @@
+﻿@using GECPatan.Admin.Models.Domain
+@model List<PrincipalPublication>
+@{
+    int principalId = ViewBag.PrincipalId;
+    string principalName = ViewBag.PrincipalName ?? "";
+    ViewData["Title"] = "Publications";
+}
+<div class="d-flex align-items-center mb-3">
+    <a asp-action="Edit" asp-route-id="@principalId"
+           class="btn btn-secondary btn-sm mr-3">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="mb-0">Publications</h5>
+        <small class="text-muted">@principalName</small>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-plus mr-2"></i>Add Publication
+                </h6>
+            </div>
+            <form asp-action="AddPublication" method="post">
+                <div class="card-body">
+                    <input type="hidden" name="PrincipalId"
+                           value="@principalId" />
+                    <div class="form-group">
+                        <label class="font-weight-bold">
+                            Type <span class="text-danger">*</span>
+                        </label>
+                        <select name="Type" class="form-control" required>
+                            <option value="Journal">Journal</option>
+                            <option value="Conference">Conference</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">
+                            Title <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="Title" class="form-control"
+                                  rows="3" required
+                                  placeholder="Full publication title"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">
+                            Journal / Conference Name
+                        </label>
+                        <input name="JournalOrConference"
+                               class="form-control"
+                               placeholder="Journal or conference name" />
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="font-weight-bold">Year</label>
+                                <input name="Year" class="form-control"
+                                       placeholder="e.g. 2023" />
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="font-weight-bold">DOI</label>
+                                <input name="DOI" class="form-control"
+                                       placeholder="10.xxxx/..." />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-plus mr-2"></i>Add
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-light d-flex
+                justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-book-open mr-2"></i>
+                    Publications (@Model.Count)
+                </h6>
+                <div>
+                    <span class="badge badge-primary">
+                        Journal: @Model.Count(p => p.Type == "Journal")
+                    </span>
+                    <span class="badge badge-info ml-1">
+                        Conference: @Model.Count(p => p.Type == "Conference")
+                    </span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                {
+                    <p class="text-muted text-center py-4">
+                        No publications yet.
+                    </p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="90">Type</th>
+                                <th>Title</th>
+                                <th>Journal/Conference</th>
+                                <th width="60">Year</th>
+                                <th width="60"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge @(p.Type == "Journal" ? "badge-primary" : "badge-info")"
+                                              style="font-size:9px;">
+                                            @p.Type
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>@p.Title</small>
+                                        @if (!string.IsNullOrEmpty(p.DOI))
+                                        {
+                                            <small class="text-muted d-block">
+                                                DOI: @p.DOI
+                                            </small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small>@p.JournalOrConference</small>
+                                    </td>
+                                    <td><small>@p.Year</small></td>
+                                    <td>
+                                        <form asp-action="DeletePublication"
+                                              method="post">
+                                            <input type="hidden" name="id"
+                                                   value="@p.Id" />
+                                            <input type="hidden"
+                                                   name="principalId"
+                                                   value="@principalId" />
+                                            <button type="submit"
+                                                    class="btn btn-xs btn-danger"
+                                                    onclick="return confirm('Remove?')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

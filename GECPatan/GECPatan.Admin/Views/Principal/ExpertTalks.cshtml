@@ -1,0 +1,120 @@
+﻿@using GECPatan.Admin.Models.Domain
+@model List<PrincipalExpertTalk>
+@{
+    int    principalId   = ViewBag.PrincipalId;
+    string principalName = ViewBag.PrincipalName ?? "";
+    ViewData["Title"]    = "Expert Talks";
+}
+<div class="d-flex align-items-center mb-3">
+    <a asp-action="Edit" asp-route-id="@principalId"
+       class="btn btn-secondary btn-sm mr-3">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="mb-0">Expert Talks / Guest Lectures</h5>
+        <small class="text-muted">@principalName</small>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-plus mr-2"></i>Add Expert Talk
+                </h6>
+            </div>
+            <form asp-action="AddExpertTalk" method="post">
+                <div class="card-body">
+                    <input type="hidden" name="PrincipalId"
+                           value="@principalId" />
+                    <div class="form-group">
+                        <label class="font-weight-bold">Year</label>
+                        <input name="Year" class="form-control"
+                               placeholder="e.g. 2023" />
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">
+                            Subject <span class="text-danger">*</span>
+                        </label>
+                        <input name="Subject" class="form-control"
+                               placeholder="Talk subject" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Place</label>
+                        <input name="Place" class="form-control"
+                               placeholder="Institution / City" />
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Details</label>
+                        <textarea name="Details" class="form-control"
+                                  rows="3"
+                                  placeholder="Additional details..."></textarea>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-plus mr-2"></i>Add
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chalkboard mr-2"></i>
+                    Expert Talks (@Model.Count)
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                {
+                    <p class="text-muted text-center py-4">
+                        No expert talks yet.
+                    </p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="60">Year</th>
+                                <th>Subject</th>
+                                <th>Place</th>
+                                <th>Details</th>
+                                <th width="60"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model)
+                            {
+                                <tr>
+                                    <td><strong>@t.Year</strong></td>
+                                    <td>@t.Subject</td>
+                                    <td><small>@t.Place</small></td>
+                                    <td><small>@t.Details</small></td>
+                                    <td>
+                                        <form asp-action="DeleteExpertTalk"
+                                              method="post">
+                                            <input type="hidden" name="id"
+                                                   value="@t.Id" />
+                                            <input type="hidden"
+                                                   name="principalId"
+                                                   value="@principalId" />
+                                            <button type="submit"
+                                                    class="btn btn-xs btn-danger"
+                                                    onclick="return confirm('Remove?')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
