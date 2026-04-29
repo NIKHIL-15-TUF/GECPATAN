@@ -1,9 +1,11 @@
 ﻿ using GECPatan.Admin.Data;
 using GECPatan.Admin.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
+using GECPatan.Admin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol.Plugins;
 
 namespace GECPatan.Admin.Controllers
 {
@@ -11,10 +13,11 @@ namespace GECPatan.Admin.Controllers
     public class AboutUsController : Controller
     {
         private readonly ApplicationDbContext _context;
-
-        public AboutUsController(ApplicationDbContext context)
+        private readonly NotificationService _notify;
+        public AboutUsController(ApplicationDbContext context, NotificationService notify)
         {
             _context = context;
+            _notify = notify;
         }
 
         public async Task<IActionResult> Index()
@@ -50,6 +53,15 @@ namespace GECPatan.Admin.Controllers
 
             await _context.SaveChangesAsync();
             TempData["Success"] = "About Us updated.";
+            //await _notify.SendAsync(
+            //    title: $"About Us : {model.HistoryText}",
+            //    message: $"About Us Page has been updated",
+            //    module: "AboutUs",
+            //    icon: "fa-user-plus",
+            //    color: "success",
+            //    link: $"/AboutUs/Index",
+            //    forRole: "SuperAdmin"
+            //);
             return RedirectToAction(nameof(Index));
         }
     }

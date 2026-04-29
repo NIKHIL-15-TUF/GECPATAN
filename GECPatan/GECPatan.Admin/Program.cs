@@ -1,5 +1,6 @@
 using GECPatan.Admin.Data;
 using GECPatan.Admin.Models.Domain;
+using GECPatan.Admin.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
@@ -48,6 +49,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+//Notification
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddHttpContextAccessor();
 //Audit-Log
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<GECPatan.Admin.Services.AuditService>();

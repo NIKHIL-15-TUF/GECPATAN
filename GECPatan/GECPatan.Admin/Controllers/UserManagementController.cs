@@ -1,6 +1,7 @@
 ﻿using GECPatan.Admin.Data;
 using GECPatan.Admin.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
+using GECPatan.Admin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,15 +16,18 @@ namespace GECPatan.Admin.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApplicationDbContext _context;
+        private readonly NotificationService _notify;
 
         public UserManagementController(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            NotificationService notify)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _context = context;
+            _notify= notify;
         }
 
         // ══════════════════════════════════════════════════
@@ -330,9 +334,18 @@ namespace GECPatan.Admin.Controllers
             TempData.Remove("UserPassword");
 
             TempData["Success"] =
-                $"✅ User '{fullName}' created with role '{role}'. " +
+                $" User '{fullName}' created with role '{role}'. " +
                 "They will be prompted to change their password on first login.";
-
+            //Notification
+            await _notify.SendAsync(
+                title: $"New User Created: {user.FullName}",
+                message: $"Role: {role}",
+                module: "UserManagement",
+                icon: "fa-user-plus",
+                color: "success",
+                link: "/UserManagement/Index",
+                forRole: "SuperAdmin"
+            );
             return RedirectToAction(nameof(Index));
         }
 

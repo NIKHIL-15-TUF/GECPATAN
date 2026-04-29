@@ -1,6 +1,7 @@
 ﻿using GECPatan.Admin.Data;
 using GECPatan.Admin.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
+using GECPatan.Admin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +13,11 @@ namespace GECPatan.Admin.Controllers
     public class ContentPageController : Controller
     {
         private readonly ApplicationDbContext _context;
-
-        public ContentPageController(ApplicationDbContext context)
+        private readonly NotificationService _notify;
+        public ContentPageController(ApplicationDbContext context,NotificationService notify)
         {
             _context = context;
+            _notify = notify;
         }
 
         // ── INDEX ─────────────────────────────────────────
@@ -83,7 +85,16 @@ namespace GECPatan.Admin.Controllers
 
             // Audit log
             await WriteAuditLog("Created", "ContentPage", page.Id, page.Title);
-
+            //Notificcation Send
+            await _notify.SendAsync(
+                title: $"Content Page Published: {page.Title}",
+                message: $"URL: /page/{page.Slug}",
+                module: "ContentPage",
+                icon: "fa-file-alt",
+                color: "primary",
+                link: $"/ContentPage/Edit/{page.Id}",
+                forRole: "SuperAdmin"
+            );
             TempData["Success"] = $"Page '{page.Title}' created. URL: /page/{page.Slug}";
             return RedirectToAction(nameof(Index));
         }

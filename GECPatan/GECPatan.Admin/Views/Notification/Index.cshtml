@@ -1,0 +1,136 @@
+﻿@model List<GECPatan.Admin.Services.NotificationItemVM>
+@{
+    ViewData["Title"] = "Notifications";
+    var modules    = ViewBag.Modules as List<string> ?? new();
+    var curModule  = ViewBag.Module as string;
+    bool unreadOnly= ViewBag.UnreadOnly == true;
+    int totalUnread= (int)(ViewBag.TotalUnread ?? 0);
+}
+ 
+<div class="row mb-3">
+    <div class="col-md-8">
+        <!-- Filters -->
+        <form asp-action="Index" method="get"
+              class="d-flex flex-wrap" style="gap:8px;">
+            <select name="module" class="form-control form-control-sm"
+                    style="width:auto;" onchange="this.form.submit()">
+                <option value="">All Modules</option>
+                @foreach (var m in modules)
+                {
+                    <option value="@m" selected="@(curModule==m)">@m</option>
+                }
+            </select>
+            <div class="custom-control custom-switch align-self-center ml-2">
+                <input type="checkbox" class="custom-control-input"
+                       id="unreadOnly" name="unreadOnly" value="true"
+                       @(unreadOnly ? "checked" : "")
+                       onchange="this.form.submit()" />
+                <label class="custom-control-label" for="unreadOnly">
+                    Unread only
+                </label>
+            </div>
+            @if (!string.IsNullOrEmpty(curModule) || unreadOnly)
+            {
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-times mr-1"></i>Clear
+                </a>
+            }
+        </form>
+    </div>
+    <div class="col-md-4 text-right">
+        @if (totalUnread > 0)
+        {
+            <form asp-action="MarkAllRead" method="post" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-check-double mr-1"></i>
+                    Mark All Read (@totalUnread)
+                </button>
+            </form>
+        }
+    </div>
+</div>
+ 
+<div class="card">
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-bell-slash fa-3x mb-3 d-block"></i>
+                No notifications
+                @(unreadOnly ? "unread" : "in the last 30 days").
+            </div>
+        }
+        else
+        {
+            <div class="list-group list-group-flush">
+                @foreach (var n in Model)
+                {
+                    <a href="@(n.Link != null
+                        ? $"/Notification/Read/{n.Id}?link={Uri.EscapeDataString(n.Link)}"
+                        : $"/Notification/Read/{n.Id}")"
+                       class="list-group-item list-group-item-action
+                              @(!n.IsRead ? "font-weight-bold" : "")
+                              d-flex align-items-start"
+                       style="@(!n.IsRead ? "background:#f0f4ff;" : "")">
+ 
+                        <!-- Icon -->
+                        <div class="mr-3 mt-1">
+                            <span class="badge badge-@n.IconColor p-2"
+                                  style="width:36px;height:36px;
+                                         display:flex;align-items:center;
+                                         justify-content:center;">
+                                <i class="fas @n.Icon"
+                                   style="font-size:14px;"></i>
+                            </span>
+                        </div>
+ 
+                        <!-- Content -->
+                        <div class="flex-fill">
+                            <div class="d-flex justify-content-between">
+                                <span style="font-size:13px;">
+                                    @n.Title
+                                    @if (!n.IsRead)
+                                    {
+                                        <span class="badge badge-primary ml-1"
+                                              style="font-size:9px;">New</span>
+                                    }
+                                </span>
+                                <small class="text-muted ml-2 flex-shrink-0">
+                                    @n.TimeAgo
+                                </small>
+                            </div>
+                            @if (!string.IsNullOrEmpty(n.Message))
+                            {
+                                <small class="text-muted d-block">
+                                    @n.Message
+                                </small>
+                            }
+                            <small class="text-muted">
+                                @if (!string.IsNullOrEmpty(n.Module))
+                                {
+                                    <span class="badge badge-light border mr-1"
+                                          style="font-size:9px;">
+                                        @n.Module
+                                    </span>
+                                }
+                                @if (!string.IsNullOrEmpty(n.TriggeredBy))
+                                {
+                                    <span>by @n.TriggeredBy</span>
+                                }
+                            </small>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+    @if (Model.Any())
+    {
+        <div class="card-footer py-2 text-muted text-center">
+            <small>
+                <i class="fas fa-info-circle mr-1"></i>
+                Showing notifications from the last 30 days only.
+            </small>
+        </div>
+    }
+</div>

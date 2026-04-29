@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-
+using GECPatan.Admin.Services;
 namespace GECPatan.Admin.Controllers
 {
     [Authorize(Roles = "SuperAdmin,ContentEditor")]
@@ -13,11 +13,12 @@ namespace GECPatan.Admin.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
-
-        public NewsItemController(ApplicationDbContext context, IWebHostEnvironment env)
+        private readonly NotificationService _notify;
+        public NewsItemController(ApplicationDbContext context, IWebHostEnvironment env, NotificationService notify)
         {
             _context = context;
             _env = env;
+            _notify = notify;
         }
 
         public async Task<IActionResult> Index()
@@ -109,7 +110,19 @@ namespace GECPatan.Admin.Controllers
                     });
 
             await _context.SaveChangesAsync();
+
             TempData["Success"] = "News item added.";
+
+            //Notification 
+            await _notify.SendAsync(
+                title: $"New News: {news.Title}",
+                message: null,
+                module: "News",
+                icon: "fa-newspaper",
+                color: "primary",
+                link: $"/NewsItem/Edit/{news.Id}",
+                forRole: "SuperAdmin"
+            );
             return RedirectToAction(nameof(Index));
         }
 

@@ -1,4 +1,5 @@
 ﻿using GECPatan.Admin.Data;
+using GECPatan.Admin.Services;
 using GECPatan.Admin.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -12,11 +13,12 @@ namespace GECPatan.Admin.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
-
-        public TenderCategoryController(ApplicationDbContext context, IWebHostEnvironment env)
+        private readonly NotificationService _notify;
+        public TenderCategoryController(ApplicationDbContext context, IWebHostEnvironment env , NotificationService notify)
         {
             _context = context;
             _env = env;
+            _notify = notify;
         }
 
         // ── INDEX: list all categories ────────────────────
@@ -76,7 +78,17 @@ namespace GECPatan.Admin.Controllers
             });
 
             await _context.SaveChangesAsync();
+
             TempData["Success"] = "Tender category added.";
+            //Notification
+            await _notify.SendAsync(
+                title: $"New Tender Category: {model.Title}",
+                module: "Tender",
+                icon: "fa-file-contract",
+                color: "warning",
+                link: "/TenderCategory/Index",
+                forRole: "SuperAdmin"
+            );
             return RedirectToAction(nameof(Index));
         }
 

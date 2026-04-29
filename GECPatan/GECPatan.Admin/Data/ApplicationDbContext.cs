@@ -117,6 +117,9 @@ namespace GECPatan.Admin.Data
         public DbSet<PrincipalMembership> PrincipalMemberships { get; set; }
         // ── AUDIT LOG ─────────────────────────────────────
         public DbSet<AuditLog> AuditLogs { get; set; }
+        // ── NOTIFICATIONS ─────────────────────────────────
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationRead> NotificationReads { get; set; }
 
         // MODEL CREATING
         protected override void OnModelCreating(ModelBuilder modelBuilder)

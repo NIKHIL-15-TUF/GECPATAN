@@ -1,10 +1,13 @@
 ﻿using GECPatan.Admin.Data;
 using GECPatan.Admin.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
+using GECPatan.Admin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol.Plugins;
 
 namespace GECPatan.Admin.Controllers
 {
@@ -13,11 +16,13 @@ namespace GECPatan.Admin.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly NotificationService _notify;
 
-        public FacultyController(ApplicationDbContext context, IWebHostEnvironment env)
+        public FacultyController(ApplicationDbContext context, IWebHostEnvironment env, NotificationService notify)
         {
             _context = context;
             _env = env;
+            _notify = notify;
         }
 
         // ── INDEX ─────────────────────────────────────────
@@ -99,13 +104,22 @@ namespace GECPatan.Admin.Controllers
                 SeniorityOrder = model.SeniorityOrder,
                 IsActive = true
             };
+            var dept = await _context.Departments.FirstOrDefaultAsync(m =>m.DeptId == model.DeptId);
 
             if (Photo != null && Photo.Length > 0)
                 faculty.ImagePath = await SaveFileAsync(Photo, "faculty");
 
             _context.Faculties.Add(faculty);
             await _context.SaveChangesAsync();
-
+            await _notify.SendAsync(
+                title: $"New Faculty Added: {faculty.Name}",
+                message: $"Added to {dept?.Name??"Unknown"} department",
+                module: "Faculty",
+                icon: "fa-user-plus",
+                color: "success",
+                link: $"/Faculty/Edit/{faculty.FacultyId}",
+                forRole: "SuperAdmin"
+            );
             TempData["Success"] = $"Faculty '{faculty.Name}' added.";
             return RedirectToAction(nameof(Index));
         }
@@ -125,8 +139,7 @@ namespace GECPatan.Admin.Controllers
             {
                 var cu = await GetCurrentUserAsync();
                 if (cu?.FacultyId != id) return Forbid();
-            }
-
+            };
             var vm = new FacultyEditVM
             {
                 FacultyId = f.FacultyId,
@@ -140,7 +153,6 @@ namespace GECPatan.Admin.Controllers
                 SeniorityOrder = f.SeniorityOrder,
                 ExistingImagePath = f.ImagePath
             };
-
             return View(await BuildEditVM(vm));
         }
 
@@ -175,6 +187,15 @@ namespace GECPatan.Admin.Controllers
 
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Faculty '{f.Name}' updated.";
+            await _notify.SendAsync(
+                title: $"Faculty Updated: {f.Name}",
+                message: "Profile details were changed",
+                module: "Faculty",
+                icon: "fa-edit",
+                color: "info",
+                link: $"/Faculty/Edit/{f.FacultyId}",
+                forRole: "SuperAdmin"
+            );
             return RedirectToAction(nameof(Index));
         }
 
@@ -188,6 +209,15 @@ namespace GECPatan.Admin.Controllers
             f.IsActive = !f.IsActive;
             await _context.SaveChangesAsync();
             TempData["Success"] = $"'{f.Name}' " + (f.IsActive ? "activated" : "deactivated") + ".";
+            await _notify.SendAsync(
+                title: $"Faculty {(f.IsActive ? "Activated" : "Deactivated")}: {f.Name}",
+                message: null,
+                module: "Faculty",
+                icon: f.IsActive ? "fa-user-check" : "fa-user-slash",
+                color: f.IsActive ? "success" : "warning",
+                link: $"/Faculty/Edit/{f.FacultyId}",
+                forRole: "SuperAdmin"
+            );
             return RedirectToAction(nameof(Index));
         }
 
@@ -200,6 +230,15 @@ namespace GECPatan.Admin.Controllers
             f.IsDeleted = true; f.IsActive = false;
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Faculty '{f.Name}' deleted.";
+            await _notify.SendAsync(
+                title: $"Faculty Deleted: {f.Name}",
+                message: null,
+                module: "Faculty",
+                icon: "fa-user-times",
+                color: "danger",
+                link: "/Faculty/Index",
+                forRole: "SuperAdmin"
+            );
             return RedirectToAction(nameof(Index));
         }
 
@@ -258,6 +297,16 @@ namespace GECPatan.Admin.Controllers
                 });
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Qualification added.";
+                var faculty = await _context.Faculties.FirstOrDefaultAsync(f => f.FacultyId == model.FacultyId);
+                await _notify.SendAsync(
+                   title: $"Qualification Added for {faculty?.Name}",
+                   message: $"{model.Degree} - {model.Specialization}",
+                   module: "Faculty",
+                   icon: "fa-graduation-cap",
+                   color: "info",
+                   link: $"/Faculty/Edit/{model.FacultyId}",
+                   forRole: "SuperAdmin"
+               );
             }
             return RedirectToAction(nameof(Qualifications), new { id = model.FacultyId });
         }
@@ -268,6 +317,21 @@ namespace GECPatan.Admin.Controllers
         {
             var item = await _context.FacultyQualifications.FindAsync(id);
             if (item != null) { item.IsDeleted = true; await _context.SaveChangesAsync(); }
+            var facultyName = await _context.Faculties
+             .Where(f => f.FacultyId == facultyId)
+             .Select(f => f.Name)
+             .FirstOrDefaultAsync();
+            var degree = item.Degree;
+            var specialization = item.Specialization;
+            await _notify.SendAsync(
+                title: $"Qualification Removed for {facultyName}",
+                message: $"{degree} - {specialization}",
+                module: "Faculty",
+                icon: "fa-user-minus",
+                color: "warning",
+                link: $"/Faculty/Edit/{facultyId}",
+                forRole: "SuperAdmin"
+            );
             return RedirectToAction(nameof(Qualifications), new { id = facultyId });
         }
 
@@ -296,7 +360,21 @@ namespace GECPatan.Admin.Controllers
                     FromDate = model.FromDate,
                     ToDate = model.ToDate
                 });
+                var facultyName = await _context.Faculties
+                    .Where(f => f.FacultyId == model.FacultyId)
+                    .Select(f => f.Name)
+                    .FirstOrDefaultAsync();
                 await _context.SaveChangesAsync();
+                await _notify.SendAsync(
+                    title: $"Experience Added for {facultyName}",
+                    message: $"{model.Position} at {model.Organization}",
+                    module: "Faculty",
+                    icon: "fa-briefcase",
+                    color: "info",
+                    link: $"/Faculty/Edit/{model.FacultyId}",
+                    forRole: "SuperAdmin"
+                );
+
                 TempData["Success"] = "Experience added.";
             }
             return RedirectToAction(nameof(Experience), new { id = model.FacultyId });
@@ -307,7 +385,25 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> DeleteExperience(int id, int facultyId)
         {
             var item = await _context.FacultyExperiences.FindAsync(id);
-            if (item != null) { item.IsDeleted = true; await _context.SaveChangesAsync(); }
+            if (item != null) {
+                var facultyName = await _context.Faculties
+                    .Where(f => f.FacultyId == facultyId)
+                    .Select(f => f.Name)
+                    .FirstOrDefaultAsync();
+
+                var position = item.Position;
+                var org = item.Organization;
+                await _notify.SendAsync(
+                    title: $"Experience Removed for {facultyName}",
+                    message: $"{position} at {org}",
+                    module: "Faculty",
+                    icon: "fa-user-minus",
+                    color: "warning",
+                    link: $"/Faculty/Edit/{facultyId}",
+                    forRole: "SuperAdmin"
+                );
+                item.IsDeleted = true; await _context.SaveChangesAsync(); 
+            }
             return RedirectToAction(nameof(Experience), new { id = facultyId });
         }
 
@@ -318,7 +414,7 @@ namespace GECPatan.Admin.Controllers
             ViewBag.FacultyId = id;
             ViewBag.FacultyName = (await _context.Faculties.FindAsync(id))?.Name;
             var list = await _context.FacultyTrainings
-                .Where(t => t.FacultyId == id).ToListAsync();
+                .Where(t => t.FacultyId == id && !t.IsDeleted).ToListAsync();
             return View(list);
         }
 
@@ -337,6 +433,21 @@ namespace GECPatan.Admin.Controllers
                     ToDate = model.ToDate
                 });
                 await _context.SaveChangesAsync();
+
+                var facultyName = await _context.Faculties
+                    .Where(f => f.FacultyId == model.FacultyId)
+                    .Select(f => f.Name)
+                    .FirstOrDefaultAsync();
+
+                await _notify.SendAsync(
+                    title: $"Training Added for {facultyName}",
+                    message: $"{model.Title} by {model.OrganizedBy}",
+                    module: "Faculty",
+                    icon: "fa-chalkboard-teacher",
+                    color: "info",
+                    link: $"/Faculty/Edit/{model.FacultyId}",
+                    forRole: "SuperAdmin"
+                );
                 TempData["Success"] = "Training added.";
             }
             return RedirectToAction(nameof(Training), new { id = model.FacultyId });
@@ -347,7 +458,26 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> DeleteTraining(int id, int facultyId)
         {
             var item = await _context.FacultyTrainings.FindAsync(id);
-            if (item != null) { item.IsDeleted = true; await _context.SaveChangesAsync(); }
+            if (item != null) {
+                item.IsDeleted = true;
+                await _context.SaveChangesAsync();
+                var title=item.Title;
+                var org = item.OrganizedBy;
+                var facultyName = await _context.Faculties
+                .Where(f => f.FacultyId == facultyId)
+                .Select(f => f.Name)
+                .FirstOrDefaultAsync();
+
+                        await _notify.SendAsync(
+                            title: $"Training Removed for {facultyName}",
+                            message: $"{title} by {org}",
+                            module: "Faculty",
+                            icon: "fa-user-minus",
+                            color: "warning",
+                            link: $"/Faculty/Edit/{facultyId}",
+                            forRole: "SuperAdmin"
+                        );
+            }
             return RedirectToAction(nameof(Training), new { id = facultyId });
         }
 
@@ -358,7 +488,8 @@ namespace GECPatan.Admin.Controllers
             ViewBag.FacultyId = id;
             ViewBag.FacultyName = (await _context.Faculties.FindAsync(id))?.Name;
             var list = await _context.FacultyPublications
-                .Where(p => p.FacultyId == id).OrderBy(p => p.SrNo).ToListAsync();
+                .Where(p => p.FacultyId == id && !p.IsDeleted).OrderBy(p => p.SrNo).ToListAsync();
+
             return View(list);
         }
 
@@ -374,7 +505,20 @@ namespace GECPatan.Admin.Controllers
                     SrNo = model.SrNo,
                     Title = model.Title
                 });
+                var facultyName = await _context.Faculties
+                  .Where(f => f.FacultyId == model.FacultyId)
+                  .Select(f => f.Name)
+                  .FirstOrDefaultAsync();
                 await _context.SaveChangesAsync();
+                await _notify.SendAsync(
+                   title: $"Publication Added for {facultyName}",
+                   message: $"[{model.SrNo}] {model.Title}",
+                   module: "Faculty",
+                   icon: "fa-book",
+                   color: "info",
+                   link: $"/Faculty/Edit/{model.FacultyId}",
+                   forRole: "SuperAdmin"
+               );
                 TempData["Success"] = "Publication added.";
             }
             return RedirectToAction(nameof(Publications), new { id = model.FacultyId });
@@ -385,11 +529,29 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> DeletePublication(int id, int facultyId)
         {
             var item = await _context.FacultyPublications.FindAsync(id);
-            if (item != null) { item.IsDeleted = true; await _context.SaveChangesAsync(); }
+            if (item != null) {
+                var title = item.Title;
+                var srNo = item.SrNo;
+                item.IsDeleted = true; await _context.SaveChangesAsync();
+                var facultyName = await _context.Faculties
+                .Where(f => f.FacultyId == facultyId)
+                .Select(f => f.Name)
+                .FirstOrDefaultAsync();
+
+                await _notify.SendAsync(
+                    title: $"Publication Removed for {facultyName}",
+                    message: $"[{srNo}] {title}",
+                    module: "Faculty",
+                    icon: "fa-trash",
+                    color: "warning",
+                    link: $"/Faculty/Edit/{facultyId}",
+                    forRole: "SuperAdmin"
+                );
+            }
             return RedirectToAction(nameof(Publications), new { id = facultyId });
         }
 
-        // ── PERSONAL DETAILS ──────────────────────────────
+        // ── PERSONAL DETAILS ──
         public async Task<IActionResult> PersonalDetails(int id)
         {
             ViewData["Title"] = "Personal Details";
@@ -427,6 +589,20 @@ namespace GECPatan.Admin.Controllers
                 existing.Email = model.Email;
             }
             await _context.SaveChangesAsync();
+            var facultyName = await _context.Faculties
+               .Where(f => f.FacultyId == model.FacultyId)
+               .Select(f => f.Name)
+               .FirstOrDefaultAsync();
+
+            await _notify.SendAsync(
+                title: $"Personal Details Updated",
+                message: $"{facultyName}'s profile updated",
+                module: "Faculty",
+                icon: "fa-id-card",
+                color: "primary",
+                link: $"/Faculty/Edit/{model.FacultyId}",
+                forRole: "SuperAdmin"
+            );
             TempData["Success"] = "Personal details saved.";
             return RedirectToAction(nameof(PersonalDetails), new { id = model.FacultyId });
         }

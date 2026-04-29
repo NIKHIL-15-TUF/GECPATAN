@@ -1,6 +1,7 @@
 ﻿using GECPatan.Admin.Data;
 using GECPatan.Admin.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
+using GECPatan.Admin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,12 @@ namespace GECPatan.Admin.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
-
-        public DepartmentController(ApplicationDbContext context, IWebHostEnvironment env)
+        private readonly NotificationService _notify;
+        public DepartmentController(ApplicationDbContext context, IWebHostEnvironment env,NotificationService notify)
         {
             _context = context;
             _env = env;
+            _notify = notify;
         }
 
         // ── INDEX ─────────────────────────────────────────
@@ -269,6 +271,16 @@ namespace GECPatan.Admin.Controllers
             // Audit log
             await WriteAuditLog("Edited", "Department", (int)d.DeptId, d.Name);
             TempData["Success"] = $"Department '{d.Name}' updated.";
+            //Notification Sends
+            await _notify.SendAsync(
+                title: $"Department Updated: {model.Name}",
+                message: "HOD made changes to department profile",
+                module: "Department",
+                icon: "fa-building",
+                color: "info",
+                link: $"/Department/Edit/{model.DeptId}",
+                forRole: "SuperAdmin"
+            );
             return RedirectToAction(nameof(Index));
         }
 
