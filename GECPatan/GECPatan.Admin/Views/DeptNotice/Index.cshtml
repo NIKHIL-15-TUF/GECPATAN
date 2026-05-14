@@ -1,0 +1,298 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.DeptNoticeBoardVM>
+@{
+    ViewData["Title"] = "Department Noticeboard";
+    var depts        = ViewBag.Departments as
+        List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+        ?? new();
+    int? selDept = ViewBag.SelectedDeptId as int?;
+}
+ 
+<div class="row mb-3">
+    <div class="col-md-6">
+        @if (depts.Count > 1)
+        {
+            <form asp-action="Index" method="get"
+                  class="d-flex" style="gap:8px;">
+                <select name="deptId"
+                        class="form-control form-control-sm"
+                        style="width:auto;"
+                        onchange="this.form.submit()">
+                    <option value="">All Departments</option>
+                    @foreach (var d in depts)
+                    {
+                        <option value="@d.Value"
+                                selected="@(selDept?.ToString()==d.Value)">
+                            @d.Text
+                        </option>
+                    }
+                </select>
+                @if (selDept.HasValue)
+                {
+                    <a asp-action="Index"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                }
+            </form>
+        }
+    </div>
+    <div class="col-md-6 text-right">
+        <a asp-action="Create"
+           asp-route-deptId="@selDept"
+           class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-1"></i>Add Notice
+        </a>
+    </div>
+</div>
+ 
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="fas fa-clipboard fa-3x mb-3 d-block"></i>
+            No notices yet.
+            <a asp-action="Create">Add the first notice.</a>
+        </div>
+    </div>
+}
+ 
+@foreach (var dept in Model)
+{
+    <div class="card mb-4">
+        <!-- Dept Header -->
+        <div class="card-header d-flex justify-content-between
+                    align-items-center"
+             style="background:#1a237e;color:#fff;">
+            <div>
+                <h6 class="mb-0">
+                    <i class="fas fa-clipboard mr-2"></i>
+                    @dept.DeptName — Noticeboard
+                </h6>
+                <small style="opacity:.8;">
+                    @dept.Total notice(s) —
+                    <span class="text-success font-weight-bold">
+                        @dept.Active active
+                    </span>
+                    @if (dept.Expired > 0)
+                    {
+                        <span class="text-warning ml-1">
+                            / @dept.Expired expired
+                        </span>
+                    }
+                </small>
+            </div>
+            <a asp-action="Create"
+               asp-route-deptId="@dept.DeptId"
+               class="btn btn-sm btn-light">
+                <i class="fas fa-plus mr-1"></i>Add
+            </a>
+        </div>
+ 
+        @if (!dept.Notices.Any())
+        {
+            <div class="card-body text-center text-muted py-3">
+                <small>No notices for this department.</small>
+            </div>
+        }
+        else
+        {
+            <div class="card-body p-0">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th width="50">Order</th>
+                            <th>Title</th>
+                            <th width="80">Type</th>
+                            <th width="80">File</th>
+                            <th width="120">Valid From</th>
+                            <th width="120">Valid To</th>
+                            <th width="80">Status</th>
+                            <th width="150">Posted By</th>
+                            <th width="180">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var n in dept.Notices
+                            .OrderBy(x => x.DisplayOrder))
+                        {
+                            <tr class="@(!n.IsActive?"table-secondary":"")">
+                                <td>
+                                    <div class="d-flex flex-column"
+                                         style="gap:2px;">
+                                        <form asp-action="Reorder"
+                                              method="post">
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@n.Id" />
+                                            <input type="hidden"
+                                                   name="dir"
+                                                   value="up" />
+                                            <button type="submit"
+                                                    class="btn btn-xs
+                                                           btn-light border">
+                                                <i class="fas fa-chevron-up"
+                                                   style="font-size:8px;"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-action="Reorder"
+                                              method="post">
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@n.Id" />
+                                            <input type="hidden"
+                                                   name="dir"
+                                                   value="down" />
+                                            <button type="submit"
+                                                    class="btn btn-xs
+                                                           btn-light border">
+                                                <i class="fas fa-chevron-down"
+                                                   style="font-size:8px;"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong style="font-size:13px;">
+                                        @n.Title
+                                    </strong>
+                                </td>
+                                <td>
+                                    @{
+                                        var (ftIcon, ftColor) = n.FileType switch
+                                        {
+                                            "PDF"   => ("fa-file-pdf",   "danger"),
+                                            "Image" => ("fa-image",      "info"),
+                                            "Link"  => ("fa-link",       "primary"),
+                                            _       => ("fa-file-alt",   "secondary")
+                                        };
+                                    }
+                                    <span class="badge badge-@ftColor"
+                                          style="font-size:9px;">
+                                        <i class="fas @ftIcon mr-1"></i>
+                                        @(n.FileType ?? "None")
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(n.FilePath))
+                                    {
+                                        <a href="@n.FilePath"
+                                           target="_blank"
+                                           class="btn btn-xs
+                                                  btn-outline-danger">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    }
+                                    else if (!string.IsNullOrEmpty(
+                                        n.ExternalLink))
+                                    {
+                                        <a href="@n.ExternalLink"
+                                           target="_blank"
+                                           class="btn btn-xs
+                                                  btn-outline-primary">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="@(!n.ValidFrom.HasValue?"text-muted":"")">
+                                        @(n.ValidFrom.HasValue
+                                            ? n.ValidFrom.Value.ToString("dd MMM yyyy")
+                                            : "Immediately")
+                                    </small>
+                                </td>
+                                <td>
+                                    @if (n.ValidTo.HasValue)
+                                    {
+                                        <small class="@(n.IsExpired?"text-danger font-weight-bold":"")">
+                                            @n.ValidTo.Value.ToString("dd MMM yyyy")
+                                            @if (n.IsExpired)
+                                            {
+                                                <span class="badge badge-danger ml-1"
+                                                      style="font-size:9px;">
+                                                    Expired
+                                                </span>
+                                            }
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">
+                                            No expiry
+                                        </small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!n.IsVisible)
+                                    {
+                                        <span class="badge badge-secondary"
+                                              style="font-size:9px;">
+                                            Hidden
+                                        </span>
+                                    }
+                                    else if (n.IsExpired)
+                                    {
+                                        <span class="badge badge-danger"
+                                              style="font-size:9px;">
+                                            Expired
+                                        </span>
+                                    }
+                                    else if (n.ValidFrom.HasValue &&
+                                             n.ValidFrom > DateTime.Now)
+                                    {
+                                        <span class="badge badge-warning"
+                                              style="font-size:9px;">
+                                            Pending
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-success"
+                                              style="font-size:9px;">
+                                            Active
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        @n.PostedBy
+                                    </small>
+                                </td>
+                                <td>
+                                    <a asp-action="Edit"
+                                       asp-route-id="@n.Id"
+                                       class="btn btn-xs btn-info">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form asp-action="ToggleVisible"
+                                          method="post" class="d-inline">
+                                        <input type="hidden"
+                                               name="id" value="@n.Id" />
+                                        <button type="submit"
+                                                class="btn btn-xs @(n.IsVisible?"btn-warning":"btn-success")"
+                                                title="@(n.IsVisible?"Hide":"Show")">
+                                            <i class="fas @(n.IsVisible?"fa-eye-slash":"fa-eye")"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="Delete"
+                                          method="post" class="d-inline">
+                                        <input type="hidden"
+                                               name="id" value="@n.Id" />
+                                        <button type="submit"
+                                                class="btn btn-xs btn-danger"
+                                                onclick="return confirm('Delete this notice?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}

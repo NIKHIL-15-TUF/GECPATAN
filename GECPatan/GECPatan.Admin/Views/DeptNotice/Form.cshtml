@@ -1,0 +1,349 @@
+﻿@model GECPatan.Admin.Models.ViewModels.DeptNoticeFormVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Notice" : "Add Notice";
+}
+ 
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-clipboard mr-2"></i>@ViewData["Title"]
+                </h3>
+            </div>
+            <form asp-action="@(isEdit?"Edit":"Create")" method="post"
+                  enctype="multipart/form-data">
+                @if (isEdit)
+                {
+                    <input asp-for="Id" type="hidden" />
+                }
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger py-2">
+                            @Html.ValidationSummary(false)
+                        </div>
+                    }
+ 
+                    <!-- Department -->
+                    <div class="form-group">
+                        <label asp-for="DeptId" class="font-weight-bold"></label>
+                        @if (Model.Departments.Count == 1)
+                        {
+                            <!-- HOD/Faculty — locked to their dept -->
+                            <input type="hidden" asp-for="DeptId" />
+                            <input class="form-control bg-light"
+                                   value="@Model.Departments.First().Text"
+                                   readonly />
+                            <small class="text-muted">
+                                <i class="fas fa-lock mr-1"></i>
+                                You can only post for your department.
+                            </small>
+                        }
+                        else
+                        {
+                            <select asp-for="DeptId"
+                                    asp-items="Model.Departments"
+                                    class="form-control">
+                                <option value="">-- Select Department --</option>
+                            </select>
+                            <span asp-validation-for="DeptId"
+                                  class="text-danger small"></span>
+                        }
+                    </div>
+ 
+                    <!-- Title -->
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title" class="form-control"
+                               placeholder="e.g. Exam Timetable — May 2025" />
+                        <span asp-validation-for="Title"
+                              class="text-danger small"></span>
+                    </div>
+ 
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label asp-for="Description" class="font-weight-bold">
+                            Description
+                            <small class="text-muted font-weight-normal">
+                                (optional)
+                            </small>
+                        </label>
+                        <textarea asp-for="Description"
+                                  class="form-control" rows="3"
+                                  placeholder="Additional details about this notice..."></textarea>
+                    </div>
+ 
+                    <hr />
+ 
+                    <!-- Attachment Type -->
+                    <label class="font-weight-bold d-block mb-2">
+                        Attachment Type
+                    </label>
+                    <div class="row mb-3">
+                        @{
+                            var types = new[]
+                            {
+                        ("None",  "fa-ban",              "No Attachment",
+                         "Text notice only",             "secondary"),
+                        ("PDF",   "fa-file-pdf",         "PDF File",
+                         "Upload a PDF document",        "danger"),
+                        ("Image", "fa-image",            "Image",
+                         "Upload an image file",         "info"),
+                        ("Link",  "fa-external-link-alt","External Link",
+                         "Link to an external URL",      "primary")
+                    };
+                        }
+                        @foreach (var (val, icon, label, desc, color) in types)
+                        {
+                            <div class="col-md-3 col-6 mb-2">
+                                <label class="w-100 mb-0" style="cursor:pointer;">
+                                    <input type="radio" asp-for="FileType"
+                                           value="@val"
+                                           class="d-none ft-radio"
+                                           onchange="switchType('@val')" />
+                                    <div class="card ft-card h-100"
+                                         id="ft-@val"
+                                         style="cursor:pointer;
+                                        border:2px solid #dee2e6;">
+                                        <div class="card-body py-2 px-2 text-center">
+                                            <i class="fas @icon text-@color"
+                                               style="font-size:20px;"></i>
+                                            <strong class="d-block"
+                                                    style="font-size:11px;
+                                                margin-top:4px;">
+                                                @label
+                                            </strong>
+                                            <small class="text-muted"
+                                                   style="font-size:10px;">
+                                                @desc
+                                            </small>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        }
+                    </div>
+ 
+                    <!-- File Upload section -->
+                    <div id="sec-PDF" class="ft-section d-none">
+                        <div class="card border-danger mb-3">
+                            <div class="card-header bg-danger text-white py-1">
+                                <small class="font-weight-bold">
+                                    PDF Upload
+                                </small>
+                            </div>
+                            <div class="card-body py-2">
+                                @if (!string.IsNullOrEmpty(Model.ExistingFilePath)
+                                                             && Model.FileType == "PDF")
+                                {
+                                    <div class="mb-2">
+                                        <a href="@Model.ExistingFilePath"
+                                               target="_blank"
+                                               class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-file-pdf mr-1"></i>
+                                            View Current PDF
+                                        </a>
+                                        <small class="text-muted ml-2">
+                                            Upload new to replace.
+                                        </small>
+                                    </div>
+                                }
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input"
+                                           name="AttachFile" accept=".pdf"
+                                           onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose PDF...'" />
+                                    <label class="custom-file-label">
+                                        Choose PDF...
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div id="sec-Image" class="ft-section d-none">
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white py-1">
+                                <small class="font-weight-bold">
+                                    Image Upload
+                                </small>
+                            </div>
+                            <div class="card-body py-2">
+                                @if (!string.IsNullOrEmpty(Model.ExistingFilePath)
+                                                             && Model.FileType == "Image")
+                                {
+                                    <div class="mb-2">
+                                        <img src="@Model.ExistingFilePath"
+                                             class="img-thumbnail"
+                                             style="max-height:80px;" />
+                                    </div>
+                                }
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input"
+                                           name="AttachFile"
+                                           accept="image/*"
+                                           onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose image...'" />
+                                    <label class="custom-file-label">
+                                        Choose image...
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div id="sec-Link" class="ft-section d-none">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white py-1">
+                                <small class="font-weight-bold">
+                                    External Link
+                                </small>
+                            </div>
+                            <div class="card-body py-2">
+                                <input asp-for="ExternalLink"
+                                       class="form-control"
+                                       placeholder="https://..." />
+                                <span asp-validation-for="ExternalLink"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <hr />
+ 
+                    <!-- Validity + Options -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="ValidFrom"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="ValidFrom"
+                                       class="form-control" type="date" />
+                                <small class="text-muted">
+                                    Blank = show immediately
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="ValidTo"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="ValidTo"
+                                       class="form-control" type="date" />
+                                <span asp-validation-for="ValidTo"
+                                      class="text-danger small"></span>
+                                <small class="text-muted">
+                                    Blank = no expiry
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label asp-for="DisplayOrder"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="DisplayOrder"
+                                       class="form-control"
+                                       type="number" min="0" />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group mt-4">
+                                <div class="custom-control custom-switch">
+                                    <input asp-for="IsVisible"
+                                           type="checkbox"
+                                           class="custom-control-input"
+                                           id="isVisible" />
+                                    <label class="custom-control-label"
+                                           for="isVisible">
+                                        Visible
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>
+                        @(isEdit ? "Save Changes" : "Post Notice")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+ 
+    <!-- Guide -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>
+                    How Validity Works
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="p-2 border-bottom">
+                    <strong class="small">Active</strong>
+                    <p class="small text-muted mb-0">
+                        Notice is visible on website right now.
+                    </p>
+                </div>
+                <div class="p-2 border-bottom">
+                    <strong class="small">Pending</strong>
+                    <p class="small text-muted mb-0">
+                        ValidFrom is in the future.
+                        Will show automatically on that date.
+                    </p>
+                </div>
+                <div class="p-2 border-bottom">
+                    <strong class="small">Expired</strong>
+                    <p class="small text-muted mb-0">
+                        ValidTo has passed.
+                        Auto-hidden on frontend.
+                        Record kept in admin.
+                    </p>
+                </div>
+                <div class="p-2">
+                    <strong class="small">💡 Use Case</strong>
+                    <p class="small text-muted mb-0">
+                        Post exam timetable with
+                        ValidTo = last exam date.
+                        It disappears automatically
+                        after exams are done.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        function switchType(type) {
+        document.querySelectorAll('.ft-section')
+        .forEach(s => s.classList.add('d-none'));
+        document.querySelectorAll('.ft-card')
+        .forEach(c => {
+        c.style.border = '2px solid #dee2e6';
+        c.style.background = '';
+        });
+        const card = document.getElementById('ft-' + type);
+        if (card) {
+        card.style.border = '2px solid #1a237e';
+        card.style.background = '#eef0fb';
+        }
+        const sec = document.getElementById('sec-' + type);
+        if (sec) sec.classList.remove('d-none');
+        }
+ 
+        document.addEventListener('DOMContentLoaded', function() {
+        const cur = '@Model.FileType';
+        switchType(cur || 'None');
+        });
+    </script>
+}

@@ -18,6 +18,7 @@ namespace GECPatan.Admin.Data
         public DbSet<DepartmentPEO> DepartmentPEOs { get; set; }
         public DbSet<DepartmentPSO> DepartmentPSOs { get; set; }
         public DbSet<DepartmentBannerImage> DepartmentImages { get; set; }
+        public DbSet<DeptNotice> DeptNotices { get; set; }
 
         // ── TIMETABLE ─────────────────────────────────────
         public DbSet<Timetable> Timetables { get; set; }
@@ -129,7 +130,8 @@ namespace GECPatan.Admin.Data
             // ── GLOBAL SOFT DELETE FILTERS ──────────────────
             modelBuilder.Entity<Department>()
                 .HasQueryFilter(x => !x.IsDeleted);
-
+            modelBuilder.Entity<DeptNotice>()
+                .HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<Faculty>()
                 .HasQueryFilter(x => !x.IsDeleted);
 
