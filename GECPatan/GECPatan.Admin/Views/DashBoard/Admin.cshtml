@@ -1,0 +1,130 @@
+﻿@model GECPatan.Admin.Models.ViewModels.DashboardVM
+@{
+    ViewData["Title"] = "Dashboard";
+}
+@if (Model.Alerts.Any())
+{
+    foreach (var alert in Model.Alerts)
+    {
+        <div class="alert alert-warning alert-dismissible fade show py-2 mb-3">
+            <i class="fas fa-exclamation-triangle mr-2"></i>@alert
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+    }
+}
+<div class="row">
+    @{
+        async Task StatCard(string label, int count, string icon,
+                            string color, string ctrl, string action)
+        {
+            <div class="col-6 col-md-3 mb-3">
+                <div class="small-box bg-@color">
+                    <div class="inner">
+                        <h3>@count</h3>
+                        <p>@label</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas @icon"></i>
+                    </div>
+                    <a asp-controller="@ctrl"
+                           asp-action="@action"
+                           class="small-box-footer">
+                        Manage <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            await Task.CompletedTask;
+        }
+    }
+    @{
+        // Render the cards inside a Razor code block.
+        // Do NOT use @await directly as markup output.
+        await StatCard("Departments", Model.DepartmentCount, "fa-building", "info", "Departments", "Index");
+        await StatCard("Faculties", Model.FacultyCount, "fa-users", "success", "Faculty", "Index");
+
+        // Replace StudentCount and CourseCount with actual properties
+        // that exist in your DashboardVM.
+        // await StatCard("Students", Model.StudentCount, "fa-user-graduate", "warning", "Students", "Index");
+        // await StatCard("Courses", Model.SubjectCount, "fa-book", "danger", "Subjects", "Index");
+    }
+    @* @await StatCard("Departments", Model.DepartmentCount, "fa-building", "info", "Departments", "Index")
+    @await StatCard("Faculties", Model.FacultyCount, "fa-users", "success", "Faculty", "Index")
+    @* @await StatCard("Students", Model.StudentCount, "fa-user-graduate", "warning", "Students", "Index") 
+    @await StatCard("Courses", Model.CourseCount, "fa-book", "danger", "Courses", "Index") *@
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt mr-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body p-2">
+                <div class="row">
+                    @{
+                        var actions = new[]
+                        {
+                            ("NewsItem",    "Create", "fa-plus",    "outline-info",      "Add News"),
+                            ("Faculty",     "Create", "fa-plus",    "outline-success",   "Add Faculty"),
+                            ("ContentPage", "Create", "fa-plus",    "outline-primary",   "New Page"),
+                            ("TenderCategory","Create","fa-plus",   "outline-warning",   "Add Tender"),
+                            ("DeptNotice",  "Create", "fa-plus",    "outline-secondary", "Add Notice"),
+                            ("Home",        "HomePageSettings","fa-home","outline-danger","Home Settings")
+                        };
+                    }
+                    @foreach (var (ctrl, action, icon, color, lbl) in actions)
+                    {
+                        <div class="col-6 mb-2">
+                            <a asp-controller="@ctrl" asp-action="@action"
+                               class="btn btn-@color btn-block btn-sm">
+                                <i class="fas @icon mr-1"></i>@lbl
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-history mr-2"></i>Recent Activity
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.RecentLogs.Any())
+                {
+                    <p class="text-muted text-center py-3">No activity yet.</p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            @foreach (var log in Model.RecentLogs)
+                            {
+                                <tr>
+                                    <td width="90"><small class="text-muted">@log.TimeAgo</small></td>
+                                    <td width="120"><small><strong>@log.UserName</strong></small></td>
+                                    <td>
+                                        @{ var bc = log.Action switch {
+                                            "Created" => "success", "Updated" => "info",
+                                            "Deleted" => "danger",  _ => "secondary" }; }
+                                        <span class="badge badge-@bc" style="font-size:10px;">@log.Action</span>
+                                        <small class="ml-1">@log.Module — @log.Record</small>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+            <div class="card-footer py-1 text-right">
+                <a asp-controller="AuditLog" asp-action="Index"
+                   class="btn btn-xs btn-link">View all →</a>
+            </div>
+        </div>
+    </div>
+</div>

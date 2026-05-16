@@ -4,10 +4,9 @@
 @inject SignInManager<ApplicationUser> SignInManager
  
 @{
-    var user     = await UserManager.GetUserAsync(User);
-    var appUser  = user as ApplicationUser;
-    var roles    = user != null
-        ? await UserManager.GetRolesAsync(user)
+    var appUser  = await UserManager.GetUserAsync(User);
+    var roles    = appUser != null
+        ? await UserManager.GetRolesAsync(appUser)
         : new List<string>();
     var role     = roles.FirstOrDefault() ?? "";
     string ctrl  = ViewContext.RouteData.Values["controller"]
@@ -19,8 +18,7 @@
     bool isCE    = role == "ContentEditor";
     bool isPO    = role == "PlacementOfficer";
     bool isCH    = role == "CommitteeHead";
-}
- 
+} 
 <!DOCTYPE html>
 <html lang="en">
 <head>

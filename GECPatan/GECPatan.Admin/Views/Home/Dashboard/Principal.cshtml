@@ -1,0 +1,137 @@
+﻿@model GECPatan.Admin.Models.ViewModels.PrincipalDashboardVM
+@{
+    ViewData["Title"] = "Principal Dashboard";
+}
+<div class="row">
+    @{
+        void Card(string label, int count, string icon, string color)
+        {
+            <div class="col-6 col-md-3 mb-3">
+                <div class="small-box bg-@color">
+                    <div class="inner"><h3>@count</h3><p>@label</p></div>
+                    <div class="icon"><i class="fas @icon"></i></div>
+                </div>
+            </div>
+        }
+    }
+    @{
+        Card("Departments", Model.DepartmentCount, "fa-building", "primary");
+    }
+    @{
+        Card("Faculty", Model.FacultyCount, "fa-chalkboard-teacher", "success");
+    }
+    @{
+        Card("Committees", Model.CommitteeCount, "fa-users", "warning");
+    }
+    @{
+        Card("News Items", Model.NewsCount, "fa-newspaper", "info");
+    }
+</div>
+ 
+@if (Model.PendingPasswordUsers > 0)
+{
+    <div class="alert alert-warning py-2 mb-3">
+        <i class="fas fa-key mr-2"></i>
+        <strong>@Model.PendingPasswordUsers</strong> user(s) haven't changed
+        their password yet.
+    </div>
+}
+ 
+<div class="row">
+    <!-- Quick Links -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt mr-2"></i>Quick Links
+                </h6>
+            </div>
+            <div class="card-body p-2">
+                <div class="row">
+                    @{
+                        var links = new[]
+                        {
+                            ("Principal",     "Index",            "fa-user-tie",    "outline-primary",   "My Profile"),
+                            ("Department",    "Index",            "fa-building",    "outline-success",   "Departments"),
+                            ("Faculty",       "Index",            "fa-users",       "outline-info",      "Faculty"),
+                            ("CampusCommittee","Index",           "fa-users",       "outline-warning",   "Committees"),
+                            ("NewsItem",      "Index",            "fa-newspaper",   "outline-secondary", "News"),
+                            ("Home",          "HomePageSettings", "fa-sliders-h",   "outline-danger",    "Home Settings")
+                        };
+                    }
+                    @foreach (var (ctrl, action, icon, color, lbl) in links)
+                    {
+                        <div class="col-6 mb-2">
+                            <a asp-controller="@ctrl" asp-action="@action"
+                                   class="btn btn-@color btn-block btn-sm">
+                                <i class="fas @icon mr-1"></i>@lbl
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Recent News -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-newspaper mr-2"></i>Recent News
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.RecentNews.Any())
+                {
+                    <p class="text-muted text-center py-3 small">No news yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var n in Model.RecentNews)
+                        {
+                            <li class="list-group-item py-2">
+                                <small class="font-weight-bold d-block">
+                                    @n.Title
+                                </small>
+                                <small class="text-muted">@n.Date</small>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- Recent Activities -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt mr-2"></i>Recent Activities
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.RecentActivities.Any())
+                {
+                    <p class="text-muted text-center py-3 small">
+                        No activities yet.
+                    </p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var a in Model.RecentActivities)
+                        {
+                            <li class="list-group-item py-2">
+                                <small class="font-weight-bold d-block">
+                                    @a.Title
+                                </small>
+                                <small class="text-muted">@a.Date</small>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

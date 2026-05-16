@@ -1,0 +1,156 @@
+﻿@model GECPatan.Admin.Models.ViewModels.ContentEditorDashboardVM
+@{
+    ViewData["Title"] = "Content Dashboard";
+}
+<div class="row">
+    @{
+        // Because this helper contains Tag Helpers (asp-controller, asp-action),
+        // it must be async and return Task.
+        async Task Card(string label, int count, string icon, string color,
+                        string ctrl, string action)
+        {
+            <div class="col-6 col-md-4 mb-3">
+                <div class="small-box bg-@color">
+                    <div class="inner">
+                        <h3>@count</h3>
+                        <p>@label</p>
+                    </div>
+
+                    <div class="icon">
+                        <i class="fas @icon"></i>
+                    </div>
+
+                    <a asp-controller="@ctrl"
+                           asp-action="@action"
+                           class="small-box-footer">
+                        Manage <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            await Task.CompletedTask;
+        }
+
+        // Render all cards
+        await Card("News & Notices", Model.NewsCount,
+            "fa-newspaper", "primary", "NewsItem", "Index");
+
+        await Card("Content Pages", Model.ContentPageCount,
+            "fa-file-alt", "info", "ContentPage", "Index");
+
+        await Card("Activities", Model.ActivityCount,
+            "fa-calendar-alt", "success", "Activity", "Index");
+
+        await Card("Achievements", Model.AchievementCount,
+            "fa-trophy", "warning", "Achievement", "Index");
+
+        await Card("Active Marquee", Model.MarqueeCount,
+            "fa-bullhorn", "danger", "Marquee", "Index");
+    }
+</div>
+<div class="row">
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt mr-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body p-2">
+                <div class="row">
+                    @{
+                        var qa = new[]
+                        {
+                            ("NewsItem",    "Create", "fa-plus", "outline-primary",   "Add News"),
+                            ("ContentPage", "Create", "fa-plus", "outline-info",      "New Page"),
+                            ("Activity",    "Create", "fa-plus", "outline-success",   "Add Activity"),
+                            ("Achievement", "Create", "fa-plus", "outline-warning",   "Add Achievement"),
+                            ("Marquee",     "Create", "fa-plus", "outline-danger",    "Add Marquee"),
+                            ("Gallery",     "Index",  "fa-images","outline-secondary","Gallery")
+                        };
+                    }
+                    @foreach (var (ctrl, action, icon, color, lbl) in qa)
+                    {
+                        <div class="col-6 mb-2">
+                            <a asp-controller="@ctrl" asp-action="@action"
+                                   class="btn btn-@color btn-block btn-sm">
+                                <i class="fas @icon mr-1"></i>@lbl
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Recent News -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light d-flex
+                justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-newspaper mr-2"></i>Recent News
+                </h6>
+                <a asp-controller="NewsItem" asp-action="Create"
+                       class="btn btn-xs btn-primary">
+                    <i class="fas fa-plus"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.RecentNews.Any())
+                {
+                    <p class="text-muted text-center py-3 small">No news yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var n in Model.RecentNews)
+                        {
+                            <li class="list-group-item py-2">
+                                <small class="font-weight-bold d-block">
+                                    @n.Title
+                                </small>
+                                <small class="text-muted">@n.Date</small>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- Recent Pages -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light d-flex
+                justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-file-alt mr-2"></i>Content Pages
+                </h6>
+                <a asp-controller="ContentPage" asp-action="Create"
+                       class="btn btn-xs btn-info">
+                    <i class="fas fa-plus"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.RecentPages.Any())
+                {
+                    <p class="text-muted text-center py-3 small">No pages yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var p in Model.RecentPages)
+                        {
+                            <li class="list-group-item py-2">
+                                <small class="font-weight-bold d-block">
+                                    @p.Title
+                                </small>
+                                <small class="text-muted">@p.Date</small>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>
