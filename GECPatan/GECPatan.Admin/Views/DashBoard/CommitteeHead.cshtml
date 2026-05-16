@@ -1,0 +1,153 @@
+﻿@model GECPatan.Admin.Models.ViewModels.CommitteeHeadDashboardVM
+@{
+    ViewData["Title"] = "Committee Dashboard";
+}
+<!-- Committee Header -->
+<div class="card mb-4"
+     style="background:linear-gradient(135deg,#1a237e,#283593);
+    color:#fff;border:none;">
+    <div class="card-body py-3">
+        <div class="row align-items-center">
+            <div class="col">
+                <h4 class="mb-0">@Model.CommitteeTitle</h4>
+                @if (!string.IsNullOrEmpty(Model.CommitteeTagline))
+                {
+                    <small style="opacity:.8;">@Model.CommitteeTagline</small>
+                }
+            </div>
+            <div class="col-auto">
+                <a asp-controller="CampusCommittee"
+                       asp-action="Edit"
+                       asp-route-id="@Model.CommitteeId"
+                       class="btn btn-light btn-sm">
+                    <i class="fas fa-edit mr-1"></i>Edit Committee
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+<div class="row">
+    @{
+        void Card(string label, int count, string icon, string color)
+        {
+            <div class="col-md-6 mb-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-@color elevation-1">
+                        <i class="fas @icon"></i>
+                    </span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">@label</span>
+                        <span class="info-box-number">@count</span>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    @{
+        Card("Members", Model.MemberCount, "fa-users", "primary");
+    }
+    @{
+        Card("Activities", Model.ActivityCount, "fa-calendar-alt", "success");
+    }
+</div>
+ 
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt mr-2"></i>Quick Links
+                </h6>
+            </div>
+            <div class="card-body p-2">
+                @{
+                    var links = new[]
+                    {
+                        ("CampusCommittee","Edit",    "fa-edit",         "outline-primary",   "Edit Committee"),
+                        ("CampusCommittee","Members", "fa-users",        "outline-success",   "Members"),
+                        ("Activity",       "Create",  "fa-plus",         "outline-warning",   "Add Activity"),
+                        ("Achievement",    "Create",  "fa-plus",         "outline-info",      "Add Achievement"),
+                        ("DynamicSection", "Index",   "fa-layer-group",  "outline-secondary", "Sections")
+                    };
+                }
+                @foreach (var (ctrl, action, icon, color, lbl) in links)
+                {
+                    if (action == "Edit" || action == "Members")
+                    {
+                        <a asp-controller="@ctrl" asp-action="@action"
+                               asp-route-id="@Model.CommitteeId"
+                               class="btn btn-@color btn-block btn-sm mb-2">
+                            <i class="fas @icon mr-1"></i>@lbl
+                        </a>
+                    }
+                    else if (ctrl == "DynamicSection")
+                    {
+                        <a asp-controller="@ctrl" asp-action="@action"
+                               asp-route-pageType="2"
+                               asp-route-pageId="@Model.CommitteeId"
+                               class="btn btn-@color btn-block btn-sm mb-2">
+                            <i class="fas @icon mr-1"></i>@lbl
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="@ctrl" asp-action="@action"
+                               class="btn btn-@color btn-block btn-sm mb-2">
+                            <i class="fas @icon mr-1"></i>@lbl
+                        </a>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-light d-flex
+                justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    Recent Activities
+                </h6>
+                <a asp-controller="Activity" asp-action="Create"
+                       class="btn btn-xs btn-success">
+                    <i class="fas fa-plus mr-1"></i>Add
+                </a>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.RecentActivities.Any())
+                {
+                    <p class="text-muted text-center py-3 small">
+                        No activities yet.
+                    </p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            @foreach (var a in Model.RecentActivities)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@a.Title</strong>
+                                        <small class="text-muted d-block">
+                                            @a.Date
+                                        </small>
+                                    </td>
+                                    <td class="text-right">
+                                        <a asp-controller="Activity"
+                                               asp-action="Edit"
+                                               asp-route-id="@a.Id"
+                                               class="btn btn-xs btn-info">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

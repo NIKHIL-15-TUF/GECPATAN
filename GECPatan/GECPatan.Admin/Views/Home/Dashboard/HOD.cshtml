@@ -1,0 +1,161 @@
+﻿@model GECPatan.Admin.Models.ViewModels.HodDashboardVM
+@{
+    ViewData["Title"] = "HOD Dashboard";
+}
+<!-- Dept Header -->
+<div class="card mb-4" style="background:linear-gradient(135deg,#1a237e,#283593);
+    color:#fff;border:none;">
+    <div class="card-body py-3">
+        <div class="row align-items-center">
+            <div class="col">
+                <h4 class="mb-0">
+                    @Model.DeptName
+                    @if (!string.IsNullOrEmpty(Model.ShortCode))
+                    {
+                        <span class="badge badge-light text-primary ml-2">
+                            @Model.ShortCode
+                        </span>
+                    }
+                </h4>
+                <small style="opacity:.8;">Department Management</small>
+            </div>
+            <div class="col-auto">
+                <a asp-controller="Department" asp-action="Edit"
+                       asp-route-id="@Model.DeptId"
+                       class="btn btn-light btn-sm">
+                    <i class="fas fa-edit mr-1"></i>Edit Department
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+<!-- Stats -->
+<div class="row">
+    @{
+        void StatCard(string label, string val, string icon, string color)
+        {
+            <div class="col-6 col-md-3 mb-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-@color elevation-1">
+                        <i class="fas @icon"></i>
+                    </span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">@label</span>
+                        <span class="info-box-number">@val</span>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    @{
+        StatCard("Faculty", Model.FacultyCount.ToString(), "fa-chalkboard-teacher", "info");
+    }
+    @{
+        StatCard("Labs", Model.LabCount.ToString(), "fa-flask", "success");
+    }
+    @{
+        StatCard("Intake", Model.CurrentIntake > 0 ? $"{Model.CurrentIntake} ({Model.IntakeYear})" : "Not Set", "fa-graduation-cap", "warning");
+    }
+    @{
+        StatCard("Notices", Model.ActiveNotices.ToString(), "fa-clipboard", "primary");
+    }
+</div>
+ 
+<!-- Quick Links + Recent Faculty -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt mr-2"></i>Quick Links
+                </h6>
+            </div>
+            <div class="card-body p-2">
+                <div class="row">
+                    @{
+                        var links = new[]
+                        {
+                            ("Faculty",       "Index",   "fa-users",          "outline-info",      "Faculty"),
+                            ("Faculty",       "Create",  "fa-user-plus",      "outline-success",   "Add Faculty"),
+                            ("Lab",           "Index",   "fa-flask",          "outline-primary",   "Labs"),
+                            ("Timetable",     "Index",   "fa-calendar",       "outline-warning",   "Timetable"),
+                            ("ProgramIntake", "Department","fa-graduation-cap","outline-secondary", "Intake"),
+                            ("DeptNotice",    "Create",  "fa-clipboard",      "outline-danger",    "Post Notice")
+                        };
+                    }
+                    @foreach (var (ctrl, action, icon, color, lbl) in links)
+                    {
+                        string routeId = ctrl == "ProgramIntake" ? Model.DeptId.ToString() : "";
+                        <div class="col-6 mb-2">
+                            @if (!string.IsNullOrEmpty(routeId))
+                            {
+                                <a asp-controller="@ctrl" asp-action="@action"
+                                       asp-route-deptId="@routeId"
+                                       class="btn btn-@color btn-block btn-sm">
+                                    <i class="fas @icon mr-1"></i>@lbl
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="@ctrl" asp-action="@action"
+                                       class="btn btn-@color btn-block btn-sm">
+                                    <i class="fas @icon mr-1"></i>@lbl
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-light d-flex
+                justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chalkboard-teacher mr-2"></i>
+                    Faculty Members (@Model.FacultyCount)
+                </h6>
+                <a asp-controller="Faculty" asp-action="Create"
+                       class="btn btn-xs btn-success">
+                    <i class="fas fa-plus mr-1"></i>Add
+                </a>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.RecentFaculty.Any())
+                {
+                    <p class="text-muted text-center py-3 small">
+                        No faculty added yet.
+                    </p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            @foreach (var f in Model.RecentFaculty)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@f.Title</strong>
+                                        <small class="text-muted d-block">
+                                            @f.Date
+                                        </small>
+                                    </td>
+                                    <td class="text-right">
+                                        <a asp-controller="Faculty"
+                                               asp-action="Edit"
+                                               asp-route-id="@f.Id"
+                                               class="btn btn-xs btn-info">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

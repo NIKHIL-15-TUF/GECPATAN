@@ -1,0 +1,130 @@
+﻿@* @model GECPatan.Admin.Models.ViewModels.PlacementDashboardVM
+@{
+    ViewData["Title"] = "Placement Dashboard";
+}
+<!-- Latest Stats Highlight -->
+@if (!string.IsNullOrEmpty(Model.LatestYear))
+{
+    <div class="card mb-4"
+         style="background:linear-gradient(135deg,#1a237e,#283593);
+        color:#fff;border:none;">
+        <div class="card-body">
+            <h5 class="mb-3">
+                <i class="fas fa-chart-line mr-2"></i>
+                Latest Placement — @Model.LatestYear
+            </h5>
+            <div class="row text-center">
+                <div class="col-md-3 col-6 mb-2">
+                    <h3 class="mb-0">@Model.LatestTotalPlaced</h3>
+                    <small style="opacity:.8;">Students Placed</small>
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <h3 class="mb-0">@Model.LatestTotalStudents</h3>
+                    <small style="opacity:.8;">Total Students</small>
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <h3 class="mb-0">@Model.LatestHighestPkg</h3>
+                    <small style="opacity:.8;">Highest Package</small>
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <h3 class="mb-0">@Model.LatestAveragePkg</h3>
+                    <small style="opacity:.8;">Average Package</small>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+ 
+<div class="row">
+    @{
+        void Card(string label, int count, string icon, string color,
+                  string ctrl, string action)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="small-box bg-@color">
+                    <div class="inner"><h3>@count</h3><p>@label</p></div>
+                    <div class="icon"><i class="fas @icon"></i></div>
+                    <a asp-controller="@ctrl" asp-action="@action"
+                           class="small-box-footer">
+                        Manage <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        }
+    }
+    @{
+        Card("Placement Records", Model.StatCount, "fa-chart-line", "primary", "Placement", "Index");
+    }
+    @{
+        Card("Team Members", Model.TeamCount, "fa-user-graduate", "success", "PlacementTeam", "Index");
+    }
+    @{
+        Card("Top Recruiters", Model.RecruiterCount, "fa-briefcase", "warning", "TopRecruiter", "Index");
+    }
+</div>
+ 
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt mr-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body p-2">
+                @{
+                    var qa = new[]
+                    {
+                        ("Placement",     "Create","fa-plus","outline-primary",  "Add Year Stats"),
+                        ("PlacementTeam", "Create","fa-plus","outline-success",  "Add Team Member"),
+                        ("TopRecruiter",  "Create","fa-plus","outline-warning",  "Add Recruiter")
+                    };
+                }
+                @foreach (var (ctrl, action, icon, color, lbl) in qa)
+                {
+                    <a asp-controller="@ctrl" asp-action="@action"
+                           class="btn btn-@color btn-block btn-sm mb-2">
+                        <i class="fas @icon mr-1"></i>@lbl
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-history mr-2"></i>Year-wise Records
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.AllStats.Any())
+                {
+                    <p class="text-muted text-center py-3 small">
+                        No records yet.
+                    </p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Year</th>
+                                <th>Placed / Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.AllStats)
+                            {
+                                <tr>
+                                    <td><strong>@s.Date</strong></td>
+                                    <td>@s.Title</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div> *@
