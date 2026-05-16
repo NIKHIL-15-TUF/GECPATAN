@@ -17,4 +17,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\GECPatan.Admin\GECPatan.Admin.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="DTOs\" />
+	</ItemGroup>
 </Project>
