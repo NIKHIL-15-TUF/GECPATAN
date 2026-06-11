@@ -54,13 +54,19 @@
     // ── CONTENT EDITOR ────────────────────────────────────
     public class ContentEditorDashboardVM
     {
-        public int NewsCount { get; set; }
-        public int ContentPageCount { get; set; }
-        public int ActivityCount { get; set; }
-        public int AchievementCount { get; set; }
-        public int MarqueeCount { get; set; }
-        public List<RecentItemVM> RecentNews { get; set; } = new();
-        public List<RecentItemVM> RecentPages { get; set; } = new();
+        public int PageId { get; set; }  // 0 = not assigned
+        public string PageTitle { get; set; } = string.Empty;
+        public string PageSlug { get; set; } = string.Empty;
+        public bool IsPublished { get; set; }
+        public string? ContentPreview { get; set; }
+        public DateTime? LastUpdated { get; set; }
+        //public int NewsCount { get; set; }
+        //public int ContentPageCount { get; set; }
+        //public int ActivityCount { get; set; }
+        //public int AchievementCount { get; set; }
+        //public int MarqueeCount { get; set; }
+        //public List<RecentItemVM> RecentNews { get; set; } = new();
+        //public List<RecentItemVM> RecentPages { get; set; } = new();
     }
 
     // ── PLACEMENT OFFICER ─────────────────────────────────

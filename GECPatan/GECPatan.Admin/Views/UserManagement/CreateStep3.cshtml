@@ -4,6 +4,7 @@
     bool needsDept      = Model.Role == "HOD";
     bool needsCommittee = Model.Role == "CommitteeHead";
     bool needsFaculty   = Model.Role == "Faculty";
+    bool needsContentEditor = Model.Role == "ContentEditor";
 }
 <div class="row justify-content-center">
     <div class="col-md-7">
@@ -98,7 +99,25 @@
                             </small>
                         </div>
                     }
-                </div>
+                        @if (needsContentEditor)
+                        {
+                            <div class="form-group">
+                                <label class="font-weight-bold">
+                                    Assign to Content Page
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="ContentPageId" asp-items="Model.ContentPages"
+                                        class="form-control">
+                                    <option value="">-- Select Content Page --</option>
+                                </select>
+                                <span asp-validation-for="ContentPageId"
+                                      class="text-danger small"></span>
+                                <small class="text-muted">
+                                    This user will manage the selected content page.
+                                </small>
+                            </div>
+                        }
+                    </div>
                 <div class="card-footer d-flex justify-content-between">
                     <a asp-action="CreateStep2"
                        asp-route-role="@Model.Role"

@@ -271,41 +271,34 @@ namespace GECPatan.Admin.Controllers
         private async Task<IActionResult> ContentEditorDashboard(
             ApplicationUser? user)
         {
-            ViewData["Title"] = "Content Dashboard";
+            ViewData["Title"] = "My Content Page";
 
-            var vm = new ContentEditorDashboardVM
+            // No page assigned
+            if (user?.ContentPageId == null)
             {
-                NewsCount = await _context.NewsItems.CountAsync(),
-                ContentPageCount = await _context.ContentPages.CountAsync(),
-                ActivityCount = await _context.Activities.CountAsync(),
-                AchievementCount = await _context.Achievements.CountAsync(),
-                MarqueeCount = await _context.Marquees
-                    .CountAsync(m => m.IsVisible
-                        && (!m.ValidTo.HasValue
-                            || m.ValidTo >= DateTime.Now)),
+                return View("Dashboard/ContentEditor",
+                    new ContentEditorDashboardVM());
+            }
 
-                RecentNews = await _context.NewsItems
-                    .OrderByDescending(n => n.CreatedDate)
-                    .Take(5)
-                    .Select(n => new RecentItemVM
-                    {
-                        Id = n.Id,
-                        Title = n.Title,
-                        Date = n.CreatedDate.ToString("dd MMM yyyy")
-                    }).ToListAsync(),
+            var page = await _context.ContentPages
+                .FindAsync(user.ContentPageId.Value);
 
-                RecentPages = await _context.ContentPages
-                    .OrderByDescending(p => p.CreatedDate)
-                    .Take(5)
-                    .Select(p => new RecentItemVM
-                    {
-                        Id = p.Id,
-                        Title = p.Title,
-                        Date = p.CreatedDate.ToString("dd MMM yyyy")
-                    }).ToListAsync()
-            };
+            if (page == null)
+            {
+                return View("Dashboard/ContentEditor",
+                    new ContentEditorDashboardVM());
+            }
 
-            return View("Dashboard/ContentEditor", vm);
+            return View("Dashboard/ContentEditor",
+                new ContentEditorDashboardVM
+                {
+                    PageId = page.Id,
+                    PageTitle = page.Title,
+                    PageSlug = page.Slug,
+                    IsPublished = page.IsVisible,
+                    ContentPreview = page.HtmlContent,
+                    LastUpdated = page.UpdatedDate
+                });
         }
 
         // ══════════════════════════════════════════════════

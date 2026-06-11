@@ -2,23 +2,25 @@
 @using GECPatan.Admin.Models.Domain
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
- 
+
 @{
-    var appUser  = await UserManager.GetUserAsync(User);
-    var roles    = appUser != null
+    var appUser = await UserManager.GetUserAsync(User);
+    var roles = appUser != null
         ? await UserManager.GetRolesAsync(appUser)
         : new List<string>();
-    var role     = roles.FirstOrDefault() ?? "";
-    string ctrl  = ViewContext.RouteData.Values["controller"]
-        ?.ToString() ?? "";
+    var role = roles.FirstOrDefault() ?? "";
+    string ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string act = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
     bool isAdmin = role == "SuperAdmin";
-    bool isPrin  = role == "Principal";
-    bool isHOD   = role == "HOD";
-    bool isFac   = role == "Faculty";
-    bool isCE    = role == "ContentEditor";
-    bool isPO    = role == "PlacementOfficer";
-    bool isCH    = role == "CommitteeHead";
-} 
+    bool isPrin = role == "Principal";
+    bool isHOD = role == "HOD";
+    bool isFac = role == "Faculty";
+    bool isCE = role == "ContentEditor";
+    bool isPO = role == "PlacementOfficer";
+    bool isCH = role == "CommitteeHead";
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,494 +32,545 @@
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        .nav-link.active { background: rgba(255,255,255,.1); }
-        .sidebar-dark-primary .nav-sidebar>.nav-item>.nav-link.active {
-            background-color: #1a237e;
-        }
+            .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+                background-color: #1a237e;
+            }
     </style>
 </head>
-
 <body class="hold-transition sidebar-mini layout-fixed">
-<div class="wrapper">
- 
-<!-- ── NAVBAR ─────────────────────────────────────────────── -->
-<nav class="main-header navbar navbar-expand navbar-white navbar-light">
-    <ul class="navbar-nav">
-        <li class="nav-item">
-            <a class="nav-link" data-widget="pushmenu" href="#">
-                <i class="fas fa-bars"></i>
-            </a>
-        </li>
-    </ul>
-    <ul class="navbar-nav ml-auto">
-        <li class="nav-item d-flex align-items-center mr-3">
-            <span class="badge badge-secondary px-2 py-1 mr-2"
-                  style="font-size:11px;"> Welcome, @role</span>
-        </li>
-    </ul>
-</nav>
- 
-<!-- ── SIDEBAR ────────────────────────────────────────────── -->
-<aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <a href="/" class="brand-link text-center">
-        <img src="/adminlte/img/GECP_LOGO_recreated.png"
-             alt="GEC Patan"
-             class="brand-image img-circle elevation-3"
-             style="opacity:.8">
-        <span class="brand-text font-weight-light">GEC Patan Admin</span>
-    </a>
-    <div class="sidebar">
-        <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column"
-                data-widget="treeview" role="menu">
- 
-                @{
-                    string NavLink(string c, string a, string icon,
-                        string label, string? matchCtrl = null)
-                    {
-                        var active = ctrl == (matchCtrl ?? c) ? "active" : "";
-                        return $@"<li class=""nav-item"">
-                            <a asp-controller=""{c}"" asp-action=""{a}""
-                               class=""nav-link {active}"">
-                                <i class=""nav-icon fas {icon}""></i>
-                                <p>{label}</p>
-                            </a></li>";
-                    }
-                }
- 
-                <!-- DASHBOARD -->
+    <div class="wrapper">
+
+        <!-- ══════════════════════════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════════════════════════ -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a asp-controller="Home" asp-action="Index"
-                       class="nav-link @(ctrl=="Home"&&ViewContext.RouteData.Values["action"]?.ToString()=="Index"?"active":"")">
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
-                        <p>Dashboard</p>
+                    <a class="nav-link" data-widget="pushmenu" href="#">
+                        <i class="fas fa-bars"></i>
                     </a>
                 </li>
- 
-                <!-- SUPER ADMIN ONLY -->
-                @if (isAdmin)
-                {
-                    <li class="nav-item">
-                        <a asp-controller="UserManagement"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="UserManagement"?"active":"")">
-                            <i class="nav-icon fas fa-users-cog"></i>
-                            <p>Users</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="MenuItem" asp-action="Index"
-                           class="nav-link @(ctrl=="MenuItem"?"active":"")">
-                            <i class="nav-icon fas fa-bars"></i>
-                            <p>Menu Items</p>
-                        </a>
-                    </li>
-                }
- 
-                <!-- AUDIT LOGS -->
-                @if (isAdmin || isPrin)
-                {
-                    <li class="nav-item">
-                        <a asp-controller="AuditLog" asp-action="Index"
-                           class="nav-link @(ctrl=="AuditLog"?"active":"")">
-                            <i class="nav-icon fas fa-history"></i>
-                            <p>Audit Logs</p>
-                        </a>
-                    </li>
-                }
- 
-                <!-- CONTENT PAGES -->
-                @if (isAdmin || isCE || isPrin)
-                {
-                    <li class="nav-item">
-                        <a asp-controller="ContentPage" asp-action="Index"
-                           class="nav-link @(ctrl=="ContentPage"?"active":"")">
-                            <i class="nav-icon fas fa-file-alt"></i>
-                            <p>Content Pages</p>
-                        </a>
-                    </li>
-                }
- 
-                <!-- ── DEPARTMENT ────────────────────────── -->
-                @if (isAdmin || isPrin || isHOD || isFac)
-                {
-                    <li class="nav-header">DEPARTMENT</li>
- 
-                    @if (isAdmin || isPrin)
-                    {
-                        <li class="nav-item">
-                            <a asp-controller="Department"
-                               asp-action="Index"
-                               class="nav-link @(ctrl=="Department"?"active":"")">
-                                <i class="nav-icon fas fa-building"></i>
-                                <p>Departments</p>
-                            </a>
-                        </li>
-                    }
-                    else if (isHOD && appUser?.DeptId != null)
-                    {
-                        <li class="nav-item">
-                            <a asp-controller="Department"
-                               asp-action="Edit"
-                               asp-route-id="@appUser.DeptId"
-                               class="nav-link @(ctrl=="Department"?"active":"")">
-                                <i class="nav-icon fas fa-building"></i>
-                                <p>My Department</p>
-                            </a>
-                        </li>
-                    }
- 
-                    <li class="nav-item">
-                        <a asp-controller="Faculty" asp-action="Index"
-                           class="nav-link @(ctrl=="Faculty"?"active":"")">
-                            <i class="nav-icon fas fa-chalkboard-teacher"></i>
-                            <p>Faculty</p>
-                        </a>
-                    </li>
- 
-                    @if (isAdmin || isPrin || isHOD)
-                    {
-                        <li class="nav-item">
-                            <a asp-controller="Lab" asp-action="Index"
-                               class="nav-link @(ctrl=="Lab"?"active":"")">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Labs</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a asp-controller="DeptNotice" asp-action="Index"
-                               class="nav-link @(ctrl=="DeptNotice"?"active":"")">
-                                 <i class="nav-icon fas fa-clipboard"></i>
-                                 <p>Noticeboard</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a asp-controller="Timetable"
-                               asp-action="Index"
-                               class="nav-link @(ctrl=="Timetable"?"active":"")">
-                                <i class="nav-icon fas fa-calendar-alt"></i>
-                                <p>Timetables</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a asp-controller="ProgramIntake"
-                               asp-action="Index"
-                               class="nav-link @(ctrl=="ProgramIntake"?"active":"")">
-                                <i class="nav-icon fas fa-graduation-cap"></i>
-                                <p>Program Intake</p>
-                            </a>
-                        </li>
-                    }
-                }
- 
-                <!-- ── COMMITTEES ────────────────────────── -->
-                @if (isAdmin || isPrin || isCH || isCE)
-                {
-                    <li class="nav-header">COMMITTEES</li>
- 
-                    @if (isAdmin || isPrin || isCE)
-                    {
-                        <li class="nav-item">
-                            <a asp-controller="CampusCommittee"
-                               asp-action="Index"
-                               class="nav-link @(ctrl=="CampusCommittee"?"active":"")">
-                                <i class="nav-icon fas fa-users"></i>
-                                <p>Campus Committees</p>
-                            </a>
-                        </li>
-                    }
-                    else if (isCH && appUser?.CommitteeId != null)
-                    {
-                        <li class="nav-item">
-                            <a asp-controller="CampusCommittee"
-                               asp-action="Edit"
-                               asp-route-id="@appUser.CommitteeId"
-                               class="nav-link">
-                                <i class="nav-icon fas fa-users"></i>
-                                <p>My Committee</p>
-                            </a>
-                        </li>
-                    }
-                }
- 
-                <!-- ── HOME PAGE ──────────────────────────── -->
-                @if (isAdmin || isPrin || isCE)
-                {
-                    <li class="nav-header">HOME PAGE</li>
-                    <li class="nav-item">
-                        <a asp-controller="Slider" asp-action="Index"
-                           class="nav-link @(ctrl=="Slider"?"active":"")">
-                            <i class="nav-icon fas fa-images"></i>
-                            <p>Master Slider</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="Marquee" asp-action="Index"
-                           class="nav-link @(ctrl=="Marquee"?"active":"")">
-                            <i class="nav-icon fas fa-bullhorn"></i>
-                            <p>Marquee</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="Testimonial"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="Testimonial"?"active":"")">
-                            <i class="nav-icon fas fa-comments"></i>
-                            <p>Testimonials</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="TopRecruiter"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="TopRecruiter"?"active":"")">
-                            <i class="nav-icon fas fa-briefcase"></i>
-                            <p>Top Recruiters</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="Home"
-                           asp-action="HomePageSettings"
-                           class="nav-link @(ctrl=="Home"&&ViewContext.RouteData.Values["action"]?.ToString()=="HomePageSettings"?"active":"")">
-                            <i class="nav-icon fas fa-sliders-h"></i>
-                            <p>Home Settings</p>
-                        </a>
-                    </li>
-                }
- 
-                <!-- ── INSTITUTE ──────────────────────────── -->
-                @if (isAdmin || isPrin || isCE)
-                {
-                    <li class="nav-header">INSTITUTE</li>
-                    <li class="nav-item">
-                        <a asp-controller="AboutUs" asp-action="Index"
-                           class="nav-link @(ctrl=="AboutUs"?"active":"")">
-                            <i class="nav-icon fas fa-university"></i>
-                            <p>About Us</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="NewsItem" asp-action="Index"
-                           class="nav-link @(ctrl=="NewsItem"?"active":"")">
-                            <i class="nav-icon fas fa-newspaper"></i>
-                            <p>News & Notices</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="NewsLetter"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="NewsLetter"?"active":"")">
-                            <i class="nav-icon fas fa-file-pdf"></i>
-                            <p>News Letters</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="TenderCategory"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="TenderCategory"?"active":"")">
-                            <i class="nav-icon fas fa-file-contract"></i>
-                            <p>Tenders</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="ImportantDocument"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="ImportantDocument"?"active":"")">
-                            <i class="nav-icon fas fa-folder-open"></i>
-                            <p>Important Docs</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="MoU" asp-action="Index"
-                           class="nav-link @(ctrl=="MoU"?"active":"")">
-                            <i class="nav-icon fas fa-handshake"></i>
-                            <p>MoU Documents</p>
-                        </a>
-                    </li>
-                }
- 
-                <!-- ── ACADEMICS ──────────────────────────── -->
-                @if (isAdmin || isPrin || isHOD || isCE)
-                {
-                    <li class="nav-header">ACADEMICS</li>
-                    <li class="nav-item">
-                        <a asp-controller="AcademicCalendar"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="AcademicCalendar"?"active":"")">
-                            <i class="nav-icon fas fa-calendar-alt"></i>
-                            <p>Academic Calendars</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="SSIPDocument"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="SSIPDocument"?"active":"")">
-                            <i class="nav-icon fas fa-lightbulb"></i>
-                            <p>SSIP Documents</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="ResearchGrant"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="ResearchGrant"?"active":"")">
-                            <i class="nav-icon fas fa-microscope"></i>
-                            <p>Research Grants</p>
-                        </a>
-                    </li>
-                }
- 
-                @* <!-- ── PLACEMENT ──────────────────────────── -->
-                @if (isAdmin || isPrin || isPO)
-                {
-                    <li class="nav-header">PLACEMENT</li>
-                    <li class="nav-item">
-                        <a asp-controller="Placement"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="Placement"?"active":"")">
-                            <i class="nav-icon fas fa-chart-line"></i>
-                            <p>Placement Statistics</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="PlacementTeam"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="PlacementTeam"?"active":"")">
-                            <i class="nav-icon fas fa-user-graduate"></i>
-                            <p>Placement Team</p>
-                        </a>
-                    </li>
-                }*@
-
-                <!-- ── STUDENT CORNER ─────────────────────── -->
-                @if (isAdmin || isPrin || isCE || isHOD)
-                {
-                    <li class="nav-header">STUDENT CORNER</li>
-                    <li class="nav-item">
-                        <a asp-controller="StudentClub"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="StudentClub"?"active":"")">
-                            <i class="nav-icon fas fa-users"></i>
-                            <p>Student Clubs</p>
-                        </a>
-                    </li>
-                }
- 
-                <!-- ── FACILITIES ─────────────────────────── -->
-                @if (isAdmin || isPrin || isCE)
-                {
-                    <li class="nav-header">FACILITIES</li>
-                    <li class="nav-item">
-                        <a asp-controller="Facility"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="Facility"?"active":"")">
-                            <i class="nav-icon fas fa-building"></i>
-                            <p>Facility Pages</p>
-                        </a>
-                    </li>
-                }
- 
-                <!-- ── ADMINISTRATION ─────────────────────── -->
-                @if (isAdmin || isPrin)
-                {
-                    <li class="nav-header">ADMINISTRATION</li>
-                    <li class="nav-item">
-                        <a asp-controller="Principal"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="Principal"?"active":"")">
-                            <i class="nav-icon fas fa-user-tie"></i>
-                            <p>Principal Profile</p>
-                        </a>
-                    </li>
-                    @* <li class="nav-item">
-                        <a asp-controller="Alumni"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="Alumni"?"active":"")">
-                            <i class="nav-icon fas fa-user-graduate"></i>
-                            <p>Alumni</p>
-                        </a>
-                    </li> *@
-                    <li class="nav-item">
-                        <a asp-controller="Gallery"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="Gallery"?"active":"")">
-                            <i class="nav-icon fas fa-images"></i>
-                            <p>Gallery</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="Contact"
-                           asp-action="Index"
-                           class="nav-link @(ctrl=="Contact"?"active":"")">
-                            <i class="nav-icon fas fa-phone-alt"></i>
-                            <p>Contact Info</p>
-                        </a>
-                    </li>
-                }
- 
-                <!-- ── LOGOUT ─────────────────────────────── -->
-                <li class="nav-header">ACCOUNT</li>
-                <li class="nav-item">
-                    <form asp-controller="Account"
-                          asp-action="Logout" method="post">
-                        <button type="submit"
-                                class="nav-link btn btn-link text-left w-100">
-                            <i class="nav-icon fas fa-door-open"></i>
-                            <p>Logout</p>
-                        </button>
-                    </form>
+            </ul>
+            <ul class="navbar-nav ml-auto align-items-center">
+                <li class="nav-item mr-2">
+                    <span class="badge badge-secondary px-2 py-1"
+                          style="font-size:11px;">
+                        @role
+                    </span>
                 </li>
- 
+                @* <li class="nav-item mr-3">
+                    <span class="nav-link py-0" style="font-size:13px;">
+                        <i class="fas fa-user-circle mr-1"></i>
+                        @(appUser?.FullName ?? appUser?.Email ?? "Admin")
+                    </span>
+                </li> *@
             </ul>
         </nav>
+
+        <!-- ══════════════════════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════════════════════ -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <a href="/" class="brand-link text-center">
+                <img src="/adminlte/img/GECP_LOGO_recreated.png"
+                     alt="GEC Patan"
+                     class="brand-image img-circle elevation-3"
+                     style="opacity:.8">
+                <span class="brand-text font-weight-light">GEC Patan Admin</span>
+            </a>
+            <div class="sidebar">
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column"
+                        data-widget="treeview" role="menu">
+
+                        <!-- DASHBOARD — all roles see this -->
+                        <li class="nav-item">
+                            <a asp-controller="Home" asp-action="Index"
+                                   class="nav-link @(ctrl == "Home" && act == "Index" ? "active" : "")">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
+                        @* ══════════════════════════════════════════
+                   CONTENT EDITOR — sees ONLY their page
+                   (completely separate sidebar)
+                ══════════════════════════════════════════ *@
+                        @if (isCE)
+                        {
+                            <li class="nav-header">MY CONTENT PAGE</li>
+
+                            @if (appUser?.ContentPageId != null)
+                            {
+                                <li class="nav-item">
+                                    <a asp-controller="ContentPage"
+                                           asp-action="Edit"
+                                           asp-route-id="@appUser.ContentPageId"
+                                           class="nav-link @(ctrl == "ContentPage" && act == "Edit" ? "active" : "")">
+                                        <i class="nav-icon fas fa-edit"></i>
+                                        <p>Edit My Page</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="ContentPage"
+                                           asp-action="Preview"
+                                           asp-route-id="@appUser.ContentPageId"
+                                           target="_blank"
+                                           class="nav-link">
+                                        <i class="nav-icon fas fa-eye"></i>
+                                        <p>Preview Page</p>
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <span class="nav-link text-warning">
+                                        <i class="nav-icon fas fa-exclamation-triangle"></i>
+                                        <p>No Page Assigned</p>
+                                    </span>
+                                </li>
+                            }
+                        }
+
+                        @* ══════════════════════════════════════════
+                   ALL OTHER ROLES
+                ══════════════════════════════════════════ *@
+                        @if (!isCE)
+                        {
+                            @* ── SUPER ADMIN ONLY ─────────────────── *@
+                            @if (isAdmin)
+                            {
+                                <li class="nav-item">
+                                    <a asp-controller="UserManagement"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "UserManagement" ? "active" : "")">
+                                        <i class="nav-icon fas fa-users-cog"></i>
+                                        <p>Users</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="MenuItem"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "MenuItem" ? "active" : "")">
+                                        <i class="nav-icon fas fa-bars"></i>
+                                        <p>Menu Items</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="ContentPage"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "ContentPage" ? "active" : "")">
+                                        <i class="nav-icon fas fa-file-alt"></i>
+                                        <p>Content Pages</p>
+                                    </a>
+                                </li>
+                            }
+
+                            @* ── AUDIT LOGS ───────────────────────── *@
+                            @if (isAdmin || isPrin)
+                            {
+                                <li class="nav-item">
+                                    <a asp-controller="AuditLog"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "AuditLog" ? "active" : "")">
+                                        <i class="nav-icon fas fa-history"></i>
+                                        <p>Audit Logs</p>
+                                    </a>
+                                </li>
+                            }
+
+                            @* ── DEPARTMENT ───────────────────────── *@
+                            @if (isAdmin || isPrin || isHOD || isFac)
+                            {
+                                <li class="nav-header">DEPARTMENT</li>
+
+                                @if (isAdmin || isPrin)
+                                {
+                                    <li class="nav-item">
+                                        <a asp-controller="Department"
+                                               asp-action="Index"
+                                               class="nav-link @(ctrl == "Department" ? "active" : "")">
+                                            <i class="nav-icon fas fa-building"></i>
+                                            <p>Departments</p>
+                                        </a>
+                                    </li>
+                                }
+                                else if (isHOD && appUser?.DeptId != null)
+                                {
+                                    <li class="nav-item">
+                                        <a asp-controller="Department"
+                                               asp-action="Edit"
+                                               asp-route-id="@appUser.DeptId"
+                                               class="nav-link @(ctrl == "Department" ? "active" : "")">
+                                            <i class="nav-icon fas fa-building"></i>
+                                            <p>My Department</p>
+                                        </a>
+                                    </li>
+                                }
+
+                                <li class="nav-item">
+                                    <a asp-controller="Faculty"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Faculty" ? "active" : "")">
+                                        <i class="nav-icon fas fa-chalkboard-teacher"></i>
+                                        <p>Faculty</p>
+                                    </a>
+                                </li>
+
+                                @if (isAdmin || isPrin || isHOD)
+                                {
+                                    <li class="nav-item">
+                                        <a asp-controller="Lab"
+                                               asp-action="Index"
+                                               class="nav-link @(ctrl == "Lab" ? "active" : "")">
+                                            <i class="nav-icon fas fa-flask"></i>
+                                            <p>Labs</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a asp-controller="DeptNotice"
+                                               asp-action="Index"
+                                               class="nav-link @(ctrl == "DeptNotice" ? "active" : "")">
+                                            <i class="nav-icon fas fa-clipboard"></i>
+                                            <p>Noticeboard</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a asp-controller="Timetable"
+                                               asp-action="Index"
+                                               class="nav-link @(ctrl == "Timetable" ? "active" : "")">
+                                            <i class="nav-icon fas fa-calendar-alt"></i>
+                                            <p>Timetables</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a asp-controller="ProgramIntake"
+                                               asp-action="Index"
+                                               class="nav-link @(ctrl == "ProgramIntake" ? "active" : "")">
+                                            <i class="nav-icon fas fa-graduation-cap"></i>
+                                            <p>Program Intake</p>
+                                        </a>
+                                    </li>
+                                }
+                            }
+
+                            @* ── COMMITTEES ───────────────────────── *@
+                            @if (isAdmin || isPrin || isCH)
+                            {
+                                <li class="nav-header">COMMITTEES</li>
+
+                                @if (isAdmin || isPrin)
+                                {
+                                    <li class="nav-item">
+                                        <a asp-controller="CampusCommittee"
+                                               asp-action="Index"
+                                               class="nav-link @(ctrl == "CampusCommittee" ? "active" : "")">
+                                            <i class="nav-icon fas fa-users"></i>
+                                            <p>Campus Committees</p>
+                                        </a>
+                                    </li>
+                                }
+                                else if (isCH && appUser?.CommitteeId != null)
+                                {
+                                    <li class="nav-item">
+                                        <a asp-controller="CampusCommittee"
+                                               asp-action="Edit"
+                                               asp-route-id="@appUser.CommitteeId"
+                                               class="nav-link @(ctrl == "CampusCommittee" ? "active" : "")">
+                                            <i class="nav-icon fas fa-users"></i>
+                                            <p>My Committee</p>
+                                        </a>
+                                    </li>
+                                }
+                            }
+
+                            @* ── HOME PAGE ────────────────────────── *@
+                            @if (isAdmin || isPrin)
+                            {
+                                <li class="nav-header">HOME PAGE</li>
+                                <li class="nav-item">
+                                    <a asp-controller="Slider"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Slider" ? "active" : "")">
+                                        <i class="nav-icon fas fa-images"></i>
+                                        <p>Master Slider</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Marquee"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Marquee" ? "active" : "")">
+                                        <i class="nav-icon fas fa-bullhorn"></i>
+                                        <p>Marquee</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Testimonial"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Testimonial" ? "active" : "")">
+                                        <i class="nav-icon fas fa-comments"></i>
+                                        <p>Testimonials</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="TopRecruiter"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "TopRecruiter" ? "active" : "")">
+                                        <i class="nav-icon fas fa-briefcase"></i>
+                                        <p>Top Recruiters</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Home"
+                                           asp-action="HomePageSettings"
+                                           class="nav-link @(ctrl == "Home" && act == "HomePageSettings" ? "active" : "")">
+                                        <i class="nav-icon fas fa-sliders-h"></i>
+                                        <p>Home Settings</p>
+                                    </a>
+                                </li>
+                            }
+
+                            @* ── INSTITUTE ────────────────────────── *@
+                            @if (isAdmin || isPrin)
+                            {
+                                <li class="nav-header">INSTITUTE</li>
+                                <li class="nav-item">
+                                    <a asp-controller="AboutUs"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "AboutUs" ? "active" : "")">
+                                        <i class="nav-icon fas fa-university"></i>
+                                        <p>About Us</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="NewsItem"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "NewsItem" ? "active" : "")">
+                                        <i class="nav-icon fas fa-newspaper"></i>
+                                        <p>News & Notices</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="NewsLetter"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "NewsLetter" ? "active" : "")">
+                                        <i class="nav-icon fas fa-file-pdf"></i>
+                                        <p>News Letters</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="TenderCategory"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "TenderCategory" ? "active" : "")">
+                                        <i class="nav-icon fas fa-file-contract"></i>
+                                        <p>Tenders</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="ImportantDocument"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "ImportantDocument" ? "active" : "")">
+                                        <i class="nav-icon fas fa-folder-open"></i>
+                                        <p>Important Docs</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="MoU"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "MoU" ? "active" : "")">
+                                        <i class="nav-icon fas fa-handshake"></i>
+                                        <p>MoU Documents</p>
+                                    </a>
+                                </li>
+                            }
+
+                            @* ── ACADEMICS ────────────────────────── *@
+                            @if (isAdmin || isPrin || isHOD)
+                            {
+                                <li class="nav-header">ACADEMICS</li>
+                                <li class="nav-item">
+                                    <a asp-controller="AcademicCalendar"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "AcademicCalendar" ? "active" : "")">
+                                        <i class="nav-icon fas fa-calendar-alt"></i>
+                                        <p>Academic Calendars</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="SSIPDocument"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "SSIPDocument" ? "active" : "")">
+                                        <i class="nav-icon fas fa-lightbulb"></i>
+                                        <p>SSIP Documents</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="ResearchGrant"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "ResearchGrant" ? "active" : "")">
+                                        <i class="nav-icon fas fa-microscope"></i>
+                                        <p>Research Grants</p>
+                                    </a>
+                                </li>
+                            }
+
+                            @* ── PLACEMENT ────────────────────────── *@
+                            @if (isAdmin || isPrin || isPO)
+                            {
+                                <li class="nav-header">PLACEMENT</li>
+                                <li class="nav-item">
+                                    <a asp-controller="Placement"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Placement" ? "active" : "")">
+                                        <i class="nav-icon fas fa-chart-line"></i>
+                                        <p>Placement Statistics</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="PlacementTeam"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "PlacementTeam" ? "active" : "")">
+                                        <i class="nav-icon fas fa-user-graduate"></i>
+                                        <p>Placement Team</p>
+                                    </a>
+                                </li>
+                            }
+
+                            @* ── STUDENT CORNER ───────────────────── *@
+                            @if (isAdmin || isPrin || isHOD)
+                            {
+                                <li class="nav-header">STUDENT CORNER</li>
+                                <li class="nav-item">
+                                    <a asp-controller="StudentClub"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "StudentClub" ? "active" : "")">
+                                        <i class="nav-icon fas fa-users"></i>
+                                        <p>Student Clubs</p>
+                                    </a>
+                                </li>
+                            }
+
+                            @* ── FACILITIES ───────────────────────── *@
+                            @if (isAdmin || isPrin)
+                            {
+                                <li class="nav-header">FACILITIES</li>
+                                <li class="nav-item">
+                                    <a asp-controller="Facility"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Facility" ? "active" : "")">
+                                        <i class="nav-icon fas fa-building"></i>
+                                        <p>Facility Pages</p>
+                                    </a>
+                                </li>
+                            }
+
+                            @* ── ADMINISTRATION ───────────────────── *@
+                            @if (isAdmin || isPrin)
+                            {
+                                <li class="nav-header">ADMINISTRATION</li>
+                                <li class="nav-item">
+                                    <a asp-controller="Principal"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Principal" ? "active" : "")">
+                                        <i class="nav-icon fas fa-user-tie"></i>
+                                        <p>Principal Profile</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Gallery"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Gallery" ? "active" : "")">
+                                        <i class="nav-icon fas fa-images"></i>
+                                        <p>Gallery</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Contact"
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Contact" ? "active" : "")">
+                                        <i class="nav-icon fas fa-phone-alt"></i>
+                                        <p>Contact Info</p>
+                                    </a>
+                                </li>
+                            }
+                        } @* end !isCE *@
+
+                        <!-- ── ACCOUNT / LOGOUT — all roles ───────── -->
+                        <li class="nav-header">ACCOUNT</li>
+                        <li class="nav-item">
+                            <form asp-controller="Account"
+                                  asp-action="Logout" method="post">
+                                <button type="submit"
+                                        class="nav-link btn btn-link
+                                    text-left w-100">
+                                    <i class="nav-icon fas fa-door-open"></i>
+                                    <p>Logout</p>
+                                </button>
+                            </form>
+                        </li>
+
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- ══════════════════════════════════════════════════════════
+     CONTENT WRAPPER
+═══════════════════════════════════════════════════════════ -->
+        <div class="content-wrapper">
+            <section class="content-header">
+                <div class="container-fluid">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible
+                            fade show py-2 mb-3">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            @TempData["Success"]
+                            <button type="button" class="close"
+                                    data-dismiss="alert">
+                                &times;
+                            </button>
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible
+                            fade show py-2 mb-3">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            @TempData["Error"]
+                            <button type="button" class="close"
+                                    data-dismiss="alert">
+                                &times;
+                            </button>
+                        </div>
+                    }
+                    <h1 class="mb-0">@ViewData["Title"]</h1>
+                </div>
+            </section>
+            <section class="content">
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </section>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+        <footer class="main-footer text-center">
+            <strong>© @DateTime.Now.Year GEC Patan Admin</strong>
+            <small class="ml-2 text-muted">
+                Logged in as <strong>@role</strong>
+            </small>
+        </footer>
+
     </div>
-</aside>
- 
-<!-- ── CONTENT WRAPPER ────────────────────────────────────── -->
-<div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            @if (TempData["Success"] != null)
-            {
-                <div class="alert alert-success alert-dismissible fade show py-2 mb-3">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    @TempData["Success"]
-                    <button type="button" class="close" data-dismiss="alert">
-                        &times;
-                    </button>
-                </div>
-            }
-            @if (TempData["Error"] != null)
-            {
-                <div class="alert alert-danger alert-dismissible fade show py-2 mb-3">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    @TempData["Error"]
-                    <button type="button" class="close" data-dismiss="alert">
-                        &times;
-                    </button>
-                </div>
-            }
-            <h1 class="mb-0">@ViewData["Title"]</h1>
-        </div>
-    </section>
-    <section class="content">
-        <div class="container-fluid">
-            @RenderBody()
-        </div>
-    </section>
-</div>
- 
-<!-- ── FOOTER ─────────────────────────────────────────────── -->
-<footer class="main-footer text-center">
-    <strong>© @DateTime.Now.Year GEC Patan Admin</strong>
-    <small class="ml-2 text-muted">
-        Logged in as <strong>@role</strong>
-    </small>
-</footer>
- 
-</div> <!-- Scripts -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-@RenderSection("Scripts", required: false)
- 
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    @RenderSection("Scripts", required: false)
+
 </body>
 </html>

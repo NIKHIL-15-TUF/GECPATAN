@@ -1,156 +1,220 @@
 ﻿@model GECPatan.Admin.Models.ViewModels.ContentEditorDashboardVM
 @{
-    ViewData["Title"] = "Content Dashboard";
+    ViewData["Title"] = "My Content Page";
 }
-<div class="row">
-    @{
-        // Because this helper contains Tag Helpers (asp-controller, asp-action),
-        // it must be async and return Task.
-        async Task Card(string label, int count, string icon, string color,
-                        string ctrl, string action)
-        {
-            <div class="col-6 col-md-4 mb-3">
-                <div class="small-box bg-@color">
-                    <div class="inner">
-                        <h3>@count</h3>
-                        <p>@label</p>
-                    </div>
-
-                    <div class="icon">
-                        <i class="fas @icon"></i>
-                    </div>
-
-                    <a asp-controller="@ctrl"
-                           asp-action="@action"
-                           class="small-box-footer">
-                        Manage <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            await Task.CompletedTask;
-        }
-
-        // Render all cards
-        await Card("News & Notices", Model.NewsCount,
-            "fa-newspaper", "primary", "NewsItem", "Index");
-
-        await Card("Content Pages", Model.ContentPageCount,
-            "fa-file-alt", "info", "ContentPage", "Index");
-
-        await Card("Activities", Model.ActivityCount,
-            "fa-calendar-alt", "success", "Activity", "Index");
-
-        await Card("Achievements", Model.AchievementCount,
-            "fa-trophy", "warning", "Achievement", "Index");
-
-        await Card("Active Marquee", Model.MarqueeCount,
-            "fa-bullhorn", "danger", "Marquee", "Index");
-    }
-</div>
-<div class="row">
-    <!-- Quick Actions -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header" style="background:#1a237e;color:#fff;">
-                <h6 class="card-title mb-0">
-                    <i class="fas fa-bolt mr-2"></i>Quick Actions
-                </h6>
-            </div>
-            <div class="card-body p-2">
-                <div class="row">
-                    @{
-                        var qa = new[]
-                        {
-                            ("NewsItem",    "Create", "fa-plus", "outline-primary",   "Add News"),
-                            ("ContentPage", "Create", "fa-plus", "outline-info",      "New Page"),
-                            ("Activity",    "Create", "fa-plus", "outline-success",   "Add Activity"),
-                            ("Achievement", "Create", "fa-plus", "outline-warning",   "Add Achievement"),
-                            ("Marquee",     "Create", "fa-plus", "outline-danger",    "Add Marquee"),
-                            ("Gallery",     "Index",  "fa-images","outline-secondary","Gallery")
-                        };
-                    }
-                    @foreach (var (ctrl, action, icon, color, lbl) in qa)
-                    {
-                        <div class="col-6 mb-2">
-                            <a asp-controller="@ctrl" asp-action="@action"
-                                   class="btn btn-@color btn-block btn-sm">
-                                <i class="fas @icon mr-1"></i>@lbl
+ 
+@if (Model.PageId == 0)
+{
+    <!-- No page assigned -->
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-file-alt fa-4x text-warning mb-3 d-block"></i>
+            <h4>No Content Page Assigned</h4>
+            <p class="text-muted">
+                Your account is not linked to any content page yet.
+                <br />
+                Please contact the SuperAdmin to assign your page.
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Page assigned — show it -->
+    <div class="row">
+ 
+        <!-- Page Info Card -->
+        <div class="col-md-8">
+            <div class="card"
+                 style="border-left:4px solid #1a237e;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between
+                        align-items-start">
+                        <div>
+                            <h5 class="mb-1">
+                                <i class="fas fa-file-alt mr-2
+                                text-primary"></i>
+                                @Model.PageTitle
+                            </h5>
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-link mr-1"></i>
+                                <code>/page/@Model.PageSlug</code>
+                            </p>
+                            <div>
+                                @if (Model.IsPublished)
+                                {
+                                    <span class="badge badge-success px-2 py-1">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Published
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-warning px-2 py-1">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        Draft
+                                    </span>
+                                }
+                                @if (Model.LastUpdated.HasValue)
+                                {
+                                    <small class="text-muted ml-2">
+                                        Last updated:
+                                        @Model.LastUpdated.Value
+                                        .ToString("dd MMM yyyy, hh:mm tt")
+                                    </small>
+                                }
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column"
+                             style="gap:8px;">
+                            <a asp-controller="ContentPage"
+                                   asp-action="Edit"
+                                   asp-route-id="@Model.PageId"
+                                   class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit mr-1"></i>
+                                Edit Page
+                            </a>
+                            <a asp-controller="ContentPage"
+                                   asp-action="Preview"
+                                   asp-route-id="@Model.PageId"
+                                   target="_blank"
+                                   class="btn btn-secondary btn-sm">
+                                <i class="fas fa-eye mr-1"></i>
+                                Preview
                             </a>
                         </div>
-                    }
+                    </div>
                 </div>
             </div>
+ 
+            <!-- Page Content Preview -->
+            @if (!string.IsNullOrEmpty(Model.ContentPreview))
+            {
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-align-left mr-2"></i>
+                            Content Preview
+                        </h6>
+                    </div>
+                    <div class="card-body"
+                         style="max-height:300px;
+                        overflow-y:auto;
+                        font-size:13px;">
+                        @Html.Raw(Model.ContentPreview)
+                    </div>
+                    <div class="card-footer text-right py-2">
+                        <a asp-controller="ContentPage"
+                               asp-action="Edit"
+                               asp-route-id="@Model.PageId"
+                               class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit mr-1"></i>
+                            Edit Full Content
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card mt-3 border-dashed">
+                    <div class="card-body text-center py-4 text-muted">
+                        <i class="fas fa-pencil-alt fa-2x mb-2 d-block"></i>
+                        <p class="mb-2">This page has no content yet.</p>
+                        <a asp-controller="ContentPage"
+                               asp-action="Edit"
+                               asp-route-id="@Model.PageId"
+                               class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit mr-1"></i>
+                            Start Writing
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+ 
+        <!-- Right: Info + Actions -->
+        <div class="col-md-4">
+ 
+            <!-- Page URL box -->
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-link mr-2"></i>
+                        Public URL
+                    </h6>
+                </div>
+                <div class="card-body py-2">
+                    <div class="input-group input-group-sm">
+                        <input type="text"
+                               class="form-control form-control-sm"
+                               value="/page/@Model.PageSlug"
+                               readonly id="pageUrl" />
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary btn-sm"
+                                    onclick="copyUrl()"
+                                    title="Copy URL">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-1">
+                        Share this URL to let people view the page.
+                    </small>
+                </div>
+            </div>
+ 
+            <!-- Quick Help -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle mr-2 text-info"></i>
+                        Your Role
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="p-2 border-bottom">
+                        <strong class="small d-block">
+                            <i class="fas fa-check-circle text-success mr-1"></i>
+                            You Can
+                        </strong>
+                        <ul class="small text-muted mb-0 pl-3 mt-1">
+                            <li>Edit content of your assigned page</li>
+                            <li>Format text with the editor</li>
+                            <li>Add images and links</li>
+                            <li>Preview before publishing</li>
+                        </ul>
+                    </div>
+                    <div class="p-2">
+                        <strong class="small d-block">
+                            <i class="fas fa-times-circle text-danger mr-1"></i>
+                            Contact Admin For
+                        </strong>
+                        <ul class="small text-muted mb-0 pl-3 mt-1">
+                            <li>Publishing / unpublishing page</li>
+                            <li>Changing page title or URL</li>
+                            <li>Getting assigned to a different page</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+ 
         </div>
     </div>
-    <!-- Recent News -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-light d-flex
-                justify-content-between align-items-center">
-                <h6 class="card-title mb-0">
-                    <i class="fas fa-newspaper mr-2"></i>Recent News
-                </h6>
-                <a asp-controller="NewsItem" asp-action="Create"
-                       class="btn btn-xs btn-primary">
-                    <i class="fas fa-plus"></i>
-                </a>
-            </div>
-            <div class="card-body p-0">
-                @if (!Model.RecentNews.Any())
-                {
-                    <p class="text-muted text-center py-3 small">No news yet.</p>
-                }
-                else
-                {
-                    <ul class="list-group list-group-flush">
-                        @foreach (var n in Model.RecentNews)
-                        {
-                            <li class="list-group-item py-2">
-                                <small class="font-weight-bold d-block">
-                                    @n.Title
-                                </small>
-                                <small class="text-muted">@n.Date</small>
-                            </li>
-                        }
-                    </ul>
-                }
-            </div>
-        </div>
-    </div>
-    <!-- Recent Pages -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-light d-flex
-                justify-content-between align-items-center">
-                <h6 class="card-title mb-0">
-                    <i class="fas fa-file-alt mr-2"></i>Content Pages
-                </h6>
-                <a asp-controller="ContentPage" asp-action="Create"
-                       class="btn btn-xs btn-info">
-                    <i class="fas fa-plus"></i>
-                </a>
-            </div>
-            <div class="card-body p-0">
-                @if (!Model.RecentPages.Any())
-                {
-                    <p class="text-muted text-center py-3 small">No pages yet.</p>
-                }
-                else
-                {
-                    <ul class="list-group list-group-flush">
-                        @foreach (var p in Model.RecentPages)
-                        {
-                            <li class="list-group-item py-2">
-                                <small class="font-weight-bold d-block">
-                                    @p.Title
-                                </small>
-                                <small class="text-muted">@p.Date</small>
-                            </li>
-                        }
-                    </ul>
-                }
-            </div>
-        </div>
-    </div>
-</div>
+}
+ 
+@section Scripts {
+    <script>
+        function copyUrl() {
+            const url = document.getElementById('pageUrl').value;
+            navigator.clipboard.writeText(
+                window.location.origin + url)
+                .then(() => {
+                    const btn = event.target.closest('button');
+                    btn.innerHTML = '<i class="fas fa-check text-success"></i>';
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-copy"></i>';
+                    }, 2000);
+                });
+        }
+    </script>
+}

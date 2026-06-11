@@ -234,6 +234,10 @@ namespace GECPatan.Admin.Controllers
                 ModelState.AddModelError("FacultyId",
                     "Please select a faculty profile.");
 
+            if (model.Role == AppRoles.ContentEditor && !model.ContentPageId.HasValue)
+                ModelState.AddModelError("ContentPageId",
+                    "Please select a content page for Content Editor role.");
+
             // ContentEditor — ContentPageId is optional, no validation needed
 
             if (!ModelState.IsValid)
@@ -574,14 +578,33 @@ namespace GECPatan.Admin.Controllers
             // ContentEditor → Content Page (optional, all pages shown)
             if (role == AppRoles.ContentEditor)
             {
+                var assignedContentPageIds = await _context.Users
+                    .OfType<ApplicationUser>()
+                    .Where(u => u.ContentPageId.HasValue)
+                    .Select(u => u.ContentPageId!.Value)
+                    .ToListAsync();
+
                 vm.ContentPages = await _context.ContentPages
-                    .OrderBy(p => p.Title)
-                    .Select(p => new SelectListItem
+                    .Where(d => !assignedContentPageIds.Contains(d.Id))
+                    .OrderBy(d => d.Title)
+                    .Select(d => new SelectListItem
                     {
-                        Value = p.Id.ToString(),
-                        Text = p.Title
-                    }).ToListAsync();
+                        Value = d.Id.ToString(),
+                        Text = d.Title
+                    })
+                    .ToListAsync();
             }
+
+            //if (role == AppRoles.ContentEditor)
+            //{
+            //    vm.ContentPages = await _context.ContentPages
+            //        .OrderBy(p => p.Title)
+            //        .Select(p => new SelectListItem
+            //        {
+            //            Value = p.Id.ToString(),
+            //            Text = p.Title
+            //        }).ToListAsync();
+            //}
         }
 
         private async Task PopulateEditDropdowns(UserEditVM vm, string? role)
@@ -625,13 +648,22 @@ namespace GECPatan.Admin.Controllers
 
             if (role == AppRoles.ContentEditor)
             {
+                var assignedContentPageIds = await _context.Users
+                  .OfType<ApplicationUser>()
+                  .Where(u => u.ContentPageId.HasValue)
+                  .Select(u => u.ContentPageId!.Value)
+                  .ToListAsync();
+
                 vm.ContentPages = await _context.ContentPages
-                    .OrderBy(p => p.Title)
-                    .Select(p => new SelectListItem
-                    {
-                        Value = p.Id.ToString(),
-                        Text = p.Title
-                    }).ToListAsync();
+                     .Where(p => !assignedContentPageIds.Contains(p.Id)
+                                  || p.Id == vm.ContentPageId)
+                     .OrderBy(p => p.Title)
+                     .Select(p => new SelectListItem
+                     {
+                         Value = p.Id.ToString(),
+                         Text = p.Title
+                     })
+                     .ToListAsync();
             }
         }
     }

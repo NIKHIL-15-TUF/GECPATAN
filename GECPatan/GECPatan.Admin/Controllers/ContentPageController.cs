@@ -151,6 +151,10 @@ namespace GECPatan.Admin.Controllers
             await WriteAuditLog("Updated", "ContentPage", p.Id, p.Title);
 
             TempData["Success"] = $"Page updated. URL: /page/{p.Slug}";
+            if (User.IsInRole(AppRoles.ContentEditor))
+            {
+                return RedirectToAction("Index", "Home");
+            }
             return RedirectToAction(nameof(Index));
         }
 

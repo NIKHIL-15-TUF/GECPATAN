@@ -73,9 +73,19 @@
             </div>
         </div>
         <div class="card-footer d-flex justify-content-between">
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="fas fa-arrow-left mr-2"></i>Back
-            </a>
+           @if (User.IsInRole(AppRoles.ContentEditor))
+            {
+                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to home
+                </a>
+            }
+            else
+            {
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </a>
+            }
+
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save mr-2"></i>Save Changes
             </button>
