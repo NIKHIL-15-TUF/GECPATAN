@@ -1,8 +1,8 @@
-﻿using GECPatan.Admin.Data;
-using GECPatan.Admin.Models.Domain;
+﻿using GECPatan.Core.Data;
+using  GECPatan.Core.Models.Domain;
 using Microsoft.EntityFrameworkCore;
 
-namespace GECPatan.Admin.Data
+namespace GECPatan.Core.Data
 {
     public static class MenuItemSeeder
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
-namespace GECPatan.Admin.Models.Domain
+namespace GECPatan.Core.Models.Domain
 {
     public class ApplicationUser : IdentityUser  // ← IdentityUser not IdentityUser<string>
     {

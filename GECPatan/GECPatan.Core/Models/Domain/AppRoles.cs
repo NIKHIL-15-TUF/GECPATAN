@@ -1,4 +1,4 @@
-﻿namespace GECPatan.Admin.Models.Domain
+﻿namespace GECPatan.Core.Models.Domain
 {
     // All role name constants used across the application.
     // Always use these constants instead of hardcoded strings.

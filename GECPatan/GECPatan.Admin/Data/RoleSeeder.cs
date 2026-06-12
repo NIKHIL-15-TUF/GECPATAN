@@ -1,7 +1,7 @@
-﻿using GECPatan.Admin.Models.Domain;
+﻿using  GECPatan.Core.Models.Domain;
 using Microsoft.AspNetCore.Identity;
 
-namespace GECPatan.Admin.Data
+namespace GECPatan.Core.Data
 {
     public static class RoleSeeder
     {

@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.EntityFrameworkCore;
-using NuGet.Protocol.Plugins;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GECPatan.Admin.Models.Domain
+namespace GECPatan.Core.Models.Domain
 {
     public class Department : BaseEntity
     {

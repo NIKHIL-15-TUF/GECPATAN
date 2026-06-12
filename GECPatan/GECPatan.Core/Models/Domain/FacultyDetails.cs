@@ -1,7 +1,7 @@
 ﻿//using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 //using System.ComponentModel.DataAnnotations;
 
-//namespace GECPatan.Admin.Models.Domain
+//namespace GECPatan.Core.Models.Domain
 //{
 //    // PERSONAL DETAILS
 //    public class PersonalDetail : BaseEntity

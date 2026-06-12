@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace GECPatan.Admin.Data
+namespace GECPatan.Core.Data
 {
     // Used by EF Core Tools (Add-Migration, Update-Database)
     // at design time to create the DbContext

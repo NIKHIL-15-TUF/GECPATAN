@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GECPatan.Admin.Models.Domain
+namespace GECPatan.Core.Models.Domain
 {
     // SLIDER
     public class Slider : BaseEntity

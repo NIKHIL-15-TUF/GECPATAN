@@ -1,9 +1,10 @@
-﻿using GECPatan.Admin.Data;
-using GECPatan.Admin.Models.Domain;
+﻿using GECPatan.Core.Data;
+using GECPatan.Core.Models.Domain;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace GECPatan.Admin.Services
+namespace GECPatan.Core.Services
 {
     /// <summary>
     /// Inject via constructor: private readonly NotificationService _notify;

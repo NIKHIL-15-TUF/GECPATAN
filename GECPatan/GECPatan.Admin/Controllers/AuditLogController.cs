@@ -1,4 +1,4 @@
-﻿using GECPatan.Admin.Data;
+﻿using GECPatan.Core.Data;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

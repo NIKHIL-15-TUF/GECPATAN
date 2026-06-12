@@ -1,4 +1,4 @@
-﻿namespace GECPatan.Admin.Models.Domain
+﻿namespace GECPatan.Core.Models.Domain
 {
     // Base class for all domain entities.
     // Provides audit fields and soft delete.

@@ -1,5 +1,5 @@
-using GECPatan.Admin.Data;
-using GECPatan.Admin.Models.Domain;
+using GECPatan.Core.Data;
+using GECPatan.Core.Models.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

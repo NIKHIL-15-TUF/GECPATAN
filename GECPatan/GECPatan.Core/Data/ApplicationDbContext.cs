@@ -1,9 +1,9 @@
-﻿using GECPatan.Admin.Models.Domain;
+﻿using GECPatan.Core.Models.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace GECPatan.Admin.Data
+namespace GECPatan.Core.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {

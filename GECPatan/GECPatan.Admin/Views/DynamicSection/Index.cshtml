@@ -1,5 +1,5 @@
 ﻿@model List<GECPatan.Admin.Models.ViewModels.DynamicSectionListVM>
-@using GECPatan.Admin.Models.Domain
+@using  GECPatan.Core.Models.Domain
 @{
     ViewData["Title"] = "Manage Sections";
     var pageType = (PageType)ViewBag.PageType;
@@ -110,25 +110,25 @@
 </div>
  
 @functions {
-    string GetTypeBadge(GECPatan.Admin.Models.Domain.SectionType type) => type switch
+    string GetTypeBadge( GECPatan.Core.Models.Domain.SectionType type) => type switch
     {
-        GECPatan.Admin.Models.Domain.SectionType.RichText => "badge-primary",
-        GECPatan.Admin.Models.Domain.SectionType.PDFViewer => "badge-danger",
-        GECPatan.Admin.Models.Domain.SectionType.PDFDownload => "badge-warning",
-        GECPatan.Admin.Models.Domain.SectionType.ImageGallery => "badge-success",
-        GECPatan.Admin.Models.Domain.SectionType.FileList => "badge-info",
-        GECPatan.Admin.Models.Domain.SectionType.Table => "badge-secondary",
+         GECPatan.Core.Models.Domain.SectionType.RichText => "badge-primary",
+         GECPatan.Core.Models.Domain.SectionType.PDFViewer => "badge-danger",
+         GECPatan.Core.Models.Domain.SectionType.PDFDownload => "badge-warning",
+         GECPatan.Core.Models.Domain.SectionType.ImageGallery => "badge-success",
+         GECPatan.Core.Models.Domain.SectionType.FileList => "badge-info",
+         GECPatan.Core.Models.Domain.SectionType.Table => "badge-secondary",
         _ => "badge-light"
     };
  
-    string GetTypeIcon(GECPatan.Admin.Models.Domain.SectionType type) => type switch
+    string GetTypeIcon( GECPatan.Core.Models.Domain.SectionType type) => type switch
     {
-        GECPatan.Admin.Models.Domain.SectionType.RichText => "📝",
-        GECPatan.Admin.Models.Domain.SectionType.PDFViewer => "📄",
-        GECPatan.Admin.Models.Domain.SectionType.PDFDownload => "⬇️",
-        GECPatan.Admin.Models.Domain.SectionType.ImageGallery => "🖼️",
-        GECPatan.Admin.Models.Domain.SectionType.FileList => "📁",
-        GECPatan.Admin.Models.Domain.SectionType.Table => "📊",
+         GECPatan.Core.Models.Domain.SectionType.RichText => "📝",
+         GECPatan.Core.Models.Domain.SectionType.PDFViewer => "📄",
+         GECPatan.Core.Models.Domain.SectionType.PDFDownload => "⬇️",
+         GECPatan.Core.Models.Domain.SectionType.ImageGallery => "🖼️",
+         GECPatan.Core.Models.Domain.SectionType.FileList => "📁",
+         GECPatan.Core.Models.Domain.SectionType.Table => "📊",
         _ => ""
     };
 }

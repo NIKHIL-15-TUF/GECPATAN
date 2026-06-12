@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GECPatan.Admin.Models.Domain
+namespace GECPatan.Core.Models.Domain
 {
     // PLACEMENT STATISTIC
     public class PlacementStatistic : BaseEntity

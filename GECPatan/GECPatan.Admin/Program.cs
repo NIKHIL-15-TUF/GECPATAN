@@ -1,6 +1,6 @@
-using GECPatan.Admin.Data;
-using GECPatan.Admin.Models.Domain;
-using GECPatan.Admin.Services;
+using GECPatan.Core.Data;
+using  GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
@@ -54,7 +54,7 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddHttpContextAccessor();
 //Audit-Log
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<GECPatan.Admin.Services.AuditService>();
+builder.Services.AddScoped<GECPatan.Core.Services.AuditService>();
 // ── MVC ───────────────────────────────────────────────
 builder.Services.AddControllersWithViews();
 

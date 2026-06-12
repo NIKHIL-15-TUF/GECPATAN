@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GECPatan.Admin.Models.Domain
+namespace GECPatan.Core.Models.Domain
 {
     // ACADEMIC CALENDAR
     public class AcademicCalendar : BaseEntity

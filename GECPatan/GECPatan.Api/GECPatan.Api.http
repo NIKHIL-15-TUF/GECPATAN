@@ -1,4 +1,4 @@
-@GECPatan.Api_HostAddress = http://localhost:5160
+@GECPatan.Api_HostAddress = http://localhost:5001
 
 GET {{GECPatan.Api_HostAddress}}/weatherforecast/
 Accept: application/json

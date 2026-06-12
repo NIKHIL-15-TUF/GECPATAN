@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="GECPatan.Admin/GECPatan.Admin.csproj" />
-  <Project Path="GECPatan.Api/GECPatan.Api.csproj" Id="abca130f-85e1-422e-b350-485bcc3d3901" />
+  <Project Path="GECPatan.Api/GECPatan.Api.csproj" Id="83621308-098e-4197-af83-8876af7b409e" />
+  <Project Path="GECPatan.Core/GECPatan.Core.csproj" />
   <Project Path="GECPatan.Web/GECPatan.Web.csproj" />
 </Solution>
