@@ -60,6 +60,7 @@
 
         public List<ClubImageDTO> Images { get; set; } = new();
         public List<ClubMemberDTO> Members { get; set; } = new();
+        public List<DynamicSectionDTO> DynamicSections { get; set; } = new();
         public List<string> Objectives { get; set; } = new();
     }
 

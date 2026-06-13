@@ -1,0 +1,33 @@
+﻿{
+  "name": "Facilities & Student Clubs",
+  "item": [
+    {
+      "name": "Get All Facilities",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/facilities"
+      }
+    },
+    {
+      "name": "Get Facility by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/facilities/1"
+      }
+    },
+    {
+      "name": "Get All Student Clubs",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/clubs"
+      }
+    },
+    {
+      "name": "Get Student Club by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/clubs/1"
+      }
+    }
+  ]
+}
