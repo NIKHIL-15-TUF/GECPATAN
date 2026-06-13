@@ -1,0 +1,12 @@
+﻿{
+  "name": "Principal",
+  "item": [
+    {
+      "name": "Get Active Principal Profile",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/principal"
+      }
+    }
+  ]
+}
