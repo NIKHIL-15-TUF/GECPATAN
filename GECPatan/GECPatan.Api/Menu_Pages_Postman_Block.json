@@ -1,0 +1,26 @@
+﻿{
+  "name": "Menu & Content Pages",
+  "item": [
+    {
+      "name": "Get Main Menu",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/menu/main"
+      }
+    },
+    {
+      "name": "Get Footer Menu",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/menu/footer"
+      }
+    },
+    {
+      "name": "Get Content Page by Slug",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/pages/about-us"
+      }
+    }
+  ]
+}
