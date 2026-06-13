@@ -1,0 +1,68 @@
+﻿{
+  "info": {
+    "name": "GEC Patan API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:7001/api"
+    }
+  ],
+  "item": [
+    {
+      "name": "Home",
+      "item": [
+        {
+          "name": "Get Sliders",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/home/slider"
+          }
+        },
+        {
+          "name": "Get Marquee",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/home/marquee"
+          }
+        },
+        {
+          "name": "Get Testimonials",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/home/testimonials"
+          }
+        },
+        {
+          "name": "Get Top Recruiters",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/home/toprecruiters"
+          }
+        },
+        {
+          "name": "Get Latest News",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/home/news?take=5"
+          }
+        },
+        {
+          "name": "Get Home Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/home/stats"
+          }
+        },
+        {
+          "name": "Get Site Settings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/home/settings"
+          }
+        }
+      ]
+    }
+  ]
+}
