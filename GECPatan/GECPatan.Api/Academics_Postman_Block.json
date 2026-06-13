@@ -1,0 +1,33 @@
+﻿{
+  "name": "Academics",
+  "item": [
+    {
+      "name": "Get Academic Calendar",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/academics/calendar"
+      }
+    },
+    {
+      "name": "Get Academic Calendar by Department",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/academics/calendar?deptId=1"
+      }
+    },
+    {
+      "name": "Get SSIP Documents",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/academics/ssip"
+      }
+    },
+    {
+      "name": "Get Research Grants",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/academics/research"
+      }
+    }
+  ]
+}
