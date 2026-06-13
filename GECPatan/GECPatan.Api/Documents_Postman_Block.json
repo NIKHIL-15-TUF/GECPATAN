@@ -1,0 +1,40 @@
+﻿{
+  "name": "Documents",
+  "item": [
+    {
+      "name": "Get Document Categories",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/documents/categories"
+      }
+    },
+    {
+      "name": "Get Document Category Detail",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/documents/1"
+      }
+    },
+    {
+      "name": "Get Tenders",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/documents/tenders"
+      }
+    },
+    {
+      "name": "Get Important Documents",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/documents/important"
+      }
+    },
+    {
+      "name": "Get MoU Documents",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/documents/mou"
+      }
+    }
+  ]
+}
