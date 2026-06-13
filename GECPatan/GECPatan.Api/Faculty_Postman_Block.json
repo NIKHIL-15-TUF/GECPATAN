@@ -1,0 +1,26 @@
+﻿{
+  "name": "Faculty",
+  "item": [
+    {
+      "name": "Get All Faculty",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/faculty"
+      }
+    },
+    {
+      "name": "Get Faculty by Department",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/faculty?deptId=1"
+      }
+    },
+    {
+      "name": "Get Faculty by ID (Full Profile)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/faculty/1"
+      }
+    }
+  ]
+}
