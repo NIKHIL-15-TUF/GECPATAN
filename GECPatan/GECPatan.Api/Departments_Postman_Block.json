@@ -1,0 +1,54 @@
+﻿{
+  "name": "Departments",
+  "item": [
+    {
+      "name": "Get All Departments",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/departments"
+      }
+    },
+    {
+      "name": "Get Department by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/departments/1"
+      }
+    },
+    {
+      "name": "Get Department Faculty",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/departments/1/faculty"
+      }
+    },
+    {
+      "name": "Get Department Labs",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/departments/1/labs"
+      }
+    },
+    {
+      "name": "Get Department Timetable",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/departments/1/timetable"
+      }
+    },
+    {
+      "name": "Get Department Intake",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/departments/1/intake"
+      }
+    },
+    {
+      "name": "Get Department Notices",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/departments/1/notices"
+      }
+    }
+  ]
+}
