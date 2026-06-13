@@ -1,0 +1,34 @@
+﻿{
+
+  "name": "Committees",
+  "item": [
+    {
+      "name": "Get All Committees",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/committees"
+      }
+    },
+    {
+      "name": "Get Committee by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/committees/1"
+      }
+    },
+    {
+      "name": "Get Committee Members",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/committees/1/members"
+      }
+    },
+    {
+      "name": "Get Committee Activities",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/committees/1/activities"
+      }
+    }
+  ]
+}
