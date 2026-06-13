@@ -1,0 +1,29 @@
+﻿{
+  "name": "News & Achievements",
+  "item": [
+    {
+      "name": "Get News (Paged)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/news?page=1&pageSize=10" }
+    },
+    {
+      "name": "Get News by ID",
+      "request": { "method": "GET", "url": "{{baseUrl}}/news/1" }
+    },
+    {
+      "name": "Get News Letters",
+      "request": { "method": "GET", "url": "{{baseUrl}}/news/letters" }
+    },
+    {
+      "name": "Get All Achievements",
+      "request": { "method": "GET", "url": "{{baseUrl}}/achievements" }
+    },
+    {
+      "name": "Get Achievements by Department",
+      "request": { "method": "GET", "url": "{{baseUrl}}/achievements?deptId=1" }
+    },
+    {
+      "name": "Get Achievements by Type (Sports)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/achievements?type=2" }
+    }
+  ]
+}
