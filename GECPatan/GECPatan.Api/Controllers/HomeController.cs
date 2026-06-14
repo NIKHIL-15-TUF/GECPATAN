@@ -184,7 +184,48 @@ namespace GECPatan.Api.Controllers
 
             return Ok(ApiResponse<SiteSettingsDTO>.Ok(data));
         }
+        // GET /api/home/activities?take=10
+        // Latest activities across all committees/depts
+        // Used for home page ticker/feed
+        [HttpGet("activities")]
+        public async Task<ActionResult<ApiResponse<List<HomeActivityDTO>>>> GetLatestActivities(
+            [FromQuery] int take = 10)
+        {
+            if (take < 1 || take > 50) take = 10;
 
+            var items = await _context.Activities
+                .Include(a => a.Images.OrderBy(i => i.DisplayOrder))
+                .Where(a => a.IsVisible)
+                .OrderByDescending(a => a.EventDate)
+                .Take(take)
+                .ToListAsync();
+
+            var data = items.Select(a => new HomeActivityDTO
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description,
+                EventDate = a.EventDate.HasValue
+                    ? a.EventDate.Value.ToString("yyyy-MM-dd") : null,
+                Year = a.Year,
+                CommitteeId = a.CommitteeId,
+                DeptId = a.DeptId,
+                ClubId = a.ClubId,
+                Link = a.CommitteeId.HasValue
+                    ? $"/committees/{a.CommitteeId}/activities"
+                    : a.DeptId.HasValue
+                        ? $"/departments/{a.DeptId}/activities"
+                        : a.ClubId.HasValue
+                            ? $"/clubs/{a.ClubId}/activities"
+                            : $"/activities/{a.Id}",
+                ThumbnailPath = a.Images
+                    .OrderBy(i => i.DisplayOrder)
+                    .Select(i => i.ImagePath)
+                    .FirstOrDefault()
+            }).ToList();
+
+            return Ok(ApiResponse<List<HomeActivityDTO>>.Ok(data));
+        }
         // ── HELPERS ───────────────────────────────────────
         private static string? ResolveMarqueeLink(
             GECPatan.Core.Models.Domain.Marquee m)

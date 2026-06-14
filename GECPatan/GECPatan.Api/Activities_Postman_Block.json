@@ -1,0 +1,41 @@
+﻿{
+  "name": "Activities",
+  "item": [
+    {
+      "name": "Get Home Activities Ticker",
+      "request": { "method": "GET", "url": "{{baseUrl}}/home/activities" }
+    },
+    {
+      "name": "Get Home Activities (custom take)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/home/activities?take=5" }
+    },
+    {
+      "name": "Get All Activities (paged)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/activities?page=1&pageSize=20" }
+    },
+    {
+      "name": "Get Activity by ID",
+      "request": { "method": "GET", "url": "{{baseUrl}}/activities/1" }
+    },
+    {
+      "name": "Filter by Committee",
+      "request": { "method": "GET", "url": "{{baseUrl}}/activities?committeeId=1" }
+    },
+    {
+      "name": "Filter by Department",
+      "request": { "method": "GET", "url": "{{baseUrl}}/activities?deptId=1" }
+    },
+    {
+      "name": "Filter by Club",
+      "request": { "method": "GET", "url": "{{baseUrl}}/activities?clubId=1" }
+    },
+    {
+      "name": "Filter by Year",
+      "request": { "method": "GET", "url": "{{baseUrl}}/activities?year=2025" }
+    },
+    {
+      "name": "Get Available Years",
+      "request": { "method": "GET", "url": "{{baseUrl}}/activities/years" }
+    }
+  ]
+}
