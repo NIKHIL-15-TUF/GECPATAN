@@ -78,4 +78,18 @@
         public string? Email { get; set; }
         public string? Address { get; set; }
     }
+    // ── HOME ACTIVITIES TICKER (for /api/home/activities) ──
+    public class HomeActivityDTO
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? EventDate { get; set; }
+        public int? Year { get; set; }
+        public int? CommitteeId { get; set; }
+        public int? DeptId { get; set; }
+        public int? ClubId { get; set; }
+        public string? Link { get; set; }
+        public string? ThumbnailPath { get; set; }
+    }
 }

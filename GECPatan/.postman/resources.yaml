@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 46256bd3-7c50-4292-8f41-32750ee1e047
+
+localResources:
+  specs:
+    - ..\GECPatan.Api\obj\Debug\net8.0\EndpointInfo\GECPatan.Api.json

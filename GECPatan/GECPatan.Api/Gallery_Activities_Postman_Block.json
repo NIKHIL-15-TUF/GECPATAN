@@ -1,0 +1,40 @@
+﻿{
+  "name": "Gallery & Activities",
+  "item": [
+    {
+      "name": "Get All Gallery Images",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/gallery"
+      }
+    },
+    {
+      "name": "Get Gallery by Category",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/gallery?category=Sports"
+      }
+    },
+    {
+      "name": "Get Gallery Categories",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/gallery/categories"
+      }
+    },
+    {
+      "name": "Get Department Activities",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/departments/1/activities"
+      }
+    },
+    {
+      "name": "Get Club Activities",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/clubs/1/activities"
+      }
+    }
+  ]
+}

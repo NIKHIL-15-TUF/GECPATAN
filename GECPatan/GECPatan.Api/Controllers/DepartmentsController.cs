@@ -317,5 +317,56 @@ namespace GECPatan.Api.Controllers
 
             return Ok(ApiResponse<List<DeptNoticeDTO>>.Ok(data));
         }
+        // GET /api/departments/{id}/activities
+        [HttpGet("{id}/activities")]
+        public async Task<ActionResult<ApiResponse<List<ActivityDTO>>>> GetActivities(int id)
+        {
+            var deptExists = await _context.Departments
+                .AnyAsync(d => d.DeptId == id && d.IsActive);
+
+            if (!deptExists)
+                return NotFound(ApiResponse<List<ActivityDTO>>.Fail(
+                    "Department not found"));
+
+            var activities = await _context.Activities
+                .Include(a => a.Images.OrderBy(i => i.DisplayOrder))
+                .Include(a => a.Files.OrderBy(f => f.DisplayOrder))
+                .Where(a => a.DeptId == id && a.IsVisible)
+                .OrderByDescending(a => a.EventDate)
+                .ToListAsync();
+
+            var data = activities.Select(a => new ActivityDTO
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description,
+                EventDate = a.EventDate.HasValue
+                    ? a.EventDate.Value.ToString("yyyy-MM-dd") : null,
+                EventTime = a.EventTime,
+                Year = a.Year,
+                TargetStudents = a.TargetStudents,
+                Keywords = a.Keywords,
+                ExternalLink = a.ExternalLink,
+                Link = !string.IsNullOrEmpty(a.ExternalLink)
+                    ? a.ExternalLink
+                    : (!string.IsNullOrEmpty(a.ControllerName)
+                       && !string.IsNullOrEmpty(a.ActionName)
+                        ? $"/{a.ControllerName}/{a.ActionName}" : null),
+                Images = a.Images.Select(img => new ActivityImageDTO
+                {
+                    ImagePath = img.ImagePath,
+                    DisplayOrder = img.DisplayOrder
+                }).ToList(),
+                Files = a.Files.Select(f => new ActivityFileDTO
+                {
+                    Title = f.Title,
+                    FilePath = f.FilePath,
+                    FileType = f.FileType,
+                    DisplayOrder = f.DisplayOrder
+                }).ToList()
+            }).ToList();
+
+            return Ok(ApiResponse<List<ActivityDTO>>.Ok(data));
+        }
     }
 }
