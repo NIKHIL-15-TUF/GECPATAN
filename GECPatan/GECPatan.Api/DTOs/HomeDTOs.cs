@@ -57,6 +57,17 @@
         public int? LatestPlacementYear { get; set; }
         public int? LatestTotalPlaced { get; set; }
         public string? LatestHighestPackage { get; set; }
+
+        // Feature highlight icons (from SiteSettings)
+        // Admin sets these under Home.Feature1.Text etc.
+        public string? Feature1Text { get; set; }
+        public string? Feature1Icon { get; set; }
+        public string? Feature2Text { get; set; }
+        public string? Feature2Icon { get; set; }
+        public string? Feature3Text { get; set; }
+        public string? Feature3Icon { get; set; }
+        public string? Feature4Text { get; set; }
+        public string? Feature4Icon { get; set; }
     }
 
     public class SiteSettingsDTO
@@ -77,6 +88,9 @@
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? Address { get; set; }
+        public string? MapEmbedUrl { get; set; }
+        public string? MapLatitude { get; set; }
+        public string? MapLongitude { get; set; }
     }
     // ── HOME ACTIVITIES TICKER (for /api/home/activities) ──
     public class HomeActivityDTO

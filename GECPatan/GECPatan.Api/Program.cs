@@ -1,6 +1,6 @@
 using GECPatan.Core.Data;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.FileProviders;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── DATABASE ──────────────────────────────────────────
@@ -66,7 +66,20 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("WebFrontend");
+var adminWwwRoot = Path.Combine(
+    builder.Environment.ContentRootPath,
+    "..",
+    "GECPatan.Admin",
+    "wwwroot");
 
+if (Directory.Exists(adminWwwRoot))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(adminWwwRoot),
+        RequestPath = ""
+    });
+}
 // Serve uploaded files (images/PDFs) — point to Admin's wwwroot
 app.UseStaticFiles();
 

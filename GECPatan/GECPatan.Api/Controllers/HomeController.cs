@@ -133,6 +133,12 @@ namespace GECPatan.Api.Controllers
         [HttpGet("stats")]
         public async Task<ActionResult<ApiResponse<HomeStatsDTO>>> GetStats()
         {
+            var settings = await _context.SiteSettings.ToListAsync();
+
+            string? Cfg(string key)
+            {
+                return settings.FirstOrDefault(x => x.Key == key)?.Value;
+            }
             var latestPlacement = await _context.PlacementStatistics
                 .OrderByDescending(p => p.Year)
                 .FirstOrDefaultAsync();
@@ -148,7 +154,18 @@ namespace GECPatan.Api.Controllers
                     && int.TryParse(latestPlacement.Year, out var yr)
                         ? yr : null,
                 LatestTotalPlaced = latestPlacement?.TotalPlaced,
-                LatestHighestPackage = latestPlacement?.HighestPackage
+                LatestHighestPackage = latestPlacement?.HighestPackage,
+                Feature1Text = Cfg("Home.Feature1.Text"),
+                Feature1Icon = Cfg("Home.Feature1.Icon"),
+
+                Feature2Text = Cfg("Home.Feature2.Text"),
+                Feature2Icon = Cfg("Home.Feature2.Icon"),
+
+                Feature3Text = Cfg("Home.Feature3.Text"),
+                Feature3Icon = Cfg("Home.Feature3.Icon"),
+
+                Feature4Text = Cfg("Home.Feature4.Text"),
+                Feature4Icon = Cfg("Home.Feature4.Icon"),
             };
 
             return Ok(ApiResponse<HomeStatsDTO>.Ok(data));
@@ -179,7 +196,10 @@ namespace GECPatan.Api.Controllers
                 InstagramUrl = Get("Social.Instagram"),
                 Phone = Get("Contact.Phone"),
                 Email = Get("Contact.Email"),
-                Address = Get("Contact.Address")
+                Address = Get("Contact.Address"),
+                MapEmbedUrl = Get("Contact.MapEmbedUrl"),
+                MapLatitude = Get("Contact.MapLatitude"),
+                MapLongitude = Get("Contact.MapLongitude")
             };
 
             return Ok(ApiResponse<SiteSettingsDTO>.Ok(data));
