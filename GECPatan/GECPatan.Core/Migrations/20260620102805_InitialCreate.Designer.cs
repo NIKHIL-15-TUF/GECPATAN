@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace GECPatan.Admin.Migrations
+namespace GECPatan.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260426083643_Marqee")]
-    partial class Marqee
+    [Migration("20260620102805_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace GECPatan.Admin.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.AboutUs", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.AboutUs", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -66,7 +66,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("AboutUs");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.AcademicCalendar", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.AcademicCalendar", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -120,7 +120,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("AcademicCalendars");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Achievement", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Achievement", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -189,7 +189,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Achievements");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Activity", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Activity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -270,7 +270,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Activities");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ActivityFile", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ActivityFile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -325,7 +325,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("ActivityFiles");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ActivityImage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ActivityImage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -371,7 +371,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("ActivityImages");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.AdditionalMemberDetail", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.AdditionalMemberDetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -433,7 +433,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("AdditionalMemberDetails");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.AdditionalMemberGroup", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.AdditionalMemberGroup", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -480,7 +480,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("AdditionalMemberGroups");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Alumni", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Alumni", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -547,7 +547,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Alumni");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ApplicationUser", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -647,7 +647,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.AuditLog", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.AuditLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -698,7 +698,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("AuditLogs");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CampusCommittee", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CampusCommittee", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -819,7 +819,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("CampusCommittees");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ClubImage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ClubImage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -869,7 +869,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("ClubImages");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ClubMember", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ClubMember", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -931,7 +931,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("ClubMembers");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ClubObjective", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ClubObjective", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -977,7 +977,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("ClubObjectives");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CommitteeMember", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CommitteeMember", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1043,7 +1043,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("CommitteeMembers");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CommitteeMission", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CommitteeMission", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1089,7 +1089,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("CommitteeMissions");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CommitteeObjective", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CommitteeObjective", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1135,7 +1135,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("CommitteeObjectives");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CommitteeSubObjective", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CommitteeSubObjective", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1181,7 +1181,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("CommitteeSubObjectives");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CommitteeVision", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CommitteeVision", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1227,7 +1227,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("CommitteeVisions");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ContactInfo", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ContactInfo", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1277,7 +1277,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("ContactInfos");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ContentPage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ContentPage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1331,7 +1331,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("ContentPages");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Department", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Department", b =>
                 {
                     b.Property<int>("DeptId")
                         .ValueGeneratedOnAdd()
@@ -1396,7 +1396,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Departments");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DepartmentBannerImage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentBannerImage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1442,7 +1442,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("DepartmentImages");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DepartmentMission", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentMission", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1488,7 +1488,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("DepartmentMissions");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DepartmentPEO", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentPEO", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1534,7 +1534,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("DepartmentPEOs");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DepartmentPSO", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentPSO", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1580,7 +1580,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("DepartmentPSOs");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DepartmentVision", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentVision", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1626,7 +1626,81 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("DepartmentVisions");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DocumentCategory", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DeptNotice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("DeptId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExternalLink")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FilePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PostedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("ValidFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ValidTo")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeptId");
+
+                    b.ToTable("DeptNotices");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentCategory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1671,7 +1745,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("DocumentCategories");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DocumentFile", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentFile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1724,7 +1798,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("DocumentFiles");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DocumentYearSection", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentYearSection", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1771,7 +1845,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("DocumentYearSections");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DynamicSection", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DynamicSection", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1834,7 +1908,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("DynamicSections");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DynamicSectionFile", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DynamicSectionFile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1889,7 +1963,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("DynamicSectionFiles");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Facility", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Facility", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1944,7 +2018,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Facilities");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacilityBannerImage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacilityBannerImage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1990,7 +2064,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("FacilityBannerImage");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacilityMember", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacilityMember", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2056,7 +2130,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("FacilityMembers");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacilityMission", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacilityMission", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2102,7 +2176,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("FacilityMissions");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacilityVision", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacilityVision", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2148,7 +2222,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("FacilityVisions");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Faculty", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Faculty", b =>
                 {
                     b.Property<int>("FacultyId")
                         .ValueGeneratedOnAdd()
@@ -2218,7 +2292,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Faculties");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacultyExperience", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacultyExperience", b =>
                 {
                     b.Property<int>("FacultyExperienceId")
                         .ValueGeneratedOnAdd()
@@ -2273,7 +2347,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("FacultyExperiences");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacultyPublication", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacultyPublication", b =>
                 {
                     b.Property<int>("FacultyPublicationId")
                         .ValueGeneratedOnAdd()
@@ -2319,7 +2393,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("FacultyPublications");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacultyQualification", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacultyQualification", b =>
                 {
                     b.Property<int>("FacultyQualificationId")
                         .ValueGeneratedOnAdd()
@@ -2374,7 +2448,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("FacultyQualifications");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacultyTraining", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacultyTraining", b =>
                 {
                     b.Property<int>("FacultyTrainingId")
                         .ValueGeneratedOnAdd()
@@ -2428,7 +2502,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("FacultyTrainings");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.GalleryImage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.GalleryImage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2480,7 +2554,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("GalleryImages");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ImportantDocument", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ImportantDocument", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2536,7 +2610,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("ImportantDocuments");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Lab", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Lab", b =>
                 {
                     b.Property<int>("LabId")
                         .ValueGeneratedOnAdd()
@@ -2589,7 +2663,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Labs");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.LabImage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.LabImage", b =>
                 {
                     b.Property<int>("LabImageId")
                         .ValueGeneratedOnAdd()
@@ -2639,7 +2713,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("LabImages");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Marquee", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Marquee", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2717,7 +2791,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Marquees");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.MenuItem", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.MenuItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2803,7 +2877,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("MenuItems");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.MoUDocument", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.MoUDocument", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2855,7 +2929,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("MoUDocuments");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.NewsItem", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.NewsItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2921,7 +2995,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("NewsItems");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.NewsItemFile", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.NewsItemFile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2976,7 +3050,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("NewsItemFiles");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.NewsItemImage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.NewsItemImage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3022,7 +3096,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("NewsItemImages");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.NewsLetter", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.NewsLetter", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3076,7 +3150,95 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("NewsLetters");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.PersonalDetail", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ForRole")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ForUserId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("IconColor")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Link")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Module")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TriggeredBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TriggeredByRole")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.NotificationRead", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("NotificationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NotificationId");
+
+                    b.ToTable("NotificationReads");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PersonalDetail", b =>
                 {
                     b.Property<int>("PersonalDetailId")
                         .ValueGeneratedOnAdd()
@@ -3128,7 +3290,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("PersonalDetails");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.PlacementStatistic", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PlacementStatistic", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3181,7 +3343,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("PlacementStatistics");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.PlacementTeamMember", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PlacementTeamMember", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3233,7 +3395,495 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("PlacementTeamMembers");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ProgramIntake", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Principal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AreaOfInterest")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Contact")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DateOfJoiningDept")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateOfJoiningInstitute")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Designation")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PhotoPath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("TransferDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TransferNote")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Principals");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalAchievement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AchievementText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PrincipalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Year")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrincipalId");
+
+                    b.ToTable("PrincipalAchievements");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalBookPublication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BookCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Branch")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ContentTopics")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ISBN")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PrincipalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Publisher")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Semester")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("University")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrincipalId");
+
+                    b.ToTable("PrincipalBookPublications");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalExperience", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Designation")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FromDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Organization")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Place")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("PrincipalId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ToDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrincipalId");
+
+                    b.ToTable("PrincipalExperiences");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalExpertTalk", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Place")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("PrincipalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Year")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrincipalId");
+
+                    b.ToTable("PrincipalExpertTalks");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalMembership", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MembershipText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PrincipalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrincipalId");
+
+                    b.ToTable("PrincipalMemberships");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalPublication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DOI")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("JournalOrConference")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int>("PrincipalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Year")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrincipalId");
+
+                    b.ToTable("PrincipalPublications");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalQualification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Degree")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PrincipalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Result")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("University")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Year")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrincipalId");
+
+                    b.ToTable("PrincipalQualifications");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ProgramIntake", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3282,7 +3932,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("ProgramIntakes");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ResearchGrant", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ResearchGrant", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3349,7 +3999,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("ResearchGrants");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.SSIPDocument", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.SSIPDocument", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3400,7 +4050,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("SSIPDocuments");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.SiteSetting", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.SiteSetting", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3454,7 +4104,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("SiteSettings");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Slider", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Slider", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3525,7 +4175,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Sliders");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.StudentClub", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.StudentClub", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3588,7 +4238,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("StudentClubs");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.TenderCategory", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.TenderCategory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3633,7 +4283,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("TenderCategories");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.TenderDocument", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.TenderDocument", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3689,7 +4339,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("TenderDocuments");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Testimonial", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Testimonial", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3746,7 +4396,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Testimonials");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Timetable", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Timetable", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3810,7 +4460,7 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("Timetables");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.TopRecruiter", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.TopRecruiter", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -3991,9 +4641,9 @@ namespace GECPatan.Admin.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ActivityFile", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ActivityFile", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Activity", "Activity")
+                    b.HasOne("GECPatan.Core.Models.Domain.Activity", "Activity")
                         .WithMany("Files")
                         .HasForeignKey("ActivityId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4002,9 +4652,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Activity");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ActivityImage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ActivityImage", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Activity", "Activity")
+                    b.HasOne("GECPatan.Core.Models.Domain.Activity", "Activity")
                         .WithMany("Images")
                         .HasForeignKey("ActivityId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4013,9 +4663,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Activity");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.AdditionalMemberDetail", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.AdditionalMemberDetail", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.AdditionalMemberGroup", "AdditionalMemberGroup")
+                    b.HasOne("GECPatan.Core.Models.Domain.AdditionalMemberGroup", "AdditionalMemberGroup")
                         .WithMany("Members")
                         .HasForeignKey("AdditionalMemberGroupId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4024,9 +4674,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("AdditionalMemberGroup");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.AdditionalMemberGroup", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.AdditionalMemberGroup", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
+                    b.HasOne("GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
                         .WithMany("AdditionalMemberGroups")
                         .HasForeignKey("CommitteeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4035,14 +4685,14 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Committee");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ApplicationUser", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ApplicationUser", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Department", "Department")
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
                         .WithMany()
                         .HasForeignKey("DeptId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne(" GECPatan.Core.Models.Domain.Faculty", "Faculty")
+                    b.HasOne("GECPatan.Core.Models.Domain.Faculty", "Faculty")
                         .WithMany()
                         .HasForeignKey("FacultyId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -4052,9 +4702,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Faculty");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ClubImage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ClubImage", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.StudentClub", "Club")
+                    b.HasOne("GECPatan.Core.Models.Domain.StudentClub", "Club")
                         .WithMany("Images")
                         .HasForeignKey("ClubId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4063,9 +4713,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Club");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ClubMember", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ClubMember", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.StudentClub", "Club")
+                    b.HasOne("GECPatan.Core.Models.Domain.StudentClub", "Club")
                         .WithMany("Members")
                         .HasForeignKey("ClubId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4074,9 +4724,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Club");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ClubObjective", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ClubObjective", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.StudentClub", "Club")
+                    b.HasOne("GECPatan.Core.Models.Domain.StudentClub", "Club")
                         .WithMany("Objectives")
                         .HasForeignKey("ClubId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4085,9 +4735,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Club");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CommitteeMember", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CommitteeMember", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
+                    b.HasOne("GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
                         .WithMany("Members")
                         .HasForeignKey("CommitteeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4096,9 +4746,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Committee");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CommitteeMission", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CommitteeMission", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
+                    b.HasOne("GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
                         .WithMany("Missions")
                         .HasForeignKey("CommitteeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4107,9 +4757,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Committee");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CommitteeObjective", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CommitteeObjective", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
+                    b.HasOne("GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
                         .WithMany("Objectives")
                         .HasForeignKey("CommitteeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4118,9 +4768,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Committee");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CommitteeSubObjective", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CommitteeSubObjective", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
+                    b.HasOne("GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
                         .WithMany("SubObjectives")
                         .HasForeignKey("CommitteeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4129,9 +4779,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Committee");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CommitteeVision", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CommitteeVision", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
+                    b.HasOne("GECPatan.Core.Models.Domain.CampusCommittee", "Committee")
                         .WithMany("Visions")
                         .HasForeignKey("CommitteeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4140,9 +4790,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Committee");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DepartmentBannerImage", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentBannerImage", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Department", "Department")
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
                         .WithMany("BannerImages")
                         .HasForeignKey("DeptId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4151,9 +4801,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DepartmentMission", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentMission", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Department", "Department")
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
                         .WithMany("Missions")
                         .HasForeignKey("DeptId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4162,9 +4812,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DepartmentPEO", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentPEO", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Department", "Department")
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
                         .WithMany("PEOs")
                         .HasForeignKey("DeptId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4173,9 +4823,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DepartmentPSO", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentPSO", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Department", "Department")
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
                         .WithMany("PSOs")
                         .HasForeignKey("DeptId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4184,9 +4834,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DepartmentVision", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentVision", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Department", "Department")
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
                         .WithMany("Visions")
                         .HasForeignKey("DeptId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4195,205 +4845,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DocumentFile", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DeptNotice", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.DocumentYearSection", "YearSection")
-                        .WithMany("Files")
-                        .HasForeignKey("YearSectionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("YearSection");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DocumentYearSection", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.DocumentCategory", "Category")
-                        .WithMany("YearSections")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DynamicSectionFile", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.DynamicSection", "DynamicSection")
-                        .WithMany("Files")
-                        .HasForeignKey("DynamicSectionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DynamicSection");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacilityBannerImage", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Facility", "Facility")
-                        .WithMany("BannerImages")
-                        .HasForeignKey("FacilityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Facility");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacilityMember", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Facility", "Facility")
-                        .WithMany("Members")
-                        .HasForeignKey("FacilityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Facility");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacilityMission", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Facility", "Facility")
-                        .WithMany("Missions")
-                        .HasForeignKey("FacilityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Facility");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacilityVision", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Facility", "Facility")
-                        .WithMany("Visions")
-                        .HasForeignKey("FacilityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Facility");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Faculty", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Department", "Department")
-                        .WithMany("Faculties")
-                        .HasForeignKey("DeptId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Department");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacultyExperience", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Faculty", "Faculty")
-                        .WithMany("Experiences")
-                        .HasForeignKey("FacultyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Faculty");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacultyPublication", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Faculty", "Faculty")
-                        .WithMany("Publications")
-                        .HasForeignKey("FacultyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Faculty");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacultyQualification", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Faculty", "Faculty")
-                        .WithMany("Qualifications")
-                        .HasForeignKey("FacultyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Faculty");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.FacultyTraining", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Faculty", "Faculty")
-                        .WithMany("Trainings")
-                        .HasForeignKey("FacultyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Faculty");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Lab", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Department", "Department")
-                        .WithMany("Labs")
-                        .HasForeignKey("DeptId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Department");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.LabImage", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Lab", "Lab")
-                        .WithMany("Images")
-                        .HasForeignKey("LabId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Lab");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.MenuItem", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.MenuItem", "Parent")
-                        .WithMany("Children")
-                        .HasForeignKey("ParentId");
-
-                    b.Navigation("Parent");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.NewsItemFile", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.NewsItem", "NewsItem")
-                        .WithMany("Files")
-                        .HasForeignKey("NewsItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("NewsItem");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.NewsItemImage", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.NewsItem", "NewsItem")
-                        .WithMany("Images")
-                        .HasForeignKey("NewsItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("NewsItem");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.PersonalDetail", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Faculty", "Faculty")
-                        .WithOne("PersonalDetail")
-                        .HasForeignKey(" GECPatan.Core.Models.Domain.PersonalDetail", "FacultyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Faculty");
-                });
-
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.ProgramIntake", b =>
-                {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Department", "Department")
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
                         .WithMany()
                         .HasForeignKey("DeptId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4402,9 +4856,304 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.TenderDocument", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentFile", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.TenderCategory", "TenderCategory")
+                    b.HasOne("GECPatan.Core.Models.Domain.DocumentYearSection", "YearSection")
+                        .WithMany("Files")
+                        .HasForeignKey("YearSectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("YearSection");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentYearSection", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.DocumentCategory", "Category")
+                        .WithMany("YearSections")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DynamicSectionFile", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.DynamicSection", "DynamicSection")
+                        .WithMany("Files")
+                        .HasForeignKey("DynamicSectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DynamicSection");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacilityBannerImage", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Facility", "Facility")
+                        .WithMany("BannerImages")
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Facility");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacilityMember", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Facility", "Facility")
+                        .WithMany("Members")
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Facility");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacilityMission", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Facility", "Facility")
+                        .WithMany("Missions")
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Facility");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacilityVision", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Facility", "Facility")
+                        .WithMany("Visions")
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Facility");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Faculty", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
+                        .WithMany("Faculties")
+                        .HasForeignKey("DeptId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacultyExperience", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Faculty", "Faculty")
+                        .WithMany("Experiences")
+                        .HasForeignKey("FacultyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Faculty");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacultyPublication", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Faculty", "Faculty")
+                        .WithMany("Publications")
+                        .HasForeignKey("FacultyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Faculty");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacultyQualification", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Faculty", "Faculty")
+                        .WithMany("Qualifications")
+                        .HasForeignKey("FacultyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Faculty");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacultyTraining", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Faculty", "Faculty")
+                        .WithMany("Trainings")
+                        .HasForeignKey("FacultyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Faculty");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Lab", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
+                        .WithMany("Labs")
+                        .HasForeignKey("DeptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.LabImage", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Lab", "Lab")
+                        .WithMany("Images")
+                        .HasForeignKey("LabId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lab");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.MenuItem", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.MenuItem", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId");
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.NewsItemFile", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.NewsItem", "NewsItem")
+                        .WithMany("Files")
+                        .HasForeignKey("NewsItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NewsItem");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.NewsItemImage", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.NewsItem", "NewsItem")
+                        .WithMany("Images")
+                        .HasForeignKey("NewsItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NewsItem");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.NotificationRead", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Notification", "Notification")
+                        .WithMany("ReadBy")
+                        .HasForeignKey("NotificationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Notification");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PersonalDetail", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Faculty", "Faculty")
+                        .WithOne("PersonalDetail")
+                        .HasForeignKey("GECPatan.Core.Models.Domain.PersonalDetail", "FacultyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Faculty");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalAchievement", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Principal", "Principal")
+                        .WithMany("Achievements")
+                        .HasForeignKey("PrincipalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Principal");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalBookPublication", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Principal", "Principal")
+                        .WithMany("BookPublications")
+                        .HasForeignKey("PrincipalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Principal");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalExperience", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Principal", "Principal")
+                        .WithMany("Experiences")
+                        .HasForeignKey("PrincipalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Principal");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalExpertTalk", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Principal", "Principal")
+                        .WithMany("ExpertTalks")
+                        .HasForeignKey("PrincipalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Principal");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalMembership", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Principal", "Principal")
+                        .WithMany("Memberships")
+                        .HasForeignKey("PrincipalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Principal");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalPublication", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Principal", "Principal")
+                        .WithMany("Publications")
+                        .HasForeignKey("PrincipalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Principal");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.PrincipalQualification", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Principal", "Principal")
+                        .WithMany("Qualifications")
+                        .HasForeignKey("PrincipalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Principal");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ProgramIntake", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
+                        .WithMany()
+                        .HasForeignKey("DeptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.TenderDocument", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.TenderCategory", "TenderCategory")
                         .WithMany("Documents")
                         .HasForeignKey("TenderCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4413,9 +5162,9 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("TenderCategory");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Timetable", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Timetable", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.Department", "Department")
+                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
                         .WithMany()
                         .HasForeignKey("DeptId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4435,7 +5184,7 @@ namespace GECPatan.Admin.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.ApplicationUser", null)
+                    b.HasOne("GECPatan.Core.Models.Domain.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4444,7 +5193,7 @@ namespace GECPatan.Admin.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.ApplicationUser", null)
+                    b.HasOne("GECPatan.Core.Models.Domain.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4459,7 +5208,7 @@ namespace GECPatan.Admin.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne(" GECPatan.Core.Models.Domain.ApplicationUser", null)
+                    b.HasOne("GECPatan.Core.Models.Domain.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4468,26 +5217,26 @@ namespace GECPatan.Admin.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne(" GECPatan.Core.Models.Domain.ApplicationUser", null)
+                    b.HasOne("GECPatan.Core.Models.Domain.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Activity", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Activity", b =>
                 {
                     b.Navigation("Files");
 
                     b.Navigation("Images");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.AdditionalMemberGroup", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.AdditionalMemberGroup", b =>
                 {
                     b.Navigation("Members");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.CampusCommittee", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.CampusCommittee", b =>
                 {
                     b.Navigation("AdditionalMemberGroups");
 
@@ -4502,7 +5251,7 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Visions");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Department", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Department", b =>
                 {
                     b.Navigation("BannerImages");
 
@@ -4519,22 +5268,22 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Visions");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DocumentCategory", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentCategory", b =>
                 {
                     b.Navigation("YearSections");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DocumentYearSection", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentYearSection", b =>
                 {
                     b.Navigation("Files");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.DynamicSection", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DynamicSection", b =>
                 {
                     b.Navigation("Files");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Facility", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Facility", b =>
                 {
                     b.Navigation("BannerImages");
 
@@ -4545,7 +5294,7 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Visions");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Faculty", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Faculty", b =>
                 {
                     b.Navigation("Experiences");
 
@@ -4558,24 +5307,46 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Trainings");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.Lab", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Lab", b =>
                 {
                     b.Navigation("Images");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.MenuItem", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.MenuItem", b =>
                 {
                     b.Navigation("Children");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.NewsItem", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.NewsItem", b =>
                 {
                     b.Navigation("Files");
 
                     b.Navigation("Images");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.StudentClub", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Notification", b =>
+                {
+                    b.Navigation("ReadBy");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.Principal", b =>
+                {
+                    b.Navigation("Achievements");
+
+                    b.Navigation("BookPublications");
+
+                    b.Navigation("Experiences");
+
+                    b.Navigation("ExpertTalks");
+
+                    b.Navigation("Memberships");
+
+                    b.Navigation("Publications");
+
+                    b.Navigation("Qualifications");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.StudentClub", b =>
                 {
                     b.Navigation("Images");
 
@@ -4584,7 +5355,7 @@ namespace GECPatan.Admin.Migrations
                     b.Navigation("Objectives");
                 });
 
-            modelBuilder.Entity(" GECPatan.Core.Models.Domain.TenderCategory", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.TenderCategory", b =>
                 {
                     b.Navigation("Documents");
                 });
