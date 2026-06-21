@@ -330,7 +330,30 @@
                                     </a>
                                 </li>
                             }
-
+                            @* ── MANDATORY DISCLOUSRE ────────────────────────── *@
+                            @if (isAdmin)
+                            {
+                                <li class="nav-header">MANDATORY DISCLOSURE</li>
+                                <li class="nav-item">
+                                    <a asp-controller="CutoffRecord" asp-action="Index" class="nav-link @(ctrl == "CutoffRecord" ? "active" : "")">
+                                            <i class="nav-icon fas fa-graduation-cap"></i>
+                                            <p> Cutoff Records</p>
+                                     </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="ScholarshipRecord" asp-action="Index" class="nav-link @(ctrl == "ScholarshipRecord" ? "active" : "")">
+                                          <i class="nav-icon fas fa-hand-holding-usd"></i>
+                                          <p> Scholarships</p>
+                                     </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="InfrastructureRecord" asp-action="Index" class="nav-link @(ctrl == "InfrastructureRecord" ? "active" : "")">
+                                        <i class="nav-icon fas fa-building"></i>
+                                        <p> Infrastructure</p>
+                                    </a>
+                                </li>
+                                    
+                            }
                             @* ── INSTITUTE ────────────────────────── *@
                             @if (isAdmin || isPrin)
                             {

@@ -121,7 +121,12 @@ namespace GECPatan.Core.Data
         // ── NOTIFICATIONS ─────────────────────────────────
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationRead> NotificationReads { get; set; }
-
+        //----Mandatory Disclosure---------------------------
+        public DbSet<CutoffRecord> CutoffRecords { get; set; }
+        public DbSet<ScholarshipRecord> ScholarshipRecords { get; set; }
+        public DbSet<InfrastructureRecord> InfrastructureRecords { get; set; }
+        public DbSet<DisclosureNarrative> DisclosureNarratives{ get; set; }
+        
         // MODEL CREATING
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -201,6 +206,14 @@ namespace GECPatan.Core.Data
                 .HasIndex(p => p.Slug)
                 .IsUnique();
             modelBuilder.Entity<Principal>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<CutoffRecord>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<ScholarshipRecord>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<InfrastructureRecord>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<DisclosureNarrative>()
                 .HasQueryFilter(x => !x.IsDeleted);
             // ── RELATIONSHIPS ────────────────────────────────
 

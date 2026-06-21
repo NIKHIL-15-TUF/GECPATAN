@@ -1,0 +1,76 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.ScholarshipRecordVM>
+@{
+    ViewData["Title"] = "Scholarship Records — Mandatory Disclosure";
+}
+ 
+<div class="text-right mb-3">
+    <a asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus mr-1"></i>Add Scholarship Record
+    </a>
+</div>
+ 
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-hand-holding-usd mr-2"></i>
+            Scholarship / Fee Waiver Schemes
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-hand-holding-usd fa-3x mb-3 d-block"></i>
+                No scholarship records yet.
+                <a asp-action="Create">Add the first one.</a>
+            </div>
+        }
+        else
+        {
+            <table class="table table-sm table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Scheme Name</th>
+                        <th width="120">Academic Year</th>
+                        <th width="150">Total Applications</th>
+                        <th width="80">Status</th>
+                        <th width="120">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        <tr>
+                            <td><strong>@s.SchemeName</strong></td>
+                            <td>@(s.AcademicYear ?? "—")</td>
+                            <td>@s.TotalApplications</td>
+                            <td>
+                                @if (s.IsVisible)
+                                {
+                                    <span class="badge badge-success">Visible</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-secondary">Hidden</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@s.Id"
+                                       class="btn btn-xs btn-info">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="Delete" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@s.Id" />
+                                    <button type="submit" class="btn btn-xs btn-danger"
+                                            onclick="return confirm('Delete this record?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

@@ -4,6 +4,7 @@ using GECPatan.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GECPatan.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260621023620_AddMandatoryDisclosure")]
+    partial class AddMandatoryDisclosure
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1328,71 +1331,6 @@ namespace GECPatan.Core.Migrations
                     b.ToTable("ContentPages");
                 });
 
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.CutoffRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AcademicYear")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("DeptId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("EWSRank")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("GeneralRank")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsVisible")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("SCRank")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("SEBCRank")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("STRank")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeptId");
-
-                    b.ToTable("CutoffRecords");
-                });
-
             modelBuilder.Entity("GECPatan.Core.Models.Domain.Department", b =>
                 {
                     b.Property<int>("DeptId")
@@ -1760,63 +1698,6 @@ namespace GECPatan.Core.Migrations
                     b.HasIndex("DeptId");
 
                     b.ToTable("DeptNotices");
-                });
-
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.DisclosureNarrative", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("HtmlContent")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsVisible")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("SectionKey")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("SectionTitle")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DisclosureNarratives");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentCategory", b =>
@@ -2727,63 +2608,6 @@ namespace GECPatan.Core.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ImportantDocuments");
-                });
-
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.InfrastructureRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<double>("AreaSqm")
-                        .HasColumnType("float");
-
-                    b.Property<string>("BuildingName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("DeptId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsVisible")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("RoomType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeptId");
-
-                    b.ToTable("InfrastructureRecords");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.Lab", b =>
@@ -4226,58 +4050,6 @@ namespace GECPatan.Core.Migrations
                     b.ToTable("SSIPDocuments");
                 });
 
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.ScholarshipRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AcademicYear")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsVisible")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SchemeName")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<int>("TotalApplications")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ScholarshipRecords");
-                });
-
             modelBuilder.Entity("GECPatan.Core.Models.Domain.SiteSetting", b =>
                 {
                     b.Property<int>("Id")
@@ -5018,17 +4790,6 @@ namespace GECPatan.Core.Migrations
                     b.Navigation("Committee");
                 });
 
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.CutoffRecord", b =>
-                {
-                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DeptId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Department");
-                });
-
             modelBuilder.Entity("GECPatan.Core.Models.Domain.DepartmentBannerImage", b =>
                 {
                     b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
@@ -5225,15 +4986,6 @@ namespace GECPatan.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Faculty");
-                });
-
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.InfrastructureRecord", b =>
-                {
-                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DeptId");
-
-                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.Lab", b =>
