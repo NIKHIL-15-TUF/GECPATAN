@@ -352,7 +352,12 @@
                                         <p> Infrastructure</p>
                                     </a>
                                 </li>
-                                    
+                                <li class="nav-item">
+                                    <a asp-controller="DisclosureNarrative" asp-action="Index" class="nav-link @(ctrl=="DisclosureNarrative" ? "active" : "")">
+                                        <i class="nav-icon fas fa-file-alt"></i>
+                                        <p>Narrative Sections</p>
+                                    </a>
+                                </li>   
                             }
                             @* ── INSTITUTE ────────────────────────── *@
                             @if (isAdmin || isPrin)

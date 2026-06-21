@@ -1,0 +1,109 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.DisclosureNarrativeListVM>
+@{
+    ViewData["Title"] = "Narrative Sections — Mandatory Disclosure";
+    int expected = ViewBag.ExpectedCount ?? 15;
+    int actual = ViewBag.ActualCount ?? 0;
+}
+ 
+@if (actual < expected)
+{
+    <div class="alert alert-warning py-2 mb-3">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        Only @actual of @expected expected sections found.
+        The seeder may not have run yet — restart the
+        application once to auto-populate the missing sections.
+    </div>
+}
+ 
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-file-alt mr-2"></i>
+            Narrative Sections
+            <span class="badge badge-light text-dark ml-2">
+                Fixed schema — @Model.Count sections
+            </span>
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="thead-light">
+                <tr>
+                    <th width="50">#</th>
+                    <th>Section</th>
+                    <th width="120">Content</th>
+                    <th width="100">Status</th>
+                    <th width="220">Last Updated</th>
+                    <th width="100">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.OrderBy(x => x.DisplayOrder))
+                {
+                    <tr>
+                        <td>@(s.DisplayOrder + 1)</td>
+                        <td>
+                            <strong>@s.SectionTitle</strong>
+                            <br />
+                            <code class="small text-muted">@s.SectionKey</code>
+                        </td>
+                        <td>
+                            @if (s.HasContent)
+                            {
+                                <span class="badge badge-success">
+                                    <i class="fas fa-check mr-1"></i>Filled
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-warning">
+                                    <i class="fas fa-exclamation mr-1"></i>Empty
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (s.IsVisible)
+                            {
+                                <span class="badge badge-info">Visible</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Hidden</span>
+                            }
+                        </td>
+                        <td>
+                            @if (s.LastUpdated.HasValue)
+                            {
+                                <small>
+                                    @s.LastUpdated.Value.ToString("dd MMM yyyy, hh:mm tt")
+                                    @if (!string.IsNullOrEmpty(s.UpdatedBy))
+                                    {
+                                        <span class="text-muted">by @s.UpdatedBy</span>
+                                    }
+                                </small>
+                            }
+                            else
+                            {
+                                <small class="text-muted">Never edited</small>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@s.Id"
+                                   class="btn btn-xs btn-primary">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer py-2">
+        <small class="text-muted">
+            <i class="fas fa-lock mr-1"></i>
+            This list is fixed by AICTE Mandatory Disclosure format.
+            Sections cannot be added or removed — only content and
+            visibility can be edited.
+        </small>
+    </div>
+</div>

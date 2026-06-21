@@ -83,15 +83,18 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var config = services.GetRequiredService<IConfiguration>();
+        var db = scope.ServiceProvider.GetRequiredService<GECPatan.Core.Data.ApplicationDbContext>();
 
         await context.Database.MigrateAsync();
         await RoleSeeder.SeedAsync(userManager, roleManager, config);
+        await GECPatan.Admin.Data.DisclosureNarrativeSeeder.SeedAsync(db);
     }
     catch (Exception ex)
     {
