@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        @@page { size: A4; margin: 20mm 15mm; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            color: #000;
+            margin: 0;
+            padding: 24px;
+            background: #fff;
+        }
+        .doc-header {
+            text-align: center;
+            border-bottom: 3px solid #1a237e;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+        .doc-header h1 {
+            font-size: 20pt;
+            margin: 0 0 4px;
+            color: #1a237e;
+        }
+        .doc-header h2 {
+            font-size: 14pt;
+            margin: 0 0 8px;
+            font-weight: normal;
+        }
+        .doc-header .meta {
+            font-size: 10pt;
+            color: #555;
+        }
+        h3.section-title {
+            font-size: 14pt;
+            color: #1a237e;
+            border-bottom: 1px solid #1a237e;
+            padding-bottom: 4px;
+            margin-top: 28px;
+            margin-bottom: 12px;
+            page-break-after: avoid;
+        }
+        h4.dept-title {
+            font-size: 13pt;
+            background: #eef0fb;
+            padding: 6px 10px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            page-break-after: avoid;
+        }
+        table.disc-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            font-size: 10.5pt;
+        }
+        table.disc-table th,
+        table.disc-table td {
+            border: 1px solid #999;
+            padding: 5px 8px;
+            text-align: left;
+        }
+        table.disc-table th {
+            background: #1a237e;
+            color: #fff;
+            font-weight: bold;
+        }
+        table.disc-table tr:nth-child(even) {
+            background: #f7f8fc;
+        }
+        .narrative-content {
+            font-size: 11pt;
+            margin-bottom: 16px;
+        }
+        .narrative-content p { margin: 0 0 8px; }
+        .empty-note {
+            color: #b71c1c;
+            font-style: italic;
+            font-size: 10pt;
+        }
+        .page-break { page-break-before: always; }
+        .info-grid {
+            display: table;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .info-row { display: table-row; }
+        .info-label, .info-value {
+            display: table-cell;
+            padding: 4px 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .info-label {
+            font-weight: bold;
+            width: 220px;
+            color: #1a237e;
+        }
+        .doc-footer {
+            margin-top: 40px;
+            padding-top: 12px;
+            border-top: 1px solid #ccc;
+            font-size: 9pt;
+            color: #777;
+            text-align: center;
+        }
+        @@media screen {
+            body {
+                max-width: 850px;
+                margin: 20px auto;
+                box-shadow: 0 0 12px rgba(0,0,0,.15);
+            }
+        }
+    </style>
+</head>
+<body>
+    @RenderBody()
+    <div class="doc-footer">
+        This document is system-generated from GEC Patan Admin Portal
+        on @DateTime.Now.ToString("dd MMM yyyy, hh:mm tt").
+    </div>
+</body>
+</html>

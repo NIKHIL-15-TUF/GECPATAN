@@ -1,0 +1,255 @@
+﻿@model GECPatan.Admin.Models.ViewModels.DisclosureDataVM
+@{
+    Layout = "_DisclosureLayout";
+}
+ 
+<div class="doc-header">
+    <h1>@Model.Institute.Name</h1>
+    <h2>Mandatory Disclosure — Academic Year @Model.AcademicYear</h2>
+    <div class="meta">
+        @if (!string.IsNullOrEmpty(Model.Institute.Address))
+        {
+            @Model.Institute.Address
+            <br />
+        }
+        @if (!string.IsNullOrEmpty(Model.Institute.Phone))
+        {
+            <text>Phone: @Model.Institute.Phone &nbsp;|&nbsp;</text>
+        }
+        @if (!string.IsNullOrEmpty(Model.Institute.Email))
+        {
+            <text>Email: @Model.Institute.Email</text>
+        }
+        <br />
+        @if (!string.IsNullOrEmpty(Model.Institute.AffiliatedTo))
+        {
+            <text>Affiliated to: @Model.Institute.AffiliatedTo &nbsp;|&nbsp;</text>
+        }
+        @if (!string.IsNullOrEmpty(Model.Institute.ApprovedBy))
+        {
+            <text>Approved by: @Model.Institute.ApprovedBy</text>
+        }
+    </div>
+</div>
+  
+<!--SECTION 1 — INSTITUTE & PRINCIPAL INFO-->
+<h3 class="section-title">1. Institute Information</h3>
+<div class="info-grid">
+    <div class="info-row">
+        <div class="info-label">Institute Name</div>
+        <div class="info-value">@Model.Institute.Name</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Established Year</div>
+        <div class="info-value">@(Model.Institute.EstablishedYear ?? "—")</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Affiliated University</div>
+        <div class="info-value">@(Model.Institute.AffiliatedTo ?? "—")</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Approved By</div>
+        <div class="info-value">@(Model.Institute.ApprovedBy ?? "—")</div>
+    </div>
+</div>
+ 
+@if (Model.Principal != null)
+{
+    <h3 class="section-title">2. Principal Information</h3>
+    <div class="info-grid">
+        <div class="info-row">
+            <div class="info-label">Name</div>
+            <div class="info-value">@Model.Principal.Name</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Designation</div>
+            <div class="info-value">@(Model.Principal.Designation ?? "—")</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Qualifications</div>
+            <div class="info-value">
+                @(Model.Principal.Qualifications.Any()
+                    ? string.Join(", ", Model.Principal.Qualifications)
+                    : "—")
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Contact</div>
+            <div class="info-value">
+                @(Model.Principal.Email ?? "—") &nbsp;|&nbsp;
+                @(Model.Principal.Contact ?? "—")
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <h3 class="section-title">2. Principal Information</h3>
+    <p class="empty-note">No active Principal profile found.</p>
+}
+ 
+<!-- SECTION 3 — DEPARTMENTS (Intake, Cutoff, Faculty)-->
+<h3 class="section-title">3. Department-wise Details</h3>
+ 
+@foreach (var dept in Model.Departments)
+{
+    <h4 class="dept-title">
+        @dept.Name @(!string.IsNullOrEmpty(dept.ShortCode) ? $"({dept.ShortCode})" : "")
+        — Current Intake: @dept.CurrentIntake
+        (@dept.CurrentIntakeYear)
+    </h4>
+ 
+    <strong>Cutoff (Closing Rank) History</strong>
+    @if (!dept.CutoffHistory.Any())
+    {
+        <p class="empty-note">No cutoff records available for this department.</p>
+    }
+    else
+    {
+        <table class="disc-table">
+            <thead>
+                <tr>
+                    <th>Academic Year</th>
+                    <th>General</th>
+                    <th>SEBC</th>
+                    <th>SC</th>
+                    <th>ST</th>
+                    <th>EWS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in dept.CutoffHistory)
+                {
+                    <tr>
+                        <td>@c.AcademicYear</td>
+                        <td>@c.General</td>
+                        <td>@c.SEBC</td>
+                        <td>@c.SC</td>
+                        <td>@c.ST</td>
+                        <td>@c.EWS</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+ 
+    <strong>Teaching Faculty</strong>
+    @if (!dept.Faculty.Any())
+    {
+        <p class="empty-note">No active teaching faculty records found.</p>
+    }
+    else
+    {
+        <table class="disc-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Designation</th>
+                    <th>Highest Qualification</th>
+                    <th>Date of Joining</th>
+                    <th>Experience (yrs)</th>
+                    <th>Publications</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var f in dept.Faculty)
+                {
+                    <tr>
+                        <td>@f.Name</td>
+                        <td>@f.Designation</td>
+                        <td>@f.HighestQualification</td>
+                        <td>@f.DateOfJoining</td>
+                        <td>@f.ExperienceYears</td>
+                        <td>@f.PublicationCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+ 
+<!-- SECTION 4 — SCHOLARSHIPS -->
+<div class="page-break"></div>
+<h3 class="section-title">4. Scholarship / Fee Waiver Schemes</h3>
+@if (!Model.Scholarships.Any())
+{
+    <p class="empty-note">No scholarship records available.</p>
+}
+else
+{
+    <table class="disc-table">
+        <thead>
+            <tr>
+                <th>Scheme Name</th>
+                <th>Academic Year</th>
+                <th>Total Applications</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model.Scholarships)
+            {
+                <tr>
+                    <td>@s.SchemeName</td>
+                    <td>@s.AcademicYear</td>
+                    <td>@s.TotalApplications</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+ 
+<!-- SECTION 5 — INFRASTRUCTURE -->
+<h3 class="section-title">5. Infrastructural Information</h3>
+@if (!Model.Infrastructure.Any())
+{
+    <p class="empty-note">No infrastructure records available.</p>
+}
+else
+{
+    <table class="disc-table">
+        <thead>
+            <tr>
+                <th>Room Type</th>
+                <th>Area (sq.m)</th>
+                <th>Building</th>
+                <th>Department</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var i in Model.Infrastructure)
+            {
+                <tr>
+                    <td>@i.RoomType</td>
+                    <td>@i.AreaSqm</td>
+                    <td>@i.BuildingName</td>
+                    <td>@i.DeptName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+ 
+<!-- SECTION 6 — NARRATIVE SECTIONS (strict 15 keys) -->
+<div class="page-break"></div>
+<h3 class="section-title">6. Governance &amp; Other Disclosures</h3>
+ 
+@{
+    int secNum = 1;
+}
+@foreach (var narrative in Model.Narratives)
+{
+    <h4 class="dept-title">6.@secNum @narrative.SectionTitle</h4>
+    @if (string.IsNullOrWhiteSpace(narrative.HtmlContent))
+    {
+        <p class="empty-note">
+            Content for this section has not been added yet.
+        </p>
+    }
+    else
+    {
+        <div class="narrative-content">
+            @Html.Raw(narrative.HtmlContent)
+        </div>
+    }
+    secNum++;
+}

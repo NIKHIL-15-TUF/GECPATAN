@@ -57,6 +57,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<GECPatan.Core.Services.AuditService>();
 // ── MVC ───────────────────────────────────────────────
 builder.Services.AddControllersWithViews();
+//DIscloure Data Service
+builder.Services.AddScoped<
+    GECPatan.Admin.Services.DisclosureDataService>();
 
 var app = builder.Build();
 
