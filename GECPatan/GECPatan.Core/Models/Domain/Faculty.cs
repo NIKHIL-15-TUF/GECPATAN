@@ -66,6 +66,9 @@ namespace GECPatan.Core.Models.Domain
 
         [MaxLength(200)]
         public string? Email { get; set; }
+
+        // Added for Mandatory Disclosure
+        public DateTime? DateOfBirth { get; set; }
     }
 
     public class FacultyQualification : BaseEntity
@@ -140,5 +143,140 @@ namespace GECPatan.Core.Models.Domain
 
         public int SrNo { get; set; }
         public string Title { get; set; } = string.Empty;
+        // Added for Mandatory Disclosure
+        // National / International / Conference
+        [MaxLength(50)]
+        public string Type { get; set; } = "International";
+
+        [MaxLength(300)]
+        public string? JournalName { get; set; }
+
+        [MaxLength(10)]
+        public string? Year { get; set; }
+
+        [MaxLength(500)]
+        public string? CoAuthors { get; set; }
     }
+    // ── Mandatory Disclosure Purpose ──────────────────────────────────────
+    public class FacultySubject : BaseEntity
+    {
+        public int FacultySubjectId { get; set; }
+        public int FacultyId { get; set; }
+
+        [ForeignKey("FacultyId")]
+        public Faculty? Faculty { get; set; }
+
+        [Required, MaxLength(300)]
+        public string SubjectName { get; set; } = string.Empty;
+
+        // UG / PG
+        [MaxLength(10)]
+        public string Level { get; set; } = "UG";
+
+        public int DisplayOrder { get; set; } = 0;
+    }
+
+   public class FacultyResearchGuidance : BaseEntity
+    {
+        public int FacultyResearchGuidanceId { get; set; }
+        public int FacultyId { get; set; }
+
+        [ForeignKey("FacultyId")]
+        public Faculty? Faculty { get; set; }
+
+        // Masters / PhD
+        [MaxLength(20)]
+        public string Level { get; set; } = "Masters";
+
+        public int Ongoing { get; set; } = 0;
+        public int Completed { get; set; } = 0;
+    }
+
+    public class FacultyBookPublication : BaseEntity
+    {
+        public int FacultyBookPublicationId { get; set; }
+        public int FacultyId { get; set; }
+
+        [ForeignKey("FacultyId")]
+        public Faculty? Faculty { get; set; }
+
+        public int SrNo { get; set; } = 1;
+
+        [Required, MaxLength(400)]
+        public string Title { get; set; } = string.Empty;
+
+        [MaxLength(300)]
+        public string? Publisher { get; set; }
+
+        [MaxLength(10)]
+        public string? Year { get; set; }
+
+        public int DisplayOrder { get; set; } = 0;
+    }
+
+    public class FacultyConsultancy : BaseEntity
+    {
+        public int FacultyConsultancyId { get; set; }
+        public int FacultyId { get; set; }
+
+        [ForeignKey("FacultyId")]
+        public Faculty? Faculty { get; set; }
+
+        [Required, MaxLength(400)]
+        public string Title { get; set; } = string.Empty;
+
+        [MaxLength(300)]
+        public string? Client { get; set; }
+
+        [MaxLength(10)]
+        public string? Year { get; set; }
+
+        [MaxLength(100)]
+        public string? Amount { get; set; }
+
+        public int DisplayOrder { get; set; } = 0;
+    }
+
+    public class FacultyPatent : BaseEntity
+    {
+        public int FacultyPatentId { get; set; }
+        public int FacultyId { get; set; }
+
+        [ForeignKey("FacultyId")]
+        public Faculty? Faculty { get; set; }
+
+        [Required, MaxLength(400)]
+        public string Title { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string? ApplicationNo { get; set; }
+
+        [MaxLength(10)]
+        public string? GrantedYear { get; set; }
+
+        // Filed / Published / Granted
+        [MaxLength(50)]
+        public string Status { get; set; } = "Filed";
+
+        public int DisplayOrder { get; set; } = 0;
+    }
+
+    public class FacultyProfessionalMembership : BaseEntity
+    {
+        public int FacultyProfessionalMembershipId { get; set; }
+        public int FacultyId { get; set; }
+
+        [ForeignKey("FacultyId")]
+        public Faculty? Faculty { get; set; }
+
+        [Required, MaxLength(300)]
+        public string Community { get; set; } = string.Empty;
+
+        // Member / Life Member / Fellow
+        [MaxLength(50)]
+        public string MembershipType { get; set; } = "Member";
+
+        public int DisplayOrder { get; set; } = 0;
+    }
+
 }

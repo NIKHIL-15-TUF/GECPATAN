@@ -34,6 +34,13 @@ namespace GECPatan.Core.Data
         public DbSet<FacultyExperience> FacultyExperiences { get; set; }
         public DbSet<FacultyTraining> FacultyTrainings { get; set; }
         public DbSet<FacultyPublication> FacultyPublications { get; set; }
+        public DbSet<FacultySubject> FacultySubjects { get; set; }
+        public DbSet<FacultyResearchGuidance> FacultyResearchGuidances { get; set; }
+        public DbSet<FacultyBookPublication> FacultyBookPublications { get; set; }
+        public DbSet<FacultyConsultancy> FacultyConsultancies { get; set; }
+        public DbSet<FacultyPatent> FacultyPatents { get; set; }
+        public DbSet<FacultyProfessionalMembership> FacultyProfessionalMemberships { get; set; }
+
 
         // CAMPUS COMMITTEES
         public DbSet<CampusCommittee> CampusCommittees { get; set; }
@@ -151,6 +158,24 @@ namespace GECPatan.Core.Data
 
             modelBuilder.Entity<FacultyPublication>()
                 .HasQueryFilter(x => !x.IsDeleted);
+
+            modelBuilder.Entity<FacultySubject>().
+                HasQueryFilter(x => !x.IsDeleted);
+            
+            modelBuilder.Entity<FacultyResearchGuidance>().
+                HasQueryFilter(x => !x.IsDeleted);
+            
+            modelBuilder.Entity<FacultyBookPublication>().
+                HasQueryFilter(x => !x.IsDeleted);
+            
+            modelBuilder.Entity<FacultyConsultancy>().
+                HasQueryFilter(x => !x.IsDeleted);
+            
+            modelBuilder.Entity<FacultyPatent>().
+                HasQueryFilter(x => !x.IsDeleted);
+            
+            modelBuilder.Entity<FacultyProfessionalMembership>().
+                HasQueryFilter(x => !x.IsDeleted);
 
             modelBuilder.Entity<CampusCommittee>()
                 .HasQueryFilter(x => !x.IsDeleted);
