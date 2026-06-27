@@ -37,8 +37,7 @@
                                     <option value="">-- Select --</option>
                                 </select>
                                 <div id="teachingBadge" class="mt-1"></div>
-                                <span asp-validation-for="Designation"
-                                      class="text-danger small"></span>
+                                <span asp-validation-for="Designation" class="text-danger small"></span>
                             </div>
                         </div>
                     </div>
@@ -82,7 +81,7 @@
                         </div>
                     </div>
                 </div>
- 
+
                 <!-- Photo -->
                 <div class="col-md-3 text-center">
                     @if (!string.IsNullOrEmpty(Model.ExistingImagePath))
@@ -125,7 +124,7 @@
         </div>
     </div>
 </form>
- 
+
 <!-- Sub-section quick links -->
 <div class="card mt-3">
     <div class="card-header bg-light">
@@ -135,6 +134,7 @@
     </div>
     <div class="card-body p-2">
         <div class="row">
+            <!-- Row 1 -->
             <div class="col-6 col-md-2 mb-2">
                 <a asp-action="Qualifications" asp-route-id="@Model.FacultyId"
                        class="btn btn-outline-primary btn-block btn-sm">
@@ -170,18 +170,59 @@
                     Personal Details
                 </a>
             </div>
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="Subjects" asp-route-id="@Model.FacultyId"
+                       class="btn btn-outline-secondary btn-block btn-sm">
+                    <i class="fas fa-book-reader d-block mb-1" style="font-size:18px;"></i>
+                    Subjects
+                </a>
+            </div>
+            <!-- Row 2 -->
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="ResearchGuidance" asp-route-id="@Model.FacultyId"
+                       class="btn btn-outline-primary btn-block btn-sm">
+                    <i class="fas fa-user-graduate d-block mb-1" style="font-size:18px;"></i>
+                    Research Guidance
+                </a>
+            </div>
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="BookPublications" asp-route-id="@Model.FacultyId"
+                       class="btn btn-outline-success btn-block btn-sm">
+                    <i class="fas fa-book-open d-block mb-1" style="font-size:18px;"></i>
+                    Book Publications
+                </a>
+            </div>
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="Patents" asp-route-id="@Model.FacultyId"
+                       class="btn btn-outline-warning btn-block btn-sm">
+                    <i class="fas fa-lightbulb d-block mb-1" style="font-size:18px;"></i>
+                    Patents
+                </a>
+            </div>
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="Memberships" asp-route-id="@Model.FacultyId"
+                       class="btn btn-outline-danger btn-block btn-sm">
+                    <i class="fas fa-users d-block mb-1" style="font-size:18px;"></i>
+                    Memberships
+                </a>
+            </div>
+            <div class="col-6 col-md-2 mb-2">
+                <a asp-action="Consultancy" asp-route-id="@Model.FacultyId"
+                       class="btn btn-outline-info btn-block btn-sm">
+                    <i class="fas fa-handshake d-block mb-1" style="font-size:18px;"></i>
+                    Consultancies
+                </a>
+            </div>
         </div>
     </div>
 </div>
- 
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
     <script>
-        const teachingDesignations = [
-        'Professor', 'Associate Professor', 'Assistant Professor'
-        ];
- 
+        const teachingDesignations = ['Professor', 'Associate Professor', 'Assistant Professor'];
+
         function updateTeachingBadge(val) {
         const badge = document.getElementById('teachingBadge');
         if (!val) { badge.innerHTML = ''; return; }
@@ -190,7 +231,7 @@
         ? '<span class="badge badge-primary">Teaching Staff</span>'
         : '<span class="badge badge-secondary">Non-Teaching Staff</span>';
         }
- 
+
         function previewPhoto(input) {
         const preview = document.getElementById('photoPreview');
         if (input.files && input.files[0]) {
@@ -203,7 +244,7 @@
         input.nextElementSibling.textContent = input.files[0].name;
         }
         }
- 
+
         updateTeachingBadge('@Model.Designation');
     </script>
 }

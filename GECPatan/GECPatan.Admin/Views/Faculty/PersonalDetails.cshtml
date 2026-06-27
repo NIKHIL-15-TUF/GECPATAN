@@ -23,6 +23,10 @@
                         <input name="Department" class="form-control" value="@Model.Department" placeholder="Department name (as shown on profile)" />
                     </div>
                     <div class="form-group">
+                        <label asp-for="DateOfBirth"></label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                    </div>
+                    <div class="form-group">
                         <label class="font-weight-bold">Contact Number</label>
                         <input name="Contact" class="form-control" value="@Model.Contact" placeholder="e.g. +91 9876543210" />
                     </div>

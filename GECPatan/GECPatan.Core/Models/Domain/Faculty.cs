@@ -41,7 +41,14 @@ namespace GECPatan.Core.Models.Domain
         public ICollection<FacultyExperience> Experiences { get; set; } = new List<FacultyExperience>();
         public ICollection<FacultyTraining> Trainings { get; set; } = new List<FacultyTraining>();
         public ICollection<FacultyPublication> Publications { get; set; } = new List<FacultyPublication>();
+        public ICollection<FacultySubject> Subjects { get; set; } = new List<FacultySubject>();
+        public ICollection<FacultyResearchGuidance> ResearchGuidances { get; set; } = new List<FacultyResearchGuidance>();
+        public ICollection<FacultyBookPublication> BookPublications { get; set; } = new List<FacultyBookPublication>();
+        public ICollection<FacultyConsultancy> Consultancies { get; set; } = new List<FacultyConsultancy>();
+        public ICollection<FacultyPatent> Patents { get; set; } = new List<FacultyPatent>();
+        public ICollection<FacultyProfessionalMembership> ProfessionalMemberships { get; set; } = new List<FacultyProfessionalMembership>();
         public PersonalDetail? PersonalDetail { get; set; }
+
     }
 
     public class FacultyDetails
@@ -124,6 +131,8 @@ namespace GECPatan.Core.Models.Domain
 
         [MaxLength(300)]
         public string Title { get; set; } = string.Empty;
+        [MaxLength(100)]
+        public string? TrainingType { get; set; }   
 
         [MaxLength(300)]
         public string? OrganizedBy { get; set; }

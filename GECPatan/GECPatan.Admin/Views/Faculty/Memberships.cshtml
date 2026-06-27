@@ -1,0 +1,118 @@
+﻿@using GECPatan.Core.Models.Domain
+@model List<FacultyProfessionalMembership>
+
+@{
+    ViewData["Title"] = "Professional Memberships";
+    int facultyId = ViewBag.FacultyId;
+    string facultyName = ViewBag.FacultyName ?? "";
+}
+
+<div class="d-flex align-items-center mb-3">
+    <a asp-action="Edit" asp-route-id="@facultyId" class="btn btn-secondary btn-sm mr-3">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="mb-0">Professional Memberships</h5>
+        <small class="text-muted">@facultyName</small>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-plus mr-2"></i>Add Membership
+                </h6>
+            </div>
+
+            <form asp-action="AddMembership" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body">
+                    <input type="hidden" name="FacultyId" value="@facultyId" />
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">
+                            Community <span class="text-danger">*</span>
+                        </label>
+                        <input name="Community"
+                               class="form-control"
+                               required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Membership Type</label>
+                        <select name="MembershipType" class="form-control">
+                            <option value="Member">Member</option>
+                            <option value="Life Member">Life Member</option>
+                            <option value="Fellow">Fellow</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-plus mr-2"></i>Add
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-users mr-2"></i>Memberships (@Model.Count)
+                </h6>
+            </div>
+
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                {
+                    <p class="text-muted text-center py-4">
+                        No memberships added yet.
+                    </p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Community</th>
+                                <th>Membership Type</th>
+                                <th width="60"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in Model)
+                            {
+                                <tr>
+                                    <td>@m.Community</td>
+                                    <td>
+                                        <span class="badge badge-primary">
+                                            @m.MembershipType
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form asp-action="DeleteMembership" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@m.FacultyProfessionalMembershipId" />
+                                            <input type="hidden" name="facultyId" value="@facultyId" />
+
+                                            <button type="submit"
+                                                    class="btn btn-xs btn-danger"
+                                                    onclick="return confirm('Remove this membership?')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

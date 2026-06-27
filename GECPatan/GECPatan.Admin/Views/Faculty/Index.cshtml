@@ -35,7 +35,7 @@
                     <th>Department</th>
                     <th width="100">Type</th>
                     <th width="80">Status</th>
-                    <th width="220">Actions</th>
+                    <th width="230">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -57,12 +57,16 @@
                                     <form asp-action="Reorder" method="post" class="d-inline">
                                         <input type="hidden" name="id" value="@f.FacultyId" />
                                         <input type="hidden" name="direction" value="up" />
-                                        <button type="submit" class="btn btn-xs btn-light border px-2 py-1"><i class="fas fa-chevron-up" style="font-size:10px;"></i></button>
+                                        <button type="submit" class="btn btn-xs btn-light border px-2 py-1">
+                                            <i class="fas fa-chevron-up" style="font-size:10px;"></i>
+                                        </button>
                                     </form>
                                     <form asp-action="Reorder" method="post" class="d-inline">
                                         <input type="hidden" name="id" value="@f.FacultyId" />
                                         <input type="hidden" name="direction" value="down" />
-                                        <button type="submit" class="btn btn-xs btn-light border px-2 py-1"><i class="fas fa-chevron-down" style="font-size:10px;"></i></button>
+                                        <button type="submit" class="btn btn-xs btn-light border px-2 py-1">
+                                            <i class="fas fa-chevron-down" style="font-size:10px;"></i>
+                                        </button>
                                     </form>
                                 </div>
                             }
@@ -70,11 +74,13 @@
                         <td>
                             @if (!string.IsNullOrEmpty(f.ImagePath))
                             {
-                                <img src="@f.ImagePath" class="img-thumbnail rounded-circle" style="width:45px;height:45px;object-fit:cover;" />
+                                <img src="@f.ImagePath" class="img-thumbnail rounded-circle"
+                                     style="width:45px;height:45px;object-fit:cover;" />
                             }
                             else
                             {
-                                <div class="bg-secondary d-flex align-items-center justify-content-center rounded-circle" style="width:45px;height:45px;">
+                                <div class="bg-secondary d-flex align-items-center justify-content-center rounded-circle"
+                                     style="width:45px;height:45px;">
                                     <i class="fas fa-user text-white"></i>
                                 </div>
                             }
@@ -85,54 +91,78 @@
                         </td>
                         <td>@f.Designation</td>
                         <td><span class="badge badge-light border">@f.DepartmentName</span></td>
-                        <td>@if (f.IsTeaching){
-                            <span class="badge badge-primary">Teaching</span>
-                        }else
-                        {
-
-                            <span class="badge badge-secondary">Non-Teaching</span>
-                        }
-                    </td>
-                    <td>@if (f.IsActive){
-                        <span class="badge badge-success">Active</span>
-                    }else
-                    {
-
-                        <span class="badge badge-danger">Inactive</span>
-                    }
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@f.FacultyId" class="btn btn-sm btn-info mb-1"><i class="fas fa-edit"></i> Edit</a>
-                    <div class="btn-group mb-1">
-                        <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown"><i class="fas fa-list"></i></button>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" asp-action="Qualifications" asp-route-id="@f.FacultyId"><i class="fas fa-graduation-cap mr-2"></i>Qualifications</a>
-                            <a class="dropdown-item" asp-action="Experience" asp-route-id="@f.FacultyId"><i class="fas fa-briefcase mr-2"></i>Experience</a>
-                            <a class="dropdown-item" asp-action="Training" asp-route-id="@f.FacultyId"><i class="fas fa-chalkboard mr-2"></i>Training</a>
-                            <a class="dropdown-item" asp-action="Publications" asp-route-id="@f.FacultyId"><i class="fas fa-book mr-2"></i>Publications</a>
-                            <a class="dropdown-item" asp-action="PersonalDetails" asp-route-id="@f.FacultyId"><i class="fas fa-id-card mr-2"></i>Personal Details</a>
-                        </div>
-                    </div>
-                    @if (User.IsInRole("SuperAdmin") || User.IsInRole("HOD"))
-                    {
-                        <form asp-action="ToggleActive" method="post" class="d-inline mb-1">
-                            <input type="hidden" name="id" value="@f.FacultyId" />
-                            <button type="submit" class="btn btn-sm @(f.IsActive ? "btn-warning" : "btn-success")" onclick="return confirm('Toggle status?')">
-                                <i class="fas @(f.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
-                            </button>
-                        </form>
-                    }
-                    @if (User.IsInRole("SuperAdmin"))
-                    {
-                        <form asp-action="Delete" method="post" class="d-inline">
-                            <input type="hidden" name="id" value="@f.FacultyId" />
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete?')"><i class="fas fa-trash"></i></button>
-                        </form>
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
-</div>
+                        <td>
+                            @if (f.IsTeaching)
+                            {
+                                <span class="badge badge-primary">Teaching</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Non-Teaching</span>
+                            }
+                        </td>
+                        <td>
+                            @if (f.IsActive)
+                            {
+                                <span class="badge badge-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-danger">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@f.FacultyId"
+                                   class="btn btn-sm btn-info mb-1">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <div class="btn-group mb-1">
+                                <button type="button"
+                                        class="btn btn-sm btn-secondary dropdown-toggle"
+                                        data-toggle="dropdown">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a class="dropdown-item" asp-action="Qualifications" asp-route-id="@f.FacultyId"><i class="fas fa-graduation-cap mr-2"></i>Qualifications</a>
+                                    <a class="dropdown-item" asp-action="Experience" asp-route-id="@f.FacultyId"><i class="fas fa-briefcase mr-2"></i>Experience</a>
+                                    <a class="dropdown-item" asp-action="Training" asp-route-id="@f.FacultyId"><i class="fas fa-chalkboard mr-2"></i>Training</a>
+                                    <a class="dropdown-item" asp-action="Publications" asp-route-id="@f.FacultyId"><i class="fas fa-book mr-2"></i>Publications</a>
+                                    <a class="dropdown-item" asp-action="PersonalDetails" asp-route-id="@f.FacultyId"><i class="fas fa-id-card mr-2"></i>Personal Details</a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" asp-action="Subjects" asp-route-id="@f.FacultyId"><i class="fas fa-book-reader mr-2"></i>Subjects</a>
+                                    <a class="dropdown-item" asp-action="ResearchGuidance" asp-route-id="@f.FacultyId"><i class="fas fa-user-graduate mr-2"></i>Research Guidance</a>
+                                    <a class="dropdown-item" asp-action="BookPublications" asp-route-id="@f.FacultyId"><i class="fas fa-book-open mr-2"></i>Book Publications</a>
+                                    <a class="dropdown-item" asp-action="Patents" asp-route-id="@f.FacultyId"><i class="fas fa-lightbulb mr-2"></i>Patents</a>
+                                    <a class="dropdown-item" asp-action="Memberships" asp-route-id="@f.FacultyId"><i class="fas fa-users mr-2"></i>Professional Memberships</a>
+                                    <a class="dropdown-item"
+                                           asp-action="Consultancy"
+                                           asp-route-id="@f.FacultyId">
+                                        <i class="fas fa-handshake mr-2"></i>Consultancies
+                                    </a>
+                                </div>
+                            </div><!-- /btn-group  ← was missing -->
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("HOD"))
+                            {
+                                <form asp-action="ToggleActive" method="post" class="d-inline mb-1">
+                                    <input type="hidden" name="id" value="@f.FacultyId" />
+                                    <button type="submit"
+                                            class="btn btn-sm @(f.IsActive ? "btn-warning" : "btn-success")"
+                                            onclick="return confirm('Toggle status?')">
+                                        <i class="fas @(f.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
+                                    </button>
+                                </form>
+                            }
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("HOD") || User.IsInRole("Faculty"))
+                            {
+                                <a asp-action="Profile" asp-route-id="@f.FacultyId"
+                                       class="btn btn-xs btn-secondary">
+                                    <i class="fas fa-id-card"></i> Profile
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

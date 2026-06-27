@@ -1,0 +1,109 @@
+﻿@using GECPatan.Core.Models.Domain
+@model List<FacultySubject>
+@{
+    ViewData["Title"] = "Subjects Taught";
+    int facultyId = ViewBag.FacultyId;
+    string facultyName = ViewBag.FacultyName ?? "";
+}
+<div class="d-flex align-items-center mb-3">
+    <a asp-action="Edit" asp-route-id="@facultyId" class="btn btn-secondary btn-sm mr-3">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="mb-0">Subjects Taught</h5>
+        <small class="text-muted">@facultyName</small>
+    </div>
+</div>
+<div class="row">
+    <!-- Add Form -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-plus mr-2"></i>Add Subject
+                </h6>
+            </div>
+            <form asp-action="AddSubject" method="post">
+                <div class="card-body">
+                    <input type="hidden" name="FacultyId" value="@facultyId" />
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">
+                            Subject Name <span class="text-danger">*</span>
+                        </label>
+                        <input name="SubjectName" class="form-control"
+                               placeholder="e.g. Data Structures and Algorithms" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Level</label>
+                        <select name="Level" class="form-control">
+                            <option value="UG">UG (Under Graduate)</option>
+                            <option value="PG">PG (Post Graduate)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-plus mr-2"></i>Add
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- List -->
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-book-reader mr-2"></i>Subjects (@Model.Count)
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                {
+                    <p class="text-muted text-center py-4">No subjects added yet.</p>
+                }
+                else
+                {
+                    <table class="table table-sm mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Subject Name</th>
+                                <th width="80">Level</th>
+                                <th width="50"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model)
+                            {
+                                <tr>
+                                    <td>@s.SubjectName</td>
+                                    <td>
+                                        <span class="badge badge-@(s.Level == "PG" ? "info" : "primary")">
+                                            @s.Level
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form asp-action="DeleteSubject" method="post">
+                                            <input type="hidden" name="id"
+                                                   value="@s.FacultySubjectId" />
+                                            <input type="hidden" name="facultyId"
+                                                   value="@s.FacultyId" />
+                                            <button type="submit"
+                                                    class="btn btn-xs btn-danger"
+                                                    onclick="return confirm('Remove this subject?')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

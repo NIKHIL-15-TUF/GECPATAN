@@ -1,0 +1,169 @@
+﻿@model GECPatan.Admin.Models.ViewModels.FacultyConsultancyVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Consultancy Project" : "Add Consultancy Project";
+    var faculty = ViewBag.Faculty as GECPatan.Core.Models.Domain.Faculty;
+    int facultyId = (int)ViewBag.FacultyId;
+}
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header"
+                 style="background:#1a237e;color:#fff;">
+                <div>
+                    <h5 class="mb-0">
+                        <i class="fas fa-handshake mr-2"></i>
+                        @ViewData["Title"]
+                    </h5>
+                    <small style="opacity:.8;">
+                        @faculty?.Name — @faculty?.Department?.Name
+                    </small>
+                </div>
+            </div>
+
+            <form asp-action="@(isEdit ? "EditConsultancy" : "CreateConsultancy")"
+                  method="post">
+
+                @if (isEdit)
+                {
+                    <input asp-for="Id" type="hidden" />
+                }
+
+                <input asp-for="FacultyId" type="hidden" />
+
+                <div class="card-body">
+
+                    <div asp-validation-summary="ModelOnly"
+                         class="alert alert-danger"></div>
+
+                    <!-- Title -->
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <input asp-for="Title"
+                               class="form-control"
+                               placeholder="e.g. Design of Solar Tracking System" />
+                        <span asp-validation-for="Title"
+                              class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <!-- Client -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Client"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="Client"
+                                       class="form-control"
+                                       placeholder="e.g. XYZ Industries" />
+                                <span asp-validation-for="Client"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Year -->
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label asp-for="Year"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="Year"
+                                       class="form-control"
+                                       placeholder="e.g. 2024" />
+                                <span asp-validation-for="Year"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label asp-for="Amount"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="Amount"
+                                       class="form-control"
+                                       placeholder="e.g. ₹50,000" />
+                                <span asp-validation-for="Amount"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Display Order -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="DisplayOrder"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="DisplayOrder"
+                                       class="form-control"
+                                       type="number"
+                                       min="0" />
+                                <span asp-validation-for="DisplayOrder"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-controller="Faculty"
+                           asp-action="Consultancy"
+                           asp-route-id="@facultyId"
+                           class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>
+                        @(isEdit ? "Save Changes" : "Add Project")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Help panel -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>
+                    About Consultancy Projects
+                </h6>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="p-3 border-bottom">
+                    <strong class="small d-block mb-1">What to include</strong>
+                    <ul class="small text-muted pl-3 mb-0">
+                        <li>Industry consultancy projects</li>
+                        <li>Government-funded consultancy</li>
+                        <li>Testing / inspection services</li>
+                        <li>Design consultancy</li>
+                    </ul>
+                </div>
+
+                <div class="p-3 border-bottom">
+                    <strong class="small d-block mb-1">Amount field</strong>
+                    <p class="small text-muted mb-0">
+                        Enter the project value like ₹50,000 or Unpaid.
+                    </p>
+                </div>
+
+                <div class="p-3">
+                    <strong class="small d-block mb-1">
+                        Appears in Mandatory Disclosure
+                    </strong>
+                    <p class="small text-muted mb-0">
+                        Consultancy count appears in Faculty Profile section.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

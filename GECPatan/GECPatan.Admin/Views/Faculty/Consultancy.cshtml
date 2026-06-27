@@ -1,0 +1,103 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.FacultyConsultancyVM>
+@{
+    ViewData["Title"] = "Consultancy Projects";
+    var faculty = ViewBag.Faculty as GECPatan.Core.Models.Domain.Faculty;
+    int facultyId = (int)ViewBag.FacultyId;
+}
+<!-- Header -->
+<div class="card mb-3"
+     style="background:linear-gradient(135deg,#1a237e,#283593);
+    color:#fff;border:none;">
+    <div class="card-body py-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0">
+                <i class="fas fa-handshake mr-2"></i>
+                Consultancy Projects
+            </h5>
+            <small style="opacity:.8;">
+                @faculty?.Name — @faculty?.Department?.Name
+            </small>
+        </div>
+        <a asp-action="CreateConsultancy" asp-route-facultyId="@facultyId"
+               class="btn btn-light btn-sm">
+            <i class="fas fa-plus mr-1"></i>Add Project
+        </a>
+    </div>
+</div>
+
+<!-- List -->
+<div class="card">
+    <div class="card-header bg-light d-flex justify-content-between">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-handshake mr-2"></i>
+            All Consultancy Projects (@Model.Count)
+        </h6>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card-body text-center py-5 text-muted">
+            <i class="fas fa-handshake fa-3x mb-3 d-block"></i>
+            No consultancy projects added yet.
+            <br />
+            <a asp-action="CreateConsultancy" asp-route-facultyId="@facultyId"
+                   class="btn btn-primary btn-sm mt-2">
+                Add First Project
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Project Title</th>
+                        <th width="200">Client / Organization</th>
+                        <th width="80">Year</th>
+                        <th width="120">Amount</th>
+                        <th width="80">Order</th>
+                        <th width="100">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@item.Title</strong>
+                            </td>
+                            <td>
+                                @(item.Client ?? "—")
+                            </td>
+                            <td>
+                                @(item.Year ?? "—")
+                            </td>
+                            <td>
+                                @(item.Amount ?? "—")
+                            </td>
+                            <td>@item.DisplayOrder</td>
+                            <td>
+                                <a asp-action="EditConsultancy"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-xs btn-info">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="DeleteConsultancy"
+                                      method="post" class="d-inline">
+                                    <input type="hidden"
+                                           name="id" value="@item.Id" />
+                                    <button type="submit"
+                                            class="btn btn-xs btn-danger"
+                                            onclick="return confirm('Delete this project?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -1,0 +1,607 @@
+﻿@using GECPatan.Core.Models.Domain
+@model GECPatan.Core.Models.Domain.Faculty
+@{
+    ViewData["Title"] = $"Faculty Profile — {Model.Name}";
+    var pd = Model.PersonalDetail;
+}
+
+<!-- Print / back button bar -->
+<div class="d-flex justify-content-between mb-3 d-print-none">
+    <a asp-action="Index" class="btn btn-secondary btn-sm">
+        <i class="fas fa-arrow-left mr-1"></i>Back to Faculty List
+    </a>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.FacultyId"
+               class="btn btn-info btn-sm mr-1">
+            <i class="fas fa-edit mr-1"></i>Edit Profile
+        </a>
+        <button onclick="window.print()" class="btn btn-primary btn-sm">
+            <i class="fas fa-print mr-1"></i>Print / PDF
+        </button>
+    </div>
+</div>
+
+<!-- PROFILE CARD — matches AICTE Mandatory Disclosure format -->
+<div class="card" id="facultyProfileCard">
+    <div class="card-header text-center"
+         style="background:#1a237e;color:#fff;">
+        <h5 class="mb-0">Faculty Profile</h5>
+        <small>@Model.Department?.Name</small>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-bordered mb-0"
+               style="font-size:13px;">
+            <colgroup>
+                <col style="width:40px;" />
+                <col style="width:200px;" />
+                <col />
+            </colgroup>
+            <tbody>
+                <!-- 1. NAME + PHOTO -->
+                <tr>
+                    <td class="text-center align-middle font-weight-bold">1</td>
+                    <td class="font-weight-bold align-middle">Name</td>
+                    <td>
+                        <div class="d-flex justify-content-between">
+                            <strong style="font-size:15px;">@Model.Name</strong>
+                            @if (!string.IsNullOrEmpty(Model.ImagePath))
+                            {
+                                <img src="@Model.ImagePath"
+                                     style="width:90px;height:110px;object-fit:cover;border:1px solid #ccc;"
+                                     alt="@Model.Name" />
+                            }
+                            else
+                            {
+                                <div style="width:90px;height:110px;background:#eee;
+                                    display:flex;align-items:center;
+                                    justify-content:center;font-size:10px;
+                                    color:#999;border:1px solid #ccc;">
+                                    No Photo
+                                </div>
+                            }
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- 2. POST -->
+                <tr>
+                    <td class="text-center font-weight-bold">2</td>
+                    <td class="font-weight-bold">Post</td>
+                    <td>@Model.Designation</td>
+                </tr>
+
+                <!-- 3. EMAIL -->
+                <tr>
+                    <td class="text-center font-weight-bold">3</td>
+                    <td class="font-weight-bold">Email</td>
+                    <td>@(pd?.Email ?? "—")</td>
+                </tr>
+
+                <!-- 4. DATE OF BIRTH -->
+                <tr>
+                    <td class="text-center font-weight-bold">4</td>
+                    <td class="font-weight-bold">Date of Birth</td>
+                    <td>
+                        @(pd?.DateOfBirth.HasValue == true
+                            ? pd.DateOfBirth.Value.ToString("dd MMM yyyy")
+                            : "—")
+                    </td>
+                </tr>
+
+                <!-- 5. EDUCATIONAL QUALIFICATIONS -->
+                <tr>
+                    <td class="text-center font-weight-bold">5</td>
+                    <td class="font-weight-bold">Educational Qualification</td>
+                    <td>
+                        @if (Model.Qualifications.Any())
+                        {
+                            @string.Join(", ",
+                                Model.Qualifications
+                                    .OrderByDescending(q => q.Year)
+                                    .Select(q => string.IsNullOrEmpty(q.University)
+                                        ? q.Degree
+                                        : $"{q.Degree} ({q.University})"))
+                        }
+                        else
+                        {
+
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- 6. WEBPAGE -->
+                <tr>
+                    <td class="text-center font-weight-bold">6</td>
+                    <td class="font-weight-bold">Webpage</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(Model.Website))
+                        {
+                            <a href="@Model.Website" target="_blank">@Model.Website</a>
+                        }
+                        else
+                        {
+
+                            <span>—</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- 7. WORK EXPERIENCE -->
+                @{
+                    var exps = Model.Experiences.OrderBy(e => e.FromDate).ToList();
+                    int totalYears = (int)((DateTime.Now - Model.DateOfJoining).TotalDays / 365.25);
+                }
+                <tr>
+                    <td class="text-center font-weight-bold" rowspan="6">7</td>
+                    <td class="font-weight-bold" rowspan="6">Work Experience</td>
+                    <td>
+                        <table class="table table-bordered table-sm mb-2"
+                               style="font-size:12px;">
+                            <tr>
+                                <td style="width:120px;">Teaching</td>
+                                <td>@totalYears Years</td>
+                            </tr>
+                            <tr><td>Research</td><td>—</td></tr>
+                            <tr><td>Industry</td><td>—</td></tr>
+                            <tr><td>Others</td><td>—</td></tr>
+                        </table>
+                        <strong class="d-block mb-1">Details:</strong>
+                        @if (exps.Any())
+                        {
+                            <table class="table table-bordered table-sm"
+                                   style="font-size:11px;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Sr. No.</th>
+                                        <th>Institute</th>
+                                        <th>Period</th>
+                                        <th>Experience</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int expSr = 1;
+                                    }
+                                    @foreach (var e in exps)
+                                    {
+                                        var from = e.FromDate?.ToString("MMM yyyy") ?? "—";
+                                        var to = e.ToDate?.ToString("MMM yyyy") ?? "till date";
+                                        var days = (e.ToDate ?? DateTime.Now)
+                                            - (e.FromDate ?? DateTime.Now);
+                                        var yrs = (int)(days.TotalDays / 365.25);
+                                        var mos = (int)((days.TotalDays % 365.25) / 30.44);
+                                        <tr>
+                                            <td>@expSr</td>
+                                            <td>@e.Organization</td>
+                                            <td>@from to @to</td>
+                                            <td>@yrs Yrs @mos Months</td>
+                                        </tr>
+                                        expSr++;
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <span class="text-muted small">No experience records.</span>
+                        }
+                    </td>
+                </tr>
+                <tr></tr>
+                <tr></tr>
+                <tr></tr>
+                <tr></tr>
+                <tr></tr>
+
+                <!-- 8. AREA OF SPECIALIZATION -->
+                <tr>
+                    <td class="text-center font-weight-bold">8</td>
+                    <td class="font-weight-bold">Area of Specializations</td>
+                    <td>@(Model.AreaOfInterest ?? "—")</td>
+                </tr>
+
+                <!-- 9. UG SUBJECTS -->
+                @{
+                    var ugSubjects = Model.Subjects
+                        .Where(s => s.Level == "UG")
+                        .OrderBy(s => s.DisplayOrder).ToList();
+                    var pgSubjects = Model.Subjects
+                        .Where(s => s.Level == "PG")
+                        .OrderBy(s => s.DisplayOrder).ToList();
+                }
+                <tr>
+                    <td class="text-center font-weight-bold">9</td>
+                    <td class="font-weight-bold">Subjects teaching at UG Level</td>
+                    <td>
+                        @if (ugSubjects.Any())
+                        {
+                            @string.Join(", ", ugSubjects.Select(s => s.SubjectName))
+                        }
+                        else
+                        {
+
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- 10. PG SUBJECTS -->
+                <tr>
+                    <td class="text-center font-weight-bold">10</td>
+                    <td class="font-weight-bold">Subjects teaching at PG Level</td>
+                    <td>
+                        @if (pgSubjects.Any())
+                        {
+                            @string.Join(", ", pgSubjects.Select(s => s.SubjectName))
+                        }
+                        else
+                        {
+
+                            <span>—</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- 11. RESEARCH GUIDANCE -->
+                @{
+                    var mastersGuidance = Model.ResearchGuidances
+                        .FirstOrDefault(r => r.Level == "Masters");
+                    var phdGuidance = Model.ResearchGuidances
+                        .FirstOrDefault(r => r.Level == "PhD");
+                }
+                <tr>
+                    <td class="text-center font-weight-bold" rowspan="2">11</td>
+                    <td class="font-weight-bold" rowspan="2">Research Guidance</td>
+                    <td>
+                        <table class="table table-bordered table-sm mb-0"
+                               style="font-size:12px;">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th></th>
+                                    <th>Ongoing</th>
+                                    <th>Completed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Master's Degree</td>
+                                    <td>@(mastersGuidance?.Ongoing ?? 0)</td>
+                                    <td>@(mastersGuidance?.Completed ?? 0)</td>
+                                </tr>
+                                <tr>
+                                    <td>Ph.D.</td>
+                                    <td>@(phdGuidance?.Ongoing ?? 0)</td>
+                                    <td>@(phdGuidance?.Completed ?? 0)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr></tr>
+
+                <!-- 12. RESEARCH PAPERS -->
+                @{
+                    var intlPubs = Model.Publications
+                        .Where(p => p.Type == "International").ToList();
+                    var natPubs = Model.Publications
+                        .Where(p => p.Type == "National").ToList();
+                    var confPubs = Model.Publications
+                        .Where(p => p.Type == "Conference").ToList();
+                }
+                <tr>
+                    <td class="text-center font-weight-bold" rowspan="4">12</td>
+                    <td class="font-weight-bold" rowspan="4">
+                        No. of Research Papers Published
+                    </td>
+                    <td>
+                        <table class="table table-bordered table-sm mb-2"
+                               style="font-size:12px;">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Category of Journals</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>National Journals</td>
+                                    <td>@natPubs.Count</td>
+                                </tr>
+                                <tr>
+                                    <td>International Journals</td>
+                                    <td>@intlPubs.Count</td>
+                                </tr>
+                                <tr>
+                                    <td>Conferences</td>
+                                    <td>@confPubs.Count</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        @if (intlPubs.Any())
+                        {
+                            <strong>Published in International Journal</strong>
+                            <table class="table table-bordered table-sm mt-1"
+                                   style="font-size:11px;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th style="width:40px;">Sr.</th>
+                                        <th>Paper Title</th>
+                                        <th style="width:120px;">Journal</th>
+                                        <th style="width:50px;">Year</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in intlPubs.OrderBy(x => x.SrNo))
+                                    {
+                                        <tr>
+                                            <td>@p.SrNo</td>
+                                            <td>@p.Title</td>
+                                            <td>@(p.JournalName ?? "—")</td>
+                                            <td>@(p.Year ?? "—")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        @if (natPubs.Any())
+                        {
+                            <strong>Published in National Journal</strong>
+                            <table class="table table-bordered table-sm mt-1"
+                                   style="font-size:11px;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th style="width:40px;">Sr.</th>
+                                        <th>Paper Title</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in natPubs.OrderBy(x => x.SrNo))
+                                    {
+                                        <tr>
+                                            <td>@p.SrNo</td>
+                                            <td>@p.Title</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </td>
+                </tr>
+                <tr></tr>
+                <tr></tr>
+                <tr></tr>
+
+                <!-- 13. CONSULTANCY -->
+                <tr>
+                    <td class="text-center font-weight-bold">13</td>
+                    <td class="font-weight-bold">No. of Consultancy Projects</td>
+                    <td>@Model.Consultancies.Count</td>
+                </tr>
+
+                <!-- 14. PATENTS -->
+                <tr>
+                    <td class="text-center font-weight-bold">14</td>
+                    <td class="font-weight-bold">Patents</td>
+                    <td>
+                        @if (Model.Patents.Any())
+                        {
+                            <table class="table table-bordered table-sm"
+                                   style="font-size:11px;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Application No.</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in Model.Patents)
+                                    {
+                                        <tr>
+                                            <td>@p.Title</td>
+                                            <td>@(p.ApplicationNo ?? "—")</td>
+                                            <td>@p.Status</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+
+                            <span>—</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- 15. BOOKS -->
+                <tr>
+                    <td class="text-center font-weight-bold">15</td>
+                    <td class="font-weight-bold">Books Published</td>
+                    <td>
+                        @if (Model.BookPublications.Any())
+                        {
+                            <table class="table table-bordered table-sm"
+                                   style="font-size:11px;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Sr.</th>
+                                        <th>Title</th>
+                                        <th>Publisher</th>
+                                        <th>Year</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var b in Model.BookPublications)
+                                    {
+                                        <tr>
+                                            <td>@b.SrNo</td>
+                                            <td>@b.Title</td>
+                                            <td>@(b.Publisher ?? "—")</td>
+                                            <td>@(b.Year ?? "—")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <table class="table table-bordered table-sm"
+                                   style="font-size:11px;">
+                                <tr>
+                                    <td>Sr. No.</td>
+                                    <td>Title</td>
+                                    <td>Publisher</td>
+                                    <td>Year</td>
+                                </tr>
+                                <tr><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                            </table>
+                        }
+                    </td>
+                </tr>
+
+                <!-- 16. TRAINING (STTP/MOOC/FDP) -->
+                @{
+                    var trainings = Model.Trainings
+                        .Where(t => t.TrainingType != "Seminar"
+                                 && t.TrainingType != "Workshop")
+                        .OrderBy(t => t.FromDate).ToList();
+                }
+                <tr>
+                    <td class="text-center font-weight-bold">16</td>
+                    <td class="font-weight-bold">Training</td>
+                    <td>
+                        @if (trainings.Any())
+                        {
+                            <table class="table table-bordered table-sm"
+                                   style="font-size:11px;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Sr.</th>
+                                        <th>Training Title</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int tr = 1;
+                                    }
+                                    @foreach (var t in trainings)
+                                    {
+                                        <tr>
+                                            <td>@tr</td>
+                                            <td>@t.Title</td>
+                                        </tr>
+                                        tr++;
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+
+                            <span>—</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- 17. SEMINARS / WORKSHOPS -->
+                @{
+                    var seminars = Model.Trainings
+                        .Where(t => t.TrainingType == "Seminar"
+                                 || t.TrainingType == "Workshop")
+                        .OrderBy(t => t.FromDate).ToList();
+                }
+                <tr>
+                    <td class="text-center font-weight-bold">17</td>
+                    <td class="font-weight-bold">Seminars / Workshops</td>
+                    <td>
+                        @if (seminars.Any())
+                        {
+                            <table class="table table-bordered table-sm"
+                                   style="font-size:11px;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Sr.</th>
+                                        <th>Title</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int sm = 1;
+                                    }
+                                    @foreach (var s in seminars)
+                                    {
+                                        <tr>
+                                            <td>@sm</td>
+                                            <td>@s.Title</td>
+                                        </tr>
+                                        sm++;
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+
+                            <span>—</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- 18. PROFESSIONAL MEMBERSHIPS -->
+                <tr>
+                    <td class="text-center font-weight-bold">18</td>
+                    <td class="font-weight-bold">Membership</td>
+                    <td>
+                        @if (Model.ProfessionalMemberships.Any())
+                        {
+                            <table class="table table-bordered table-sm"
+                                   style="font-size:11px;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Sr.</th>
+                                        <th>Community / Body</th>
+                                        <th>Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int mb = 1;
+                                    }
+                                    @foreach (var m in Model.ProfessionalMemberships)
+                                    {
+                                        <tr>
+                                            <td>@mb</td>
+                                            <td>@m.Community</td>
+                                            <td>@m.MembershipType</td>
+                                        </tr>
+                                        mb++;
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+
+                            <span>—</span>
+                        }
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        @@media print {
+            .d-print-none { display: none !important; }
+            .sidebar-mini .content-wrapper { margin-left: 0 !important; }
+            .main-header, .main-sidebar, .main-footer { display: none !important; }
+            #facultyProfileCard { box-shadow: none !important; }
+        }
+    </style>
+}

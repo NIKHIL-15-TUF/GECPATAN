@@ -429,6 +429,7 @@ namespace GECPatan.Admin.Controllers
                     FacultyId = model.FacultyId,
                     Title = model.Title,
                     OrganizedBy = model.OrganizedBy,
+                    TrainingType = model.TrainingType,
                     FromDate = model.FromDate,
                     ToDate = model.ToDate
                 });
@@ -503,7 +504,9 @@ namespace GECPatan.Admin.Controllers
                 {
                     FacultyId = model.FacultyId,
                     SrNo = model.SrNo,
-                    Title = model.Title
+                    Title = model.Title,
+                    Type = model.Type,
+
                 });
                 var facultyName = await _context.Faculties
                   .Where(f => f.FacultyId == model.FacultyId)
@@ -562,6 +565,7 @@ namespace GECPatan.Admin.Controllers
             {
                 FacultyId = id,
                 PersonalDetailId = detail?.PersonalDetailId ?? 0,
+                DateOfBirth = detail?.DateOfBirth,
                 Department = detail?.Department,
                 Contact = detail?.Contact,
                 Email = detail?.Email
@@ -580,13 +584,15 @@ namespace GECPatan.Admin.Controllers
                     FacultyId = model.FacultyId,
                     Department = model.Department,
                     Contact = model.Contact,
-                    Email = model.Email
+                    Email = model.Email,
+                    DateOfBirth = model.DateOfBirth
                 });
             else
             {
                 existing.Department = model.Department;
                 existing.Contact = model.Contact;
                 existing.Email = model.Email;
+                existing.DateOfBirth = model.DateOfBirth;
             }
             await _context.SaveChangesAsync();
             var facultyName = await _context.Faculties
@@ -606,6 +612,387 @@ namespace GECPatan.Admin.Controllers
             TempData["Success"] = "Personal details saved.";
             return RedirectToAction(nameof(PersonalDetails), new { id = model.FacultyId });
         }
+        public async Task<IActionResult> Profile(int id)
+        {
+            ViewData["Title"] = "Faculty Profile";
+
+            var faculty = await _context.Faculties
+                .Include(f => f.Department)
+                .Include(f => f.Qualifications)
+                .Include(f => f.Experiences)
+                .Include(f => f.Trainings)
+                .Include(f => f.Publications)
+                .Include(f => f.Subjects)
+                .Include(f => f.ResearchGuidances)
+                .Include(f => f.BookPublications)
+                .Include(f => f.Consultancies)
+                .Include(f => f.Patents)
+                .Include(f => f.ProfessionalMemberships)
+                .Include(f => f.PersonalDetail)
+                .FirstOrDefaultAsync(f => f.FacultyId == id);
+
+            if (faculty == null) return NotFound();
+
+            return View(faculty);
+        }
+
+        // ── SUBJECTS (UG/PG) ──
+        public async Task<IActionResult> Subjects(int id)
+        {
+            ViewData["Title"] = "Subjects Taught";
+            var subjects = await _context.FacultySubjects
+                .Where(s => s.FacultyId == id)
+                .OrderBy(s => s.Level).ThenBy(s => s.DisplayOrder)
+                .ToListAsync();
+            ViewBag.FacultyId = id;
+            ViewBag.FacultyName = (await _context.Faculties.FindAsync(id))?.Name;
+            return View(subjects);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddSubject(int FacultyId, string SubjectName, string Level)
+        {
+            if (!string.IsNullOrWhiteSpace(SubjectName))
+            {
+                _context.FacultySubjects.Add(new FacultySubject
+                {
+                    FacultyId = FacultyId,
+                    SubjectName = SubjectName.Trim(),
+                    Level = Level ?? "UG"
+                });
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Subject added.";
+            }
+            return RedirectToAction("Subjects", new { id = FacultyId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteSubject(int id, int facultyId)
+        {
+            var s = await _context.FacultySubjects.FindAsync(id);
+            if (s != null) { s.IsDeleted = true; await _context.SaveChangesAsync(); }
+            return RedirectToAction("Subjects", new { id = facultyId });
+        }
+
+        // ── RESEARCH GUIDANCE ──
+        public async Task<IActionResult> ResearchGuidance(int id)
+        {
+            ViewData["Title"] = "Research Guidance";
+            var guidance = await _context.FacultyResearchGuidances
+                .Where(r => r.FacultyId == id).ToListAsync();
+            ViewBag.FacultyId = id;
+            ViewBag.FacultyName = (await _context.Faculties.FindAsync(id))?.Name;
+            return View(guidance);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveResearchGuidance(
+            int FacultyId, string Level,
+            int Ongoing, int Completed)
+        {
+            var existing = await _context.FacultyResearchGuidances
+                .FirstOrDefaultAsync(r => r.FacultyId == FacultyId
+                                       && r.Level == Level);
+            if (existing == null)
+            {
+                _context.FacultyResearchGuidances.Add(new FacultyResearchGuidance
+                {
+                    FacultyId = FacultyId,
+                    Level = Level,
+                    Ongoing = Ongoing,
+                    Completed = Completed
+                });
+            }
+            else
+            {
+                existing.Ongoing = Ongoing;
+                existing.Completed = Completed;
+            }
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Research guidance updated.";
+            return RedirectToAction("ResearchGuidance", new { id = FacultyId });
+        }
+
+        // ── BOOK PUBLICATIONS ──
+        public async Task<IActionResult> BookPublications(int id)
+        {
+            ViewData["Title"] = "Book Publications";
+            var books = await _context.FacultyBookPublications
+                .Where(b => b.FacultyId == id)
+                .OrderBy(b => b.SrNo).ToListAsync();
+            ViewBag.FacultyId = id;
+            ViewBag.FacultyName = (await _context.Faculties.FindAsync(id))?.Name;
+            return View(books);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddBookPublication(
+            int FacultyId, string Title, string? Publisher, string? Year)
+        {
+            if (!string.IsNullOrWhiteSpace(Title))
+            {
+                int srNo = await _context.FacultyBookPublications
+                    .Where(b => b.FacultyId == FacultyId)
+                    .CountAsync() + 1;
+
+                _context.FacultyBookPublications.Add(new FacultyBookPublication
+                {
+                    FacultyId = FacultyId,
+                    SrNo = srNo,
+                    Title = Title.Trim(),
+                    Publisher = Publisher,
+                    Year = Year
+                });
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Book publication added.";
+            }
+            return RedirectToAction("BookPublications", new { id = FacultyId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteBookPublication(int id, int facultyId)
+        {
+            var b = await _context.FacultyBookPublications.FindAsync(id);
+            if (b != null) { b.IsDeleted = true; await _context.SaveChangesAsync(); }
+            return RedirectToAction("BookPublications", new { id = facultyId });
+        }
+
+        // ── PATENTS ──
+        public async Task<IActionResult> Patents(int id)
+        {
+            ViewData["Title"] = "Patents";
+            var patents = await _context.FacultyPatents
+                .Where(p => p.FacultyId == id)
+                .OrderBy(p => p.DisplayOrder).ToListAsync();
+            ViewBag.FacultyId = id;
+            ViewBag.FacultyName = (await _context.Faculties.FindAsync(id))?.Name;
+            return View(patents);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddPatent(
+            int FacultyId, string Title,
+            string? ApplicationNo, string? GrantedYear, string Status)
+        {
+            if (!string.IsNullOrWhiteSpace(Title))
+            {
+                _context.FacultyPatents.Add(new FacultyPatent
+                {
+                    FacultyId = FacultyId,
+                    Title = Title.Trim(),
+                    ApplicationNo = ApplicationNo,
+                    GrantedYear = GrantedYear,
+                    Status = Status ?? "Filed"
+                });
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Patent added.";
+            }
+            return RedirectToAction("Patents", new { id = FacultyId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeletePatent(int id, int facultyId)
+        {
+            var p = await _context.FacultyPatents.FindAsync(id);
+            if (p != null) { p.IsDeleted = true; await _context.SaveChangesAsync(); }
+            return RedirectToAction("Patents", new { id = facultyId });
+        }
+
+        // ── PROFESSIONAL MEMBERSHIPS ──
+        public async Task<IActionResult> Memberships(int id)
+        {
+            ViewData["Title"] = "Professional Memberships";
+            var memberships = await _context.FacultyProfessionalMemberships
+                .Where(m => m.FacultyId == id)
+                .OrderBy(m => m.DisplayOrder).ToListAsync();
+            ViewBag.FacultyId = id;
+            ViewBag.FacultyName = (await _context.Faculties.FindAsync(id))?.Name;
+            return View(memberships);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddMembership(
+            int FacultyId, string Community, string MembershipType)
+        {
+            if (!string.IsNullOrWhiteSpace(Community))
+            {
+                _context.FacultyProfessionalMemberships.Add(
+                    new FacultyProfessionalMembership
+                    {
+                        FacultyId = FacultyId,
+                        Community = Community.Trim(),
+                        MembershipType = MembershipType ?? "Member"
+                    });
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Membership added.";
+            }
+            return RedirectToAction("Memberships", new { id = FacultyId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteMembership(int id, int facultyId)
+        {
+            var m = await _context.FacultyProfessionalMemberships.FindAsync(id);
+            if (m != null) { m.IsDeleted = true; await _context.SaveChangesAsync(); }
+            return RedirectToAction("Memberships", new { id = facultyId });
+        }
+
+        // ================= CONSULTANCY =================
+
+        // INDEX
+        public async Task<IActionResult> Consultancy(int id)
+        {
+            int facultyId = id;
+
+            ViewData["Title"] = "Consultancy Projects";
+
+            var faculty = await _context.Faculties
+                .Include(f => f.Department)
+                .FirstOrDefaultAsync(f => f.FacultyId == facultyId);
+
+            if (faculty == null)
+                return NotFound();
+
+            ViewBag.Faculty = faculty;
+            ViewBag.FacultyId = facultyId;
+            var items = await _context.FacultyConsultancies
+                .Where(c => c.FacultyId == facultyId)
+                .OrderBy(c => c.DisplayOrder)
+                .ThenByDescending(c => c.Year)
+                .Select(c => new FacultyConsultancyVM
+                {
+                    Id = c.FacultyConsultancyId,
+                    FacultyId = c.FacultyId,
+                    Title = c.Title,
+                    Client = c.Client,
+                    Year = c.Year,
+                    Amount = c.Amount,
+                    DisplayOrder = c.DisplayOrder
+                })
+                .ToListAsync();
+
+            return View(items);
+        }
+
+        // CREATE GET
+        public async Task<IActionResult> CreateConsultancy(int facultyId)
+        {
+            var faculty = await _context.Faculties
+                .FirstOrDefaultAsync(f => f.FacultyId == facultyId);
+
+            if (faculty == null)
+                return NotFound();
+
+            ViewBag.Faculty = faculty;
+            ViewBag.FacultyId = facultyId;
+
+            return View(new FacultyConsultancyVM
+            {
+                FacultyId = facultyId
+            });
+        }
+
+        // CREATE POST
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateConsultancy(FacultyConsultancyVM vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Faculty = await _context.Faculties
+                    .Include(f => f.Department)
+                    .FirstOrDefaultAsync(f => f.FacultyId == vm.FacultyId);
+
+                ViewBag.FacultyId = vm.FacultyId;
+
+                return View(vm);
+            }
+            var entity = new FacultyConsultancy
+            {
+                FacultyId = vm.FacultyId,
+                Title = vm.Title,
+                Client = vm.Client,
+                Year = vm.Year,
+                Amount = vm.Amount,
+                DisplayOrder = vm.DisplayOrder
+            };
+
+            _context.FacultyConsultancies.Add(entity);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Consultancy), new { id = vm.FacultyId });
+        }
+
+        // EDIT GET
+        public async Task<IActionResult> EditConsultancy(int id)
+        {
+            var item = await _context.FacultyConsultancies.FindAsync(id);
+
+            if (item == null)
+                return NotFound();
+
+            var faculty = await _context.Faculties
+                .Include(f => f.Department)
+                .FirstOrDefaultAsync(f => f.FacultyId == item.FacultyId);
+
+            if (faculty == null)
+                return NotFound();
+
+            ViewBag.Faculty = faculty;
+            ViewBag.FacultyId = faculty.FacultyId;
+
+            var vm = new FacultyConsultancyVM
+            {
+                Id = item.FacultyConsultancyId,
+                FacultyId = item.FacultyId,
+                Title = item.Title,
+                Client = item.Client,
+                Year = item.Year,
+                Amount = item.Amount,
+                DisplayOrder = item.DisplayOrder
+            };
+
+            return View("CreateConsultancy", vm);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditConsultancy(FacultyConsultancyVM vm)
+        {
+            if (!ModelState.IsValid)
+                return View("CreateConsultancy", vm);
+
+            var entity = await _context.FacultyConsultancies.FindAsync(vm.Id);
+
+            if (entity == null)
+                return NotFound();
+
+            entity.Title = vm.Title;
+            entity.Client = vm.Client;
+            entity.Year = vm.Year;
+            entity.Amount = vm.Amount;
+            entity.DisplayOrder = vm.DisplayOrder;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Consultancy), new { id = vm.FacultyId });
+        }
+        // DELETE
+        [HttpPost]
+        public async Task<IActionResult> DeleteConsultancy(int id)
+        {
+            var item = await _context.FacultyConsultancies.FindAsync(id);
+
+            if (item == null)
+                return NotFound();
+
+            int facultyId = item.FacultyId;
+
+            _context.FacultyConsultancies.Remove(item);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Consultancy), new {id = facultyId });
+        }
+
 
         // ── HELPERS ───────────────────────────────────────
         private async Task<FacultyCreateVM> BuildCreateVM(FacultyCreateVM vm)
