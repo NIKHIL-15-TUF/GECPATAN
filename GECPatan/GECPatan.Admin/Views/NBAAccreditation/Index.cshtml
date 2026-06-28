@@ -1,0 +1,102 @@
+﻿@model List<GECPatan.Core.Models.Domain.NBAAccreditation>
+@{
+    ViewData["Title"] = "NBA Accreditation Records";
+}
+ 
+<div class="text-right mb-3">
+    <a asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus mr-1"></i>Add Record
+    </a>
+</div>
+ 
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-certificate mr-2"></i>
+            NBA / Accreditation Records
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-certificate fa-3x mb-3 d-block"></i>
+                No accreditation records yet.
+                <a asp-action="Create">Add the first one.</a>
+            </div>
+        }
+        else
+        {
+            <table class="table table-sm table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Program Name</th>
+                        <th width="100">Accredited By</th>
+                        <th width="90">Valid From</th>
+                        <th width="90">Valid To</th>
+                        <th width="120">Status</th>
+                        <th width="160">Department</th>
+                        <th width="80">Visible</th>
+                        <th width="130">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><strong>@item.ProgramName</strong></td>
+                            <td>@(item.AccreditedBy ?? "NBA")</td>
+                            <td>@(item.ValidFrom ?? "—")</td>
+                            <td>@(item.ValidTo ?? "—")</td>
+                            <td>
+                                @{
+                                    var badgeColor = item.Status switch
+                                    {
+                                        "Accredited" => "success",
+                                        "Applied" => "warning",
+                                        "Expired" => "danger",
+                                        _ => "secondary"
+                                    };
+                                }
+                                <span class="badge badge-@badgeColor">
+                                    @item.Status
+                                </span>
+                            </td>
+                            <td>
+                                @(item.Department?.Name ?? "Institute-wide")
+                            </td>
+                            <td>
+                                <form asp-action="ToggleVisible"
+                                      method="post" class="d-inline">
+                                    <input type="hidden"
+                                           name="id" value="@item.Id" />
+                                    <button type="submit"
+                                            class="btn btn-xs @(item.IsVisible ? "btn-success" : "btn-secondary")">
+                                        <i class="fas @(item.IsVisible ? "fa-eye" : "fa-eye-slash")"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            <td>
+                                <a asp-action="Edit"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-xs btn-info">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="Delete"
+                                      method="post" class="d-inline">
+                                    <input type="hidden"
+                                           name="id" value="@item.Id" />
+                                    <button type="submit"
+                                            class="btn btn-xs btn-danger"
+                                            onclick="return confirm('Delete this record?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

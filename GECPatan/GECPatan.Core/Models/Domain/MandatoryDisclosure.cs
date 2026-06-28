@@ -121,7 +121,7 @@ namespace GECPatan.Core.Models.Domain
         public string? Status { get; set; } // Accredited / Applied / Not Applied
 
         public int? DeptId { get; set; }
-
+        public Department? Department { get; set; }
         public int DisplayOrder { get; set; } = 0;
         public bool IsVisible { get; set; } = true;
     }

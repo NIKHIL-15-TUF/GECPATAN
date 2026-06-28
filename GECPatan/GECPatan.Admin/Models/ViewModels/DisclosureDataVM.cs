@@ -1,5 +1,7 @@
 ﻿
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace GECPatan.Admin.Models.ViewModels
 {
@@ -139,13 +141,41 @@ namespace GECPatan.Admin.Models.ViewModels
     // ── Sub VMs ──────────────────────────────────────────────
     public class NBAAccreditationVM
     {
-        public string ProgramName { get; set; } = string.Empty;
-        public string? AccreditedBy { get; set; }
-        public string? ValidFrom { get; set; }
-        public string? ValidTo { get; set; }
-        public string? Status { get; set; }
-    }
+        public int Id { get; set; }
 
+        [Required(ErrorMessage = "Program name is required")]
+        [Display(Name = "Program Name")]
+        public string ProgramName { get; set; } = string.Empty;
+
+        [Display(Name = "Accredited By")]
+        public string? AccreditedBy { get; set; } = "NBA";
+
+        [Display(Name = "Valid From (e.g. 2023)")]
+        public string? ValidFrom { get; set; }
+
+        [Display(Name = "Valid To (e.g. 2026)")]
+        public string? ValidTo { get; set; }
+
+        [Display(Name = "Status")]
+        public string? Status { get; set; } = "Accredited";
+
+        [Display(Name = "Department (optional)")]
+        public int? DeptId { get; set; }
+
+        public int DisplayOrder { get; set; } = 0;
+        public bool IsVisible { get; set; } = true;
+
+        public List<SelectListItem> Departments { get; set; } = new();
+        public List<SelectListItem> StatusOptions { get; set; } = new()
+        {
+            new SelectListItem("Accredited",   "Accredited"),
+            new SelectListItem("Applied",      "Applied"),
+            new SelectListItem("Not Applied",  "Not Applied"),
+            new SelectListItem("Expired",      "Expired"),
+            new SelectListItem("Eligible",     "Eligible"),
+            new SelectListItem("Not Eligible", "Not Eligible")
+        };
+    }
     public class DisclosureDeptProgramVM
     {
         public string DeptName { get; set; } = string.Empty;
@@ -253,6 +283,22 @@ namespace GECPatan.Admin.Models.ViewModels
     {
         public string DeptName { get; set; } = string.Empty;
         public string? EquipmentHtml { get; set; }
+    }
+    public class DeptEquipmentEditVM
+    {
+        public int Id { get; set; }
+        public int DeptId { get; set; }
+        public string DeptName { get; set; } = string.Empty;
+        public string? EquipmentHtml { get; set; }
+    }
+
+    public class DeptEquipmentListVM
+    {
+        public int DeptId { get; set; }
+        public string DeptName { get; set; } = string.Empty;
+        public bool HasContent { get; set; }
+        public DateTime? LastUpdated { get; set; }
+        public string? UpdatedBy { get; set; }
     }
 }
 

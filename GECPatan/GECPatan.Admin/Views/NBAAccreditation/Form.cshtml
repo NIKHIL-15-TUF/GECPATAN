@@ -1,0 +1,157 @@
+﻿@model GECPatan.Admin.Models.ViewModels.NBAAccreditationVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit NBA Accreditation" : "Add NBA Accreditation";
+}
+ 
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-certificate mr-2"></i>@ViewData["Title"]
+                </h3>
+            </div>
+            <form asp-action="@(isEdit?"Edit":"Create")" method="post">
+                @if (isEdit)
+                {
+                    <input asp-for="Id" type="hidden" />
+                }
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger py-2">
+                            @Html.ValidationSummary(false)
+                        </div>
+                    }
+ 
+                    <div class="form-group">
+                        <label asp-for="ProgramName" class="font-weight-bold"></label>
+                        <input asp-for="ProgramName" class="form-control"
+                               placeholder="e.g. B.E. Computer Science & Engineering" />
+                        <span asp-validation-for="ProgramName"
+                              class="text-danger small"></span>
+                    </div>
+ 
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="AccreditedBy"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="AccreditedBy"
+                                       class="form-control"
+                                       placeholder="e.g. NBA" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Status"
+                                       class="font-weight-bold"></label>
+                                <select asp-for="Status"
+                                        asp-items="Model.StatusOptions"
+                                        class="form-control">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="ValidFrom"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="ValidFrom"
+                                       class="form-control"
+                                       placeholder="e.g. 2023" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="ValidTo"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="ValidTo"
+                                       class="form-control"
+                                       placeholder="e.g. 2026" />
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label asp-for="DeptId"
+                                       class="font-weight-bold"></label>
+                                <select asp-for="DeptId"
+                                        asp-items="Model.Departments"
+                                        class="form-control">
+                                    <option value="">— Institute-wide —</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label asp-for="DisplayOrder"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="DisplayOrder"
+                                       class="form-control" type="number"
+                                       min="0" />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group mt-4">
+                                <div class="custom-control custom-switch">
+                                    <input asp-for="IsVisible"
+                                           type="checkbox"
+                                           class="custom-control-input"
+                                           id="isVisible" />
+                                    <label class="custom-control-label"
+                                           for="isVisible">Visible</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>
+                    About NBA Accreditation
+                </h6>
+            </div>
+            <div class="card-body small text-muted">
+                <p>
+                    <strong>Program Name:</strong> Full name of the UG/PG program
+                    (e.g. B.E. Computer Science & Engineering)
+                </p>
+                <p><strong>Status options:</strong></p>
+                <ul>
+                    <li><strong>Accredited</strong> — currently accredited</li>
+                    <li><strong>Applied</strong> — application submitted</li>
+                    <li><strong>Not Applied</strong> — not yet applied</li>
+                    <li><strong>Expired</strong> — accreditation lapsed</li>
+                    <li><strong>Not Eligible</strong> - not eligible yet</li>
+                </ul>
+                <p>
+                    <strong>Valid From/To:</strong> Enter year only
+                    (e.g. 2023 to 2026)
+                </p>
+                <p>
+                    Appears in Section 3 (Programs) of the
+                    Mandatory Disclosure document.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
