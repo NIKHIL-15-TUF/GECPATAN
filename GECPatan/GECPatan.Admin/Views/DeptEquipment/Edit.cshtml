@@ -1,0 +1,134 @@
+﻿@model GECPatan.Admin.Models.ViewModels.DeptEquipmentEditVM
+@{
+    ViewData["Title"] = $"Equipment — {Model.DeptName}";
+}
+ 
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb bg-transparent p-0 mb-0">
+        <li class="breadcrumb-item">
+            <a asp-action="Index">Equipment Lists</a>
+        </li>
+        <li class="breadcrumb-item active">@Model.DeptName</li>
+    </ol>
+</nav>
+ 
+<div class="row">
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header"
+                 style="background:#1a237e;color:#fff;">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-tools mr-2"></i>
+                    @Model.DeptName — Equipment List
+                </h3>
+                <small style="opacity:.8;">
+                    Appears in Section 11 of Mandatory Disclosure
+                </small>
+            </div>
+            <form asp-action="Edit" method="post">
+                <input asp-for="Id"      type="hidden" />
+                <input asp-for="DeptId"  type="hidden" />
+                <input asp-for="DeptName"type="hidden" />
+ 
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="font-weight-bold">
+                            Laboratory / Workshop Equipment
+                        </label>
+                        <small class="text-muted d-block mb-2">
+                            List all major equipment in each lab/workshop.
+                            Use tables for structured listing.
+                        </small>
+                        <textarea asp-for="EquipmentHtml"
+                                  id="equipmentEditor"
+                                  class="form-control"
+                                  rows="20"></textarea>
+                    </div>
+                </div>
+ 
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <div>
+                        <a asp-controller="Disclosure"
+                           asp-action="Preview"
+                           target="_blank"
+                           class="btn btn-outline-info mr-2">
+                            <i class="fas fa-eye mr-1"></i>Preview
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-2"></i>Save
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+ 
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-lightbulb mr-2 text-warning"></i>
+                    Suggested Format
+                </h6>
+            </div>
+            <div class="card-body small text-muted">
+                <p><strong>Use tables like:</strong></p>
+                <table class="table table-bordered table-sm"
+                       style="font-size:11px;">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Sr.</th>
+                            <th>Equipment</th>
+                            <th>Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td>
+                            <td>Oscilloscope</td><td>5</td></tr>
+                        <tr><td>2</td>
+                            <td>Function Generator</td><td>10</td></tr>
+                    </tbody>
+                </table>
+                <p class="mt-2">
+                    <strong>Sub-headings</strong> for each lab:
+                    <br />e.g. <em>Communication Lab</em>,
+                    <em>Microprocessor Lab</em>, etc.
+                </p>
+                <p>
+                    Leave blank if department has no
+                    specific lab equipment to list.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"></script>
+    <script>
+        tinymce.init({
+            selector: '#equipmentEditor',
+            height: 500,
+            menubar: true,
+            plugins: [
+                'advlist', 'autolink', 'lists',
+                'table', 'code', 'fullscreen',
+                'searchreplace', 'wordcount', 'help'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+                'bold italic | ' +
+                'bullist numlist | ' +
+                'table | code fullscreen | help',
+            content_style: 'body { font-family: Times New Roman, serif; font-size: 11pt; }',
+            table_default_attributes: { border: '1' },
+            table_default_styles: {
+                'border-collapse': 'collapse',
+                'width': '100%',
+                'font-size': '10pt'
+            }
+        });
+    </script>
+}

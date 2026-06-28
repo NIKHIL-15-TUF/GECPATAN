@@ -357,7 +357,22 @@
                                         <i class="nav-icon fas fa-file-alt"></i>
                                         <p>Narrative Sections</p>
                                     </a>
-                                </li>   
+                                </li>  
+                                <li class="nav-item">
+                                    <a asp-controller="NBAAccreditation" asp-action="Index"
+                                           class="nav-link @(ctrl == "NBAAccreditation" ? "active" : "")">
+                                        <i class="nav-icon fas fa-certificate"></i>
+                                        <p>NBA Accreditation</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a asp-controller="DeptEquipment" asp-action="Index"
+                                           class="nav-link @(ctrl == "DeptEquipment" ? "active" : "")">
+                                        <i class="nav-icon fas fa-tools"></i>
+                                        <p>Dept Equipment</p>
+                                    </a>
+                                </li>
                                 <li class="nav-item">
                                     <a asp-controller="Disclosure" asp-action="Preview" class="nav-link">
                                         <i class="nav-icon fas fa-eye"></i>
