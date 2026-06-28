@@ -197,6 +197,7 @@ namespace GECPatan.Core.Models.Domain
         // GOVERNANCE
         public const string Governance = "Governance";
         public const string AcademicAdvisoryBody = "AcademicAdvisoryBody";
+        public const string BoardMeetings = "BoardMeetings";
         public const string OrganizationalChart = "OrganizationalChart";
         public const string FacultyStudentInvolvement = "FacultyStudentInvolvement";
         public const string GovernanceMechanism = "GovernanceMechanism";
@@ -231,7 +232,7 @@ namespace GECPatan.Core.Models.Domain
         public static readonly string[] AllKeys = new[]
         {
             AboutInstitute,
-            Governance, AcademicAdvisoryBody, OrganizationalChart,
+            Governance, AcademicAdvisoryBody,BoardMeetings, OrganizationalChart,
             FacultyStudentInvolvement, GovernanceMechanism,
             StudentFeedback, GrievanceRedressal,
             AccreditationStatus,
@@ -249,6 +250,7 @@ namespace GECPatan.Core.Models.Domain
             [AboutInstitute] = "About the Institute",
             [Governance] = "Governance",
             [AcademicAdvisoryBody] = "Members of Academic Advisory Body",
+            [BoardMeetings]= "Frequency of the Board Meetings and Academic Advisory Body",
             [OrganizationalChart] = "Organizational Chart and Processes",
             [FacultyStudentInvolvement] = "Faculty & Student Involvement",
             [GovernanceMechanism] = "Mechanism for Good Governance",

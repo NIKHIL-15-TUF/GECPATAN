@@ -1,7 +1,8 @@
-﻿using GECPatan.Core.Data;
+﻿using GECPatan.Admin.Models.ViewModels;
+using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
-using GECPatan.Admin.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Configuration;
 
 namespace GECPatan.Admin.Services
 {
@@ -23,9 +24,16 @@ namespace GECPatan.Admin.Services
             var settings = await _context.SiteSettings.ToListAsync();
             string? Cfg(string key) =>
                 settings.FirstOrDefault(s => s.Key == key)?.Value;
+            string? Narrative(string key) =>
+                _context.DisclosureNarratives
+                    .Where(n => n.SectionKey == key && !n.IsDeleted)
+                    .OrderByDescending(n => !string.IsNullOrWhiteSpace(n.HtmlContent))
+                    .ThenBy(n => n.DisplayOrder)
+                    .Select(n => n.HtmlContent)
+                    .FirstOrDefault();
 
             // ── SECTION 1: About Institute ──────────────────
-            vm.AboutInstitute = Cfg("Disclosure.AboutInstitute");
+            vm.AboutInstitute = Narrative("AboutInstitute");
 
             // ── SECTION 2: Institute Info ───────────────────
             vm.Institute = new InstituteInfoVM
@@ -46,6 +54,7 @@ namespace GECPatan.Admin.Services
             {
                 DisclosureSectionKeys.Governance,
                 DisclosureSectionKeys.AcademicAdvisoryBody,
+                DisclosureSectionKeys.BoardMeetings,
                 DisclosureSectionKeys.OrganizationalChart,
                 DisclosureSectionKeys.FacultyStudentInvolvement,
                 DisclosureSectionKeys.GovernanceMechanism,
@@ -57,7 +66,7 @@ namespace GECPatan.Admin.Services
                 await AddNarrative(vm.GovernanceNarratives, key);
 
             // ── SECTION 4: Programs ─────────────────────────
-            vm.AccreditationStatusHtml = Cfg("Disclosure.AccreditationStatus");
+            vm.AccreditationStatusHtml = Narrative("AccreditationStatus");
 
             vm.NBAAccreditations = await _context.NBAAccreditations
                 .Where(n => n.IsVisible)
@@ -128,8 +137,8 @@ namespace GECPatan.Admin.Services
             }
 
             // ── SECTION 6: Placement ─────────────────────────
-            vm.PlacementFacilitiesHtml = Cfg("Disclosure.PlacementFacilities");
-            vm.ForeignCollaborationHtml = Cfg("Disclosure.ForeignCollaboration");
+            vm.PlacementFacilitiesHtml = Narrative("PlacementFacilities");
+            vm.ForeignCollaborationHtml = Narrative("ForeignCollaboration");
 
             vm.PlacementData = await _context.DisclosurePlacements
                 .Where(p => p.IsVisible)
@@ -312,13 +321,13 @@ namespace GECPatan.Admin.Services
             }
 
             // ── SECTION 8: Fee ───────────────────────────────
-            vm.FeeStructureHtml = Cfg("Disclosure.FeeStructure");
+            vm.FeeStructureHtml = Narrative("FeeStructure");
 
             // ── SECTION 9: Admission ─────────────────────────
-            vm.AdmissionProcessHtml = Cfg("Disclosure.AdmissionProcess");
-            vm.CriteriaWeightagesHtml = Cfg("Disclosure.CriteriaWeightages");
-            vm.ApplicantListHtml = Cfg("Disclosure.ApplicantList");
-            vm.ManagementSeatsHtml = Cfg("Disclosure.ManagementSeatsResult");
+            vm.AdmissionProcessHtml = Narrative("AdmissionProcess");
+            vm.CriteriaWeightagesHtml = Narrative("CriteriaWeightages");
+            vm.ApplicantListHtml = Narrative("ApplicantList");
+            vm.ManagementSeatsHtml = Narrative("ManagementSeatsResult");
 
             // ── SECTION 10: Infrastructure ───────────────────
             var allInfra = await _context.InfrastructureRecords
@@ -343,10 +352,10 @@ namespace GECPatan.Admin.Services
                     DeptName = i.Department?.Name ?? "Institute-wide"
                 }).ToList();
 
-            vm.InfrastructureInfoHtml = Cfg("Disclosure.InfrastructureInfo");
+            vm.InfrastructureInfoHtml = Narrative("InfrastructureInfo");
 
             // ── SECTION 11: Library ──────────────────────────
-            vm.LibraryInfoHtml = Cfg("Disclosure.LibraryInfo");
+            vm.LibraryInfoHtml = Narrative("LibraryInfo");
 
             // ── SECTION 12: Dept Equipment ───────────────────
             var equipments = await _context.DepartmentEquipments.ToListAsync();
@@ -367,7 +376,7 @@ namespace GECPatan.Admin.Services
             }
 
             // ── SECTION 13: Best Practices ───────────────────
-            vm.BestPracticesHtml = Cfg("Disclosure.BestPractices");
+            vm.BestPracticesHtml = Narrative("BestPractices");
 
             // ── Warnings ──────────────────────────────────────
             if (string.IsNullOrWhiteSpace(vm.AboutInstitute))

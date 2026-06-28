@@ -18,22 +18,22 @@ namespace GECPatan.Admin.Controllers
 
         // SiteSettings-backed sections (TinyMCE direct, not in
         // DisclosureNarratives table)
-        private static readonly Dictionary<string, (string Title, string Group, string Help)>
-            _settingsKeys = new()
-            {
-                ["Disclosure.AboutInstitute"] = ("About the Institute", "About", "Write a general overview of the institute — history, location, vision, achievements."),
-                ["Disclosure.AccreditationStatus"] = ("Accreditation Status Details", "Programs", "Add additional narrative about accreditation, NAAC grade, or other certifications."),
-                ["Disclosure.PlacementFacilities"] = ("Placement Facilities", "Placement", "Describe the Training & Placement Cell, infrastructure, tie-ups with companies."),
-                ["Disclosure.ForeignCollaboration"] = ("Foreign Collaboration Details", "Placement", "List any MoUs or collaborations with foreign universities/institutions."),
-                ["Disclosure.FeeStructure"] = ("Fee Structure", "Fee", "Enter fee details for all programs (tuition, hostel, other fees) in tabular form."),
-                ["Disclosure.AdmissionProcess"] = ("Admission Process", "Admission", "Describe the admission process followed (ACPC/GUJCET norms)."),
-                ["Disclosure.CriteriaWeightages"] = ("Criteria & Weightages for Admission", "Admission", "List criteria and weightages used for admission (merit, reservation, etc.)."),
-                ["Disclosure.ApplicantList"] = ("List of Applicants", "Admission", "Paste or link the list of applicants for the current year."),
-                ["Disclosure.ManagementSeatsResult"] = ("Result of Admission under Management/Vacant Seats", "Admission", "Enter results of admission under management quota or vacant seats."),
-                ["Disclosure.InfrastructureInfo"] = ("Additional Infrastructural Information", "Infrastructure", "Describe any additional infrastructure not covered by the structured tables."),
-                ["Disclosure.LibraryInfo"] = ("Library Facilities", "Library", "Describe library holdings, e-resources, reading rooms, and facilities."),
-                ["Disclosure.BestPractices"] = ("Best Practices Adopted (if any)", "Best Practices", "Describe any best practices followed by the institute."),
-            };
+        //private static readonly Dictionary<string, (string Title, string Group, string Help)>
+        //    _settingsKeys = new()
+        //    {
+        //        ["Disclosure.AboutInstitute"] = ("About the Institute", "About", "Write a general overview of the institute — history, location, vision, achievements."),
+        //        ["Disclosure.AccreditationStatus"] = ("Accreditation Status Details", "Programs", "Add additional narrative about accreditation, NAAC grade, or other certifications."),
+        //        ["Disclosure.PlacementFacilities"] = ("Placement Facilities", "Placement", "Describe the Training & Placement Cell, infrastructure, tie-ups with companies."),
+        //        ["Disclosure.ForeignCollaboration"] = ("Foreign Collaboration Details", "Placement", "List any MoUs or collaborations with foreign universities/institutions."),
+        //        ["Disclosure.FeeStructure"] = ("Fee Structure", "Fee", "Enter fee details for all programs (tuition, hostel, other fees) in tabular form."),
+        //        ["Disclosure.AdmissionProcess"] = ("Admission Process", "Admission", "Describe the admission process followed (ACPC/GUJCET norms)."),
+        //        ["Disclosure.CriteriaWeightages"] = ("Criteria & Weightages for Admission", "Admission", "List criteria and weightages used for admission (merit, reservation, etc.)."),
+        //        ["Disclosure.ApplicantList"] = ("List of Applicants", "Admission", "Paste or link the list of applicants for the current year."),
+        //        ["Disclosure.ManagementSeatsResult"] = ("Result of Admission under Management/Vacant Seats", "Admission", "Enter results of admission under management quota or vacant seats."),
+        //        ["Disclosure.InfrastructureInfo"] = ("Additional Infrastructural Information", "Infrastructure", "Describe any additional infrastructure not covered by the structured tables."),
+        //        ["Disclosure.LibraryInfo"] = ("Library Facilities", "Library", "Describe library holdings, e-resources, reading rooms, and facilities."),
+        //        ["Disclosure.BestPractices"] = ("Best Practices Adopted (if any)", "Best Practices", "Describe any best practices followed by the institute."),
+        //    };
 
         public DisclosureNarrativeController(ApplicationDbContext context)
             => _context = context;
@@ -56,7 +56,7 @@ namespace GECPatan.Admin.Controllers
             foreach (var key in DisclosureSectionKeys.AllKeys)
             {
                 // Skip SiteSettings-backed keys from DB loop
-                if (_settingsKeys.ContainsKey(key)) continue;
+                //if (_settingsKeys.ContainsKey(key)) continue;
 
                 var rows = dbRows.Where(n => n.SectionKey == key).ToList();
                 var best = rows
@@ -81,26 +81,26 @@ namespace GECPatan.Admin.Controllers
             }
 
             // ── SiteSettings-backed sections ───────────────
-            var settings = await _context.SiteSettings
-                .Where(s => _settingsKeys.Keys.Contains(s.Key))
-                .ToListAsync();
+            //var settings = await _context.SiteSettings
+            //    .Where(s => _settingsKeys.Keys.Contains(s.Key))
+            //    .ToListAsync();
 
-            foreach (var (key, meta) in _settingsKeys)
-            {
-                var setting = settings.FirstOrDefault(s => s.Key == key);
-                list.Add(new NarrativeIndexVM
-                {
-                    SectionKey = key,
-                    SectionTitle = meta.Title,
-                    SectionGroup = meta.Group,
-                    HasContent = setting != null
-                        && !string.IsNullOrWhiteSpace(setting.Value),
-                    IsVisible = true,
-                    IsDbSection = false,
-                    LastUpdated = null,
-                    UpdatedBy = null
-                });
-            }
+            //foreach (var (key, meta) in _settingsKeys)
+            //{
+            //    var setting = settings.FirstOrDefault(s => s.Key == key);
+            //    list.Add(new NarrativeIndexVM
+            //    {
+            //        SectionKey = key,
+            //        SectionTitle = meta.Title,
+            //        SectionGroup = meta.Group,
+            //        HasContent = setting != null
+            //            && !string.IsNullOrWhiteSpace(setting.Value),
+            //        IsVisible = true,
+            //        IsDbSection = false,
+            //        LastUpdated = null,
+            //        UpdatedBy = null
+            //    });
+            //}
 
             // Group order
             var groupOrder = new[]
@@ -125,29 +125,29 @@ namespace GECPatan.Admin.Controllers
         // ════════════════════════════════════════════════════
         public async Task<IActionResult> Edit(string key)
         {
-            if (!DisclosureSectionKeys.AllKeys.Contains(key)
-                && !_settingsKeys.ContainsKey(key))
-                return NotFound("Invalid section key.");
+            //if (!DisclosureSectionKeys.AllKeys.Contains(key)
+            //    && !_settingsKeys.ContainsKey(key))
+            //    return NotFound("Invalid section key.");
 
             ViewData["Title"] = "Edit Narrative Section";
 
             // SiteSettings-backed
-            if (_settingsKeys.TryGetValue(key, out var meta))
-            {
-                var setting = await _context.SiteSettings
-                    .FirstOrDefaultAsync(s => s.Key == key);
+            //if (_settingsKeys.TryGetValue(key, out var meta))
+            //{
+            //    var setting = await _context.SiteSettings
+            //        .FirstOrDefaultAsync(s => s.Key == key);
 
-                return View(new NarrativeEditVM
-                {
-                    SectionKey = key,
-                    SectionTitle = meta.Title,
-                    SectionGroup = meta.Group,
-                    HtmlContent = setting?.Value,
-                    IsVisible = true,
-                    IsDbSection = false,
-                    HelpText = meta.Help
-                });
-            }
+            //    return View(new NarrativeEditVM
+            //    {
+            //        SectionKey = key,
+            //        SectionTitle = meta.Title,
+            //        SectionGroup = meta.Group,
+            //        HtmlContent = setting?.Value,
+            //        IsVisible = true,
+            //        IsDbSection = false,
+            //        HelpText = meta.Help
+            //    });
+            //}
 
             // DB-backed
             var rows = await _context.DisclosureNarratives
@@ -208,29 +208,29 @@ namespace GECPatan.Admin.Controllers
             string userName = User.Identity?.Name ?? "Admin";
 
             // SiteSettings-backed
-            if (!model.IsDbSection)
-            {
-                var setting = await _context.SiteSettings
-                    .FirstOrDefaultAsync(s => s.Key == model.SectionKey);
+           // if (!model.IsDbSection)
+            //{
+                //var setting = await _context.SiteSettings
+                //    .FirstOrDefaultAsync(s => s.Key == model.SectionKey);
 
-                if (setting == null)
-                {
-                    _context.SiteSettings.Add(new SiteSetting
-                    {
-                        Key = model.SectionKey,
-                        Value = model.HtmlContent ?? "",
-                        Group = "Disclosure"
-                    });
-                }
-                else
-                {
-                    setting.Value = model.HtmlContent ?? "";
-                }
+                //if (setting == null)
+                //{
+                //    _context.SiteSettings.Add(new SiteSetting
+                //    {
+                //        Key = model.SectionKey,
+                //        Value = model.HtmlContent ?? "",
+                //        Group = "Disclosure"
+                //    });
+                //}
+                //else
+                //{
+                //    setting.Value = model.HtmlContent ?? "";
+                //}
 
-                await _context.SaveChangesAsync();
-                TempData["Success"] = $"'{model.SectionTitle}' saved.";
-                return RedirectToAction(nameof(Index));
-            }
+                //await _context.SaveChangesAsync();
+                //TempData["Success"] = $"'{model.SectionTitle}' saved.";
+                //return RedirectToAction(nameof(Index));
+            //}
 
             // DB-backed — find single best row
             var rows = await _context.DisclosureNarratives
@@ -278,6 +278,7 @@ namespace GECPatan.Admin.Controllers
         {
             DisclosureSectionKeys.Governance or
             DisclosureSectionKeys.AcademicAdvisoryBody or
+            DisclosureSectionKeys.BoardMeetings or
             DisclosureSectionKeys.OrganizationalChart or
             DisclosureSectionKeys.FacultyStudentInvolvement or
             DisclosureSectionKeys.GovernanceMechanism or
@@ -303,6 +304,8 @@ namespace GECPatan.Admin.Controllers
                 => "Describe how the institute is governed (State/Central Govt., etc.).",
             DisclosureSectionKeys.AcademicAdvisoryBody
                 => "List members of the Academic Advisory Body and their roles.",
+            DisclosureSectionKeys.BoardMeetings
+                => "Add details about governing board meetings, decisions, and agenda.",
             DisclosureSectionKeys.OrganizationalChart
                 => "Describe the organizational hierarchy (can embed an image or table).",
             DisclosureSectionKeys.FacultyStudentInvolvement
