@@ -133,7 +133,11 @@ namespace GECPatan.Core.Data
         public DbSet<ScholarshipRecord> ScholarshipRecords { get; set; }
         public DbSet<InfrastructureRecord> InfrastructureRecords { get; set; }
         public DbSet<DisclosureNarrative> DisclosureNarratives{ get; set; }
-        
+        public DbSet<NBAAccreditation> NBAAccreditations { get; set; }
+        public DbSet<DisclosurePlacementData> DisclosurePlacements { get; set; }
+        public DbSet<FacultyApprovalInfo> FacultyApprovalInfos { get; set; }
+        public DbSet<DepartmentEquipment> DepartmentEquipments { get; set; }
+
         // MODEL CREATING
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -240,6 +244,15 @@ namespace GECPatan.Core.Data
                 .HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<DisclosureNarrative>()
                 .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<NBAAccreditation>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<DisclosurePlacementData>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<FacultyApprovalInfo>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<DepartmentEquipment>()
+                .HasQueryFilter(x => !x.IsDeleted);
+
             // ── RELATIONSHIPS ────────────────────────────────
 
             // Faculty → Department

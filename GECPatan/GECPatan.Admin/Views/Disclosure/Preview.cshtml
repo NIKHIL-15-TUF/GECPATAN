@@ -1,39 +1,50 @@
 ﻿@model GECPatan.Admin.Models.ViewModels.DisclosureDataVM
 @{
     Layout = "_DisclosureLayout";
+    int secNum = 0;
+
+    string Sec() { secNum++; return secNum.ToString(); }
 }
  
+@* ── Helper: render one infra sub-table ─────────────────── *@
+@functions
+{
+    string RenderEmpty(string msg)
+        => $"<p class=\"empty-note\">{msg}</p>";
+}
+ 
+<!-- ══════════════════════════════════════════════════════════
+     DOCUMENT HEADER
+═══════════════════════════════════════════════════════════ -->
 <div class="doc-header">
     <h1>@Model.Institute.Name</h1>
     <h2>Mandatory Disclosure — Academic Year @Model.AcademicYear</h2>
     <div class="meta">
-        @if (!string.IsNullOrEmpty(Model.Institute.Address))
-        {
-            @Model.Institute.Address
-            <br />
-        }
+        @Model.Institute.Address<br />
         @if (!string.IsNullOrEmpty(Model.Institute.Phone))
         {
             <text>Phone: @Model.Institute.Phone &nbsp;|&nbsp;</text>
         }
-        @if (!string.IsNullOrEmpty(Model.Institute.Email))
-        {
-            <text>Email: @Model.Institute.Email</text>
-        }
-        <br />
-        @if (!string.IsNullOrEmpty(Model.Institute.AffiliatedTo))
-        {
-            <text>Affiliated to: @Model.Institute.AffiliatedTo &nbsp;|&nbsp;</text>
-        }
-        @if (!string.IsNullOrEmpty(Model.Institute.ApprovedBy))
-        {
-            <text>Approved by: @Model.Institute.ApprovedBy</text>
-        }
+        Email: @Model.Institute.Email<br />
+        Affiliated to: @(Model.Institute.AffiliatedTo ?? "—")
+        &nbsp;|&nbsp; Approved by: @(Model.Institute.ApprovedBy ?? "—")
     </div>
 </div>
-  
-<!--SECTION 1 — INSTITUTE & PRINCIPAL INFO-->
-<h3 class="section-title">1. Institute Information</h3>
+ 
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 1 — ABOUT THE INSTITUTE
+═══════════════════════════════════════════════════════════ -->
+<h3 class="section-title">@Sec(). About the Institute</h3>
+@if (!string.IsNullOrWhiteSpace(Model.AboutInstitute))
+{
+    <div class="narrative-content">@Html.Raw(Model.AboutInstitute)</div>
+}
+else
+{
+    <p class="empty-note">About Institute content not added yet.</p>
+}
+ 
+<!-- Basic info grid -->
 <div class="info-grid">
     <div class="info-row">
         <div class="info-label">Institute Name</div>
@@ -51,60 +62,131 @@
         <div class="info-label">Approved By</div>
         <div class="info-value">@(Model.Institute.ApprovedBy ?? "—")</div>
     </div>
+    <div class="info-row">
+        <div class="info-label">Address</div>
+        <div class="info-value">@(Model.Institute.Address ?? "—")</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Phone</div>
+        <div class="info-value">@(Model.Institute.Phone ?? "—")</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Email</div>
+        <div class="info-value">@(Model.Institute.Email ?? "—")</div>
+    </div>
 </div>
  
-@if (Model.Principal != null)
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 2 — GOVERNANCE
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h3 class="section-title">@Sec(). Governance</h3>
+@foreach (var n in Model.GovernanceNarratives)
 {
-    <h3 class="section-title">2. Principal Information</h3>
-    <div class="info-grid">
-        <div class="info-row">
-            <div class="info-label">Name</div>
-            <div class="info-value">@Model.Principal.Name</div>
-        </div>
-        <div class="info-row">
-            <div class="info-label">Designation</div>
-            <div class="info-value">@(Model.Principal.Designation ?? "—")</div>
-        </div>
-        <div class="info-row">
-            <div class="info-label">Qualifications</div>
-            <div class="info-value">
-                @(Model.Principal.Qualifications.Any()
-                    ? string.Join(", ", Model.Principal.Qualifications)
-                    : "—")
-            </div>
-        </div>
-        <div class="info-row">
-            <div class="info-label">Contact</div>
-            <div class="info-value">
-                @(Model.Principal.Email ?? "—") &nbsp;|&nbsp;
-                @(Model.Principal.Contact ?? "—")
-            </div>
-        </div>
-    </div>
+    <h4 class="sub-section-title">@n.SectionTitle</h4>
+    @if (!string.IsNullOrWhiteSpace(n.HtmlContent))
+    {
+        <div class="narrative-content">@Html.Raw(n.HtmlContent)</div>
+    }
+    else
+    {
+        <p class="empty-note">Content not added yet.</p>
+    }
+}
+ 
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 3 — PROGRAMS
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h3 class="section-title">@Sec(). Programs</h3>
+ 
+<h4 class="sub-section-title">AICTE Approved Programs</h4>
+@if (Model.Programs.Any())
+{
+    <table class="disc-table">
+        <thead>
+            <tr>
+                <th>Sr.</th>
+                <th>Program Name</th>
+                <th>Level</th>
+                <th>Duration</th>
+                <th>Intake (@Model.Programs.First().IntakeYear)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ int psr = 1; }
+            @foreach (var p in Model.Programs)
+            {
+                <tr>
+                    <td>@psr</td>
+                    <td>@p.DeptName @(!string.IsNullOrEmpty(p.ShortCode) ? $"({p.ShortCode})" : "")</td>
+                    <td>@p.Level</td>
+                    <td>@p.Duration</td>
+                    <td>@p.Intake</td>
+                </tr>
+                psr++;
+            }
+        </tbody>
+    </table>
 }
 else
 {
-    <h3 class="section-title">2. Principal Information</h3>
-    <p class="empty-note">No active Principal profile found.</p>
+    <p class="empty-note">No programs found.</p>
 }
  
-<!-- SECTION 3 — DEPARTMENTS (Intake, Cutoff, Faculty)-->
-<h3 class="section-title">3. Department-wise Details</h3>
+<h4 class="sub-section-title">NBA Accreditation Status</h4>
+@if (Model.NBAAccreditations.Any())
+{
+    <table class="disc-table">
+        <thead>
+            <tr>
+                <th>Sr.</th>
+                <th>Program Name</th>
+                <th>Accredited By</th>
+                <th>Valid From</th>
+                <th>Valid To</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ int nsr = 1; }
+            @foreach (var n in Model.NBAAccreditations)
+            {
+                <tr>
+                    <td>@nsr</td>
+                    <td>@n.ProgramName</td>
+                    <td>@(n.AccreditedBy ?? "NBA")</td>
+                    <td>@(n.ValidFrom ?? "—")</td>
+                    <td>@(n.ValidTo ?? "—")</td>
+                    <td>@(n.Status ?? "—")</td>
+                </tr>
+                nsr++;
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p class="empty-note">No NBA accreditation records added.</p>
+}
  
-@foreach (var dept in Model.Departments)
+@if (!string.IsNullOrWhiteSpace(Model.AccreditationStatusHtml))
+{
+    <h4 class="sub-section-title">Additional Accreditation Information</h4>
+    <div class="narrative-content">@Html.Raw(Model.AccreditationStatusHtml)</div>
+}
+ 
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 4 — CUTOFF RANKS
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h3 class="section-title">@Sec(). Admission Cutoff (Closing Ranks)</h3>
+@foreach (var dept in Model.DeptCutoffs)
 {
     <h4 class="dept-title">
         @dept.Name @(!string.IsNullOrEmpty(dept.ShortCode) ? $"({dept.ShortCode})" : "")
-        — Current Intake: @dept.CurrentIntake
-        (@dept.CurrentIntakeYear)
     </h4>
- 
-    <strong>Cutoff (Closing Rank) History</strong>
-    @if (!dept.CutoffHistory.Any())
-    {
-        <p class="empty-note">No cutoff records available for this department.</p>
-    }
-    else
+    @if (dept.CutoffHistory.Any())
     {
         <table class="disc-table">
             <thead>
@@ -132,124 +214,669 @@ else
             </tbody>
         </table>
     }
- 
-    <strong>Teaching Faculty</strong>
-    @if (!dept.Faculty.Any())
-    {
-        <p class="empty-note">No active teaching faculty records found.</p>
-    }
     else
     {
-        <table class="disc-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Designation</th>
-                    <th>Highest Qualification</th>
-                    <th>Date of Joining</th>
-                    <th>Experience (yrs)</th>
-                    <th>Publications</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var f in dept.Faculty)
-                {
-                    <tr>
-                        <td>@f.Name</td>
-                        <td>@f.Designation</td>
-                        <td>@f.HighestQualification</td>
-                        <td>@f.DateOfJoining</td>
-                        <td>@f.ExperienceYears</td>
-                        <td>@f.PublicationCount</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <p class="empty-note">No cutoff records for this department.</p>
     }
 }
  
-<!-- SECTION 4 — SCHOLARSHIPS -->
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 5 — PLACEMENT
+═══════════════════════════════════════════════════════════ -->
 <div class="page-break"></div>
-<h3 class="section-title">4. Scholarship / Fee Waiver Schemes</h3>
-@if (!Model.Scholarships.Any())
+<h3 class="section-title">@Sec(). Placement</h3>
+ 
+<h4 class="sub-section-title">Placement Facilities</h4>
+@if (!string.IsNullOrWhiteSpace(Model.PlacementFacilitiesHtml))
 {
-    <p class="empty-note">No scholarship records available.</p>
+    <div class="narrative-content">@Html.Raw(Model.PlacementFacilitiesHtml)</div>
 }
 else
+{
+    <p class="empty-note">Placement facilities content not added yet.</p>
+}
+ 
+<h4 class="sub-section-title">Placement Statistics</h4>
+@if (Model.PlacementData.Any())
 {
     <table class="disc-table">
         <thead>
             <tr>
-                <th>Scheme Name</th>
                 <th>Academic Year</th>
-                <th>Total Applications</th>
+                <th>Total Students</th>
+                <th>Total Placed</th>
+                <th>Highest Package</th>
+                <th>Average Package</th>
+                <th>Top Recruiter</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var s in Model.Scholarships)
+            @foreach (var p in Model.PlacementData)
             {
                 <tr>
-                    <td>@s.SchemeName</td>
-                    <td>@s.AcademicYear</td>
-                    <td>@s.TotalApplications</td>
+                    <td>@p.AcademicYear</td>
+                    <td>@p.TotalStudents</td>
+                    <td>@p.TotalPlaced</td>
+                    <td>@(p.HighestPkg ?? "—")</td>
+                    <td>@(p.AveragePkg ?? "—")</td>
+                    <td>@(p.TopRecruiter ?? "—")</td>
                 </tr>
             }
         </tbody>
     </table>
-}
- 
-<!-- SECTION 5 — INFRASTRUCTURE -->
-<h3 class="section-title">5. Infrastructural Information</h3>
-@if (!Model.Infrastructure.Any())
-{
-    <p class="empty-note">No infrastructure records available.</p>
 }
 else
 {
-    <table class="disc-table">
+    <p class="empty-note">No placement data added yet.</p>
+}
+ 
+<h4 class="sub-section-title">Foreign Collaboration Details</h4>
+@if (!string.IsNullOrWhiteSpace(Model.ForeignCollaborationHtml))
+{
+    <div class="narrative-content">@Html.Raw(Model.ForeignCollaborationHtml)</div>
+}
+else
+{
+    <p class="empty-note">Foreign collaboration content not added yet.</p>
+}
+ 
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 6 — FACULTY
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h3 class="section-title">@Sec(). Faculty Details</h3>
+ 
+@* Principal First *@
+@if (Model.Principal != null)
+{
+    <h4 class="sub-section-title">Principal</h4>
+    <div class="info-grid">
+        <div class="info-row">
+            <div class="info-label">Name</div>
+            <div class="info-value">@Model.Principal.Name</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Designation</div>
+            <div class="info-value">@(Model.Principal.Designation ?? "—")</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Qualifications</div>
+            <div class="info-value">
+                @(Model.Principal.Qualifications.Any()
+                    ? string.Join(", ", Model.Principal.Qualifications)
+                    : "—")
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Email</div>
+            <div class="info-value">@(Model.Principal.Email ?? "—")</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Contact</div>
+            <div class="info-value">@(Model.Principal.Contact ?? "—")</div>
+        </div>
+    </div>
+}
+ 
+@* Department-wise Faculty *@
+@foreach (var dept in Model.DeptFaculty)
+{
+    <div class="page-break"></div>
+    <h4 class="dept-title">@dept.DeptName — Faculty</h4>
+ 
+    @* Summary Table *@
+    <strong style="font-size:11pt;">Faculty List</strong>
+    <table class="disc-table" style="margin-top:6px;">
         <thead>
             <tr>
-                <th>Room Type</th>
-                <th>Area (sq.m)</th>
-                <th>Building</th>
-                <th>Department</th>
+                <th>Sr. No.</th>
+                <th>Name</th>
+                <th>Post</th>
+                <th>Approval Status</th>
+                <th>Letter Number</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var i in Model.Infrastructure)
+            @foreach (var row in dept.SummaryTable)
             {
                 <tr>
-                    <td>@i.RoomType</td>
-                    <td>@i.AreaSqm</td>
-                    <td>@i.BuildingName</td>
-                    <td>@i.DeptName</td>
+                    <td>@row.SrNo</td>
+                    <td>@row.Name</td>
+                    <td>@row.Post</td>
+                    <td>@(row.ApprovalStatus ?? "Approved")</td>
+                    <td>@(row.LetterNumber ?? "—")</td>
                 </tr>
             }
         </tbody>
     </table>
-}
  
-<!-- SECTION 6 — NARRATIVE SECTIONS (strict 15 keys) -->
-<div class="page-break"></div>
-<h3 class="section-title">6. Governance &amp; Other Disclosures</h3>
- 
-@{
-    int secNum = 1;
-}
-@foreach (var narrative in Model.Narratives)
-{
-    <h4 class="dept-title">6.@secNum @narrative.SectionTitle</h4>
-    @if (string.IsNullOrWhiteSpace(narrative.HtmlContent))
+    @* Individual Profile Cards *@
+    @foreach (var f in dept.Faculty)
     {
-        <p class="empty-note">
-            Content for this section has not been added yet.
-        </p>
-    }
-    else
-    {
-        <div class="narrative-content">
-            @Html.Raw(narrative.HtmlContent)
+        <div style="border:1px solid #999;margin:16px 0;
+                    page-break-inside:avoid;">
+            <table class="disc-table mb-0"
+                   style="font-size:10.5pt;">
+                <colgroup>
+                    <col style="width:30px;" />
+                    <col style="width:180px;" />
+                    <col />
+                </colgroup>
+                <tbody>
+                    <tr>
+                        <td class="text-center font-weight-bold">1</td>
+                        <td class="font-weight-bold">Name</td>
+                        <td>
+                            <div style="display:flex;justify-content:space-between;">
+                                <strong>@f.Name</strong>
+                                @if (!string.IsNullOrEmpty(f.ImagePath))
+                                {
+                                    <img src="@f.ImagePath"
+                                         style="width:70px;height:85px;
+                                                object-fit:cover;border:1px solid #ccc;" />
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">2</td>
+                        <td class="font-weight-bold">Post</td>
+                        <td>@f.Designation</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">3</td>
+                        <td class="font-weight-bold">Email</td>
+                        <td>@(f.Email ?? "—")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">4</td>
+                        <td class="font-weight-bold">Date of Birth</td>
+                        <td>@(f.DateOfBirth ?? "—")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">5</td>
+                        <td class="font-weight-bold">Educational Qualification</td>
+                        <td>@(string.IsNullOrEmpty(f.Qualifications) ? "—" : f.Qualifications)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">6</td>
+                        <td class="font-weight-bold">Webpage</td>
+                        <td>@(f.Website ?? "—")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">7</td>
+                        <td class="font-weight-bold">Work Experience</td>
+                        <td>
+                            <table class="disc-table mb-2" style="font-size:10pt;">
+                                <tr><td style="width:100px;">Teaching</td>
+                                    <td>@f.TeachingYears Years</td></tr>
+                                <tr><td>Research</td><td>—</td></tr>
+                                <tr><td>Industry</td><td>—</td></tr>
+                                <tr><td>Others</td><td>—</td></tr>
+                            </table>
+                            @if (f.Experiences.Any())
+                            {
+                                <strong>Details:</strong>
+                                <table class="disc-table mt-1" style="font-size:10pt;">
+                                    <thead>
+                                        <tr>
+                                            <th>Sr.</th>
+                                            <th>Institute</th>
+                                            <th>Period</th>
+                                            <th>Experience</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{ int esr = 1; }
+                                        @foreach (var e in f.Experiences)
+                                        {
+                                            <tr>
+                                                <td>@esr</td>
+                                                <td>@e.Organization</td>
+                                                <td>@e.Period</td>
+                                                <td>@e.Duration</td>
+                                            </tr>
+                                            esr++;
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">8</td>
+                        <td class="font-weight-bold">Area of Specializations</td>
+                        <td>@(f.AreaOfInterest ?? "—")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">9</td>
+                        <td class="font-weight-bold">Subjects at UG Level</td>
+                        <td>@(f.UGSubjects.Any() ? string.Join(", ", f.UGSubjects) : "—")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">10</td>
+                        <td class="font-weight-bold">Subjects at PG Level</td>
+                        <td>@(f.PGSubjects.Any() ? string.Join(", ", f.PGSubjects) : "—")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">11</td>
+                        <td class="font-weight-bold">Research Guidance</td>
+                        <td>
+                            <table class="disc-table" style="font-size:10pt;">
+                                <thead>
+                                    <tr><th></th><th>Ongoing</th><th>Completed</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Master's Degree</td>
+                                        <td>@f.MastersOngoing</td>
+                                        <td>@f.MastersCompleted</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Ph.D.</td>
+                                        <td>@f.PhDOngoing</td>
+                                        <td>@f.PhDCompleted</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">12</td>
+                        <td class="font-weight-bold">Research Papers Published</td>
+                        <td>
+                            @{
+                                var intl = f.Publications.Where(p => p.Type == "International").ToList();
+                                var natl = f.Publications.Where(p => p.Type == "National").ToList();
+                                var conf = f.Publications.Where(p => p.Type == "Conference").ToList();
+                            }
+                            <table class="disc-table mb-2" style="font-size:10pt;">
+                                <thead>
+                                    <tr><th>Category</th><th>Total</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>National Journals</td><td>@natl.Count</td></tr>
+                                    <tr><td>International Journals</td><td>@intl.Count</td></tr>
+                                    <tr><td>Conferences</td><td>@conf.Count</td></tr>
+                                </tbody>
+                            </table>
+                            @if (intl.Any())
+                            {
+                                <strong>Published in International Journal</strong>
+                                <table class="disc-table mt-1" style="font-size:9.5pt;">
+                                    <thead>
+                                        <tr>
+                                            <th>Sr.</th>
+                                            <th>Paper Title</th>
+                                            <th>Journal</th>
+                                            <th>Year</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var p in intl)
+                                        {
+                                            <tr>
+                                                <td>@p.SrNo</td>
+                                                <td>
+                                                    @p.Title
+                                                    @if (!string.IsNullOrEmpty(p.CoAuthors))
+                                                    {
+                                                        <br />
+                                                        <small class="text-muted">Co-Authors: @p.CoAuthors</small>
+                                                    }
+                                                </td>
+                                                <td>@(p.Journal ?? "—")</td>
+                                                <td>@(p.Year ?? "—")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            @if (natl.Any())
+                            {
+                                <strong>Published in National Journal</strong>
+                                <table class="disc-table mt-1" style="font-size:9.5pt;">
+                                    <thead>
+                                        <tr><th>Sr.</th><th>Paper Title</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var p in natl)
+                                        {
+                                            <tr><td>@p.SrNo</td><td>@p.Title</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            @if (conf.Any())
+                            {
+                                <strong>Conference Papers</strong>
+                                <table class="disc-table mt-1" style="font-size:9.5pt;">
+                                    <thead>
+                                        <tr><th>Sr.</th><th>Paper Title</th><th>Conference</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var p in conf)
+                                        {
+                                            <tr>
+                                                <td>@p.SrNo</td>
+                                                <td>@p.Title</td>
+                                                <td>@(p.Journal ?? "—")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">13</td>
+                        <td class="font-weight-bold">No. of Consultancy Projects</td>
+                        <td>@f.ConsultancyCount</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">14</td>
+                        <td class="font-weight-bold">Patents</td>
+                        <td>
+                            @if (f.Patents.Any())
+                            {
+                                <table class="disc-table" style="font-size:10pt;">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Application No.</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var p in f.Patents)
+                                        {
+                                            <tr>
+                                                <td>@p.Title</td>
+                                                <td>@(p.ApplicationNo ?? "—")</td>
+                                                <td>@p.Status</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else { <span>—</span> }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">15</td>
+                        <td class="font-weight-bold">Books Published</td>
+                        <td>
+                            @if (f.Books.Any())
+                            {
+                                <table class="disc-table" style="font-size:10pt;">
+                                    <thead>
+                                        <tr>
+                                            <th>Sr.</th>
+                                            <th>Title</th>
+                                            <th>Publisher</th>
+                                            <th>Year</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var b in f.Books)
+                                        {
+                                            <tr>
+                                                <td>@b.SrNo</td>
+                                                <td>@b.Title</td>
+                                                <td>@(b.Publisher ?? "—")</td>
+                                                <td>@(b.Year ?? "—")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <table class="disc-table" style="font-size:10pt;">
+                                    <tr>
+                                        <td>Sr. No.</td><td>Title</td>
+                                        <td>Publisher</td><td>Year</td>
+                                    </tr>
+                                    <tr><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                </table>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">16</td>
+                        <td class="font-weight-bold">Training</td>
+                        <td>
+                            @if (f.Trainings.Any())
+                            {
+                                <table class="disc-table" style="font-size:10pt;">
+                                    <thead>
+                                        <tr><th>Sr.</th><th>Training Title</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @{ int tsr = 1; }
+                                        @foreach (var t in f.Trainings)
+                                        {
+                                            <tr><td>@tsr</td><td>@t</td></tr>
+                                            tsr++;
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else { <span>—</span> }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">17</td>
+                        <td class="font-weight-bold">Seminars / Workshops</td>
+                        <td>
+                            @if (f.Seminars.Any())
+                            {
+                                <table class="disc-table" style="font-size:10pt;">
+                                    <thead>
+                                        <tr><th>Sr.</th><th>Title</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @{ int ssr = 1; }
+                                        @foreach (var s in f.Seminars)
+                                        {
+                                            <tr><td>@ssr</td><td>@s</td></tr>
+                                            ssr++;
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else { <span>—</span> }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-weight-bold">18</td>
+                        <td class="font-weight-bold">Membership</td>
+                        <td>
+                            @if (f.Memberships.Any())
+                            {
+                                <table class="disc-table" style="font-size:10pt;">
+                                    <thead>
+                                        <tr>
+                                            <th>Sr.</th>
+                                            <th>Community / Body</th>
+                                            <th>Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{ int msr = 1; }
+                                        @foreach (var m in f.Memberships)
+                                        {
+                                            <tr>
+                                                <td>@msr</td>
+                                                <td>@m.Community</td>
+                                                <td>@m.MembershipType</td>
+                                            </tr>
+                                            msr++;
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else { <span>—</span> }
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     }
-    secNum++;
+}
+ 
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 7 — FEE STRUCTURE
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h3 class="section-title">@Sec(). Fee Structure</h3>
+@if (!string.IsNullOrWhiteSpace(Model.FeeStructureHtml))
+{
+    <div class="narrative-content">@Html.Raw(Model.FeeStructureHtml)</div>
+}
+else
+{
+    <p class="empty-note">Fee structure content not added yet.</p>
+}
+ 
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 8 — ADMISSION
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h3 class="section-title">@Sec(). Admission</h3>
+ 
+<h4 class="sub-section-title">Admission Process</h4>
+@if (!string.IsNullOrWhiteSpace(Model.AdmissionProcessHtml))
+{
+    <div class="narrative-content">@Html.Raw(Model.AdmissionProcessHtml)</div>
+}
+else { <p class="empty-note">Content not added yet.</p> }
+ 
+<h4 class="sub-section-title">Criteria & Weightages for Admission</h4>
+@if (!string.IsNullOrWhiteSpace(Model.CriteriaWeightagesHtml))
+{
+    <div class="narrative-content">@Html.Raw(Model.CriteriaWeightagesHtml)</div>
+}
+else { <p class="empty-note">Content not added yet.</p> }
+ 
+<h4 class="sub-section-title">List of Applicants</h4>
+@if (!string.IsNullOrWhiteSpace(Model.ApplicantListHtml))
+{
+    <div class="narrative-content">@Html.Raw(Model.ApplicantListHtml)</div>
+}
+else { <p class="empty-note">Content not added yet.</p> }
+ 
+<h4 class="sub-section-title">Result of Admission under Management / Vacant Seats</h4>
+@if (!string.IsNullOrWhiteSpace(Model.ManagementSeatsHtml))
+{
+    <div class="narrative-content">@Html.Raw(Model.ManagementSeatsHtml)</div>
+}
+else { <p class="empty-note">Content not added yet.</p> }
+ 
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 9 — INFRASTRUCTURE
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h3 class="section-title">@Sec(). Infrastructural Information</h3>
+ 
+@{
+    void InfraTable(string label,
+        List<GECPatan.Admin.Models.ViewModels.InfrastructureRowVM> rows)
+    {
+        <h4 class="sub-section-title">@label</h4>
+        if (rows.Any())
+        {
+            <table class="disc-table">
+                <thead>
+                    <tr>
+                        <th>Sr.</th>
+                        <th>Room Type</th>
+                        <th>Area (sq.m)</th>
+                        <th>Building Name</th>
+                        <th>Department</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int r = 1;
+                    }
+                    @foreach (var i in rows)
+                    {
+                        <tr>
+                            <td>@r</td>
+                            <td>@i.RoomType</td>
+                            <td>@i.AreaSqm</td>
+                            <td>@i.BuildingName</td>
+                            <td>@i.DeptName</td>
+                        </tr>
+                        r++;
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="empty-note">No @label.ToLower() records added.</p>
+        }
+    }
+}
+ 
+@{ InfraTable("Classroom Details", Model.Classrooms); }
+@{ InfraTable("Tutorial Rooms", Model.TutorialRooms); }
+@{ InfraTable("Laboratories", Model.Laboratories); }
+@{ InfraTable("Drawing Halls", Model.DrawingHalls); }
+@if (Model.OtherInfra.Any())
+{
+    InfraTable("Other Infrastructure", Model.OtherInfra);
+}
+ 
+@if (!string.IsNullOrWhiteSpace(Model.InfrastructureInfoHtml))
+{
+    <h4 class="sub-section-title">Additional Infrastructural Information</h4>
+    <div class="narrative-content">@Html.Raw(Model.InfrastructureInfoHtml)</div>
+}
+ 
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 10 — LIBRARY
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h3 class="section-title">@Sec(). Library</h3>
+@if (!string.IsNullOrWhiteSpace(Model.LibraryInfoHtml))
+{
+    <div class="narrative-content">@Html.Raw(Model.LibraryInfoHtml)</div>
+}
+else
+{
+    <p class="empty-note">Library information not added yet.</p>
+}
+ 
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 11 — DEPT EQUIPMENT
+═══════════════════════════════════════════════════════════ -->
+<h3 class="section-title">@Sec(). Department-wise List of Major Equipment in Laboratories/Workshops</h3>
+@foreach (var eq in Model.DeptEquipments)
+{
+    <h4 class="dept-title">@eq.DeptName</h4>
+    @if (!string.IsNullOrWhiteSpace(eq.EquipmentHtml))
+    {
+        <div class="narrative-content">@Html.Raw(eq.EquipmentHtml)</div>
+    }
+    else
+    {
+        <p class="empty-note">Equipment list not added for this department.</p>
+    }
+}
+ 
+<!-- ══════════════════════════════════════════════════════════
+     SECTION 12 — BEST PRACTICES
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h3 class="section-title">@Sec(). Best Practices Adopted (if any)</h3>
+@if (!string.IsNullOrWhiteSpace(Model.BestPracticesHtml))
+{
+    <div class="narrative-content">@Html.Raw(Model.BestPracticesHtml)</div>
+}
+else
+{
+    <p class="empty-note">Best practices content not added yet.</p>
 }

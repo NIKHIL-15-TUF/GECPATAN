@@ -5,10 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GECPatan.Admin.Services
 {
-    // Single source of truth for Mandatory Disclosure data.
-    // Both DOCX and PDF generators call BuildAsync() and use
-    // the SAME DisclosureDataVM — guarantees the two outputs
-    // never drift apart from each other.
     public class DisclosureDataService
     {
         private readonly ApplicationDbContext _context;
@@ -24,30 +20,138 @@ namespace GECPatan.Admin.Services
                 GeneratedOn = DateTime.Now
             };
 
-            // ── INSTITUTE INFO ──────────────────────────────
             var settings = await _context.SiteSettings.ToListAsync();
             string? Cfg(string key) =>
                 settings.FirstOrDefault(s => s.Key == key)?.Value;
 
+            // ── SECTION 1: About Institute ──────────────────
+            vm.AboutInstitute = Cfg("Disclosure.AboutInstitute");
+
+            // ── SECTION 2: Institute Info ───────────────────
             vm.Institute = new InstituteInfoVM
             {
-                Name = Cfg("Institute.Name") ?? "GEC Patan",
+                Name = Cfg("Institute.Name") ?? "Government Engineering College, Patan",
                 Address = Cfg("Contact.Address"),
                 Phone = Cfg("Contact.Phone"),
                 Email = Cfg("Contact.Email"),
                 EstablishedYear = Cfg("College.EstablishedYear"),
-                AffiliatedTo = Cfg("Institute.AffiliatedTo"),
-                ApprovedBy = Cfg("Institute.ApprovedBy")
+                AffiliatedTo = Cfg("Institute.AffiliatedTo")
+                                    ?? Cfg("Institute.University")
+                                    ?? "Gujarat Technological University",
+                ApprovedBy = Cfg("Institute.ApprovedBy") ?? "AICTE"
             };
 
-            // ── PRINCIPAL ────────────────────────────────────
+            // ── SECTION 3: Governance Narratives ────────────
+            var govKeys = new[]
+            {
+                DisclosureSectionKeys.Governance,
+                DisclosureSectionKeys.AcademicAdvisoryBody,
+                DisclosureSectionKeys.OrganizationalChart,
+                DisclosureSectionKeys.FacultyStudentInvolvement,
+                DisclosureSectionKeys.GovernanceMechanism,
+                DisclosureSectionKeys.StudentFeedback,
+                DisclosureSectionKeys.GrievanceRedressal
+            };
+
+            foreach (var key in govKeys)
+                await AddNarrative(vm.GovernanceNarratives, key);
+
+            // ── SECTION 4: Programs ─────────────────────────
+            vm.AccreditationStatusHtml = Cfg("Disclosure.AccreditationStatus");
+
+            vm.NBAAccreditations = await _context.NBAAccreditations
+                .Where(n => n.IsVisible)
+                .OrderBy(n => n.DisplayOrder)
+                .Select(n => new NBAAccreditationVM
+                {
+                    ProgramName = n.ProgramName,
+                    AccreditedBy = n.AccreditedBy,
+                    ValidFrom = n.ValidFrom,
+                    ValidTo = n.ValidTo,
+                    Status = n.Status
+                }).ToListAsync();
+
+            var depts = await _context.Departments
+                .Where(d => d.IsActive)
+                .OrderBy(d => d.DisplayOrder)
+                .ToListAsync();
+
+            foreach (var dept in depts)
+            {
+                var intake = await _context.ProgramIntakes
+                    .Where(p => p.DeptId == dept.DeptId && p.IsVisible)
+                    .OrderByDescending(p => p.IntakeYear)
+                    .FirstOrDefaultAsync();
+
+                if (intake == null || intake.Intake == 0) continue;
+
+                vm.Programs.Add(new DisclosureDeptProgramVM
+                {
+                    DeptName = dept.Name,
+                    ShortCode = dept.ShortCode,
+                    Intake = intake.Intake,
+                    IntakeYear = intake.IntakeYear
+                });
+            }
+
+            // ── SECTION 5: Cutoffs per dept ─────────────────
+            foreach (var dept in depts)
+            {
+                var intake = await _context.ProgramIntakes
+                    .Where(p => p.DeptId == dept.DeptId && p.IsVisible)
+                    .OrderByDescending(p => p.IntakeYear)
+                    .FirstOrDefaultAsync();
+                if (intake == null || intake.Intake == 0) continue;
+
+                var cutoffs = await _context.CutoffRecords
+                    .Where(c => c.DeptId == dept.DeptId && c.IsVisible)
+                    .OrderByDescending(c => c.AcademicYear)
+                    .ToListAsync();
+
+                vm.DeptCutoffs.Add(new DisclosureDeptVM
+                {
+                    DeptId = dept.DeptId ?? 0,
+                    Name = dept.Name,
+                    ShortCode = dept.ShortCode,
+                    CurrentIntake = intake.Intake,
+                    CurrentIntakeYear = intake.IntakeYear,
+                    CutoffHistory = cutoffs.Select(c => new DisclosureCutoffRowVM
+                    {
+                        AcademicYear = c.AcademicYear,
+                        General = c.GeneralRank?.ToString() ?? "—",
+                        SEBC = c.SEBCRank?.ToString() ?? "—",
+                        SC = c.SCRank?.ToString() ?? "—",
+                        ST = c.STRank?.ToString() ?? "—",
+                        EWS = c.EWSRank?.ToString() ?? "—"
+                    }).ToList()
+                });
+            }
+
+            // ── SECTION 6: Placement ─────────────────────────
+            vm.PlacementFacilitiesHtml = Cfg("Disclosure.PlacementFacilities");
+            vm.ForeignCollaborationHtml = Cfg("Disclosure.ForeignCollaboration");
+
+            vm.PlacementData = await _context.DisclosurePlacements
+                .Where(p => p.IsVisible)
+                .OrderByDescending(p => p.AcademicYear)
+                .Select(p => new DisclosurePlacementRowVM
+                {
+                    AcademicYear = p.AcademicYear,
+                    TotalStudents = p.TotalStudents,
+                    TotalPlaced = p.TotalPlaced,
+                    HighestPkg = p.HighestPackage,
+                    AveragePkg = p.AveragePackage,
+                    TopRecruiter = p.TopRecruiter
+                }).ToListAsync();
+
+            // ── SECTION 7: Faculty ───────────────────────────
             var principal = await _context.Principals
                 .Include(p => p.Qualifications)
-                .FirstOrDefaultAsync(p => p.IsActive);
+                .FirstOrDefaultAsync(p => p.IsActive && !p.IsDeleted);
 
             if (principal != null)
             {
-                vm.Principal = new PrincipalSummaryVM
+                vm.Principal = new DisclosurePrincipalVM
                 {
                     Name = principal.Name,
                     Designation = principal.Designation,
@@ -58,139 +162,272 @@ namespace GECPatan.Admin.Services
                 };
             }
 
-            // ── DEPARTMENTS + FACULTY + CUTOFFS ─────────────
-            var depts = await _context.Departments
-                .Where(d => d.IsActive)
-                .OrderBy(d => d.DisplayOrder)
-                .ToListAsync();
-
+            // Dept-wise faculty
             foreach (var dept in depts)
             {
-                var deptVM = new DisclosureDeptVM
-                {
-                    DeptId = dept.DeptId ?? 0,
-                    Name = dept.Name,
-                    ShortCode = dept.ShortCode
-                };
-
-                var latestIntake = await _context.ProgramIntakes
-                    .Where(p => p.DeptId == dept.DeptId)
+                var intake = await _context.ProgramIntakes
+                    .Where(p => p.DeptId == dept.DeptId && p.IsVisible)
                     .OrderByDescending(p => p.IntakeYear)
                     .FirstOrDefaultAsync();
+                if (intake == null || intake.Intake == 0) continue;
 
-                deptVM.CurrentIntake = latestIntake?.Intake ?? 0;
-                deptVM.CurrentIntakeYear = latestIntake?.IntakeYear ?? 0;
-
-                // Cutoff history (all years on record)
-                var cutoffs = await _context.CutoffRecords
-                    .Where(c => c.DeptId == dept.DeptId && c.IsVisible)
-                    .OrderByDescending(c => c.AcademicYear)
-                    .ToListAsync();
-
-                deptVM.CutoffHistory = cutoffs.Select(c => new DisclosureCutoffRowVM
-                {
-                    AcademicYear = c.AcademicYear,
-                    General = c.GeneralRank?.ToString() ?? "—",
-                    SEBC = c.SEBCRank?.ToString() ?? "—",
-                    SC = c.SCRank?.ToString() ?? "—",
-                    ST = c.STRank?.ToString() ?? "—",
-                    EWS = c.EWSRank?.ToString() ?? "—"
-                }).ToList();
-
-                // Faculty (teaching staff only, per AICTE format)
-                var faculty = await _context.Faculties
-                    .Include(f => f.Qualifications)
-                    .Include(f => f.Experiences)
-                    .Include(f => f.Publications)
+                var facultyList = await _context.Faculties
                     .Where(f => f.DeptId == dept.DeptId
-                             && f.IsActive
-                             && f.IsTeaching)
+                             && f.IsActive && f.IsTeaching)
                     .OrderBy(f => f.SeniorityOrder)
                     .ToListAsync();
 
-                deptVM.Faculty = faculty.Select(f =>
+                var ids = facultyList.Select(f => f.FacultyId).ToList();
+
+                // Load all sub-tables
+                var quals = await _context.FacultyQualifications
+                    .Where(q => ids.Contains(q.FacultyId)).ToListAsync();
+                var exps = await _context.FacultyExperiences
+                    .Where(e => ids.Contains(e.FacultyId)).ToListAsync();
+                var subjs = await _context.FacultySubjects
+                    .Where(s => ids.Contains(s.FacultyId)).ToListAsync();
+                var guidance = await _context.FacultyResearchGuidances
+                    .Where(g => ids.Contains(g.FacultyId)).ToListAsync();
+                var pubs = await _context.FacultyPublications
+                    .Where(p => ids.Contains(p.FacultyId)).ToListAsync();
+                var books = await _context.FacultyBookPublications
+                    .Where(b => ids.Contains(b.FacultyId)).ToListAsync();
+                var cons = await _context.FacultyConsultancies
+                    .Where(c => ids.Contains(c.FacultyId)).ToListAsync();
+                var patents = await _context.FacultyPatents
+                    .Where(p => ids.Contains(p.FacultyId)).ToListAsync();
+                var trainings = await _context.FacultyTrainings
+                    .Where(t => ids.Contains(t.FacultyId)).ToListAsync();
+                var memberships = await _context.FacultyProfessionalMemberships
+                    .Where(m => ids.Contains(m.FacultyId)).ToListAsync();
+                var approvals = await _context.FacultyApprovalInfos
+                    .Where(a => ids.Contains(a.FacultyId)).ToListAsync();
+                var personalDetails = await _context.PersonalDetails
+                    .Where(p => ids.Contains(p.FacultyId)).ToListAsync();
+
+                var deptVM = new DisclosureDeptFacultyVM
                 {
-                    var highestQual = f.Qualifications
-                        .OrderByDescending(q => q.Year)
-                        .Select(q => q.Degree)
-                        .FirstOrDefault() ?? "—";
+                    DeptId = dept.DeptId ?? 0,
+                    DeptName = dept.Name
+                };
 
-                    int expYears = f.Experiences
-                        .Sum(e =>
-                        {
-                            var from = e.FromDate ?? DateTime.Now;
-                            var to = e.ToDate ?? DateTime.Now;
-                            return Math.Max(0, (to - from).Days / 365);
-                        });
+                int sr = 1;
+                foreach (var f in facultyList)
+                {
+                    var appr = approvals.FirstOrDefault(a => a.FacultyId == f.FacultyId);
+                    var pd = personalDetails.FirstOrDefault(p => p.FacultyId == f.FacultyId);
 
-                    // Include current institute tenure too
-                    expYears += Math.Max(0,
-                        (DateTime.Now - f.DateOfJoining).Days / 365);
-
-                    return new DisclosureFacultyVM
+                    // Summary table row
+                    deptVM.SummaryTable.Add(new FacultySummaryRowVM
                     {
+                        SrNo = sr++,
+                        Name = f.Name,
+                        Post = f.Designation,
+                        ApprovalStatus = appr?.ApprovalStatus ?? "Approved",
+                        LetterNumber = appr?.ApprovalLetterNumber
+                    });
+
+                    // Full profile
+                    var fQuals = quals.Where(q => q.FacultyId == f.FacultyId).ToList();
+                    var fExps = exps.Where(e => e.FacultyId == f.FacultyId)
+                        .OrderBy(e => e.FromDate).ToList();
+                    var fSubjs = subjs.Where(s => s.FacultyId == f.FacultyId).ToList();
+                    var fGuidance = guidance.Where(g => g.FacultyId == f.FacultyId).ToList();
+                    var fPubs = pubs.Where(p => p.FacultyId == f.FacultyId).ToList();
+                    var fBooks = books.Where(b => b.FacultyId == f.FacultyId).ToList();
+                    var fCons = cons.Where(c => c.FacultyId == f.FacultyId).ToList();
+                    var fPatents = patents.Where(p => p.FacultyId == f.FacultyId).ToList();
+                    var fTrains = trainings.Where(t => t.FacultyId == f.FacultyId).ToList();
+                    var fMembers = memberships.Where(m => m.FacultyId == f.FacultyId).ToList();
+
+                    int teachingYrs = (int)((DateTime.Now - f.DateOfJoining).TotalDays / 365.25);
+
+                    deptVM.Faculty.Add(new DisclosureFacultyDetailVM
+                    {
+                        FacultyId = f.FacultyId,
                         Name = f.Name,
                         Designation = f.Designation,
-                        HighestQualification = highestQual,
-                        DateOfJoining = f.DateOfJoining
-                            .ToString("dd-MM-yyyy"),
-                        ExperienceYears = expYears,
-                        PublicationCount = f.Publications.Count
-                    };
-                }).ToList();
+                        Email = pd?.Email,
+                        DateOfBirth = pd?.DateOfBirth.HasValue == true
+                            ? pd.DateOfBirth.Value.ToString("dd MMM yyyy") : null,
+                        Qualifications = string.Join(", ", fQuals
+                            .OrderByDescending(q => q.Year)
+                            .Select(q => q.Degree)),
+                        Website = f.Website,
+                        AreaOfInterest = f.AreaOfInterest,
+                        ImagePath = f.ImagePath,
+                        TeachingYears = teachingYrs,
+                        Experiences = fExps.Select(e => new ExperienceRowVM
+                        {
+                            Organization = e.Organization,
+                            Period = $"{e.FromDate?.ToString("MMM yyyy") ?? "—"} to {(e.ToDate.HasValue ? e.ToDate.Value.ToString("MMM yyyy") : "till date")}",
+                            Duration = FormatDuration(e.FromDate, e.ToDate)
+                        }).ToList(),
+                        UGSubjects = fSubjs.Where(s => s.Level == "UG")
+                            .Select(s => s.SubjectName).ToList(),
+                        PGSubjects = fSubjs.Where(s => s.Level == "PG")
+                            .Select(s => s.SubjectName).ToList(),
+                        MastersOngoing = fGuidance.FirstOrDefault(g => g.Level == "Masters")?.Ongoing ?? 0,
+                        MastersCompleted = fGuidance.FirstOrDefault(g => g.Level == "Masters")?.Completed ?? 0,
+                        PhDOngoing = fGuidance.FirstOrDefault(g => g.Level == "PhD")?.Ongoing ?? 0,
+                        PhDCompleted = fGuidance.FirstOrDefault(g => g.Level == "PhD")?.Completed ?? 0,
+                        Publications = fPubs.OrderBy(p => p.SrNo).Select(p => new PublicationRowVM
+                        {
+                            SrNo = p.SrNo,
+                            Title = p.Title,
+                            Type = p.Type,
+                            Journal = p.JournalName,
+                            Year = p.Year,
+                            CoAuthors = p.CoAuthors
+                        }).ToList(),
+                        ConsultancyCount = fCons.Count,
+                        Patents = fPatents.Select(p => new PatentRowVM
+                        {
+                            Title = p.Title,
+                            ApplicationNo = p.ApplicationNo,
+                            Status = p.Status
+                        }).ToList(),
+                        Books = fBooks.OrderBy(b => b.SrNo).Select(b => new BookRowVM
+                        {
+                            SrNo = b.SrNo,
+                            Title = b.Title,
+                            Publisher = b.Publisher,
+                            Year = b.Year
+                        }).ToList(),
+                        Trainings = fTrains
+                            .Where(t => t.TrainingType != "Seminar" && t.TrainingType != "Workshop")
+                            .Select(t => t.Title).ToList(),
+                        Seminars = fTrains
+                            .Where(t => t.TrainingType == "Seminar" || t.TrainingType == "Workshop")
+                            .Select(t => t.Title).ToList(),
+                        Memberships = fMembers.Select(m => new MembershipRowVM
+                        {
+                            Community = m.Community,
+                            MembershipType = m.MembershipType
+                        }).ToList()
+                    });
+                }
 
-                vm.Departments.Add(deptVM);
+                vm.DeptFaculty.Add(deptVM);
             }
 
-            // ── SCHOLARSHIPS ─────────────────────────────────
-            var scholarships = await _context.ScholarshipRecords
-                .Where(s => s.IsVisible)
-                .OrderByDescending(s => s.AcademicYear)
-                .ToListAsync();
+            // ── SECTION 8: Fee ───────────────────────────────
+            vm.FeeStructureHtml = Cfg("Disclosure.FeeStructure");
 
-            vm.Scholarships = scholarships.Select(s => new ScholarshipRowVM
-            {
-                SchemeName = s.SchemeName,
-                AcademicYear = s.AcademicYear ?? "—",
-                TotalApplications = s.TotalApplications
-            }).ToList();
+            // ── SECTION 9: Admission ─────────────────────────
+            vm.AdmissionProcessHtml = Cfg("Disclosure.AdmissionProcess");
+            vm.CriteriaWeightagesHtml = Cfg("Disclosure.CriteriaWeightages");
+            vm.ApplicantListHtml = Cfg("Disclosure.ApplicantList");
+            vm.ManagementSeatsHtml = Cfg("Disclosure.ManagementSeatsResult");
 
-            // ── INFRASTRUCTURE ───────────────────────────────
-            var infra = await _context.InfrastructureRecords
+            // ── SECTION 10: Infrastructure ───────────────────
+            var allInfra = await _context.InfrastructureRecords
                 .Include(i => i.Department)
                 .Where(i => i.IsVisible)
-                .OrderBy(i => i.RoomType)
+                .OrderBy(i => i.DisplayOrder)
                 .ToListAsync();
 
-            vm.Infrastructure = infra.Select(i => new InfrastructureRowVM
+            vm.Classrooms = MapInfra(allInfra, "Classroom");
+            vm.TutorialRooms = MapInfra(allInfra, "Tutorial Room");
+            vm.Laboratories = MapInfra(allInfra, "Laboratory");
+            vm.DrawingHalls = MapInfra(allInfra, "Drawing Hall");
+            vm.OtherInfra = allInfra
+                .Where(i => !new[]{"Classroom","Tutorial Room",
+                                   "Laboratory","Drawing Hall"}
+                    .Contains(i.RoomType))
+                .Select(i => new InfrastructureRowVM
+                {
+                    RoomType = i.RoomType,
+                    AreaSqm = i.AreaSqm,
+                    BuildingName = i.BuildingName ?? "—",
+                    DeptName = i.Department?.Name ?? "Institute-wide"
+                }).ToList();
+
+            vm.InfrastructureInfoHtml = Cfg("Disclosure.InfrastructureInfo");
+
+            // ── SECTION 11: Library ──────────────────────────
+            vm.LibraryInfoHtml = Cfg("Disclosure.LibraryInfo");
+
+            // ── SECTION 12: Dept Equipment ───────────────────
+            var equipments = await _context.DepartmentEquipments.ToListAsync();
+            foreach (var dept in depts)
             {
-                RoomType = i.RoomType,
-                AreaSqm = i.AreaSqm,
-                BuildingName = i.BuildingName ?? "—",
-                DeptName = i.Department?.Name ?? "Institute-wide"
-            }).ToList();
+                var intake = await _context.ProgramIntakes
+                    .Where(p => p.DeptId == dept.DeptId && p.IsVisible)
+                    .OrderByDescending(p => p.IntakeYear)
+                    .FirstOrDefaultAsync();
+                if (intake == null || intake.Intake == 0) continue;
 
-            // ── NARRATIVE SECTIONS (strict 15 keys) ─────────
-            var narratives = await _context.DisclosureNarratives
-                .Where(n => n.IsVisible)
-                .OrderBy(n => n.DisplayOrder)
-                .ToListAsync();
+                var eq = equipments.FirstOrDefault(e => e.DeptId == dept.DeptId);
+                vm.DeptEquipments.Add(new DeptEquipmentVM
+                {
+                    DeptName = dept.Name,
+                    EquipmentHtml = eq?.EquipmentHtml
+                });
+            }
 
-            vm.Narratives = narratives.Select(n => new NarrativeSectionVM
-            {
-                SectionKey = n.SectionKey,
-                SectionTitle = n.SectionTitle,
-                HtmlContent = n.HtmlContent,
-                DisplayOrder = n.DisplayOrder
-            }).ToList();
+            // ── SECTION 13: Best Practices ───────────────────
+            vm.BestPracticesHtml = Cfg("Disclosure.BestPractices");
 
-            // Validation warnings — sections with no content
-            vm.EmptyNarrativeWarnings = narratives
-                .Where(n => string.IsNullOrWhiteSpace(n.HtmlContent))
-                .Select(n => n.SectionTitle)
-                .ToList();
+            // ── Warnings ──────────────────────────────────────
+            if (string.IsNullOrWhiteSpace(vm.AboutInstitute))
+                vm.EmptyNarrativeWarnings.Add("About Institute section is empty.");
+            if (!vm.Programs.Any())
+                vm.EmptyNarrativeWarnings.Add("No programs found.");
+            if (!vm.PlacementData.Any())
+                vm.EmptyNarrativeWarnings.Add("No placement data added.");
+            if (string.IsNullOrWhiteSpace(vm.FeeStructureHtml))
+                vm.EmptyNarrativeWarnings.Add("Fee Structure section is empty.");
 
             return vm;
+        }
+
+        // ── HELPERS ───────────────────────────────────────────
+        private async Task AddNarrative(
+            List<NarrativeSectionVM> list, string key)
+        {
+            var rows = await _context.DisclosureNarratives
+                .Where(n => n.SectionKey == key && !n.IsDeleted)
+                .ToListAsync();
+
+            var best = rows
+                .OrderByDescending(n =>
+                    !string.IsNullOrWhiteSpace(n.HtmlContent) ? 1 : 0)
+                .ThenBy(n => n.DisplayOrder)
+                .FirstOrDefault();
+
+            list.Add(new NarrativeSectionVM
+            {
+                SectionKey = key,
+                SectionTitle = best?.SectionTitle
+                    ?? DisclosureSectionKeys.DefaultTitles[key],
+                HtmlContent = best?.HtmlContent,
+                DisplayOrder = list.Count
+            });
+        }
+
+        private static List<InfrastructureRowVM> MapInfra(
+            List<GECPatan.Core.Models.Domain.InfrastructureRecord> all,
+            string type)
+        {
+            return all.Where(i => i.RoomType == type)
+                .Select(i => new InfrastructureRowVM
+                {
+                    RoomType = i.RoomType,
+                    AreaSqm = i.AreaSqm,
+                    BuildingName = i.BuildingName ?? "—",
+                    DeptName = i.Department?.Name ?? "Institute-wide"
+                }).ToList();
+        }
+
+        private static string FormatDuration(DateTime? from, DateTime? to)
+        {
+            if (!from.HasValue) return "—";
+            var end = to ?? DateTime.Now;
+            var days = (end - from.Value).TotalDays;
+            int yrs = (int)(days / 365.25);
+            int mos = (int)((days % 365.25) / 30.44);
+            return $"{yrs} Yrs {mos} Months";
         }
     }
 }
