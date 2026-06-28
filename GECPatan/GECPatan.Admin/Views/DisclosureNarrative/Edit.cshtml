@@ -1,77 +1,164 @@
-﻿@model GECPatan.Admin.Models.ViewModels.DisclosureNarrativeEditVM
+﻿@model GECPatan.Admin.Models.ViewModels.NarrativeEditVM
 @{
-    ViewData["Title"] = "Edit Narrative Section";
+    ViewData["Title"] = $"Edit — {Model.SectionTitle}";
 }
  
-<div class="card">
-    <div class="card-header" style="background:#1a237e;color:#fff;">
-        <h3 class="card-title mb-0">
-            <i class="fas fa-edit mr-2"></i>@Model.SectionTitle
-        </h3>
-    </div>
-    <form asp-action="Edit" method="post">
-        <input asp-for="Id" type="hidden" />
-        <input asp-for="SectionKey" type="hidden" />
-        <input asp-for="SectionTitle" type="hidden" />
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb bg-transparent p-0 mb-0">
+        <li class="breadcrumb-item">
+            <a asp-action="Index">Narrative Sections</a>
+        </li>
+        <li class="breadcrumb-item active">
+            @Model.SectionGroup — @Model.SectionTitle
+        </li>
+    </ol>
+</nav>
  
-        <div class="card-body">
-            @if (!ViewData.ModelState.IsValid)
-            {
-                <div class="alert alert-danger py-2">
-                    @Html.ValidationSummary(false)
-                </div>
-            }
- 
-            <div class="alert alert-light border py-2 mb-3">
-                <small class="text-muted">
-                    <i class="fas fa-lock mr-1"></i>
-                    Section: <strong>@Model.SectionTitle</strong>
-                    (<code>@Model.SectionKey</code>) —
-                    title and key are fixed by AICTE format.
+<div class="row">
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header"
+                 style="background:#1a237e;color:#fff;">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-edit mr-2"></i>
+                    @Model.SectionTitle
+                </h3>
+                <small style="opacity:.8;">
+                    Section: @Model.SectionGroup
+                    &nbsp;|&nbsp; Key: @Model.SectionKey
                 </small>
             </div>
  
-            <div class="form-group">
-                <label asp-for="HtmlContent" class="font-weight-bold">
-                    Content
-                </label>
-                <textarea asp-for="HtmlContent" id="htmlContent"
-                          class="form-control" rows="14"></textarea>
-            </div>
+            <form asp-action="Edit" method="post">
+                <input asp-for="SectionKey"   type="hidden" />
+                <input asp-for="SectionTitle" type="hidden" />
+                <input asp-for="SectionGroup" type="hidden" />
+                <input asp-for="IsDbSection"  type="hidden" />
  
-            <div class="form-group mt-3">
-                <div class="custom-control custom-switch">
-                    <input asp-for="IsVisible" type="checkbox"
-                           class="custom-control-input" id="isVisible" />
-                    <label class="custom-control-label" for="isVisible">
-                        Include this section in generated documents
-                    </label>
+                <div class="card-body">
+                    <!-- TinyMCE Editor -->
+                    <div class="form-group">
+                        <label class="font-weight-bold">Content</label>
+                        <textarea asp-for="HtmlContent"
+                                  id="tinymceEditor"
+                                  class="form-control"
+                                  rows="20"></textarea>
+                    </div>
+ 
+                    @if (Model.IsDbSection)
+                    {
+                        <div class="form-group">
+                            <div class="custom-control custom-switch">
+                                <input asp-for="IsVisible"
+                                       type="checkbox"
+                                       class="custom-control-input"
+                                       id="isVisible" />
+                                <label class="custom-control-label"
+                                       for="isVisible">
+                                    Show this section in Mandatory Disclosure
+                                </label>
+                            </div>
+                        </div>
+                    }
                 </div>
+ 
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <div>
+                        <a asp-controller="Disclosure"
+                           asp-action="Preview"
+                           target="_blank"
+                           class="btn btn-outline-info mr-2">
+                            <i class="fas fa-eye mr-1"></i>Preview
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-2"></i>Save
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+ 
+    <!-- Help Panel -->
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>
+                    Section Guide
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    <strong>@Model.SectionTitle</strong>
+                </p>
+                <p class="small text-muted mb-3">
+                    @Model.HelpText
+                </p>
+                <hr />
+                <p class="small text-muted mb-1">
+                    <i class="fas fa-lock mr-1 text-warning"></i>
+                    <strong>Strict Schema</strong>
+                </p>
+                <p class="small text-muted mb-0">
+                    This is one of 19 fixed sections.
+                    You can edit content but cannot add
+                    or delete sections.
+                </p>
             </div>
         </div>
-        <div class="card-footer d-flex justify-content-between">
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="fas fa-arrow-left mr-2"></i>Back
-            </a>
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save mr-2"></i>Save
-            </button>
+ 
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-keyboard mr-2"></i>
+                    Editor Tips
+                </h6>
+            </div>
+            <div class="card-body p-2">
+                <ul class="small text-muted pl-3 mb-0">
+                    <li>Use <strong>Table</strong> for structured data</li>
+                    <li>Use <strong>Bullet lists</strong> for procedures</li>
+                    <li>Use <strong>Headings</strong> for sub-sections</li>
+                    <li>Paste from Word — formatting preserved</li>
+                    <li>Leave blank to hide from document</li>
+                </ul>
+            </div>
         </div>
-    </form>
+    </div>
 </div>
  
 @section Scripts {
-   <script src="~/tinymce/tinymce.min.js"></script>
-    <script src="https://cdn.tiny.cloud/1/18c5arljshkibt2xb5jfkdlmr3uosv3lagdiujmk5c9jlv49/tinymce/6/tinymce.min.js"
-            referrerpolicy="origin"></script>
+    <!-- TinyMCE CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"></script>
     <script>
         tinymce.init({
-            selector: '#htmlContent',
-            height: 400,
-            menubar: false,
-            plugins: 'lists link table code',
-            toolbar: 'undo redo | formatselect | bold italic | ' +
-                     'bullist numlist | table | link | code'
+            selector: '#tinymceEditor',
+            height: 500,
+            menubar: true,
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link',
+                'image', 'charmap', 'preview', 'anchor',
+                'searchreplace', 'visualblocks', 'code',
+                'fullscreen', 'insertdatetime', 'media',
+                'table', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+                'bold italic underline | ' +
+                'alignleft aligncenter alignright | ' +
+                'bullist numlist outdent indent | ' +
+                'table | link image | ' +
+                'removeformat | code fullscreen | help',
+            content_style: 'body { font-family: Times New Roman, serif; font-size: 12pt; }',
+            table_default_attributes: { border: '1' },
+            table_default_styles: {
+                'border-collapse': 'collapse',
+                'width': '100%'
+            }
         });
     </script>
 }
