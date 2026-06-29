@@ -131,22 +131,30 @@ namespace GECPatan.Core.Models.Domain
     {
         public int Id { get; set; }
 
+        public int DeptId { get; set; }
+
+        [ForeignKey("DeptId")]
+        public Department? Department { get; set; }
+
         [Required, MaxLength(20)]
         public string AcademicYear { get; set; } = string.Empty;
 
-        public int TotalStudents { get; set; } = 0;
+        // Number of companies visited
+        public int NoOfCompanies { get; set; } = 0;
+
+        // Number of students placed
         public int TotalPlaced { get; set; } = 0;
 
+        // Maximum salary offered
         [MaxLength(100)]
-        public string? HighestPackage { get; set; }
+        public string? MaximumSalary { get; set; }
 
+        // Minimum salary offered
         [MaxLength(100)]
-        public string? AveragePackage { get; set; }
-
-        [MaxLength(100)]
-        public string? TopRecruiter { get; set; }
+        public string? MinimumSalary { get; set; }
 
         public int DisplayOrder { get; set; } = 0;
+
         public bool IsVisible { get; set; } = true;
     }
 

@@ -1,0 +1,103 @@
+﻿@model GECPatan.Admin.Models.ViewModels.DisclosurePlacementRowVM
+
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Placement Record" : "Add Placement Record";
+}
+
+<div class="card">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <h3 class="card-title mb-0">
+            <i class="fas fa-briefcase mr-2"></i>@ViewData["Title"]
+        </h3>
+    </div>
+
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @if (isEdit)
+        {
+            <input asp-for="Id" type="hidden" />
+        }
+
+        <div class="card-body">
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger py-2">
+                    @Html.ValidationSummary(false)
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="DeptId" class="font-weight-bold"></label>
+                        <select asp-for="DeptId" asp-items="Model.Departments"
+                                class="form-control">
+                            <option value="">-- Select Department --</option>
+                        </select>
+                        <span asp-validation-for="DeptId" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="AcademicYear" class="font-weight-bold"></label>
+                        <input asp-for="AcademicYear" class="form-control"
+                               placeholder="e.g. 2025-26" />
+                        <span asp-validation-for="AcademicYear" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="NoOfCompanies" class="font-weight-bold"></label>
+                        <input asp-for="NoOfCompanies" class="form-control" type="number" />
+                        <span asp-validation-for="NoOfCompanies" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="TotalPlaced" class="font-weight-bold"></label>
+                        <input asp-for="TotalPlaced" class="form-control" type="number" />
+                        <span asp-validation-for="TotalPlaced" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="MaximumSalary" class="font-weight-bold"></label>
+                        <input asp-for="MaximumSalary" class="form-control"
+                               placeholder="e.g. 4.8 LPA" />
+                        <span asp-validation-for="MaximumSalary" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="MinimumSalary" class="font-weight-bold"></label>
+                        <input asp-for="MinimumSalary" class="form-control"
+                               placeholder="e.g. 1.44 LPA" />
+                        <span asp-validation-for="MinimumSalary" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </a>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-2"></i>Save
+            </button>
+        </div>
+    </form>
+</div>

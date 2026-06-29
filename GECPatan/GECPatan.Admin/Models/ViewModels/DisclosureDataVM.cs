@@ -188,14 +188,38 @@ namespace GECPatan.Admin.Models.ViewModels
 
     public class DisclosurePlacementRowVM
     {
-        public string AcademicYear { get; set; } = string.Empty;
-        public int TotalStudents { get; set; }
-        public int TotalPlaced { get; set; }
-        public string? HighestPkg { get; set; }
-        public string? AveragePkg { get; set; }
-        public string? TopRecruiter { get; set; }
-    }
+        public int Id { get; set; }
 
+        public int? DeptId { get; set; }
+        public string? DepartmentName { get; set; }
+        public string AcademicYear { get; set; } = string.Empty;
+
+        // Number of companies
+        public int NoOfCompanies { get; set; }
+
+        // Number of students placed
+        public int TotalPlaced { get; set; }
+
+        // Maximum salary
+        public string? MaximumSalary { get; set; }
+
+        // Minimum salary
+        public string? MinimumSalary { get; set; }
+
+        public int DisplayOrder { get; set; } = 0;
+
+        public bool IsVisible { get; set; } = true;
+
+        // Dropdown
+        public List<SelectListItem> Departments { get; set; } = new();
+    }
+    public class DisclosurePlacementListVM
+    {
+        public int DeptId { get; set; }
+        public string DeptName { get; set; } = string.Empty;
+
+        public List<DisclosurePlacementRowVM> Records { get; set; } = new();
+    }
     public class DisclosureDeptFacultyVM
     {
         public int DeptId { get; set; }

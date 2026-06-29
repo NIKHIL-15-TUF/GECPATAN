@@ -242,25 +242,44 @@ else
     <table class="disc-table">
         <thead>
             <tr>
+                <th>Sr. No.</th>
+                <th>Department</th>
                 <th>Academic Year</th>
-                <th>Total Students</th>
-                <th>Total Placed</th>
-                <th>Highest Package</th>
-                <th>Average Package</th>
-                <th>Top Recruiter</th>
+                <th>No. of Companies</th>
+                <th>No. of Students Placed</th>
+                <th>Maximum Salary Offered</th>
+                <th>Minimum Salary Offered</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var p in Model.PlacementData)
+            @{
+                int sr = 1;
+                var grouped = Model.PlacementData
+                    .GroupBy(x => x.DepartmentName);
+            }
+
+            @foreach (var dept in grouped)
             {
-                <tr>
-                    <td>@p.AcademicYear</td>
-                    <td>@p.TotalStudents</td>
-                    <td>@p.TotalPlaced</td>
-                    <td>@(p.HighestPkg ?? "—")</td>
-                    <td>@(p.AveragePkg ?? "—")</td>
-                    <td>@(p.TopRecruiter ?? "—")</td>
-                </tr>
+                var rows = dept.ToList();
+
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    <tr>
+                        @if (i == 0)
+                        {
+                            <td rowspan="@rows.Count">@sr</td>
+                            <td rowspan="@rows.Count">@dept.Key</td>
+                        }
+
+                        <td>@rows[i].AcademicYear</td>
+                        <td>@rows[i].NoOfCompanies</td>
+                        <td>@rows[i].TotalPlaced</td>
+                        <td>@(rows[i].MaximumSalary ?? "NA")</td>
+                        <td>@(rows[i].MinimumSalary ?? "NA")</td>
+                    </tr>
+                }
+
+                sr++;
             }
         </tbody>
     </table>

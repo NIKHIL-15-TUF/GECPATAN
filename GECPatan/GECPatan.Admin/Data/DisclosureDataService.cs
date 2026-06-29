@@ -145,12 +145,17 @@ namespace GECPatan.Admin.Services
                 .OrderByDescending(p => p.AcademicYear)
                 .Select(p => new DisclosurePlacementRowVM
                 {
+                    Id = p.Id,
+                    DeptId = p.DeptId,
+                    DepartmentName = p.Department.Name,
                     AcademicYear = p.AcademicYear,
-                    TotalStudents = p.TotalStudents,
+                    NoOfCompanies = p.NoOfCompanies,
                     TotalPlaced = p.TotalPlaced,
-                    HighestPkg = p.HighestPackage,
-                    AveragePkg = p.AveragePackage,
-                    TopRecruiter = p.TopRecruiter
+                    MaximumSalary = p.MaximumSalary,
+                    MinimumSalary = p.MinimumSalary,
+                    DisplayOrder = p.DisplayOrder,
+                    IsVisible = p.IsVisible
+
                 }).ToListAsync();
 
             // ── SECTION 7: Faculty ───────────────────────────
