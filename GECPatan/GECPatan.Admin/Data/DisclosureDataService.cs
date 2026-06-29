@@ -178,7 +178,7 @@ namespace GECPatan.Admin.Services
                     .Where(p => p.DeptId == dept.DeptId && p.IsVisible)
                     .OrderByDescending(p => p.IntakeYear)
                     .FirstOrDefaultAsync();
-                if (intake == null || intake.Intake == 0) continue;
+            //    if (intake == null || intake.Intake == 0) continue;
 
                 var facultyList = await _context.Faculties
                     .Where(f => f.DeptId == dept.DeptId
