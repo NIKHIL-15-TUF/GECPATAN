@@ -92,6 +92,7 @@ namespace GECPatan.Admin.Models.ViewModels
         public List<NarrativeSectionVM> GovernanceNarratives { get; set; } = new();
 
         // Section 4 — Programs
+        public string? StudentToFacultyRatioHtml { get; set; }
         public List<NBAAccreditationVM> NBAAccreditations { get; set; } = new();
         public List<DisclosureDeptProgramVM> Programs { get; set; } = new();
         public string? AccreditationStatusHtml { get; set; }

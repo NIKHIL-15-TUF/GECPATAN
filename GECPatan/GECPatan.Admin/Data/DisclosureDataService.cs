@@ -66,6 +66,7 @@ namespace GECPatan.Admin.Services
                 await AddNarrative(vm.GovernanceNarratives, key);
 
             // ── SECTION 4: Programs ─────────────────────────
+            vm.StudentToFacultyRatioHtml = Narrative("StudentToFacultyRatio");
             vm.AccreditationStatusHtml = Narrative("AccreditationStatus");
 
             vm.NBAAccreditations = await _context.NBAAccreditations

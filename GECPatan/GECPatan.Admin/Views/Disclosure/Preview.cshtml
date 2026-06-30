@@ -169,6 +169,11 @@ else
 {
     <p class="empty-note">No NBA accreditation records added.</p>
 }
+@if (!string.IsNullOrWhiteSpace(Model.StudentToFacultyRatioHtml))
+{
+    <h4 class="sub-section-title">Student to Faculty Ratio Details</h4>
+    <div class="narrative-content">@Html.Raw(Model.StudentToFacultyRatioHtml)</div>
+}
  
 @if (!string.IsNullOrWhiteSpace(Model.AccreditationStatusHtml))
 {

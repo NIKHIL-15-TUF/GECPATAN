@@ -284,6 +284,7 @@ namespace GECPatan.Admin.Controllers
             DisclosureSectionKeys.GovernanceMechanism or
             DisclosureSectionKeys.StudentFeedback or
             DisclosureSectionKeys.GrievanceRedressal => "Governance",
+            DisclosureSectionKeys.StudentToFacultyRatio => "Programs",
             DisclosureSectionKeys.AccreditationStatus => "Programs",
             DisclosureSectionKeys.PlacementFacilities or
             DisclosureSectionKeys.ForeignCollaboration => "Placement",
@@ -316,6 +317,8 @@ namespace GECPatan.Admin.Controllers
                 => "Describe the student feedback mechanism on institutional governance.",
             DisclosureSectionKeys.GrievanceRedressal
                 => "Describe the grievance redressal mechanism for students and staff.",
+            DisclosureSectionKeys.StudentToFacultyRatio
+                => "Add narrative about student to faculty ratio.",
             DisclosureSectionKeys.AccreditationStatus
                 => "Add narrative about NAAC grade, NBA status, and other accreditations.",
             DisclosureSectionKeys.PlacementFacilities

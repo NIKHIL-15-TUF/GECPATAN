@@ -213,6 +213,7 @@ namespace GECPatan.Core.Models.Domain
         public const string GrievanceRedressal = "GrievanceRedressal";
 
         // PROGRAMS (new narrative sections)
+        public const string StudentToFacultyRatio = "StudentToFacultyRatio";
         public const string AccreditationStatus = "AccreditationStatus";
 
         // PLACEMENT
@@ -243,7 +244,7 @@ namespace GECPatan.Core.Models.Domain
             Governance, AcademicAdvisoryBody,BoardMeetings, OrganizationalChart,
             FacultyStudentInvolvement, GovernanceMechanism,
             StudentFeedback, GrievanceRedressal,
-            AccreditationStatus,
+            StudentToFacultyRatio, AccreditationStatus,
             PlacementFacilities, ForeignCollaboration,
             FeeStructure,
             AdmissionProcess, CriteriaWeightages,
@@ -264,6 +265,7 @@ namespace GECPatan.Core.Models.Domain
             [GovernanceMechanism] = "Mechanism for Good Governance",
             [StudentFeedback] = "Student Feedback on Governance",
             [GrievanceRedressal] = "Grievance Redressal Mechanism",
+            [StudentToFacultyRatio]="Student to Faculty Ratio Details",
             [AccreditationStatus] = "Accreditation Status",
             [PlacementFacilities] = "Placement Facilities",
             [ForeignCollaboration] = "Foreign Collaboration Details",
