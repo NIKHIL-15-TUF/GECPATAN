@@ -172,7 +172,7 @@ namespace GECPatan.Core.Models.Domain
         public string ApprovalStatus { get; set; } = "Approved";
 
         [MaxLength(200)]
-        public string? ApprovalLetterNumber { get; set; }
+        public string? LetterNumber { get; set; }
 
         [MaxLength(200)]
         public string? ApprovedByUniversity { get; set; }

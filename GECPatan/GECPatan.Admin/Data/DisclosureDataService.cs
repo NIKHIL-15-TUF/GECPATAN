@@ -251,7 +251,7 @@ namespace GECPatan.Admin.Services
                         Name = f.Name,
                         Post = f.Designation,
                         ApprovalStatus = appr?.ApprovalStatus ?? "Approved",
-                        LetterNumber = appr?.ApprovalLetterNumber
+                        ApprovalLetterNumber = f.LetterNumber
                     });
 
                     // Full profile

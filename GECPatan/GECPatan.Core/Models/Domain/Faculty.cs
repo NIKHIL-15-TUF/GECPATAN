@@ -22,6 +22,7 @@ namespace GECPatan.Core.Models.Domain
         public Department? Department { get; set; }
 
         public DateTime DateOfJoining { get; set; } = DateTime.Today;
+        public string? LetterNumber { get; set; }
 
         // Qualification removed — use FacultyQualification table
         public string? AreaOfInterest { get; set; }

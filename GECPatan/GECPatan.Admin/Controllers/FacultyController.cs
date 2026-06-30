@@ -99,6 +99,7 @@ namespace GECPatan.Admin.Controllers
                 DeptId = model.DeptId,
                 DateOfJoining = model.DateOfJoining,
                 AreaOfInterest = model.AreaOfInterest,
+                LetterNumber = model.LetterNumber,
                 Website = model.Website,
                 IsTeaching = isTeaching,
                 SeniorityOrder = model.SeniorityOrder,
@@ -148,6 +149,7 @@ namespace GECPatan.Admin.Controllers
                 DeptId = f.DeptId,
                 DateOfJoining = f.DateOfJoining,
                 AreaOfInterest = f.AreaOfInterest,
+                LetterNumber = f.LetterNumber,
                 Website = f.Website,
                 IsTeaching = f.IsTeaching,
                 SeniorityOrder = f.SeniorityOrder,
@@ -175,6 +177,7 @@ namespace GECPatan.Admin.Controllers
             f.DeptId = model.DeptId;
             f.DateOfJoining = model.DateOfJoining;
             f.AreaOfInterest = model.AreaOfInterest;
+            f.LetterNumber = model.LetterNumber; 
             f.Website = model.Website;
             f.IsTeaching = isTeaching;
             f.SeniorityOrder = model.SeniorityOrder;

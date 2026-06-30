@@ -237,7 +237,7 @@ namespace GECPatan.Admin.Models.ViewModels
         public string Name { get; set; } = string.Empty;
         public string Post { get; set; } = string.Empty;
         public string? ApprovalStatus { get; set; }
-        public string? LetterNumber { get; set; }
+        public string? ApprovalLetterNumber { get; set; }
     }
 
     public class DisclosureFacultyDetailVM

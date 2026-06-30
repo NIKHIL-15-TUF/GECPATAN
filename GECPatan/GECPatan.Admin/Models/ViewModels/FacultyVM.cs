@@ -27,6 +27,8 @@ namespace GECPatan.Admin.Models.ViewModels
         [Required(ErrorMessage = "Designation is required")]
         [MaxLength(200)]
         public string Designation { get; set; } = string.Empty;
+        [MaxLength(200)]
+        public string LetterNumber { get; set; }= string.Empty;
 
         [Required(ErrorMessage = "Department is required")]
         [Display(Name = "Department")]
