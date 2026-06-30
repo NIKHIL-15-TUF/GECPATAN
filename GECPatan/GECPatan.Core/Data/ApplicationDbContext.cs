@@ -137,6 +137,7 @@ namespace GECPatan.Core.Data
         public DbSet<DisclosurePlacementData> DisclosurePlacements { get; set; }
         public DbSet<FacultyApprovalInfo> FacultyApprovalInfos { get; set; }
         public DbSet<DepartmentEquipment> DepartmentEquipments { get; set; }
+        public DbSet<FacultyTurnoverRecord> FacultyTurnoverRecords { get; set; }
 
         // MODEL CREATING
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -251,6 +252,8 @@ namespace GECPatan.Core.Data
             modelBuilder.Entity<FacultyApprovalInfo>()
                 .HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<DepartmentEquipment>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<FacultyTurnoverRecord>()
                 .HasQueryFilter(x => !x.IsDeleted);
 
             // ── RELATIONSHIPS ────────────────────────────────

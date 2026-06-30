@@ -225,7 +225,19 @@ namespace GECPatan.Admin.Services
                     DeptId = dept.DeptId ?? 0,
                     DeptName = dept.Name
                 };
-
+                deptVM.Turnover = await _context.FacultyTurnoverRecords
+                .Where(t => t.DeptId == dept.DeptId && t.IsVisible)
+                .OrderByDescending(t => t.AcademicYear)
+                .Take(3)
+                .Select(t => new FacultyTurnoverRowVM
+                {
+                    AcademicYear = t.AcademicYear,
+                    NonTeachingJoin = t.NonTeachingJoin,
+                    TeachingJoin = t.TeachingJoin,
+                    NonTeachingLeft = t.NonTeachingLeft,
+                    TeachingLeft = t.TeachingLeft
+                })
+                .ToListAsync();
                 int sr = 1;
                 foreach (var f in facultyList)
                 {

@@ -4,6 +4,7 @@ using GECPatan.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GECPatan.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260630064646_AddFacultyTurnover")]
+    partial class AddFacultyTurnover
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3153,9 +3156,6 @@ namespace GECPatan.Core.Migrations
                     b.Property<long>("CreatedDateInt")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("DeptId")
-                        .HasColumnType("int");
-
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
@@ -3187,8 +3187,6 @@ namespace GECPatan.Core.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DeptId");
 
                     b.ToTable("FacultyTurnoverRecords");
                 });
@@ -5946,17 +5944,6 @@ namespace GECPatan.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Faculty");
-                });
-
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.FacultyTurnoverRecord", b =>
-                {
-                    b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DeptId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.InfrastructureRecord", b =>

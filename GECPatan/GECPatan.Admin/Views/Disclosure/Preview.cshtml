@@ -345,6 +345,46 @@ else
 @* Department-wise Faculty *@
 @foreach (var dept in Model.DeptFaculty)
 {
+    <strong style="font-size:10.5pt;">
+        Number of Faculty Employed and Left (Last 3 Years) — @dept.DeptName
+    </strong>
+    @if (dept.Turnover.Any())
+    {
+        <table class="disc-table" style="margin-top:6px;margin-bottom:14px;">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="vertical-align:middle;">Year</th>
+                    <th colspan="2">Join</th>
+                    <th colspan="2">Left / Transferred</th>
+                </tr>
+                <tr>
+                    <th>Non Teaching</th>
+                    <th>Teaching</th>
+                    <th>Non Teaching</th>
+                    <th>Teaching</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in dept.Turnover)
+                {
+                    <tr>
+                        <td>@t.AcademicYear</td>
+                        <td>@t.NonTeachingJoin</td>
+                        <td>@t.TeachingJoin</td>
+                        <td>@t.NonTeachingLeft</td>
+                        <td>@t.TeachingLeft</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="empty-note">
+            No faculty turnover records for @dept.DeptName yet.
+        </p>
+    }
+
     <div class="page-break"></div>
     <h4 class="dept-title">@dept.DeptName — Faculty</h4>
  

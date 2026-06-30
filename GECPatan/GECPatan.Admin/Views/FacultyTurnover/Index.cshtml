@@ -1,0 +1,113 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.FacultyTurnoverGroupVM>
+@{
+    ViewData["Title"] = "Faculty Turnover — Mandatory Disclosure";
+    var depts = ViewBag.Departments as
+        List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new();
+    int? selDept = ViewBag.SelectedDeptId as int?;
+}
+ 
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form asp-action="Index" method="get" class="d-flex" style="gap:8px;">
+            <select name="deptId" class="form-control form-control-sm"
+                    style="width:auto;" onchange="this.form.submit()">
+                <option value="">All Departments</option>
+                @foreach (var d in depts)
+                {
+                    <option value="@d.Value" selected="@(selDept?.ToString()==d.Value)">
+                        @d.Text
+                    </option>
+                }
+            </select>
+            @if (selDept.HasValue)
+            {
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            }
+        </form>
+    </div>
+    <div class="col-md-6 text-right">
+        <a asp-action="Create" asp-route-deptId="@selDept"
+               class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-1"></i>Add Record
+        </a>
+    </div>
+</div>
+ 
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="fas fa-people-arrows fa-3x mb-3 d-block"></i>
+            No faculty turnover records yet.
+            <a asp-action="Create">Add the first one.</a>
+        </div>
+    </div>
+}
+ 
+@foreach (var group in Model)
+{
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center"
+             style="background:#1a237e;color:#fff;">
+            <h6 class="mb-0">
+                <i class="fas fa-people-arrows mr-2"></i>@group.DeptName
+            </h6>
+            <a asp-action="Create" asp-route-deptId="@group.DeptId"
+                   class="btn btn-sm btn-light">
+                <i class="fas fa-plus mr-1"></i>Add
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0 text-center">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Year</th>
+                        <th>Non Teaching<br />(Join)</th>
+                        <th>Teaching<br />(Join)</th>
+                        <th>Non Teaching<br />(Left/Transferred)</th>
+                        <th>Teaching<br />(Left/Transferred)</th>
+                        <th width="80">Visible</th>
+                        <th width="120">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in group.Records)
+                    {
+                        <tr>
+                            <td><strong>@t.AcademicYear</strong></td>
+                            <td>@t.NonTeachingJoin</td>
+                            <td>@t.TeachingJoin</td>
+                            <td>@t.NonTeachingLeft</td>
+                            <td>@t.TeachingLeft</td>
+                            <td>
+                                @if (t.IsVisible)
+                                {
+                                    <span class="badge badge-success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-secondary">No</span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@t.Id"
+                                       class="btn btn-xs btn-info">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="Delete" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@t.Id" />
+                                    <button type="submit" class="btn btn-xs btn-danger"
+                                            onclick="return confirm('Delete this record?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

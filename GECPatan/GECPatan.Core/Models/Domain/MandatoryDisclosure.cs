@@ -193,6 +193,26 @@ namespace GECPatan.Core.Models.Domain
         [MaxLength(200)]
         public string? UpdatedBy { get; set; }
     }
+    public class FacultyTurnoverRecord : BaseEntity
+    {
+        public int Id { get; set; }
+        public int DeptId { get; set; }
+
+        [ForeignKey("DeptId")]
+        public Department? Department {  get; set; }
+            [Required, MaxLength(20)]
+        public string AcademicYear { get; set; } = string.Empty;
+        // e.g. "2022-23"
+
+        public int NonTeachingJoin { get; set; } = 0;
+        public int TeachingJoin { get; set; } = 0;
+        public int NonTeachingLeft { get; set; } = 0;
+        public int TeachingLeft { get; set; } = 0;
+
+        public int DisplayOrder { get; set; } = 0;
+        public bool IsVisible { get; set; } = true;
+    }
+
     // STRICT SCHEMA — allowed narrative section keys
     // Admin can EDIT content for these keys only.
     // Cannot add arbitrary new sections (per requirement:

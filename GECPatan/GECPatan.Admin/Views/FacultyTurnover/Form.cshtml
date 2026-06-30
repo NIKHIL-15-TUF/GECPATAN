@@ -1,0 +1,156 @@
+﻿@model GECPatan.Admin.Models.ViewModels.FacultyTurnoverVM
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Faculty Turnover Record" : "Add Faculty Turnover Record";
+}
+ 
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-people-arrows mr-2"></i>@ViewData["Title"]
+                </h3>
+            </div>
+            <form asp-action="@(isEdit?"Edit":"Create")" method="post">
+                @if (isEdit)
+                {
+                    <input asp-for="Id" type="hidden" />
+                }
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger py-2">
+                            @Html.ValidationSummary(false)
+                        </div>
+                    }
+ 
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="DeptId" class="font-weight-bold"></label>
+                                <select asp-for="DeptId" asp-items="Model.Departments"
+                                        class="form-control">
+                                    <option value="">-- Select Department --</option>
+                                </select>
+                                <span asp-validation-for="DeptId"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="AcademicYear" class="font-weight-bold"></label>
+                                <input asp-for="AcademicYear" class="form-control"
+                                       placeholder="e.g. 2024-25" />
+                                <span asp-validation-for="AcademicYear"
+                                      class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <hr />
+                    <p class="font-weight-bold mb-2">Joined</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="TeachingJoin"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="TeachingJoin" class="form-control"
+                                       type="number" min="0" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="NonTeachingJoin"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="NonTeachingJoin" class="form-control"
+                                       type="number" min="0" />
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <hr />
+                    <p class="font-weight-bold mb-2">Left / Transferred</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="TeachingLeft"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="TeachingLeft" class="form-control"
+                                       type="number" min="0" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="NonTeachingLeft"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="NonTeachingLeft" class="form-control"
+                                       type="number" min="0" />
+                            </div>
+                        </div>
+                    </div>
+ 
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="DisplayOrder"
+                                       class="font-weight-bold"></label>
+                                <input asp-for="DisplayOrder" class="form-control"
+                                       type="number" min="0" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mt-4">
+                                <div class="custom-control custom-switch">
+                                    <input asp-for="IsVisible" type="checkbox"
+                                           class="custom-control-input" id="isVisible" />
+                                    <label class="custom-control-label" for="isVisible">
+                                        Visible
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+ 
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>
+                    About This Table
+                </h6>
+            </div>
+            <div class="card-body small text-muted">
+                <p>
+                    AICTE Mandatory Disclosure requires the number
+                    of faculty employed and left during the last
+                    three academic years, <strong>per department</strong>.
+                </p>
+                <p>
+                    Add one record per department per academic year
+                    (e.g. CSE 2022-23, CSE 2023-24, CSE 2024-25).
+                </p>
+                <p>
+                    This table appears <strong>
+                    before each
+                    department's faculty listing
+                </strong> in
+                Section 6 (Faculty Details) of the document.
+            </p>
+        </div>
+    </div>
+</div>
+</div>

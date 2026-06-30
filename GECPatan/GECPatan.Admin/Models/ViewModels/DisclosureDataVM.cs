@@ -99,6 +99,7 @@ namespace GECPatan.Admin.Models.ViewModels
 
         // Section 5 — Cutoffs (per dept)
         public List<DisclosureDeptVM> DeptCutoffs { get; set; } = new();
+        public List<FacultyTurnoverRowVM> FacultyTurnover { get; set; } = new();
 
         // Section 6 — Placement
         public string? PlacementFacilitiesHtml { get; set; }
@@ -225,6 +226,7 @@ namespace GECPatan.Admin.Models.ViewModels
     {
         public int DeptId { get; set; }
         public string DeptName { get; set; } = string.Empty;
+        public List<FacultyTurnoverRowVM> Turnover { get; set; } = new();
         public List<FacultySummaryRowVM> SummaryTable { get; set; } = new();
         public List<DisclosureFacultyDetailVM> Faculty { get; set; } = new();
     }
@@ -325,5 +327,49 @@ namespace GECPatan.Admin.Models.ViewModels
         public DateTime? LastUpdated { get; set; }
         public string? UpdatedBy { get; set; }
     }
+    public class FacultyTurnoverVM
+    {
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Department is required")]
+        [Display(Name = "Department")]
+        public int DeptId { get; set; }
+
+        [Required(ErrorMessage = "Academic year is required")]
+        [Display(Name = "Academic Year (e.g. 2022-23)")]
+        public string AcademicYear { get; set; } = string.Empty;
+
+        [Display(Name = "Non-Teaching (Join)")]
+        public int NonTeachingJoin { get; set; } = 0;
+
+        [Display(Name = "Teaching (Join)")]
+        public int TeachingJoin { get; set; } = 0;
+
+        [Display(Name = "Non-Teaching (Left/Transferred)")]
+        public int NonTeachingLeft { get; set; } = 0;
+
+        [Display(Name = "Teaching (Left/Transferred)")]
+        public int TeachingLeft { get; set; } = 0;
+
+        public int DisplayOrder { get; set; } = 0;
+        public bool IsVisible { get; set; } = true;
+
+        public List<SelectListItem> Departments { get; set; } = new();
+    }
+    public class FacultyTurnoverGroupVM
+    {
+        public int DeptId { get; set; }
+        public string DeptName { get; set; } = string.Empty;
+        public List<FacultyTurnoverVM> Records { get; set; } = new();
+    }
+    public class FacultyTurnoverRowVM
+    {
+        public string AcademicYear { get; set; } = string.Empty;
+        public int NonTeachingJoin { get; set; }
+        public int TeachingJoin { get; set; }
+        public int NonTeachingLeft { get; set; }
+        public int TeachingLeft { get; set; }
+    }
+
 }
 
