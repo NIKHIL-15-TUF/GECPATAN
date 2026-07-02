@@ -35,7 +35,7 @@ namespace GECPatan.Admin.Controllers
                 })
                 .Select(d => new DeptEquipmentListVM
                 {
-                    DeptId = d.DeptId ?? 0,
+                    DeptId = d.DeptId,
                     DeptName = d.Name,
                     HasContent = equipments.Any(e =>
                         e.DeptId == d.DeptId &&

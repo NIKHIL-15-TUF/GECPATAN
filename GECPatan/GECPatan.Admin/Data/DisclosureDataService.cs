@@ -120,7 +120,7 @@ namespace GECPatan.Admin.Services
 
                 vm.DeptCutoffs.Add(new DisclosureDeptVM
                 {
-                    DeptId = dept.DeptId ?? 0,
+                    DeptId = dept.DeptId,
                     Name = dept.Name,
                     ShortCode = dept.ShortCode,
                     CurrentIntake = intake.Intake,
@@ -222,7 +222,7 @@ namespace GECPatan.Admin.Services
 
                 var deptVM = new DisclosureDeptFacultyVM
                 {
-                    DeptId = dept.DeptId ?? 0,
+                    DeptId = dept.DeptId,
                     DeptName = dept.Name
                 };
                 deptVM.Turnover = await _context.FacultyTurnoverRecords

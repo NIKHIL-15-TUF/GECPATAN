@@ -1,5 +1,6 @@
 using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHttpClient<IDepartmentApiService, DepartmentApiService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Api:BaseUrl"]!);
+});
 
 // ── IDENTITY ─────────────────────────────────────────
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -36,7 +41,25 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // ── MVC ──────────────────────────────────────────────
-builder.Services.AddControllersWithViews();
+// NOTE: This is a stop-gap. GECPatan.Admin's controllers are being picked up
+// because its assembly is somewhere in Web's dependency graph (directly or
+// via a shared project). The real fix is finding and removing that
+// <ProjectReference> — run this to locate it:
+//   Get-ChildItem -Recurse -Filter *.csproj | Select-String "ProjectReference"
+// Until that's cleaned up, explicitly strip Admin's ApplicationPart so its
+// controllers never register with Web's routing table.
+builder.Services.AddControllersWithViews()
+    .ConfigureApplicationPartManager(apm =>
+    {
+        var partsToRemove = apm.ApplicationParts
+            .Where(p => p.Name is "GECPatan.Admin")
+            .ToList();
+
+        foreach (var part in partsToRemove)
+        {
+            apm.ApplicationParts.Remove(part);
+        }
+    });
 
 var app = builder.Build();
 
@@ -68,8 +91,8 @@ using (var scope = app.Services.CreateScope())
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var config = services.GetRequiredService<IConfiguration>();
         await context.Database.MigrateAsync();
-        await RoleSeeder.SeedAsync(userManager, roleManager, config);
-        await MenuItemSeeder.SeedAsync(context); 
+        //await RoleSeeder.SeedAsync(userManager, roleManager, config);
+        //await MenuItemSeeder.SeedAsync(context);
     }
     catch (Exception ex)
     {

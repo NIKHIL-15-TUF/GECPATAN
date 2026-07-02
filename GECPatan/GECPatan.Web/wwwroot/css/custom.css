@@ -1,0 +1,1142 @@
+.detached.tabs > ul > li + li {
+    margin-left: 95px !important;
+}
+
+.compact .header #logo {
+    background-size: 23% !important;
+    background-position: left 13px !important;
+}
+
+/*ul.nav>li>a.active {
+    color: #5076bb !important;
+}*/
+
+ul.nav > li > a:hover {
+    color: #fff !important;
+}
+
+.detached.tabs > ul > li.current {
+    border-bottom: 2px solid #5076bb !important;
+    color: #5076bb !important;
+}
+
+.top_nav .topsocial li a {
+    color: #5076bb !important;
+}
+
+.top_nav .left a {
+    color: #5076bb !important;
+}
+
+.top_nav .left {
+    color: #5076bb !important;
+}
+
+.top_nav .gecp_social_right {
+    margin-top: 10px;
+}
+
+.tpbut:hover,
+.tpbut.active {
+    color: #5076bb !important;
+}
+
+.top_nav .left i {
+    color: #5076bb !important;
+}
+
+.tpbut {
+    color: #5076bb !important;
+}
+
+.footer4 {
+    background-color: #1a1818;
+}
+
+.footer_social_links4 a i {
+    background-color: #46546f;
+}
+
+.pricingtable9 strong {
+    color: #5076bb !important;
+}
+
+.pricingtable9 b {
+    color: #5076bb !important;
+}
+
+.featured_section19 .text {
+    background-color: #5076bb !important;
+}
+
+    .featured_section19 .text h1 {
+        color: white;
+        border-bottom: 1px solid #ffffff;
+    }
+
+    .featured_section19 .text p {
+        color: white;
+    }
+
+.divider_line11belownews {
+    float: left;
+    width: 100%;
+    padding-top: 10px;
+    margin-bottom: 100px;
+    background: url(../images/h-line5.jpg) no-repeat center bottom;
+    text-align: center;
+}
+
+.hovercolor:hover > .hovered {
+    background-color: #5076bb;
+    color: white;
+}
+
+.tabs li.active a {
+    background-color: #5076bb !important;
+}
+
+    .tabs li.active a::after {
+        border-right-color: #5076bb !important;
+    }
+
+
+/* .tabs3 li a:active {
+    background-color: #5076bb !important;
+} */
+
+.tabs3 li.active a {
+    background-color: #5076bb !important;
+    color: white !important;
+}
+
+.colortext {
+    color: #393939;
+}
+
+.featured_section13 .cirimg {
+    border: 4px solid #5076bb !important;
+}
+
+.divider_line11dept {
+    float: left;
+    width: 100%;
+    padding-top: 35px;
+    margin-bottom: 16px;
+    background: url(../images/h-line5.jpg) no-repeat center bottom;
+    text-align: center;
+}
+
+.featured_section10 {
+    background-color: #5076bb !important;
+    color: white
+}
+
+.title21 em {
+    color: #ffffff;
+}
+
+.featured_section113 .one_half:hover {
+    background-color: #5076bb;
+    color: #ffffff;
+}
+
+a {
+    color: #727272;
+}
+
+.colorwhite {
+    color: white !important;
+    text-align: center;
+}
+
+
+/* Jagruti custom */
+
+.cforms label em {
+    color: red;
+    font-size: 12px;
+    font-style: normal;
+}
+
+.cforms .label {
+    float: left;
+    width: 100%;
+    color: #5076bb !important;
+    font-weight: 600;
+}
+
+.cforms .button {
+    float: left;
+    margin-top: 10px;
+    color: #fff;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #5076bb;
+    border: 1px solid #1b5bd1;
+    border-radius: 3px;
+    font-family: 'Raleway', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .cforms .button:hover {
+        background: #454545;
+        border: 1px solid #393939;
+    }
+
+.one_half a {
+    color: #5076bb;
+    font-weight: 600;
+}
+
+.cforms input {
+    color: #454545;
+    float: left;
+    width: 100%;
+    padding: 7px 12px;
+    margin-bottom: 10px;
+    border: 1px solid #e1e1e1;
+    background: #f9f9f9;
+    -webkit-box-shadow: inset 1px 0px 2px 0px rgba(238, 238, 238, 1);
+    -moz-box-shadow: inset 1px 0px 2px 0px rgba(238, 238, 238, 1);
+    box-shadow: inset 0px 2px 4px 0px rgb(226, 229, 232);
+}
+
+.cforms textarea {
+    color: #454545;
+    float: left;
+    width: 100%;
+    padding: 7px 12px;
+    margin-bottom: 10px;
+    border: 1px solid #e1e1e1;
+    background: #f9f9f9;
+    -webkit-box-shadow: inset 1px 0px 2px 0px rgba(238, 238, 238, 1);
+    -moz-box-shadow: inset 1px 0px 2px 0px rgba(238, 238, 238, 1);
+    box-shadow: inset 0px 2px 4px 0px rgb(226, 229, 232);
+}
+
+.cforms .input :hover {
+    background-color: #f0ecec;
+    border: 1px solid rgb(65, 64, 64);
+    border-top-style: inset;
+}
+
+.cforms .textarea :hover {
+    border: 1px solid rgb(65, 64, 64);
+    border-top-style: inset;
+}
+
+#default {
+    background-color: #5076bb;
+}
+
+.piechart1 {
+    float: left;
+    color: #393939;
+    width: 20%;
+    font-size: 16px;
+    font-weight: normal;
+    text-align: center;
+    padding-bottom: 40px;
+    padding-top: 30px;
+}
+
+#jcustom {
+    float: left;
+    width: 100%;
+    padding: 50px 0px 0px 0px;
+}
+
+.page_title1.sty7 {
+    background: #999 url(../images/contact-us.jpg) no-repeat;
+    background-size: 100% 100%;
+}
+
+.page_title2 {
+    float: left;
+    width: 100%;
+    padding: 70px 0px;
+    margin-top: 35px;
+    background: #ece9e9 url(../../../../www.themesmarket.net/html/linstar/images/footer-graph3.html) no-repeat center bottom;
+}
+
+#bar {
+    width: 0%;
+    max-width: 100%;
+    height: 4px;
+    background: #5076bb !important;
+}
+
+.slidermar {
+    margin-top: 60px !important;
+}
+
+.top_section2 {
+    background-color: white;
+}
+
+    .top_section2 .right .tinfo a {
+        color: black !important;
+    }
+
+    .top_section2 .right .tinfo em {
+        color: black !important;
+    }
+
+    .top_section2 .right .tinfo i {
+        border: 1px solid black;
+    }
+
+.fa-envelope::before {
+    color: black;
+}
+
+.fa-phone::before {
+    color: black;
+}
+
+.top_section2 .right .tinfo strong {
+    color: black;
+}
+
+.page_title3 {
+    margin-top: 60px !important;
+}
+
+.owl-theme .owl-controls {
+    margin-top: 0px !important;
+}
+
+.parallax_section10 {
+    padding: 40px 0px 110px 0px;
+}
+
+.cd-timeline-content .cd-date b {
+    background: #5076bb !important;
+}
+
+.cd-timeline-content .cd-date strong {
+    background: #5076bb !important;
+}
+
+.cd-timeline-content h2 {
+    color: #5076bb !important;
+}
+
+.cd-timeline-content .cd-date strong::after {
+    border-right-color: #5076bb !important;
+}
+
+.cd-timeline-content .cd-date b::after {
+    border-left-color: #5076bb !important;
+}
+
+.featured_section8 .puhtext {
+    float: left;
+    /* color: #fff; */
+    width: 50%;
+    padding-left: 0% !important;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    text-align: left;
+    background: rgba(49, 49, 55, 0.95);
+}
+
+.logregform.two {
+    /* float: left; */
+    width: 100%;
+    /* margin-left: -46%; */
+}
+
+.logregform {
+    float: none !important;
+    width: 35%;
+    margin-left: 0% !important;
+    /* background: #fff; */
+    border: 0px solid #f9f9f9 !important;
+    -webkit-box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.2);
+}
+
+.featured_section69 .box i :hover {
+    color: #5076bb;
+}
+
+.color3 {
+    color: #5076bb;
+}
+
+.detached.tabs.place > ul {
+    padding: 0 0 0 2% !important;
+}
+
+.tabs-content3.three {
+    padding: 4% 8% !important;
+}
+
+.detached.tabs > section {
+    padding: 0px 0px 30px 0px !important;
+}
+
+.placeperson {
+    border-radius: 100%;
+    height: 30%;
+    width: 30%;
+}
+
+.featured_section38 {
+    background: #58a8e0;
+}
+
+.parallax_section18 {
+    padding: 26px 0px 20px 0px !important;
+}
+
+.featured_section10 {
+    padding: 25px 0px !important;
+}
+
+.title21,
+.title22 {
+    margin-bottom: 25px !important;
+    color: white !important;
+}
+
+.parallax_section10 {
+    padding: 25px 0px 20px 0px;
+}
+
+.fbut {
+    background: #5aa7dc !important;
+}
+
+.logregform .feildcont label em {
+    color: red !important;
+}
+
+.logregform .feildcont label {
+    color: white !important;
+}
+
+.featured_section14 {
+    padding: 30px 0px !important;
+}
+
+.parallax_section12 {
+    padding: 45px 0px 35px 0px !important;
+}
+
+.featured_section105 .one_half strong {
+    color: #5076bb !important;
+}
+
+.widthclass {
+    width: 300px !important;
+}
+
+.shiftright {
+    margin-left: 6%;
+}
+
+.featured_section98 .box.highlight {
+    background-color: #5076bb !important;
+}
+
+.blacktext {
+    color: black !important;
+}
+
+.featured_section40 {
+    padding: 0px 0px 0px 0px !important;
+    background: #f3f3f300 !important;
+}
+
+    .featured_section40 h4 {
+        margin-bottom: 5px !important;
+        color: white;
+    }
+
+.white {
+    color: white !important;
+}
+
+.featured_section99 {
+    background-color: #5076bb !important;
+}
+
+.st-accordion-two {
+    width: 230% !important;
+}
+
+.parallax_section1 {
+    /*padding: 30px 0px !important;*/
+    background: #393939 url(../images/Home/alumni-bg.png);
+}
+
+.featured_section60 {
+    padding: 40px 0px !important;
+}
+
+.featured_section3.two strong {
+    color: #5076bb !important;
+}
+
+.featured_section3 {
+    padding: 40px 0px 0px 0px !important;
+}
+
+#slider-outline .sl-div.two {
+    background-color: #5076bb !important;
+}
+
+.compact .header {
+    background-color: #5076bb !important;
+}
+
+.featured_section38 {
+    background-color: #5076bb !important;
+}
+
+.header {
+    background-color: #5076bb !important;
+}
+
+.featured_section40.two i {
+    background-color: #5076bb !important;
+}
+
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_asc_disabled:after,
+table.dataTable thead .sorting_asc_disabled:before,
+table.dataTable thead .sorting_desc:after,
+table.dataTable thead .sorting_desc:before,
+table.dataTable thead .sorting_desc_disabled:after,
+table.dataTable thead .sorting_desc_disabled:before {
+    bottom: .5em;
+}
+
+.no-touch .cd-timeline-content .cd-read-more:hover {
+    background-color: #5076bb !important;
+    ;
+}
+
+.dept_faculty_pic {
+    width: 200.6px;
+    height: 199.783px;
+}
+
+.faculties_img_div {
+    width: 278px;
+    height: 180px;
+    float: left;
+    position: relative;
+}
+
+    .faculties_img_div .faculty_info_link {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        text-align: center;
+        background: #4c99e5e0;
+        font-size: 20px;
+        padding: 7px 10px;
+        color: white;
+    }
+
+
+.women_cell_title {
+    background: #999 url(../images/women_banner.jpg) no-repeat;
+}
+
+.alumni_cell_title {
+    background: #999 url(../images/alumni-banner.jpg) no-repeat;
+    background-size: cover;
+    background-position-y: bottom;
+}
+
+    .alumni_cell_title h1 {
+        background: #00000063;
+        padding: 20px 0;
+    }
+
+.ssip_title {
+    background: #999 url(../images/ssip_banner.jpg) no-repeat center top;
+}
+
+.nss_title {
+    background: #999 url(../images/nss_banner.jpg) no-repeat center top;
+}
+
+.anti_ragging_title {
+    background: #999 url(../images/anti_ragging_banner.jpg) no-repeat center top;
+}
+
+.grievance_title {
+    background: #999 url(../images/grievence_banner.jpg) no-repeat center top;
+}
+
+.rti_title {
+    background: #999 url(../images/CampusCommittee/RTI/rti_banner.jpg) no-repeat center top;
+}
+
+.placement_title {
+    background: #999 url(../images/placement_banner.jpg) no-repeat center top;
+}
+
+    .placement_title h1, .women_cell_title h1, .nss_title h1, .grievance_title h1, .ssip_title h1, .anti_ragging_title h1 {
+        padding: 20px 0 0 0;
+        background-color: #25252575;
+    }
+
+.text-justify {
+    text-align: justify;
+}
+
+.ec_title {
+    background: #999 url(../images/Title/ec_banner.jpg) no-repeat center top;
+}
+
+.cs_title {
+    background: #999 url(../images/Title/cs_banner.jpg) no-repeat center top;
+}
+
+.ee_title {
+    background: #999 url(../images/Title/ee_banner.jpg) no-repeat center top;
+}
+
+.ce_title {
+    background: #999 url(../images/Title/ce_banner.jpg) no-repeat center top;
+}
+
+.me_title {
+    background: #999 url(../images/Title/me_banner.jpg) no-repeat center top;
+}
+
+.lib_title {
+    background: #999 url(../images/Title/lib_banner.jpg) no-repeat center top;
+}
+
+.admin_title {
+    background: #999 url(../images/Title/admin_banner.jpg) no-repeat center top;
+}
+
+.teqip_title {
+    background: #999 url(../images/Title/teqip_banner.jpg) no-repeat center top;
+}
+
+.general_title {
+    background: #999 url(../images/Title/gen_banner.jpg) no-repeat center top;
+}
+
+    .ec_title h1, .cs_title h1, .ee_title h1, .ce_title h1, .me_title h1, .lib_title h1, .admin_title h1, .teqip_title h1, .general_title h1 {
+        padding: 20px 0 0 0;
+        background-color: #25252575;
+    }
+
+.engg_title {
+    background: #999 url(../images/Title/title_banner.jpg) no-repeat center top;
+}
+
+.coe_title {
+    background: #999 url(../images/Title/coe_banner.jpg) no-repeat center top;
+}
+
+.gallery_title {
+    background: #999 url(../images/Title/gallery_banner.jpg) no-repeat center top;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.overflowCommittes {
+    max-height: 370px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    white-space: normal;
+    padding-right: 10px;
+}
+
+.newssection li {
+    text-align: justify;
+    padding: 3px 0 3px 0;
+    /*border-bottom: 1px solid #d1cbcb;*/
+    margin-bottom: 15px;
+}
+
+    .newssection li a {
+        color: red;
+    }
+
+        .newssection li a:hover {
+            color: #727272;
+        }
+
+.box {
+    padding: 20px;
+    border: 2px double;
+}
+
+
+.box-shadow {
+    padding: 20px;
+    border: 2px double;
+    box-shadow: 2px 2px 5px #787980;
+    background: #ced8f833;
+}
+
+.box {
+    padding: 20px;
+    border: 2px double;
+}
+
+.boxdetail {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin: 10px 0px;
+    clear: both;
+}
+
+.boxtitle {
+    padding: 10px;
+    border-left: 10px solid black;
+    background: #d7d0d0;
+}
+
+.boxinfo {
+    text-align: justify;
+}
+
+.boxtitle {
+    padding: 10px;
+    border-left: 10px solid black;
+    background: #d7d0d0;
+}
+
+.fabig {
+    font-size: 150px;
+    margin: auto;
+    display: block !important;
+}
+
+.minheight {
+    min-height: 270px;
+    padding: 20px 15px !important;
+}
+
+    .minheight a {
+        font-weight: bolder;
+    }
+
+.full-container {
+    padding: 0 4%;
+}
+
+.logo_section {
+    width: 100px;
+    display: inline;
+}
+
+.gecp_logo {
+    width: 84%;
+    display: inline-block;
+    float: left;
+    position: absolute;
+    top: 50px;
+}
+
+    .gecp_logo img {
+        width: 100px;
+    }
+
+.gecp_gov_emblame img {
+    float: right;
+}
+
+.gecp_logo h1 {
+    display: inline-block;
+    margin: auto;
+    font-size: 60px;
+    top: -30px;
+    position: relative;
+    left: 0%;
+    font-variant: small-caps;
+}
+
+.gecp_gov_emblame {
+    width: 15%;
+    display: block;
+    float: right;
+    position: relative;
+    top: 4px;
+}
+
+.gecp_name {
+    display: block;
+    margin: auto;
+}
+
+.gecp_logo2 {
+    float: right;
+}
+
+.header {
+    top: 150px;
+}
+/*jquery tabs from w3schools goes here*/
+.tab {
+    float: left;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    width: 19%;
+   /* min-height: 300px;*/
+    margin-right: 1%;
+    margin-bottom: 5%;
+}
+
+    /* Style the buttons inside the tab */
+    .tab button {
+        display: block;
+        background-color: inherit;
+        color: black;
+        padding: 22px 16px;
+        width: 100%;
+        border: none;
+        outline: none;
+        text-align: left;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 17px;
+        border-bottom: 1px solid #ccc;
+    }
+
+        /* Change background color of buttons on hover */
+        .tab button:hover {
+            background-color: #5076bb;
+            color: white;
+            font-weight: bolder;
+        }
+
+        /* Create an active/current "tab button" class */
+        .tab button.active {
+            background-color: #5076bb;
+            color: white;
+            font-weight: bolder;
+        }
+
+
+.tab-xs {
+    float: left;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    width: 100%;
+    /* min-height: 300px; */
+    margin-right: 1%;
+    margin-bottom: 5%;
+}
+
+    .tab-xs button {
+        display: block;
+        background-color: inherit;
+        color: black;
+        padding: 22px 16px;
+        width: 100%;
+        border: none;
+        outline: none;
+        text-align: left;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 17px;
+        border-bottom: 1px solid #ccc;
+    }
+
+        /* Change background color of buttons on hover */
+        .tab-xs button:hover {
+            background-color: #5076bb;
+            color: white;
+            font-weight: bolder;
+        }
+
+        /* Create an active/current "tab button" class */
+        .tab-xs button.active {
+            background-color: #5076bb;
+            color: white;
+            font-weight: bolder;
+        }
+
+/* Style the tab content */
+.tabcontent {
+    float: left;
+    padding: 15px;
+    border: 1px solid #ccc;
+    width: 79%;
+    /* border-left: none; */
+    min-height: 300px;
+    margin-bottom: 5%;
+}
+
+    .tabcontent > .box {
+        border-color: #ccc;
+    }
+
+.box .post_categoty {
+    background: #5076bb;
+    color: white;
+    font-weight: bold;
+    padding: 1px;
+    padding: 0px 10px;
+    margin: 0px 3px;
+}
+
+.featured_section16 .box {
+    float: left;
+    margin-top: 75px;
+    margin-left: 6.2%;
+    margin-bottom: 40px;
+    border: none;
+}
+/* end of jquery tabs from w3schools goes here */
+
+.stcode_title4 .line {
+    background: #5076bb;
+}
+
+.vision_section {
+    float: left;
+    width: 100%;
+    background: #f3f3f3;
+    padding: 2% 4%;
+}
+
+    .vision_section .one_half {
+        border-right: 2px solid rgb(0 123 255);
+    }
+    .vision_section .last {
+        border-right: none;
+    }
+
+
+.blog_postcontent .image_frame .height180 {
+    height: 180px;
+}
+
+.box .blog_post .blog_postcontent {
+    height: 663px;
+    overflow-y:scroll;
+    scrollbar-width:none;
+}
+
+.copyright_info2 {
+    margin: 50px 0px 0px 0px;
+}
+
+.footer2 {
+    padding: 50px 0px 0px 0px;
+}
+
+.vcenter {
+    vertical-align: middle !important;
+    float: none;
+}
+#style-selector {
+    top: 212px;
+}
+
+    #style-selector a.close {
+        background: white url(arrow.jpg) no-repeat 8px 5px;
+    }
+.button1 {
+    font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    font-weight: 100;
+    letter-spacing: 0.5px;
+    width: 100%;
+    padding: 3px;
+    background-color: grey;
+}
+
+.featured_section13 .updates_section {
+    width: 25%;
+    padding: 0%;
+    border: 1px solid #5076bb;
+}
+
+.pri_message {
+    background-color: #bfd1f2;
+    color: #2e2e2e;
+}
+
+.p1{
+    text-align:justify;
+}
+
+.bg{
+    background-color:#f3f3f3;
+}
+/* Legacy Highlighter Blinking Badge */
+.badge-new {
+    /* Classic old-school vibrant neon yellow to bright lime-green gradient background */
+    background: linear-gradient(to bottom, #ffff00 0%, /* Neon Yellow top */
+    #e1ff00 40%, /* High-visibility center */
+    #ccff00 60%, /* Bright Chartreuse gradient line */
+    #b6ff00 100% /* Electric Lime base */
+    );
+    /* Pure dark red text to maximize screen contrast with the background */
+    color: #cc0000 !important;
+    font-size: 10px;
+    font-weight: 900;
+    font-family: Arial, Helvetica, sans-serif;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 2px;
+    margin-right: 6px;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 14px;
+    letter-spacing: 0.5px;
+    /* 3D beveled borders typical of early Web layouts */
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-right: 1px solid #88aa00;
+    border-bottom: 2px solid #556600;
+    /* Sharp red backing shadow to give text that authentic old-website "glowing outline" look */
+    text-shadow: 1px 1px 0px #ffffbb, -0.5px -0.5px 0px #ffffff;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    /* Slowed down cycle rate (2s) to create an intentional, steady legacy flash cadence */
+    animation: old-school-blink 2s steps(2, start) infinite;
+    -webkit-animation: old-school-blink 2s steps(2, start) infinite;
+}
+
+/* Stable layout switch block (leaves position tracking intact while hidden) */
+@keyframes old-school-blink {
+    to {
+        visibility: hidden;
+    }
+}
+
+@-webkit-keyframes old-school-blink {
+    to {
+        visibility: hidden;
+    }
+}
+/*responsive goes here*/
+@media only screen and (max-width: 479px) {
+    .client_logos3 .minheight {
+            width: 60%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .logo_section {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .gecp_logo {
+            flex-direction: column;
+        }
+
+        .gecp_name {
+            font-size: 1.2rem;
+        }
+
+        .gecp_logo img,
+        .gecp_gov_emblame img {
+            max-width: 60px; /* Smaller images for mobile */
+        }
+
+        .gecp_logo h1 {
+            display: inline;
+            margin: auto;
+            font-size: 29px;
+            top: -19px;
+            position: relative;
+            /*left: 3%;*/
+            font-variant: small-caps;
+        }
+        .New_container {
+            flex-direction: column;
+            width: 100%;
+            align-items: center;
+        }
+        .body {
+            overflow-x: hidden;
+        }
+    }
+
+   
+@media (max-width: 1024px) {
+    .logo_section {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .gecp_logo {
+        flex-direction: column;
+        top:73px;
+    }
+
+    body, input, textarea {
+        /* font: 14px 'Open Sans', sans-serif; */
+        font-weight: normal;
+        font-style: normal;
+        line-height: 23px;
+        color: #727272;
+    }
+
+    .gecp_name {
+        font-size: 1.2rem;
+    }
+
+    .gecp_logo img,
+    .gecp_gov_emblame img {
+        max-width: 110px; /* Smaller images for mobile */
+    }
+
+    .gecp_logo h1 {
+        display: inline;
+        margin: auto;
+        font-size: 24px;
+        top: -19px;
+        position: relative;
+        /*left: 3%;*/
+        font-variant: small-caps;
+    }
+
+    .New_container {
+        flex-direction: column;
+        width: 100%;
+        align-items: center;
+    }
+
+    .body {
+        overflow-x: hidden;
+    }
+    .tabcontent{
+        width:100%;
+    }
+    .top_section2 .right{
+        width:100%;
+    }
+
+    .featured_section13 .updates_section {
+        width: 96%;
+        }
+    .responsive-logo{
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 1366px) {
+    .gecp_logo h1 {
+        font-size: 50px;
+    }
+}

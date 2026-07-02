@@ -39,8 +39,8 @@ namespace GECPatan.Api.Controllers
                 .ToList();
 
             var deptNames = await _context.Departments
-                .Where(d => deptIds.Contains(d.DeptId ?? 0))
-                .ToDictionaryAsync(d => d.DeptId ?? 0, d => d.Name);
+                .Where(d => deptIds.Contains(d.DeptId))
+                .ToDictionaryAsync(d => d.DeptId, d => d.Name);
 
             var data = items.Select(c => new AcademicCalendarDTO
             {

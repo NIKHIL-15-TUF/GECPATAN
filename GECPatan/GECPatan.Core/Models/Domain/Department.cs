@@ -8,7 +8,7 @@ namespace GECPatan.Core.Models.Domain
     public class Department : BaseEntity
     {
         [Key]
-        public int? DeptId { get; set; }
+        public int DeptId { get; set; }
 
         [Required, MaxLength(200)]
         public string Name { get; set; } = string.Empty;

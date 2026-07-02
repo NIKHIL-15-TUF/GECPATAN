@@ -54,7 +54,7 @@ namespace GECPatan.Api.Controllers
 
             var data = depts.Select(d => new DepartmentListDTO
             {
-                DeptId = d.DeptId ?? 0,
+                DeptId = d.DeptId,
                 Name = d.Name,
                 ShortCode = d.ShortCode,
                 Tagline = d.Tagline,
@@ -111,7 +111,7 @@ namespace GECPatan.Api.Controllers
 
             var data = new DepartmentDetailDTO
             {
-                DeptId = dept.DeptId ?? 0,
+                DeptId = dept.DeptId,
                 Name = dept.Name,
                 ShortCode = dept.ShortCode,
                 About = dept.About,

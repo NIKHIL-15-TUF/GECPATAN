@@ -5,13 +5,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\GECPatan.Core\GECPatan.Core.csproj" />
+	</ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GECPatan.Admin\GECPatan.Admin.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Views\Department\" />
     <Folder Include="Views\Faculty\" />
     <Folder Include="Views\Institute\" />
     <Folder Include="Views\CampusCommittee\" />
