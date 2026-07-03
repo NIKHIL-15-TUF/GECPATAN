@@ -94,7 +94,7 @@
     {
         public int Id { get; set; }
         public int Year { get; set; }
-        public string? SemesterType { get; set; }
+        public int? SemesterType { get; set; }
         public int Semester { get; set; }
         public string FilePath { get; set; } = string.Empty;
         public string? UploadedDate { get; set; }

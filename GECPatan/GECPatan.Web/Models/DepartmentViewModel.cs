@@ -6,6 +6,8 @@ namespace GECPatan.Web.Models
     // but populated from API DTOs instead of a server-side ViewModel.
     public class DepartmentViewModel
     {
+        public string ApiBaseUrl { get; set; } = string.Empty;
+
         public int DeptId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? About { get; set; }

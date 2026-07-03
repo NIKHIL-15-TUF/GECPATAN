@@ -1,4 +1,5 @@
 ﻿@model GECPatan.Web.Models.DepartmentViewModel
+@using GECPatan.Web.Models.Dtos
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = Model.Title;
@@ -11,12 +12,13 @@
         .GroupBy(s => s.SectionType!)
         .ToList();
 
-    // The API sometimes returns image paths as "images/Faculty/1.jpg" and
-    // sometimes as "/images/Faculty/1.jpg" or a full URL. Blindly prepending
-    // "~/" (as the old view did) breaks the second two cases and produces
-    // the broken-image icons seen in the PDF export. This normalizes all of
-    // them to a safe, resolvable URL.
-    string ResolveImageUrl(string? path)
+    // The API sometimes returns paths as "images/Faculty/1.jpg", sometimes as
+    // "/uploads/timetables/xxx.pdf", and occasionally a full URL. These are
+    // files served by GECPatan.Api's static file middleware, not by this Web
+    // app, so they must be resolved against Model.ApiBaseUrl -- resolving
+    // them with Url.Content("~/...") (as the old view did) points at this
+    // app's own host instead and 404s.
+    string ResolveApiFileUrl(string? path)
     {
         if (string.IsNullOrWhiteSpace(path))
         {
@@ -28,7 +30,14 @@
         {
             return path;
         }
-        return Url.Content("~/" + path.TrimStart('~', '/'));
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            // Fall back to this app's own host rather than throwing, so a
+            // missing config value degrades to "broken image" instead of a
+            // server error.
+            return Url.Content("~/" + path.TrimStart('~', '/'));
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
     }
 }
 
@@ -43,6 +52,7 @@
     </div>
 </div>
 <div class="clearfix"></div>
+
 <div class="margin_top10"></div>
 <div class="full-container">
 
@@ -90,18 +100,22 @@
     </div>
     <div class="tab-xs visible-xs">
         @{ RenderTabButtons(); }
-    </div> 
+    </div>
 
     <!-- ABOUT -->
     <div id="About" class="tabcontent">
         <div class="full-container">
             <div class="one_half">
-                <div id="owl-demo2" class="owl-carousel">
-                    @foreach (var img in Model.BannerImages)
-                    {
-                        <div><img src="@Url.Content(img)" alt="" class="rimg"></div>
-                    }
-                </div>
+                @{ var bannerImages = Model.BannerImages.Where(b => !string.IsNullOrWhiteSpace(b)).ToList(); }
+                @if (bannerImages.Any())
+                {
+                    <div id="owl-demo2" class="owl-carousel">
+                        @foreach (var img in bannerImages)
+                        {
+                            <div><img src="@ResolveApiFileUrl(img)" alt="" class="rimg" onerror="this.parentElement.style.display='none'"></div>
+                        }
+                    </div>
+                }
             </div>
             <!-- end section -->
 
@@ -206,22 +220,24 @@
     <div id="Labs" class="tabcontent">
         @foreach (var lab in Model.Labs.OrderBy(l => l.DisplayOrder))
         {
-            var mainImg = lab.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault();
-
-            <div class="boxdetail">
+            var mainImg = lab.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault(); 
+            <div class="boxdetail lab-card">
                 <h2 class="boxtitle">@lab.LabName</h2>
 
-                <div class="one_third">
-                    @if (mainImg != null)
-                    {
-                        <img src="@ResolveImageUrl(mainImg.ImagePath)" alt="@lab.LabName" />
-                    }
-                </div>
+                @if (mainImg != null)
+                {
+                    <div class="lab-card_image">
+                        <img src="@ResolveApiFileUrl(mainImg.ImagePath)" alt="@lab.LabName"
+                             onerror="this.style.display='none'" />
+                    </div>
+                }
 
-                <div class="two_third last table-responsive">
-                    @Html.Raw(lab.About)
-                </div>
-
+                @if (!string.IsNullOrEmpty(lab.About))
+                {
+                    <div class="lab-card_details table-responsive">
+                        @Html.Raw(lab.About)
+                    </div>
+                }
                 <div class="clearfix"></div>
             </div>
         }
@@ -246,7 +262,7 @@
             {
                 <div class="one_half @(i % 2 == 0 ? "last" : "") animate" data-anim-type="fadeIn" data-anim-delay="300">
                     <div class="faculties_img_div">
-                        <img src="@ResolveImageUrl(data.ImagePath)" alt="@data.Name" onerror="this.style.display='none'" />
+                        <img src="@ResolveApiFileUrl(data.ImagePath)" alt="@data.Name" onerror="this.style.display='none'" />
                     </div>
                     <div class="b-portfolio_info col-sm-6">
                         <div class="b-portfolio_info_title f-primary-b f-portfolio_info_title">
@@ -295,7 +311,7 @@
             {
                 <div class="one_half @(j % 2 == 0 ? "last" : "") animate" data-anim-type="fadeIn" data-anim-delay="300">
                     <div class="faculties_img_div">
-                        <img src="@ResolveImageUrl(data.ImagePath)" alt="@data.Name" onerror="this.style.display='none'" />
+                        <img src="@ResolveApiFileUrl(data.ImagePath)" alt="@data.Name" onerror="this.style.display='none'" />
                     </div>
                     <div class="b-portfolio_info col-sm-6">
                         <div class="b-portfolio_info_title f-primary-b f-portfolio_info_title">
@@ -331,11 +347,11 @@
     <div id="TimeTable" class="tabcontent">
         <div class="client_logos3 animate fadeIn" data-anim-type="fadeIn" data-anim-delay="300">
             <ul>
-                @foreach (var item in Model.TimeTable)
+                @foreach (var item in Model.TimeTable.Where(t => !string.IsNullOrEmpty(t.FilePath)))
                 {
                     var title = $"{item.SemesterType} Sem {item.Semester} ({item.Year})";
                     <li class="minheight">
-                        <a href="javascript:void(0)" onclick="loadPdf('@item.FilePath','@title')">
+                        <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(item.FilePath)','@title')">
                             <i class="fa fa-file-pdf-o fabig" aria-hidden="true"></i>
                             @title
                         </a>
@@ -371,13 +387,13 @@
                             <li>
                                 @if ((item.FileType ?? "").ToUpper() == "PDF")
                                 {
-                                    <a href="javascript:void(0)" onclick="loadPdf('@item.FilePath','@item.Title')">
+                                    <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(item.FilePath)','@item.Title')">
                                         <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @item.Title
                                     </a>
                                 }
                                 else
                                 {
-                                    <a href="@Url.Content(item.FilePath)" target="_blank" download>
+                                    <a href="@ResolveApiFileUrl(item.FilePath)" download>
                                         <i class="fa @((item.FileType ?? "").ToUpper() == "WORD" ? "fa-file-word-o" : "fa-file-excel-o")" aria-hidden="true"></i>
                                         @item.Title
                                     </a>
@@ -434,18 +450,18 @@
 
                     <div class="clearfix margin_top1"></div>
                     <ul class="Activitesfile">
-                        @foreach (var file in item.Files)
+                        @foreach (var file in item.Files.Where(f => !string.IsNullOrEmpty(f.FilePath)))
                         {
                             <li>
                                 @if ((file.FileType ?? "").ToUpper() == "PDF")
                                 {
-                                    <a href="javascript:void(0)" onclick="loadPdf('@file.FilePath','@file.Title')">
+                                    <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(file.FilePath)','@file.Title')">
                                         <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @file.Title
                                     </a>
                                 }
                                 else
                                 {
-                                    <a href="@Url.Content(file.FilePath)" target="_blank" download>
+                                    <a href="@ResolveApiFileUrl(file.FilePath)" download>
                                         <i class="fa @((file.FileType ?? "").ToUpper() == "WORD" ? "fa-file-word-o" : "fa-file-excel-o")" aria-hidden="true"></i>
                                         @file.Title
                                     </a>
@@ -481,21 +497,22 @@
                         }
                     </div>
 
-                    @if (sec.Files.Any())
+                    @{ var secFiles = sec.Files.Where(f => !string.IsNullOrEmpty(f.FilePath)).OrderBy(f => f.DisplayOrder).ToList(); }
+                    @if (secFiles.Any())
                     {
                         <ul class="Activitesfile">
-                            @foreach (var file in sec.Files.OrderBy(f => f.DisplayOrder))
+                            @foreach (var file in secFiles)
                             {
                                 <li>
                                     @if ((file.FileType ?? "").ToUpper() == "PDF")
                                     {
-                                        <a href="javascript:void(0)" onclick="loadPdf('@file.FilePath','@file.Title')">
+                                        <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(file.FilePath)','@file.Title')">
                                             <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @file.Title
                                         </a>
                                     }
                                     else
                                     {
-                                        <a href="@Url.Content(file.FilePath)" target="_blank" download>
+                                        <a href="@ResolveApiFileUrl(file.FilePath)" download>
                                             <i class="fa @((file.FileType ?? "").ToUpper() == "WORD" ? "fa-file-word-o" : "fa-file-excel-o")" aria-hidden="true"></i>
                                             @file.Title
                                         </a>
@@ -506,7 +523,7 @@
                     }
                     else if (!string.IsNullOrEmpty(sec.FilePath))
                     {
-                        <a href="javascript:void(0)" onclick="loadPdf('@sec.FilePath','@sec.FileName')">
+                        <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(sec.FilePath)','@sec.FileName')">
                             <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @sec.FileName
                         </a>
                     }
@@ -579,16 +596,14 @@
 
     <script>
         function loadPdf(path, name) {
-            if (path !== '') {
-                path = path.replace("~", "");
-                if (PDFObject.supportsPDFs) {
-                    PDFObject.embed(path, "#pdfreader");
-                    $("#newsname").text(name);
-                    $("#lnkPopup").click();
-                } else {
-                    window.location.href = path;
-                }
-            }
+        if (path && path.trim() !== '') {
+
+        $("#newsname").text(name);
+
+        popupOpenClose($("#popup"));
+
+        PDFObject.embed(path, "#pdfreader");
+        }
         }
 
         function popupOpenClose(popup) {
@@ -626,6 +641,7 @@
 
 @section styles {
     <style>
+
         .faculties_img_div img {
             margin-right: 0;
             width: 100%;
@@ -702,8 +718,7 @@
             }
     </style>
 
+    <link rel="stylesheet" href="~/css/graph.css" />
     <link type="text/css" rel="stylesheet" href="@Url.Content("~/js/loopslider/style.css")">
-    <link rel="stylesheet" href="@Url.Content("~/css/reset.css")" />
-    <link rel="stylesheet" href="@Url.Content("~/cdn1/DataTables/datatables.css")" />
     <link rel="stylesheet" href="@Url.Content("~/css/reset.css")" />
 }

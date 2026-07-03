@@ -7,10 +7,12 @@ namespace GECPatan.Web.Controllers
     public class DepartmentController : Controller
     {
         private readonly IDepartmentApiService _api;
+        private readonly IConfiguration _configuration;
 
-        public DepartmentController(IDepartmentApiService api)
+        public DepartmentController(IDepartmentApiService api, IConfiguration configuration)
         {
             _api = api;
+            _configuration = configuration;
         }
 
         // GET /Department/5
@@ -35,6 +37,12 @@ namespace GECPatan.Web.Controllers
 
             var vm = new DepartmentViewModel
             {
+                // Uploaded files (PDFs, faculty/lab/banner images) are served by
+                // GECPatan.Api's own static file middleware, not by this Web app.
+                // Relative paths like "/uploads/timetables/xxx.pdf" returned by
+                // the API therefore need to be resolved against the API's own
+                // host, not this app's — see ResolveApiFileUrl() in the view.
+                ApiBaseUrl = _configuration["Api:BaseUrl"]?.TrimEnd('/') ?? string.Empty,
                 DeptId = dept.DeptId,
                 Title = dept.Name,
                 About = dept.About,
