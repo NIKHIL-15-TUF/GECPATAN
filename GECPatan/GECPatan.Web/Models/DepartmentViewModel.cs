@@ -27,6 +27,7 @@ namespace GECPatan.Web.Models
         public List<DeptLabDTO> Labs { get; set; } = new();
         public List<DeptFacultyDTO> FacultyList { get; set; } = new();
         public List<DeptTimetableDTO> TimeTable { get; set; } = new();
+        public List<DeptIntakeDTO> IntakeHistory { get; set; } = new();
         public List<ActivityDTO> Activities { get; set; } = new();
         public List<DeptNoticeDTO> NoticeBoard { get; set; } = new();
 

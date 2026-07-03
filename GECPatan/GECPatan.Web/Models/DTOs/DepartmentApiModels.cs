@@ -8,6 +8,18 @@
         public string? Message { get; set; }
         public T? Data { get; set; }
     }
+    public class DepartmentListDTO
+    {
+        public int DeptId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? ShortCode { get; set; }
+        public string? Tagline { get; set; }
+        public string? TitleImagePath { get; set; }
+        public int DisplayOrder { get; set; }
+        public int FacultyCount { get; set; }
+        public int LabCount { get; set; }
+        public int CurrentIntake { get; set; }
+    }
 
     public class DepartmentDetailDTO
     {
@@ -101,6 +113,12 @@
         public string? PostedBy { get; set; }
         public int DisplayOrder { get; set; }
     }
+    public class DeptIntakeDTO
+    {
+        public int IntakeYear { get; set; }
+        public int Intake { get; set; }
+        public bool IsLatest { get; set; }
+    }
 
     public class ActivityDTO
     {
@@ -115,6 +133,7 @@
         public string? ExternalLink { get; set; }
         public string? Link { get; set; }
         public List<ActivityImageDTO> Images { get; set; } = new();
+
         public List<ActivityFileDTO> Files { get; set; } = new();
     }
 

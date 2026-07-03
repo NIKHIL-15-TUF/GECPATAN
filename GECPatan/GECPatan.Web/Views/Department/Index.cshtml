@@ -2,15 +2,39 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = Model.Title;
-    int count = 1;
+
+    // Dynamic sections replace the old hard-coded Achievements / NewsLetter /
+    // AcademicCalender tabs. Group them by SectionType so the CMS can add new
+    // tab types without any front-end change.
+    var sectionGroups = Model.DynamicSections
+        .Where(s => !string.IsNullOrWhiteSpace(s.SectionType))
+        .GroupBy(s => s.SectionType!)
+        .ToList();
+
+    // The API sometimes returns image paths as "images/Faculty/1.jpg" and
+    // sometimes as "/images/Faculty/1.jpg" or a full URL. Blindly prepending
+    // "~/" (as the old view did) breaks the second two cases and produces
+    // the broken-image icons seen in the PDF export. This normalizes all of
+    // them to a safe, resolvable URL.
+    string ResolveImageUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        return Url.Content("~/" + path.TrimStart('~', '/'));
+    }
 }
 
 <div class="clearfix"></div>
 
-@* Original used a CSS class (TitleImageCSSClass) for the banner background; the API doesn't
-   expose that class name, so this falls back to an inline background image from TitleImagePath.
-   Tell me the class-naming convention (e.g. "banner-cse", "banner-mech") if you want it back. *@
-<div class="page_title3" style="background-image:url('@Url.Content(Model.TitleImagePath ?? "~/images/default-banner.jpg")')">
+<div class="page_title3 general_title">
     <div class="full-container">
         <h1>
             @Model.Title
@@ -19,82 +43,63 @@
     </div>
 </div>
 <div class="clearfix"></div>
-
 <div class="margin_top10"></div>
 <div class="full-container">
+
+    @{
+        void RenderTabButtons()
+        {
+            <button class="tablinks" onclick="openTab(event, 'About')" id="defaultOpen">About</button>
+            @if (Model.Vision.Any() && Model.Mission.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'VisionMission')">Vision &amp; Mission</button>
+            }
+            @if (Model.PEOs.Any() && Model.PSOs.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'PeoPso')">PEOs &amp; PSOs</button>
+            }
+            @if (Model.Labs.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'Labs')">Labs</button>
+            }
+            @if (Model.FacultyList.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'Staff')">Faculties And Staff</button>
+            }
+            @if (Model.TimeTable.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'TimeTable')">Time Table</button>
+            }
+            @if (Model.NoticeBoard.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'NoticeBoard')">Notice Board</button>
+            }
+            @if (Model.Activities.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'Activities')">Activities</button>
+            }
+            @foreach (var group in sectionGroups)
+            {
+                <button class="tablinks" onclick="openTab(event, 'Section_@group.Key')">@group.Key</button>
+            }
+        }
+    }
+
     <div class="tab hidden-xs">
-        <button class="tablinks" onclick="openTab(event, 'About')" id="defaultOpen">About</button>
-        @if (Model.Vision.Any() && Model.Mission.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'VisionMission')">Vision &amp; Mission</button>
-        }
-        @if (Model.PEOs.Any() && Model.PSOs.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'PeoPso')">PEOs &amp; PSOs</button>
-        }
-        @if (Model.Labs.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'Labs')">Labs</button>
-        }
-        @if (Model.FacultyList.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'Staff')">Faculties And Staff</button>
-        }
-        @if (Model.TimeTable.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'TimeTable')">Time Table</button>
-        }
-        @if (Model.Activities.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'Activities')">Activities</button>
-        }
-        @if (Model.NoticeBoard.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'NoticeBoard')">Notice Board</button>
-        }
-        @* Academic Calendar / Achievements / Newsletter tabs stay out until
-           GetAcademicCalendar / GetAchievements / GetNewsletter exist on DepartmentsController. *@
+        @{ RenderTabButtons(); }
     </div>
-
     <div class="tab-xs visible-xs">
-        <button class="tablinks" onclick="openTab(event, 'About')" id="defaultOpenXs">About</button>
-        @if (Model.Vision.Any() && Model.Mission.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'VisionMission')">Vision &amp; Mission</button>
-        }
-        @if (Model.PEOs.Any() && Model.PSOs.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'PeoPso')">PEOs &amp; PSOs</button>
-        }
-        @if (Model.Labs.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'Labs')">Labs</button>
-        }
-        @if (Model.FacultyList.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'Staff')">Faculties And Staff</button>
-        }
-        @if (Model.TimeTable.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'TimeTable')">Time Table</button>
-        }
-        @if (Model.Activities.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'Activities')">Activities</button>
-        }
-        @if (Model.NoticeBoard.Any())
-        {
-            <button class="tablinks" onclick="openTab(event, 'NoticeBoard')">Notice Board</button>
-        }
-    </div>
+        @{ RenderTabButtons(); }
+    </div> 
 
+    <!-- ABOUT -->
     <div id="About" class="tabcontent">
         <div class="full-container">
             <div class="one_half">
                 <div id="owl-demo2" class="owl-carousel">
-                    @foreach (var item in Model.BannerImages)
+                    @foreach (var img in Model.BannerImages)
                     {
-                        <div><img src="@Url.Content(item)" alt="" class="rimg"></div>
+                        <div><img src="@Url.Content(img)" alt="" class="rimg"></div>
                     }
                 </div>
             </div>
@@ -112,7 +117,7 @@
 
         @if (Model.ShowIntake)
         {
-            <div class="margin_top2"> </div>
+            <div class="margin_top2"></div>
             <div class="parallax_section12">
                 <div class="full-container">
                     <div class="counters7 animate" data-anim-type="fadeIn" data-anim-delay="300">
@@ -120,79 +125,76 @@
                             <i class="fa fa-user"></i> <span id="target21">@Model.Intake</span>
                             <h4>Total Intake</h4>
                         </div>
-                        <!-- end section -->
                         <div class="one_fourth">
-                            <i class="fa fa-users"></i> <span id="target22">@Model.FacultyList.Count(f => f.IsTeaching)</span>
+                            <i class="fa fa-users"></i> <span id="target22">@Model.FacultyList.Count(m => m.IsTeaching)</span>
                             <h4>Faculties Member</h4>
                         </div>
-                        <!-- end section -->
                         <div class="one_fourth last">
-                            <i class="fa fa-building"></i> <span id="target25">@Model.Labs.Count()</span>
+                            <i class="fa fa-building"></i> <span id="target25">@Model.Labs.Count</span>
                             <h4>Labs And Workshops</h4>
                         </div>
-                        <!-- end section -->
                         <div class="one_fourth">
                             <i class="fa fa-paper-plane"></i> <span id="target24">@Model.AnnualPlacementCount</span>
                             <h4>Annual Placement</h4>
                         </div>
-                        <!-- end section -->
                     </div>
                 </div>
             </div>
-            <!-- end parallax section 12 -->
         }
     </div>
 
+    <!-- VISION & MISSION -->
     <div id="VisionMission" class="tabcontent">
         <div class="featured_section106" style="background-color:white">
             <div style="padding-left:10px;">
                 <div class="margin_top2"></div>
-                <h2 class="roboto thin">Vision </h2>
+                <h2 class="roboto thin">Vision</h2>
                 <div class="hsmline7"></div>
                 <br><br>
-                @foreach (var obj in Model.Vision)
+                @foreach (var v in Model.Vision)
                 {
-                    <h4 class="roboto thin text-justify"> @obj</h4>
+                    <h4 class="roboto thin text-justify">@v</h4>
                 }
 
                 <div class="clearfix margin_top2"></div>
 
                 <div class="margin_top2"></div>
-                <h2 class="roboto thin">Mission </h2>
+                <h2 class="roboto thin">Mission</h2>
                 <div class="hsmline7"></div>
                 <br><br>
-                @foreach (var obj in Model.Mission)
+                @foreach (var m in Model.Mission)
                 {
-                    <h4 class="roboto thin text-justify"><i class="fa fa-check"></i> @Html.Raw(obj)</h4>
+                    <h4 class="roboto thin text-justify"><i class="fa fa-check"></i> @Html.Raw(m)</h4>
                 }
                 <div class="margin_top2"></div>
             </div>
         </div>
     </div>
 
+    <!-- PEOs & PSOs -->
     <div id="PeoPso" class="tabcontent">
         @if (Model.PEOs.Any())
         {
             <div class="featured_section106" style="background-color:white">
                 <div style="padding-left:10px;">
                     <div class="margin_top2"></div>
-                    <h2 class="roboto thin">PROGRAM EDUCATIONAL OBJECTIVES (PEOs) </h2>
+                    <h2 class="roboto thin">PROGRAM EDUCATIONAL OBJECTIVES (PEOs)</h2>
                     <div class="hsmline7"></div>
                     <br><br>
-                    @foreach (var obj in Model.PEOs)
+                    @foreach (var p in Model.PEOs)
                     {
-                        <h4 class="roboto thin text-justify"><i class="fa fa-check"></i> @obj</h4>
+                        <h4 class="roboto thin text-justify"><i class="fa fa-check"></i> @p</h4>
                     }
 
                     <div class="clearfix margin_top2"></div>
 
                     <div class="margin_top2"></div>
-                    <h2 class="roboto thin">PROGRAM SPECIFIC OUTCOMES (PSOs) </h2>
+                    <h2 class="roboto thin">PROGRAM SPECIFIC OUTCOMES (PSOs)</h2>
                     <div class="hsmline7"></div>
                     <br><br>
-                    @foreach (var obj in Model.PSOs)
+                    @foreach (var p in Model.PSOs)
                     {
-                        <h4 class="roboto thin text-justify"><i class="fa fa-check"></i> @Html.Raw(obj)</h4>
+                        <h4 class="roboto thin text-justify"><i class="fa fa-check"></i> @Html.Raw(p)</h4>
                     }
                     <div class="margin_top2"></div>
                 </div>
@@ -200,31 +202,33 @@
         }
     </div>
 
+    <!-- LABS -->
     <div id="Labs" class="tabcontent">
-        @foreach (var lab in Model.Labs)
+        @foreach (var lab in Model.Labs.OrderBy(l => l.DisplayOrder))
         {
-            var mainImage = lab.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault();
+            var mainImg = lab.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault();
+
             <div class="boxdetail">
                 <h2 class="boxtitle">@lab.LabName</h2>
+
                 <div class="one_third">
-                    @if (mainImage != null)
+                    @if (mainImg != null)
                     {
-                        <img src="@Url.Content(mainImage.ImagePath)" alt="@lab.LabName" />
+                        <img src="@ResolveImageUrl(mainImg.ImagePath)" alt="@lab.LabName" />
                     }
                 </div>
+
                 <div class="two_third last table-responsive">
-                    @if (!string.IsNullOrEmpty(lab.About))
-                    {
-                        @Html.Raw(lab.About)
-                    }
+                    @Html.Raw(lab.About)
                 </div>
+
                 <div class="clearfix"></div>
             </div>
         }
     </div>
 
+    <!-- STAFF -->
     <div id="Staff" class="tabcontent">
-        <!-- end featured section 3 -->
         @{
             var teaching = Model.FacultyList.Where(f => f.IsTeaching).OrderBy(f => f.SeniorityOrder).ToList();
             var nonTeaching = Model.FacultyList.Where(f => !f.IsTeaching).OrderBy(f => f.SeniorityOrder).ToList();
@@ -236,12 +240,13 @@
                 <h3 class="boxtitle" style="font-size:2rem">Teaching Staff</h3>
                 <div class="line"></div>
             </div>
-            count = 1;
-            @foreach (var data in teaching)
+
+            int i = 1;
+            foreach (var data in teaching)
             {
-                <div class="one_half @(count % 2 == 0 ? "last" : "") animate" data-anim-type="fadeIn" data-anim-delay="300">
+                <div class="one_half @(i % 2 == 0 ? "last" : "") animate" data-anim-type="fadeIn" data-anim-delay="300">
                     <div class="faculties_img_div">
-                        <img src="@Url.Content(data.ImagePath ?? "~/images/faculty-placeholder.jpg")" alt="@data.Name" />
+                        <img src="@ResolveImageUrl(data.ImagePath)" alt="@data.Name" onerror="this.style.display='none'" />
                     </div>
                     <div class="b-portfolio_info col-sm-6">
                         <div class="b-portfolio_info_title f-primary-b f-portfolio_info_title">
@@ -260,17 +265,19 @@
                                         <li><strong>Area Of Interest:</strong> @data.AreaOfInterest</li>
                                     }
                                 </ul>
-                                @* "Know More" (Publications/Training/Experience) needs a
-                                   dedicated faculty-detail API endpoint - not yet exposed. *@
+                                @* NOTE: the old "KNOW MORE" faculty-detail popup called a
+                                   FacultyDatas API that isn't in the current swagger list.
+                                   Re-add it here once a GET /api/faculty/{id}/details
+                                   endpoint exists. *@
                             </div>
                         </div>
                     </div>
                 </div>
-                if (count % 2 == 0)
+                if (i % 2 == 0)
                 {
                     <div class="clearfix margin_top5"></div>
                 }
-                count++;
+                i++;
             }
             <div class="clearfix margin_top4"></div>
             <div class="clearfix"></div>
@@ -282,12 +289,13 @@
                 <h3 class="boxtitle" style="font-size:2rem">Non-Teaching Staff</h3>
                 <div class="line"></div>
             </div>
-            count = 1;
-            @foreach (var data in nonTeaching)
+
+            int j = 1;
+            foreach (var data in nonTeaching)
             {
-                <div class="one_half @(count % 2 == 0 ? " last" : "") animate" data-anim-type="fadeIn" data-anim-delay="300">
+                <div class="one_half @(j % 2 == 0 ? "last" : "") animate" data-anim-type="fadeIn" data-anim-delay="300">
                     <div class="faculties_img_div">
-                        <img src="@Url.Content(data.ImagePath ?? "~/images/faculty-placeholder.jpg")" alt="@data.Name" />
+                        <img src="@ResolveImageUrl(data.ImagePath)" alt="@data.Name" onerror="this.style.display='none'" />
                     </div>
                     <div class="b-portfolio_info col-sm-6">
                         <div class="b-portfolio_info_title f-primary-b f-portfolio_info_title">
@@ -310,23 +318,24 @@
                         </div>
                     </div>
                 </div>
-                if (count % 2 == 0)
+                if (j % 2 == 0)
                 {
                     <div class="clearfix margin_top5"></div>
                 }
-                count++;
+                j++;
             }
         }
     </div>
 
+    <!-- TIME TABLE -->
     <div id="TimeTable" class="tabcontent">
         <div class="client_logos3 animate fadeIn" data-anim-type="fadeIn" data-anim-delay="300">
             <ul>
-                @foreach (var item in Model.TimeTable.OrderBy(t => t.Semester))
+                @foreach (var item in Model.TimeTable)
                 {
-                    var title = $"{item.Year} - {item.SemesterType} Semester {item.Semester}";
+                    var title = $"{item.SemesterType} Sem {item.Semester} ({item.Year})";
                     <li class="minheight">
-                        <a href="javascript:void(0)" onclick="openPdfPopup('@item.FilePath')">
+                        <a href="javascript:void(0)" onclick="loadPdf('@item.FilePath','@title')">
                             <i class="fa fa-file-pdf-o fabig" aria-hidden="true"></i>
                             @title
                         </a>
@@ -336,6 +345,63 @@
         </div>
     </div>
 
+    <!-- NOTICE BOARD -->
+    <div id="NoticeBoard" class="tabcontent">
+        @if (Model.NoticeBoard.Any())
+        {
+            foreach (var item in Model.NoticeBoard)
+            {
+                <div class="box">
+                    <h2 class="boxtitle">@item.Title</h2>
+                    <div class="boxinfo">
+                        @if (!string.IsNullOrEmpty(item.PostedBy))
+                        {
+                            <ul class="post_meta_links">
+                                <li class="post_categoty">@item.PostedBy</li>
+                            </ul>
+                        }
+                        <div class="clearfix margin_top1"></div>
+                        @Html.Raw(item.Description)
+                    </div>
+                    <div class="clearfix margin_top1"></div>
+
+                    @if (!string.IsNullOrEmpty(item.FilePath))
+                    {
+                        <ul class="Activitesfile">
+                            <li>
+                                @if ((item.FileType ?? "").ToUpper() == "PDF")
+                                {
+                                    <a href="javascript:void(0)" onclick="loadPdf('@item.FilePath','@item.Title')">
+                                        <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @item.Title
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a href="@Url.Content(item.FilePath)" target="_blank" download>
+                                        <i class="fa @((item.FileType ?? "").ToUpper() == "WORD" ? "fa-file-word-o" : "fa-file-excel-o")" aria-hidden="true"></i>
+                                        @item.Title
+                                    </a>
+                                }
+                            </li>
+                        </ul>
+                    }
+                    <div class="clearfix margin_bottom1"></div>
+
+                    @if (!string.IsNullOrWhiteSpace(item.ExternalLink))
+                    {
+                        <a href="@item.ExternalLink" class="read-more-button" target="_blank">KNOW MORE</a>
+                    }
+                </div>
+                <div class="clearfix margin_bottom1"></div>
+            }
+        }
+        else
+        {
+            <h2>No Notices Available</h2>
+        }
+    </div>
+
+    <!-- ACTIVITIES -->
     <div id="Activities" class="tabcontent">
         @if (Model.Activities.Any())
         {
@@ -349,7 +415,7 @@
                             <li class="post_categoty">@item.EventTime</li>
                             @if (!string.IsNullOrWhiteSpace(item.Keywords))
                             {
-                                foreach (string key in item.Keywords.Split(','))
+                                foreach (var key in item.Keywords.Split(','))
                                 {
                                     <li class="post_categoty">@key</li>
                                 }
@@ -358,12 +424,14 @@
                         <div class="clearfix margin_top1"></div>
                         @Html.Raw(item.Description)
                     </div>
-                    @if (item.Images.Count() > 1 && !string.IsNullOrEmpty(item.Link))
+
+                    @if (item.Images.Count > 1 && !string.IsNullOrEmpty(item.Link))
                     {
                         <a href="@item.Link" target="_blank">
                             <button class="btn btn-outline-primary">More..</button>
                         </a>
                     }
+
                     <div class="clearfix margin_top1"></div>
                     <ul class="Activitesfile">
                         @foreach (var file in item.Files)
@@ -371,9 +439,8 @@
                             <li>
                                 @if ((file.FileType ?? "").ToUpper() == "PDF")
                                 {
-                                    <a href="javascript:void(0)" onclick="openPdfPopup('@file.FilePath')">
-                                        <i class="fa fa-file-pdf-o " aria-hidden="true"></i>
-                                        @file.Title
+                                    <a href="javascript:void(0)" onclick="loadPdf('@file.FilePath','@file.Title')">
+                                        <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @file.Title
                                     </a>
                                 }
                                 else
@@ -396,53 +463,58 @@
         }
     </div>
 
-    <div id="NoticeBoard" class="tabcontent">
-        @if (Model.NoticeBoard.Any())
-        {
-            foreach (var item in Model.NoticeBoard)
+    <!-- DYNAMIC SECTIONS (Achievements / Newsletter / Calendar / anything else the CMS adds) -->
+    @foreach (var group in sectionGroups)
+    {
+        <div id="Section_@group.Key" class="tabcontent">
+            @foreach (var sec in group.OrderBy(s => s.DisplayOrder))
             {
                 <div class="box">
-                    <h2 class="boxtitle">@item.Title</h2>
+                    @if (!string.IsNullOrWhiteSpace(sec.Title))
+                    {
+                        <h2 class="boxtitle">@Html.Raw(sec.Title)</h2>
+                    }
                     <div class="boxinfo">
-                        <div class="clearfix margin_top1"></div>
-                        @Html.Raw(item.Description)
+                        @if (!string.IsNullOrWhiteSpace(sec.HtmlContent))
+                        {
+                            @Html.Raw(sec.HtmlContent)
+                        }
                     </div>
-                    <div class="clearfix margin_top1"></div>
-                    @if (!string.IsNullOrEmpty(item.FilePath))
+
+                    @if (sec.Files.Any())
                     {
                         <ul class="Activitesfile">
-                            <li>
-                                @if ((item.FileType ?? "").ToUpper() == "PDF")
-                                {
-                                    <a href="javascript:void(0)" onclick="openPdfPopup('@item.FilePath')">
-                                        <i class="fa fa-file-pdf-o " aria-hidden="true"></i>
-                                        @item.Title
-                                    </a>
-                                }
-                                else
-                                {
-                                    <a href="@Url.Content(item.FilePath)" target="_blank" download>
-                                        <i class="fa @((item.FileType ?? "").ToUpper() == "WORD" ? "fa-file-word-o" : "fa-file-excel-o")" aria-hidden="true"></i>
-                                        @item.Title
-                                    </a>
-                                }
-                            </li>
+                            @foreach (var file in sec.Files.OrderBy(f => f.DisplayOrder))
+                            {
+                                <li>
+                                    @if ((file.FileType ?? "").ToUpper() == "PDF")
+                                    {
+                                        <a href="javascript:void(0)" onclick="loadPdf('@file.FilePath','@file.Title')">
+                                            <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @file.Title
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a href="@Url.Content(file.FilePath)" target="_blank" download>
+                                            <i class="fa @((file.FileType ?? "").ToUpper() == "WORD" ? "fa-file-word-o" : "fa-file-excel-o")" aria-hidden="true"></i>
+                                            @file.Title
+                                        </a>
+                                    }
+                                </li>
+                            }
                         </ul>
                     }
-                    <div class="clearfix margin_bottom1"></div>
-                    @if (!string.IsNullOrWhiteSpace(item.ExternalLink))
+                    else if (!string.IsNullOrEmpty(sec.FilePath))
                     {
-                        <a href="@item.ExternalLink" class="read-more-button" target="_blank">KNOW MORE</a>
+                        <a href="javascript:void(0)" onclick="loadPdf('@sec.FilePath','@sec.FileName')">
+                            <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @sec.FileName
+                        </a>
                     }
                 </div>
                 <div class="clearfix margin_bottom1"></div>
             }
-        }
-        else
-        {
-            <h2>No Notices Available</h2>
-        }
-    </div>
+        </div>
+    }
 </div>
 
 @if (!string.IsNullOrWhiteSpace(Model.Tagline))
@@ -455,27 +527,99 @@
     </div>
 }
 
+<a id="lnkPopup" href="#animatedModal" class="popup-trigger hidden" data-target="#popup"></a>
+<div id="popup" class="popup">
+    <h2 id="newsname"></h2>
+    <div id="pdfreader" style="height:600px"></div>
+    <span class="popup-btn-close">&times;</span>
+</div>
+
 @section scripts {
     <script src="@Url.Content("~/js/loopslider/jquery.loopslider.js")"></script>
+    <script src="@Url.Content("~/js/pdfobject/pdfobject.min.js")"></script>
+
     <script>
         $(function () {
-        (function ($) {
-        "use strict";
-        function animateTarget(id) {
-        var el = $('#' + id);
-        if (!el.length) return;
-        var target = el.text();
-        el.animateNumber({
-        number: target,
-        numberStep: function (now, tween) {
-        $(tween.elem).text(Math.floor(now));
-        }
-        }, 5000);
-        }
-        ['target21', 'target22', 'target24', 'target25'].forEach(animateTarget);
-        })(jQuery);
+            $('#slider').loopSlider({
+                autoMove: true,
+                mouseOnStop: true,
+                turn: 9000,
+                motion: 'swing',
+                delay: 500,
+                width: 750,
+                height: 400,
+                marginLR: 10,
+                viewSize: 100,
+                viewOverflow: 'visible',
+                navPositionBottom: 30,
+                navibotton: true,
+                navbtnImage: ''
+            });
+        });
+    </script>
 
-        document.getElementById("defaultOpen")?.click();
+    <script>
+        (function ($) {
+            "use strict";
+            function animateCounter(id) {
+                var target = $(id).text();
+                $(id).animateNumber({
+                    number: target,
+                    numberStep: function (now, tween) {
+                        $(tween.elem).text(Math.floor(now));
+                    }
+                }, 5000);
+            }
+            animateCounter('#target21');
+            animateCounter('#target22');
+            animateCounter('#target24');
+            animateCounter('#target25');
+        })(jQuery);
+    </script>
+
+    <script>
+        function loadPdf(path, name) {
+            if (path !== '') {
+                path = path.replace("~", "");
+                if (PDFObject.supportsPDFs) {
+                    PDFObject.embed(path, "#pdfreader");
+                    $("#newsname").text(name);
+                    $("#lnkPopup").click();
+                } else {
+                    window.location.href = path;
+                }
+            }
+        }
+
+        function popupOpenClose(popup) {
+            if ($(".wrapper", popup).length == 0) {
+                $(popup).wrapInner("<div class='wrapper'></div>");
+            }
+            $(popup).show();
+            $(popup).click(function (e) {
+                if (e.target == this && $(popup).is(':visible')) {
+                    $(popup).hide();
+                    resetPopUpScroll();
+                }
+            });
+            $(popup).find(".popup-btn-close").on("click", function () {
+                if ($(".formElementError").is(':visible')) {
+                    $(".formElementError").remove();
+                }
+                $(popup).hide();
+                resetPopUpScroll();
+            });
+        }
+
+        function resetPopUpScroll() {
+            $("#pdfreader").scrollTop(0);
+        }
+
+        $(document).ready(function () {
+            $(".popup-trigger").on("click", function () {
+                popupOpenClose($($(this).data('target')));
+                resetPopUpScroll();
+            });
         });
     </script>
 }
@@ -483,40 +627,83 @@
 @section styles {
     <style>
         .faculties_img_div img {
-        margin-right: 0px;
-        width: 100%;
-        margin-bottom: 20px;
-        border-radius: 15px;
+            margin-right: 0;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 15px;
         }
 
-        .read-more-container {
-        margin-top: 15px;
+        #pdfreader {
+            max-height: 600px;
+            overflow-y: scroll;
+            scrollbar-width: thin;
         }
 
         .read-more-button {
-        display: inline-block;
-        background-color: #5076bb;
-        color: white !important;
-        text-align: center;
-        padding: 10px 20px;
-        font-size: 16px;
-        font-weight: bold;
-        text-decoration: none;
-        border-radius: 5px;
-        transition: background 0.3s ease-in-out;
+            display: inline-block;
+            background-color: #5076bb;
+            color: white !important;
+            text-align: center;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s ease-in-out;
         }
 
-        .read-more-button:hover {
-        background-color: #0056b3;
-        }
+            .read-more-button:hover {
+                background-color: #0056b3;
+            }
 
         .Activitesfile > li {
-        display: block;
-        margin: auto;
-        float: left;
-        margin-right: 15px;
+            display: block;
+            margin: auto;
+            float: left;
+            margin-right: 15px;
         }
+
+        /* Labs tab: stacked layout (title bar, full-width image, spec table)
+           replacing the old side-by-side one_third/two_third floats, which
+           overlapped in print/PDF output. */
+        .lab-card {
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+            .lab-card .boxtitle {
+                border-left: 5px solid #5076bb;
+                padding-left: 12px;
+                margin-bottom: 15px;
+            }
+
+        .lab-card_image {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+            .lab-card_image img {
+                width: 100%;
+                height: auto;
+                display: block;
+                border-radius: 4px;
+            }
+
+        .lab-card_details table {
+            width: 100%;
+        }
+
+            .lab-card_details table th,
+            .lab-card_details table td {
+                padding: 6px 10px;
+                border: 1px solid #e5e5e5;
+            }
     </style>
 
     <link type="text/css" rel="stylesheet" href="@Url.Content("~/js/loopslider/style.css")">
+    <link rel="stylesheet" href="@Url.Content("~/css/reset.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/cdn1/DataTables/datatables.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/css/reset.css")" />
 }
