@@ -94,6 +94,10 @@
             {
                 <button class="tablinks" onclick="openTab(event, 'Activities')">Activities</button>
             }
+            @if (Model.Achievements.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'Achievements')">Achievements</button>
+            }
             @foreach (var sec in dynamicSections)
             {
                 var sid = SafeId(sec.Title);
@@ -488,6 +492,101 @@
         {
             <h2>No Activities Available</h2>
         }
+    </div>
+    <div id="Achievements" class="tabcontent">
+
+        @if (Model.Achievements != null && Model.Achievements.Count() > 0)
+        {
+            int count = 1;
+            <table id="myTable" class="display">
+                <thead>
+                    <tr>
+                        <th>Achievements</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @foreach (var item in Model.Achievements)
+                    {
+
+                        <tr>
+                            <td>
+                                <div class="box hidden-xs" style="height:265px">
+                                    <h3 class="boxtitle">@Html.Raw(item.Title)</h3>
+                                    <div class="boxinfo">
+                                        <ul class="post_meta_links">
+
+                                            <li class="post_categoty">@item.Date</li>
+                                            @if (!string.IsNullOrWhiteSpace(item.TypeName))
+                                            {
+                                                <li class="post_categoty">@item.TypeName</li>
+                                            }
+                                        </ul>
+                                        <div class="clearfix margin_top1"></div>
+
+
+
+                                        <div class="image_section">
+
+
+                                            <div class="col-sm-2 ">
+                                                @if (!string.IsNullOrEmpty(item.ImagePath))
+                                                {
+                                                    <img src="@Url.Content(item.ImagePath)" alt="" class="height180">
+                                                }
+                                            </div>
+
+                                        </div>
+
+                                        @item.Description
+                                    </div>
+                                </div>
+                                <div class="box visible-xs" style="height:auto">
+                                    <h3 class="boxtitle">@Html.Raw(item.Title)</h3>
+                                    <div class="boxinfo">
+                                        <ul class="post_meta_links">
+
+                                            <li class="post_categoty">@item.Date</li>
+                                            @if (!string.IsNullOrWhiteSpace(item.TypeName))
+                                            {
+                                                <li class="post_categoty">@item.TypeName</li>
+                                            }
+                                        </ul>
+                                        <div class="clearfix margin_top1"></div>
+
+
+
+                                        <div class="image_section">
+
+
+                                            <div class="col-sm-2 ">
+                                                @if (!string.IsNullOrEmpty(item.ImagePath))
+                                                {
+                                                    <img src="@Url.Content(item.ImagePath)" alt="" class="height180">
+                                                }
+                                            </div>
+
+                                        </div>
+
+                                        @item.Description
+                                    </div>
+                                </div>
+                                <div class="clearfix margin_bottom1"></div>
+                            </td>
+                        </tr>
+
+
+                        count++;
+
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <h2>No Achievement Available</h2>
+        }
+
     </div>
 
     <!-- DYNAMIC SECTIONS (Achievements / Newsletter / Calendar / anything else the CMS adds) -->

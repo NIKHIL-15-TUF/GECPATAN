@@ -32,6 +32,7 @@ namespace GECPatan.Web.Controllers
             var intakeTask = _api.GetIntakeAsync(id, ct);
             var noticesTask = _api.GetNoticesAsync(id, ct);
             var activitiesTask = _api.GetActivitiesAsync(id, ct);
+            var achievementTask = _api.GetAchivementsAsync(id, ct);
 
             await Task.WhenAll(facultyTask, labsTask, timetableTask, intakeTask, noticesTask, activitiesTask);
 
@@ -64,7 +65,9 @@ namespace GECPatan.Web.Controllers
                 TimeTable = timetableTask.Result,
                 IntakeHistory = intakeTask.Result,
                 NoticeBoard = noticesTask.Result,
-                Activities = activitiesTask.Result
+                Activities = activitiesTask.Result,
+                Achievements= achievementTask.Result
+
             };
 
             return View(vm);

@@ -11,5 +11,6 @@ namespace GECPatan.Web.Services
         Task<List<DeptIntakeDTO>> GetIntakeAsync(int id, CancellationToken ct = default);
         Task<List<DeptNoticeDTO>> GetNoticesAsync(int id, CancellationToken ct = default);
         Task<List<ActivityDTO>> GetActivitiesAsync(int id, CancellationToken ct = default);
+        Task<List<AchievementDTO>> GetAchivementsAsync(int id, CancellationToken ct = default);
     }
 }

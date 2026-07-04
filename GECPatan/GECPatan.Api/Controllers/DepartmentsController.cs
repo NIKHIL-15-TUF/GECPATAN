@@ -4,6 +4,8 @@ using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GECPatan.Api.Controllers
 {
@@ -368,5 +370,38 @@ namespace GECPatan.Api.Controllers
 
             return Ok(ApiResponse<List<ActivityDTO>>.Ok(data));
         }
+        // GET /api/departments/{id}/achievements
+        [HttpGet("{id}/achievements")]
+        public async Task<ActionResult<ApiResponse<List<AchievementDTO>>>> GetAchievements(int id)
+        {
+            var deptExists = await _context.Departments
+                .AnyAsync(d => d.DeptId == id && d.IsActive);
+
+            if (!deptExists)
+                return NotFound(ApiResponse<List<AchievementDTO>>.Fail(
+                    "Department not found"));
+
+            var data = await _context.Achievements
+                .Where(a => a.DeptId == id && a.IsVisible)
+                .OrderByDescending(a => a.Year)
+                .ThenByDescending(a => a.Date)
+                .Select(a => new AchievementDTO
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Description = a.Description,
+                    ImagePath = a.ImagePath,
+                    Date = a.Date,
+                    Year = a.Year,
+                   // TypeName = TypeName(a.Type),
+                    DeptId = a.DeptId,
+                    DeptName = a.DeptName,
+                    CommitteeId = a.CommitteeId
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponse<List<AchievementDTO>>.Ok(data));
+        }
+
     }
 }

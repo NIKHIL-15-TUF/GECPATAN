@@ -1,4 +1,5 @@
-﻿using GECPatan.Web.Models.Dtos;
+﻿using GECPatan.Core.Models.Domain;
+using GECPatan.Web.Models.Dtos;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -50,6 +51,8 @@ namespace GECPatan.Web.Services
 
         public async Task<List<ActivityDTO>> GetActivitiesAsync(int id, CancellationToken ct = default)
             => await GetAsync<List<ActivityDTO>>($"api/departments/{id}/activities", ct) ?? new();
+        public async Task<List<AchievementDTO>> GetAchivementsAsync(int id, CancellationToken ct = default)
+            => await GetAsync<List<AchievementDTO>>($"api/departments/{id}/achievements", ct) ?? new();
 
         private async Task<T?> GetAsync<T>(string url, CancellationToken ct)
         {

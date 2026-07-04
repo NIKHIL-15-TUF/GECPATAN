@@ -150,4 +150,17 @@
         public string? FileType { get; set; }
         public int DisplayOrder { get; set; }
     }
+    public class AchievementDTO
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? ImagePath { get; set; }
+        public string? Date { get; set; }
+        public int? Year { get; set; }
+        public string? TypeName { get; set; } // Academic/Sports/Cultural/NSS/Other
+        public int? DeptId { get; set; }
+        public string? DeptName { get; set; }
+        public int? CommitteeId { get; set; }
+    }
 }

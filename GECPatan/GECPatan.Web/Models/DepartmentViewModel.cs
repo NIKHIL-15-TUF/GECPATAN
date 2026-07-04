@@ -1,4 +1,5 @@
-﻿using GECPatan.Web.Models.Dtos;
+﻿using GECPatan.Core.Models.Domain;
+using GECPatan.Web.Models.Dtos;
 
 namespace GECPatan.Web.Models
 {
@@ -31,6 +32,7 @@ namespace GECPatan.Web.Models
         public List<DeptTimetableDTO> TimeTable { get; set; } = new();
         public List<DeptIntakeDTO> IntakeHistory { get; set; } = new();
         public List<ActivityDTO> Activities { get; set; } = new();
+        public List<AchievementDTO>Achievements { get; set; } = new();
         public List<DeptNoticeDTO> NoticeBoard { get; set; } = new();
 
         // Extra content the API exposes generically. Not present in the old view,

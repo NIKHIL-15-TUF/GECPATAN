@@ -65,5 +65,7 @@
         public int? DeptId { get; set; }
         public string? DeptName { get; set; }
         public int? CommitteeId { get; set; }
+        public string? CommitteeName { get; set; }
+
     }
 }
