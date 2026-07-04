@@ -7,10 +7,16 @@
     // Dynamic sections replace the old hard-coded Achievements / NewsLetter /
     // AcademicCalender tabs. Group them by SectionType so the CMS can add new
     // tab types without any front-end change.
-    var sectionGroups = Model.DynamicSections
-        .Where(s => !string.IsNullOrWhiteSpace(s.SectionType))
-        .GroupBy(s => s.SectionType!)
-        .ToList();
+    var dynamicSections = Model.DynamicSections
+     .Where(s => !string.IsNullOrWhiteSpace(s.Title))
+     .OrderBy(s => s.DisplayOrder)
+     .ToList();
+
+    string SafeId(string title)
+    {
+        return "Sec_" + System.Text.RegularExpressions.Regex
+            .Replace(title ?? "", @"[^a-zA-Z0-9]", "");
+    }
 
     // The API sometimes returns paths as "images/Faculty/1.jpg", sometimes as
     // "/uploads/timetables/xxx.pdf", and occasionally a full URL. These are
@@ -88,9 +94,14 @@
             {
                 <button class="tablinks" onclick="openTab(event, 'Activities')">Activities</button>
             }
-            @foreach (var group in sectionGroups)
+            @foreach (var sec in dynamicSections)
             {
-                <button class="tablinks" onclick="openTab(event, 'Section_@group.Key')">@group.Key</button>
+                var sid = SafeId(sec.Title);
+
+                <button class="tablinks"
+                        onclick="openTab(event,'@sid')">
+                    @sec.Title
+                </button>
             }
         }
     }
@@ -221,12 +232,12 @@
         @foreach (var lab in Model.Labs.OrderBy(l => l.DisplayOrder))
         {
             var mainImg = lab.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault(); 
-            <div class="boxdetail lab-card">
+            <div class="boxdetail">
                 <h2 class="boxtitle">@lab.LabName</h2>
 
                 @if (mainImg != null)
                 {
-                    <div class="lab-card_image">
+                    <div class="one_third">
                         <img src="@ResolveApiFileUrl(mainImg.ImagePath)" alt="@lab.LabName"
                              onerror="this.style.display='none'" />
                     </div>
@@ -234,7 +245,7 @@
 
                 @if (!string.IsNullOrEmpty(lab.About))
                 {
-                    <div class="lab-card_details table-responsive">
+                    <div class="two_third last table-responsive">
                         @Html.Raw(lab.About)
                     </div>
                 }
@@ -480,16 +491,15 @@
     </div>
 
     <!-- DYNAMIC SECTIONS (Achievements / Newsletter / Calendar / anything else the CMS adds) -->
-    @foreach (var group in sectionGroups)
+    @foreach (var sec in dynamicSections)
     {
-        <div id="Section_@group.Key" class="tabcontent">
-            @foreach (var sec in group.OrderBy(s => s.DisplayOrder))
-            {
-                <div class="box">
-                    @if (!string.IsNullOrWhiteSpace(sec.Title))
+        var sid = SafeId(sec.Title);
+        <div id="@sid" class="tabcontent">
+            <div class="box">
+                    @* @if (!string.IsNullOrWhiteSpace(sec.Title))
                     {
                         <h2 class="boxtitle">@Html.Raw(sec.Title)</h2>
-                    }
+                    } *@
                     <div class="boxinfo">
                         @if (!string.IsNullOrWhiteSpace(sec.HtmlContent))
                         {
@@ -523,13 +533,16 @@
                     }
                     else if (!string.IsNullOrEmpty(sec.FilePath))
                     {
-                        <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(sec.FilePath)','@sec.FileName')">
-                            <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @sec.FileName
-                        </a>
+                         <ul>
+                            <li class="minheight">
+                                <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(sec.FilePath)','@sec.FileName')">
+                                    <i class="fa fa-file-pdf-o fabig" aria-hidden="true"></i>
+                                    @sec.FileName
+                                </a>
+                            </li>
+                        </ul>
                     }
                 </div>
-                <div class="clearfix margin_bottom1"></div>
-            }
         </div>
     }
 </div>

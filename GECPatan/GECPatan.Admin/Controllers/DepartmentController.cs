@@ -266,8 +266,15 @@ namespace GECPatan.Admin.Controllers
                             DisplayOrder = i
                         });
             }
-
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                var msg = ex.InnerException?.Message ?? ex.Message;
+                throw;
+            }
             // Audit log
             await WriteAuditLog("Edited", "Department", (int)d.DeptId, d.Name);
             TempData["Success"] = $"Department '{d.Name}' updated.";
@@ -363,7 +370,7 @@ namespace GECPatan.Admin.Controllers
             using var stream = new FileStream(filePath, FileMode.Create);
             await file.CopyToAsync(stream);
             return $"/uploads/{folder}/{fileName}";
-        }
+        } 
 
         private void DeleteFile(string? filePath)
         {
