@@ -15,6 +15,12 @@ namespace GECPatan.Api.Controllers
 
         public MenuController(ApplicationDbContext context)
             => _context = context;
+        // GET /api/menu/top
+        // Top-bar quick action links (e.g. Alumni, RTI, Recruitment)
+        [HttpGet("top")]
+        public async Task<ActionResult<ApiResponse<List<MenuItemDTO>>>> GetTop()
+            => await BuildMenuTree("Top");
+
         // GET /api/menu/main
         // 3-level hierarchical navbar menu tree
         [HttpGet("main")]

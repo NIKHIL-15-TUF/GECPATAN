@@ -65,7 +65,13 @@
             <div class="top_section2" id="topHeader"></div>
         }
         <div class="clearfix"></div>
-        <header class="header" id="menuload"></header>
+        @{
+            var showHeader = ViewData["ShowHeader"] as bool? ?? true;
+        }
+        @if (showHeader)
+        {
+            <header class="header" id="menuload"></header>
+        }
 
         @RenderBody()
 

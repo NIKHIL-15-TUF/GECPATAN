@@ -1,0 +1,39 @@
+﻿@model GECPatan.Web.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Unexpected Error";
+    Layout = "_Layout";
+    ViewData["ShowTopHeader"] = false;
+    ViewData["ShowHeader"] = false;
+}
+
+<div class="full-container text-center" style="padding: 80px 15px; min-height: 50vh; display: flex; align-items: center; justify-content: center;">
+    <div style="max-width: 600px; margin: 0 auto;">
+
+        <!-- Optional Icon (If you use FontAwesome) -->
+        <h1 class="text-danger mb-3" style="font-size: 4rem;">
+            <i class="fa fa-exclamation-triangle"></i>
+        </h1>
+
+        <h2 class="text-dark mb-3">Oops! Something went wrong.</h2>
+
+        <p class="text-muted mb-4" style="font-size: 1.1rem;">
+            We apologize for the inconvenience, but an unexpected error occurred while processing your request.
+            Our technical team has been notified and we are working to resolve the issue.
+        </p>
+
+        @if (Model.ShowRequestId)
+        {
+            <div class="alert alert-secondary p-3 mb-4" role="alert" style="display: inline-block; text-align: left;">
+                <p class="mb-1"><strong>Error Reference ID:</strong> <code>@Model.RequestId</code></p>
+                <small class="text-muted">Please provide this code if you need to contact support.</small>
+            </div>
+        }
+
+        <div class="mt-2">
+            <a href="/" class="btn btn-primary px-4 py-2">
+                <i class="fa fa-home mr-2"></i> Return to Homepage
+            </a>
+        </div>
+
+    </div>
+</div>

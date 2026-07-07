@@ -1,0 +1,52 @@
+@model GECPatan.Web.Models.TopHeaderViewModel
+<div class="top_nav">
+    <div class="full-container">
+
+        <div class="left hidden-xs">
+
+            <a href="mailto:@Model.ContactEmail"><i class="fa fa-envelope"></i>&nbsp; @Model.ContactEmail</a> <i class="fa fa-phone-square"></i>&nbsp; @Model.ContactNo
+
+        </div><!-- end left -->
+
+        <div class="right gecp_social_right">
+            @* API already resolves each item's final Link and sorts by Position *@
+            @foreach (var item in Model.TopMenu.OrderBy(m => m.Position))
+            {
+                var href = string.IsNullOrWhiteSpace(item.Link) ? "javascript:void(0)" : item.Link;
+                var target = item.OpenInNewTab ? "_blank" : "_self";
+                <a href="@href" target="@target" class="tpbut">
+                    @item.MenuText
+                </a>
+            }
+        </div>
+
+    </div>
+</div><!-- end top navigation links -->
+<div class="clearfix margin_top1"></div>
+<div class="full-container hidden-xs">
+    <div class="logo_section">
+        <div class="gecp_logo">
+            <a href="@Url.Action("Index","Home")">
+                <img src="@Url.Content(Model.Logo)" class="rimg gecp_logo1" />
+                <h1 class="animate fadeIn gecp_name">Government Engineering College, Patan</h1>
+            </a>
+        </div>
+        <div class="gecp_gov_emblame">
+            <img src="@Url.Content("~/images/affiliated.png")" class="rimg" />
+        </div>
+    </div>
+
+</div>
+<div class="full-container visible-xs">
+    <img src="@Url.Content("~/images/Dynamic/NameBanner.png")" class="visible-xs responsive-logo" />
+</div>
+@* NOTE: the original used @@section styles { ... }, but this partial is
+   rendered via PartialView() (AJAX .load()), which has no Layout to
+   consume a section — that throws at runtime. Inlining instead. *@
+<style>
+    .h1 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 500;
+        color: #393939;
+    }
+</style>
