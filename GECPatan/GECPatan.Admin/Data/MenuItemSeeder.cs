@@ -107,17 +107,17 @@ namespace GECPatan.Core.Data
             // ═══════════════════════════════════════════════
             db.MenuItems.AddRange(
                 M("Electronics & Communication", depts.Id, "dynamic",
-                  "Department", "DepartmentDetails", dynId: 1, dynType: "Department", pos: 0),
+                  "Department", "Departments", dynId: 1, dynType: "Department", pos: 0),
                 M("Computer Science & Engineering", depts.Id, "dynamic",
-                  "Department", "DepartmentDetails", dynId: 2, dynType: "Department", pos: 1),
+                  "Department", "Departments", dynId: 2, dynType: "Department", pos: 1),
                 M("Electrical Engineering", depts.Id, "dynamic",
-                  "Department", "DepartmentDetails", dynId: 3, dynType: "Department", pos: 2),
+                  "Department", "Departments", dynId: 3, dynType: "Department", pos: 2),
                 M("Mechanical Engineering", depts.Id, "dynamic",
-                  "Department", "DepartmentDetails", dynId: 5, dynType: "Department", pos: 3),
+                  "Department", "Departments", dynId: 5, dynType: "Department", pos: 3),
                 M("Science & Humanities", depts.Id, "dynamic",
-                  "Department", "DepartmentDetails", dynId: 6, dynType: "Department", pos: 4),
+                  "Department", "Departments", dynId: 6, dynType: "Department", pos: 4),
                 M("Applied Mechanics", depts.Id, "dynamic",
-                  "Department", "DepartmentDetails", dynId: 8, dynType: "Department", pos: 5)
+                  "Department", "Departments", dynId: 8, dynType: "Department", pos: 5)
             );
 
             // Civil & Applied Mechanics container
