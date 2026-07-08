@@ -1,3 +1,28 @@
+/* Ensure the html and body take up full height */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+/* Turn your existing wrapper into a flex container */
+.site_wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 100% of the viewport height */
+}
+
+/* Tell the new main content wrapper to grow and take up empty space */
+.main-content {
+    flex: 1 0 auto;
+    width: 100%;
+}
+
+/* Prevent the footer from shrinking */
+#Gecfooter {
+    flex-shrink: 0;
+    width: 100%;
+}
+
 .detached.tabs > ul > li + li {
     margin-left: 95px !important;
 }

@@ -26,12 +26,12 @@ namespace GECPatan.Web.Controllers
         public async Task<IActionResult> Menu(CancellationToken ct)
         {
             var menu = await _menuApi.GetMainMenuAsync(ct);
-            return PartialView("~/Views/Shared/_Header.cshtml", menu);
+            return PartialView("~/Views/Shared/_Menu.cshtml", menu);
         }
 
         // GET /Home/TopMenu — loaded via AJAX by _Layout.cshtml into <div id="topHeader">
         [HttpGet]
-        public async Task<IActionResult> TopMenu(CancellationToken ct)
+        public async Task<IActionResult> Header(CancellationToken ct)
         {
             var topMenuTask = _menuApi.GetTopMenuAsync(ct);
             var settingsTask = _homeApi.GetSettingsAsync(ct);
@@ -40,14 +40,14 @@ namespace GECPatan.Web.Controllers
 
             var settings = settingsTask.Result;
 
-            var vm = new TopHeaderViewModel
+            var vm = new HeaderViewModel
             {
                 TopMenu = topMenuTask.Result,
                 ContactNo = settings?.Phone,
                 ContactEmail = settings?.Email
             };
 
-            return PartialView("~/Views/Shared/_TopHeader.cshtml", vm);
+            return PartialView("~/Views/Shared/_Header.cshtml", vm);
         }
 
         // GET /Home/Footer — loaded via AJAX by _Layout.cshtml into <div id="Gecfooter">

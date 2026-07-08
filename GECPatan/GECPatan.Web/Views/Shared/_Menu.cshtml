@@ -1,0 +1,83 @@
+@model List<GECPatan.Web.Models.Dtos.MenuItemDTO>
+@{
+    // The API only returns visible items already sorted by Position,
+    // but we re-sort defensively in case a partial/failed call short-circuits that.
+    var topLevel = (Model ?? new List<GECPatan.Web.Models.Dtos.MenuItemDTO>())
+        .OrderBy(m => m.Position);
+
+    string Href(GECPatan.Web.Models.Dtos.MenuItemDTO m)
+        => string.IsNullOrWhiteSpace(m.Link) ? "javascript:void(0)" : m.Link;
+
+    string Target(GECPatan.Web.Models.Dtos.MenuItemDTO m)
+        => m.OpenInNewTab ? "_blank" : "_self";
+}
+
+<div class="full-container">
+    <!-- Navigation Menu -->
+    <div class="menu_main_full2">
+        <div class="navbar yamm navbar-default">
+            <div class="navbar-header">
+                <div class="navbar-toggle .navbar-collapse .pull-right" data-toggle="collapse" data-target="#navbar-collapse-1">
+                    <span>Menu</span>
+                    <button type="button"><i class="fa fa-bars"></i></button>
+                </div>
+            </div>
+
+            <div id="navbar-collapse-1" class="navbar-collapse collapse">
+                <nav>
+                    <ul class="nav navbar-nav">
+                        @foreach (var item in topLevel)
+                        {
+                            if (item.Children.Any())
+                            {
+                                <li class="dropdown @item.CssClass">
+                                    <a href="#" class="dropdown-toggle">
+                                        @item.MenuText
+                                    </a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        @foreach (var childItem in item.Children.OrderBy(c => c.Position))
+                                        {
+                                            @if (childItem.Children.Any())
+                                            {
+                                                <li class="dropdown-submenu">
+                                                    <a href="#">@childItem.MenuText</a>
+                                                    <ul class="dropdown-menu">
+                                                        @foreach (var subChild in childItem.Children.OrderBy(s => s.Position))
+                                                        {
+                                                            <li>
+                                                                <a href="@Href(subChild)" target="@Target(subChild)">
+                                                                    @subChild.MenuText
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </li>
+                                            }
+                                            else
+                                            {
+                                                <li>
+                                                    <a href="@Href(childItem)" target="@Target(childItem)">
+                                                        @childItem.MenuText
+                                                    </a>
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="dropdown yamm-fw @item.CssClass">
+                                    <a href="@Href(item)" target="@Target(item)" class="dropdown-toggle">
+                                        @item.MenuText
+                                    </a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </nav>
+            </div>
+
+        </div>
+    </div>
+</div>

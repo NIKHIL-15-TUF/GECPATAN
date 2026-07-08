@@ -1,83 +1,51 @@
-@model List<GECPatan.Web.Models.Dtos.MenuItemDTO>
-@{
-    // The API only returns visible items already sorted by Position,
-    // but we re-sort defensively in case a partial/failed call short-circuits that.
-    var topLevel = (Model ?? new List<GECPatan.Web.Models.Dtos.MenuItemDTO>())
-        .OrderBy(m => m.Position);
+@model GECPatan.Web.Models.HeaderViewModel
+<div class="top_nav">
+    <div class="full-container">
 
-    string Href(GECPatan.Web.Models.Dtos.MenuItemDTO m)
-        => string.IsNullOrWhiteSpace(m.Link) ? "javascript:void(0)" : m.Link;
+        <div class="left hidden-xs">
 
-    string Target(GECPatan.Web.Models.Dtos.MenuItemDTO m)
-        => m.OpenInNewTab ? "_blank" : "_self";
-}
+            <a href="mailto:@Model.ContactEmail"><i class="fa fa-envelope"></i>&nbsp; @Model.ContactEmail</a> <i class="fa fa-phone-square"></i>&nbsp; @Model.ContactNo
 
-<div class="full-container">
-    <!-- Navigation Menu -->
-    <div class="menu_main_full2">
-        <div class="navbar yamm navbar-default">
-            <div class="navbar-header">
-                <div class="navbar-toggle .navbar-collapse .pull-right" data-toggle="collapse" data-target="#navbar-collapse-1">
-                    <span>Menu</span>
-                    <button type="button"><i class="fa fa-bars"></i></button>
-                </div>
-            </div>
+        </div><!-- end left -->
 
-            <div id="navbar-collapse-1" class="navbar-collapse collapse">
-                <nav>
-                    <ul class="nav navbar-nav">
-                        @foreach (var item in topLevel)
-                        {
-                            if (item.Children.Any())
-                            {
-                                <li class="dropdown @item.CssClass">
-                                    <a href="#" class="dropdown-toggle">
-                                        @item.MenuText
-                                    </a>
-                                    <ul class="dropdown-menu" role="menu">
-                                        @foreach (var childItem in item.Children.OrderBy(c => c.Position))
-                                        {
-                                            @if (childItem.Children.Any())
-                                            {
-                                                <li class="dropdown-submenu">
-                                                    <a href="#">@childItem.MenuText</a>
-                                                    <ul class="dropdown-menu">
-                                                        @foreach (var subChild in childItem.Children.OrderBy(s => s.Position))
-                                                        {
-                                                            <li>
-                                                                <a href="@Href(subChild)" target="@Target(subChild)">
-                                                                    @subChild.MenuText
-                                                                </a>
-                                                            </li>
-                                                        }
-                                                    </ul>
-                                                </li>
-                                            }
-                                            else
-                                            {
-                                                <li>
-                                                    <a href="@Href(childItem)" target="@Target(childItem)">
-                                                        @childItem.MenuText
-                                                    </a>
-                                                </li>
-                                            }
-                                        }
-                                    </ul>
-                                </li>
-                            }
-                            else
-                            {
-                                <li class="dropdown yamm-fw @item.CssClass">
-                                    <a href="@Href(item)" target="@Target(item)" class="dropdown-toggle">
-                                        @item.MenuText
-                                    </a>
-                                </li>
-                            }
-                        }
-                    </ul>
-                </nav>
-            </div>
+        <div class="right gecp_social_right">
+            @* API already resolves each item's final Link and sorts by Position *@
+            @foreach (var item in Model.TopMenu.OrderBy(m => m.Position))
+            {
+                var href = string.IsNullOrWhiteSpace(item.Link) ? "javascript:void(0)" : item.Link;
+                var target = item.OpenInNewTab ? "_blank" : "_self";
+                <a href="@href" target="@target" class="tpbut">
+                    @item.MenuText
+                </a>
+            }
+        </div>
 
+    </div>
+</div><!-- end top navigation links -->
+<div class="clearfix margin_top1"></div>
+<div class="full-container hidden-xs">
+    <div class="logo_section">
+        <div class="gecp_logo">
+            <a href="@Url.Action("Index","Home")">
+                <img src="@Url.Content(Model.Logo)" class="rimg gecp_logo1" />
+                <h1 class="animate fadeIn gecp_name">Government Engineering College, Patan</h1>
+            </a>
+        </div>
+        <div class="gecp_gov_emblame">
+            <img src="@Url.Content("~/images/affiliated.png")" class="rimg" />
         </div>
     </div>
 </div>
+<div class="full-container visible-xs">
+    <img src="@Url.Content("~/images/Dynamic/NameBanner.png")" class="visible-xs responsive-logo" />
+</div>
+@* NOTE: the original used @@section styles { ... }, but this partial is
+   rendered via PartialView() (AJAX .load()), which has no Layout to
+   consume a section — that throws at runtime. Inlining instead. *@
+<style>
+    .h1 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 500;
+        color: #393939;
+    }
+</style>

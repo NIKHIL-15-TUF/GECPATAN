@@ -4,7 +4,7 @@ namespace GECPatan.Web.Models
 {
     // Replaces the old HeaderVM the legacy topHeader.cshtml expected.
     // Populated from GET /api/home/settings + GET /api/menu/top.
-    public class TopHeaderViewModel
+    public class HeaderViewModel
     {
         public List<MenuItemDTO> TopMenu { get; set; } = new();
 

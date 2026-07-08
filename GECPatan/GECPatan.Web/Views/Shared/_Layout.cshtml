@@ -57,26 +57,32 @@
 <body>
 
     <div class="site_wrapper">
-        @{
-            var showTopHeader = ViewData["ShowTopHeader"] as bool? ?? true;
-        }
-        @if (showTopHeader)
-        {
-            <div class="top_section2" id="topHeader"></div>
-        }
-        <div class="clearfix"></div>
+        <!-- Header Area -->
         @{
             var showHeader = ViewData["ShowHeader"] as bool? ?? true;
         }
         @if (showHeader)
         {
+            <div class="top_section2" id="headerload"></div>
+        }
+        <div class="clearfix"></div>
+
+        <!-- Menu Area -->
+        @{
+            var showMenu = ViewData["ShowMenu"] as bool? ?? true;
+        }
+        @if (showMenu)
+        {
             <header class="header" id="menuload"></header>
         }
 
-        @RenderBody()
+        <!-- Add this wrapper around your body content -->
+        <main class="main-content">
+            @RenderBody()
+        </main>
 
+        <!-- Footer Area -->
         <div id="Gecfooter"></div>
-
         <a href="#" class="scrollup">Scroll</a>
     </div>
 
@@ -85,8 +91,8 @@
     <script src="@Url.Content("~/js/font-awesome/ef9a692198.js")"></script>
     <script type="text/javascript" src="@Url.Content("~/js/universal/jquery.js")"></script>
     <script>
+        $('#headerload').load("@Url.Action("Header", "Home")");
         $("#menuload").load("@Url.Action("Menu", "Home")");
-        $('#topHeader').load("@Url.Action("TopMenu", "Home")");
         $('#Gecfooter').load("@Url.Action("Footer", "Home")");
     </script>
     <script src="@Url.Content("~/js/style-switcher/styleselector.js")"></script>
