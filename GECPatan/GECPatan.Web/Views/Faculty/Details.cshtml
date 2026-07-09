@@ -1,0 +1,263 @@
+﻿@model GECPatan.Web.Models.FacultyDetailsViewModel
+@{
+    Layout = null;
+
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            return Url.Content("~/" + path.TrimStart('~', '/'));
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+
+    string FormatRange(string? from, string? to)
+    {
+        if (string.IsNullOrWhiteSpace(from))
+        {
+            return string.Empty;
+        }
+        var fromText = DateTime.TryParse(from, out var f) ? f.ToString("MMM yyyy") : from;
+        var toText = string.IsNullOrWhiteSpace(to)
+            ? "Present"
+            : (DateTime.TryParse(to, out var t) ? t.ToString("MMM yyyy") : to);
+        return $"{fromText} - {toText}";
+    }
+}
+<style>
+    .table > thead > tr.success > th {
+        background-color: #5076bb !important;
+        color: white;
+        text-align: justify;
+    }
+
+    .title22 {
+        color: black;
+    }
+</style>
+<div class="box">
+    <div class="">
+        <!-- Faculty Image -->
+        <div class="one_fourth text-center">
+            @if (!string.IsNullOrEmpty(Model.ImagePath))
+            {
+                <img src="@ResolveApiFileUrl(Model.ImagePath)" alt="@Model.Name"
+                     class="img-fluid rounded-circle shadow" onerror="this.style.display='none'">
+            }
+        </div>
+
+        <!-- Faculty Basic Info -->
+        <div class="three_fourth last">
+            <h1 class="display-4 text-primary">@Model.Name</h1>
+            <hr class="mb-3" />
+            <ul class="list-unstyled">
+                <li>
+                    <strong>Designation:</strong> <span class="text-secondary">@Model.Designation</span>
+                </li>
+                @if (!string.IsNullOrWhiteSpace(Model.AreaOfInterest))
+                {
+                    <li>
+                        <strong>Area of Interest:</strong> <span class="text-secondary">@Model.AreaOfInterest</span>
+                    </li>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.DeptName))
+                {
+                    <li>
+                        <strong>Department:</strong> <span class="text-secondary">@Model.DeptName (@Model.DeptShortCode)</span>
+                    </li>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Website))
+                {
+                    <li>
+                        <strong>Website/Blogspot:</strong> <a href="@Model.Website" class="block" target="_blank" rel="noopener">view</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+
+    <!-- Educational Qualifications -->
+    <section class="boxdetail">
+        <h3 class="boxtitle">Educational Qualifications</h3>
+        <div class="table-responsive boxinfo">
+            <table class="table table-striped table-hover table-condensed shadow-sm">
+                @if (Model.EducationalQualifications.Any())
+                {
+                    <thead class="bg-primary text-white">
+                        <tr class="success">
+                            <th style="width:10% !important">Sr No</th>
+                            <th>Degree</th>
+                            <th>University</th>
+                            <th>Year</th>
+                            <th>Specialization</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var qCount = 1;
+                        }
+                        @foreach (var qualification in Model.EducationalQualifications)
+                        {
+                            <tr>
+                                <td>@qCount</td>
+                                <td>@qualification.Degree</td>
+                                <td>@qualification.University</td>
+                                <td>@qualification.Year</td>
+                                <td>@qualification.Specialization</td>
+                            </tr>
+                            qCount++;
+                        }
+                    </tbody>
+                }
+                else
+                {
+                    <tr>
+                        <td>
+                            <div class="featured_section13">
+                                <h1 class="title22" style="color:black !important;">NO RECORDS AVAILABLE</h1>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+    </section>
+
+    <!-- Professional Experience -->
+    <section class="boxdetail">
+        <h3 class="boxtitle">Professional Experience</h3>
+        <div class="table-responsive boxinfo">
+            <table class="table table-striped table-hover table-condensed shadow-sm">
+                @if (Model.ProfessionalExperiences.Any())
+                {
+                    <thead class="bg-primary text-white">
+                        <tr class="success">
+                            <th style="width:10% !important">Sr No</th>
+                            <th>Position</th>
+                            <th>Organization</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var eCount = 1;
+                        }
+                        @foreach (var experience in Model.ProfessionalExperiences)
+                        {
+                            <tr>
+                                <td>@eCount</td>
+                                <td>@experience.Position</td>
+                                <td>@experience.Organization</td>
+                                <td>@FormatRange(experience.FromDate, experience.ToDate)</td>
+                            </tr>
+                            eCount++;
+                        }
+                    </tbody>
+                }
+                else
+                {
+                    <tr>
+                        <td>
+                            <div class="featured_section13">
+                                <h1 class="title22" style="color:black !important">NO RECORDS AVAILABLE</h1>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+    </section>
+
+    <!-- Training and Workshops -->
+    <section class="boxdetail">
+        <h3 class="text-secondary boxtitle">Training and Workshops</h3>
+        <div class="table-responsive boxinfo">
+            <table class="table table-striped table-hover table-condensed shadow-sm">
+                @if (Model.TrainingAndWorkshops.Any())
+                {
+                    <thead class="bg-primary text-white">
+                        <tr class="success">
+                            <th style="width:10% !important">Sr No</th>
+                            <th>Title</th>
+                            <th>Organized By</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var tCount = 1;
+                        }
+                        @foreach (var workshop in Model.TrainingAndWorkshops)
+                        {
+                            <tr>
+                                <td>@tCount</td>
+                                <td>@workshop.Title</td>
+                                <td>@workshop.OrganizedBy</td>
+                                <td>@FormatRange(workshop.FromDate, workshop.ToDate)</td>
+                            </tr>
+                            tCount++;
+                        }
+                    </tbody>
+                }
+                else
+                {
+                    <tr>
+                        <td>
+                            <div class="featured_section13">
+                                <h1 class="title22" style="color:black !important;">NO RECORDS AVAILABLE</h1>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+    </section>
+
+    <!-- Publications -->
+    <section class="boxdetail">
+        <h3 class="text-secondary boxtitle">Publications</h3>
+        <div class="table-responsive boxinfo">
+            <table class="table table-striped table-hover table-condensed shadow-sm">
+                @if (Model.Publications.Any())
+                {
+                    <thead class="bg-primary text-white">
+                        <tr class="success">
+                            <th style="width:10% !important">Sr. No.</th>
+                            <th>Title</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var publication in Model.Publications)
+                        {
+                            <tr>
+                                <td>@publication.SrNo</td>
+                                <td>@Html.Raw(publication.Title.Replace("\r\n", "<br/>"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                }
+                else
+                {
+                    <tr>
+                        <td>
+                            <div class="featured_section13">
+                                <h1 class="title22" style="color:black !important;">NO RECORDS AVAILABLE</h1>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+    </section>
+</div>

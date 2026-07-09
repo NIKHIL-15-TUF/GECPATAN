@@ -10,7 +10,6 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Views\Faculty\" />
     <Folder Include="Views\Institute\" />
     <Folder Include="Views\CampusCommittee\" />
     <Folder Include="Views\Academics\" />
