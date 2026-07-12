@@ -1,0 +1,105 @@
+﻿@model GECPatan.Web.Models.AchievementListViewModel
+@{
+    // Layout-less partial: AJAX-loaded into #achDiv by Index.cshtml, so it
+    // must not render the site's <head>/menu/footer chrome again.
+    Layout = null;
+
+    // Same reasoning as ResolveApiFileUrl in Views/Department/Index.cshtml --
+    // ImagePath comes back from the API as a relative path (e.g.
+    // "/uploads/achievements/xxx.jpg") that needs to be resolved against the
+    // API's own host, not this Web app's.
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            return path;
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+}
+@if (Model.Achievements.Count() > 0)
+{
+    <div class="works01">
+        <div class="full-container">
+
+            <div id="filters-container" class="cbp-l-filters-button">
+                <div data-filter="*" class="cbp-filter-item-active cbp-filter-item">
+                    All
+                    <div class="cbp-filter-counter"></div>
+                </div>
+                @foreach (var type in Model.Types)
+                {
+                    <div data-filter=".@type" class="cbp-filter-item">
+                        @type
+                        <div class="cbp-filter-counter"></div>
+                    </div>
+                }
+            </div>
+
+            <div id="grid-container" class="cbp-l-grid-fullWidth">
+                @foreach (var item in Model.Achievements)
+                {
+                    <div class="cbp-item @(!string.IsNullOrWhiteSpace(item.TypeName) ? item.TypeName : "")">
+                        <div class="box">
+                            <div class="cbp-caption">
+                                <div class="cbp-caption-defaultWrap">
+                                    <div class="blog_post">
+                                        <div class="blog_postcontent">
+                                            @if (!string.IsNullOrEmpty(item.ImagePath))
+                                            {
+                                                <div class="image_frame">
+                                                    <a href="#"><img src="@ResolveApiFileUrl(item.ImagePath)" alt="" class="height180" onerror="this.parentElement.style.display='none'"></a>
+                                                </div>
+                                            }
+                                            <h3>@Html.Raw(item.Title)</h3>
+                                            <ul class="post_meta_links">
+                                                @if (item.Date.HasValue)
+                                                {
+                                                    <li><a href="#" class="date">@item.Date.Value.ToString("dd MMM yyyy")</a></li>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(item.TypeName))
+                                                {
+                                                    <li class="post_categoty">@item.TypeName</li>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(item.DeptName))
+                                                {
+                                                    <li class="post_categoty">@item.DeptName</li>
+                                                }
+                                            </ul>
+                                            <div class="clearfix"></div>
+                                            <div class="margin_top1"></div>
+                                            <p class="text-justify">@item.Description</p>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+            <!--<div class="cbp-l-loadMore-text">
+                <div data-href="ajax/loadMore.html" class="cbp-l-loadMore-text-link">LOADING...</div>
+            </div>-->
+
+        </div>
+    </div>
+}
+else
+{
+    <h2 class="text-center">NO DATA AVAILABLE</h2>
+}
+<div class="clearfix margin_top2"></div>

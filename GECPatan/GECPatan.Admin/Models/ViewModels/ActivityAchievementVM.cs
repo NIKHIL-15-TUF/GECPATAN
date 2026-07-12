@@ -66,7 +66,10 @@ namespace GECPatan.Admin.Models.ViewModels
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string? Date { get; set; }
+
+        // Was: string? Date. Now DateTime? -- format on display with
+        // Date?.ToString("dd MMM yyyy") in the view (see Index.cshtml).
+        public DateTime? Date { get; set; }
         public string? DeptName { get; set; }
         public int? Year { get; set; }
         public bool IsVisible { get; set; }
@@ -81,8 +84,14 @@ namespace GECPatan.Admin.Models.ViewModels
 
         public string? Description { get; set; }
 
-        [Display(Name = "Date (e.g. 2025/12/13)")]
-        public string? Date { get; set; }
+        // Was: string? Date with a "e.g. 2025/12/13" placeholder and a plain
+        // text input. Now a real date, bound to <input type="date"> --
+        // DataType.Date + the DisplayFormat make asp-for render/parse it
+        // correctly (see Create.cshtml / Edit.cshtml).
+        [Display(Name = "Date")]
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
+        public DateTime? Date { get; set; }
 
         public int? Year { get; set; }
         public string? Keywords { get; set; }

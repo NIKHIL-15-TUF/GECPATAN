@@ -12,8 +12,9 @@ namespace GECPatan.Core.Models.Domain
         public string? Description { get; set; }
         public string? ImagePath { get; set; }
 
-        // Date stored as string to match existing format (e.g. "2025/12/13")
-        public string? Date { get; set; }
+        // Was: string? Date (matched old "2025/12/13" text format).
+        // Now a real date column so it sorts/filters/parses correctly.
+        public DateTime? Date { get; set; }
         public int? Year { get; set; }
 
         public string? Keywords { get; set; }

@@ -26,7 +26,8 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="Date" class="font-weight-bold"></label>
-                        <input asp-for="Date" class="form-control" placeholder="e.g. 2025/12/13" />
+                        <input asp-for="Date" type="date" class="form-control" />
+                        <span asp-validation-for="Date" class="text-danger small"></span>
                     </div>
                 </div>
                 <div class="col-md-4">

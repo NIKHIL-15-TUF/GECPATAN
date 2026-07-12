@@ -59,7 +59,12 @@
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? ImagePath { get; set; }
-        public string? Date { get; set; }
+
+        // Was: string? Date. Now DateTime? -- serializes to JSON as ISO 8601
+        // (e.g. "2025-12-13T00:00:00"), which every consumer of this API
+        // (including GECPatan.Web) can parse without guessing the old
+        // "yyyy/MM/dd" text format.
+        public DateTime? Date { get; set; }
         public int? Year { get; set; }
         public string? TypeName { get; set; } // Academic/Sports/Cultural/NSS/Other
         public int? DeptId { get; set; }

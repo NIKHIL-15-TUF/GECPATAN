@@ -156,7 +156,10 @@
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? ImagePath { get; set; }
-        public string? Date { get; set; }
+
+        // Was: string? Date. Now DateTime? -- mirrors GECPatan.Api.DTOs.AchievementDTO,
+        // which now serializes Date as ISO 8601 instead of the old "yyyy/MM/dd" text.
+        public DateTime? Date { get; set; }
         public int? Year { get; set; }
         public string? TypeName { get; set; } // Academic/Sports/Cultural/NSS/Other
         public int? DeptId { get; set; }

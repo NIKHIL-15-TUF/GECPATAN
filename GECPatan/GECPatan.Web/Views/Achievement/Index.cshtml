@@ -1,0 +1,76 @@
+﻿@model GECPatan.Web.Models.AchievementsViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Achievements";
+}
+<div class="page_title3 placement_title">
+    <div class="full-container">
+
+        <h1>
+            <br> Achievements
+            <div class="line"></div>
+            <br>
+        </h1>
+
+    </div>
+</div>
+<div class="margin_top10"></div>
+
+<div class="full-container">
+    <div class="tab hidden-xs">
+        <button class="tablinks active" onclick="loadAchievements(event,'@Url.Action("ByYear", "Achievement", new { year = 0 })')" id="defaultOpen">All</button>
+        @foreach (var year in Model.Years)
+        {
+            <button class="tablinks" onclick="loadAchievements(event,'@Url.Action("ByYear", "Achievement", new { year })')">@year</button>
+        }
+    </div>
+    <div class="tab-xs visible-xs">
+        <button class="tablinks active" onclick="loadAchievements(event,'@Url.Action("ByYear", "Achievement", new { year = 0 })')" id="defaultOpenXs">All</button>
+        @foreach (var year in Model.Years)
+        {
+            <button class="tablinks" onclick="loadAchievements(event,'@Url.Action("ByYear", "Achievement", new { year })')">@year</button>
+        }
+    </div>
+
+    <div id="achDiv" class="tabcontent">
+    </div>
+    <!-- end works section -->
+</div>
+
+<div class="clearfix margin_top2"></div>
+
+@section Scripts {
+    <script type="text/javascript" src="@Url.Content("~/js/cubeportfolio/gecp_cubeportfolio_custom.js")"></script>
+    <script type="text/javascript">
+        // Called by the year tab buttons above.
+        function loadAchievements(evt, url) {
+            evt.preventDefault();
+
+            // Remove active class from all tabs and add to the clicked one
+            $(".tablinks").removeClass("active");
+            $(evt.currentTarget).addClass("active");
+
+            // Load content into #achDiv
+            $("#achDiv").load(url, function () {
+                // Destroy previous CubePortfolio grid if it exists
+                if ($('#grid-container').data('cubeportfolio')) {
+                    destroyGrid(); // external helper from gecp_cubeportfolio_custom.js
+                }
+
+                // Re-initialize CubePortfolio
+                reInit();
+            });
+        }
+
+        $(document).ready(function () {
+            // Initial load for "All"
+            $("#achDiv").load("@Url.Action("ByYear", "Achievement", new { year = 0 })", function () {
+                reInit();
+            });
+        });
+    </script>
+}
+
+@section styles {
+    <link rel="stylesheet" href="@Url.Content("~/js/timeline/timeline.css")">
+}
