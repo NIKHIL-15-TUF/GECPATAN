@@ -28,12 +28,37 @@ namespace GECPatan.Web.Services
         public async Task<SiteSettingsDTO?> GetSettingsAsync(CancellationToken ct = default)
             => await GetAsync<SiteSettingsDTO>("api/home/settings", ct);
 
+        public async Task<List<SliderDTO>> GetSlidersAsync(CancellationToken ct = default)
+            => await GetAsync<List<SliderDTO>>("api/home/slider", ct) ?? new();
+
+        public async Task<List<MarqueeDTO>> GetMarqueeAsync(CancellationToken ct = default)
+            => await GetAsync<List<MarqueeDTO>>("api/home/marquee", ct) ?? new();
+
+        public async Task<List<TestimonialDTO>> GetTestimonialsAsync(CancellationToken ct = default)
+            => await GetAsync<List<TestimonialDTO>>("api/home/testimonials", ct) ?? new();
+
+        public async Task<List<TopRecruiterDTO>> GetTopRecruitersAsync(CancellationToken ct = default)
+            => await GetAsync<List<TopRecruiterDTO>>("api/home/toprecruiters", ct) ?? new();
+
+        public async Task<List<HomeNewsDTO>> GetLatestNewsAsync(int take = 5, CancellationToken ct = default)
+            => await GetAsync<List<HomeNewsDTO>>($"api/home/news?take={take}", ct) ?? new();
+
+        public async Task<HomeStatsDTO?> GetStatsAsync(CancellationToken ct = default)
+            => await GetAsync<HomeStatsDTO>("api/home/stats", ct);
+
+        public async Task<PrincipalMessageDTO?> GetPrincipalMessageAsync(CancellationToken ct = default)
+            => await GetAsync<PrincipalMessageDTO>("api/home/principal", ct);
+
+        public async Task<List<HomeActivityDTO>> GetLatestActivitiesAsync(int take = 10, CancellationToken ct = default)
+            => await GetAsync<List<HomeActivityDTO>>($"api/home/activities?take={take}", ct) ?? new();
+
         private async Task<T?> GetAsync<T>(string url, CancellationToken ct)
         {
             try
             {
                 var response = await _http.GetAsync(url, ct);
 
+                // 404 (e.g. no active principal yet) is an expected outcome, not a failure to throw on.
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("API call to {Url} returned {StatusCode}.", url, response.StatusCode);

@@ -1,5 +1,497 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model GECPatan.Web.Models.HomeViewModel
 @{
+    ViewData["Title"] = "Home Page";
+
+    // Uploaded images (testimonials/recruiters/principal/activity thumbnails)
+    // are served by GECPatan.Api's own static file middleware, not by this
+    // Web app -- same ResolveApiFileUrl() pattern used on the Department and
+    // Achievement pages.
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            return path;
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+
+    // Font-awesome class for each department hexagon. The API doesn't carry
+    // an icon field for departments, so this maps the (fairly stable)
+    // ShortCode values to an icon, falling back to a generic cap icon for
+    // anything unrecognised so new departments never render blank.
+    string DeptIcon(string? shortCode) => (shortCode ?? string.Empty).ToUpperInvariant() switch
+    {
+        "AM" => "fa fa-graduation-cap",
+        "EC" => "fas fa-microchip",
+        "CO" or "CE" or "CSE" => "fa fa-desktop",
+        "EE" or "EL" => "fa fa-bolt",
+        "CI" or "CV" => "fas fa-hard-hat",
+        "ME" => "fa fa-wrench",
+        "SH" => "fa fa-cogs",
+        _ => "fa fa-graduation-cap"
+    };
+
+    // Cycles through the theme's existing hexagon-@@N colour classes (one..seven)
+    // instead of hardcoding a class per department id.
+    string HexClass(int index) => (index % 7) switch
+    {
+        0 => "one",
+        1 => "six",
+        2 => "seven",
+        3 => "two",
+        4 => "three",
+        5 => "four",
+        _ => "five"
+    };
+
+    var mission = (Model.Settings?.Mission ?? string.Empty)
+        .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .ToList();
+
+    int newscount = Model.News.Count();
+    int currentYear = DateTime.Now.Year;
+
+    // Prefer the dedicated /api/home/principal profile; fall back to the
+    // Principal* fields on /api/home/settings if no active principal record
+    // exists yet, and finally to nothing (section hides itself below).
+    var principalName = Model.Principal?.Name ?? Model.Settings?.PrincipalName;
+    var principalDesignation = Model.Principal?.Designation ?? Model.Settings?.PrincipalDesignation;
+    var principalMessage = Model.Principal?.Message ?? Model.Settings?.PrincipalMessage;
+    var principalPhoto = Model.Principal?.PhotoPath ?? Model.Settings?.PrincipalPhoto;
+    var principalInstitute = Model.Principal?.Institute ?? "Government Engineering College, Patan";
+}
+
+@{
+    ViewData["ApiBaseUrl"] = Model.ApiBaseUrl;
+}
+@await Html.PartialAsync("_slider", Model.Sliders)
+
+<div class="featured_section13">
+    @if (Model.Marquee.Any())
+    {
+        <div class="marquee-container">
+            <div class="marquee-track">
+
+                @for (int i = 0; i < Model.Marquee.Count; i++)
+                {
+                    var item = Model.Marquee[i];
+
+                    if (!string.IsNullOrWhiteSpace(item.Link))
+                    {
+                        var target = item.LinkType is "external" or "file" ? "_blank" : null;
+                        <a class="marquee-content" href="@item.Link" target="@target">
+                            @item.Title
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="marquee-content">@item.Title</span>
+                    }
+
+                    if (i < Model.Marquee.Count - 1)
+                    {
+                        <span class="marquee-separator"> | </span>
+                    }
+                }
+
+            </div>
+        </div>
+    }
+    <div class="clearfix margin_top5"></div>
+    <div class="full-container">
+
+        <h1 class=" animate" data-anim-type="fadeIn" data-anim-delay="100">
+            Welcome to Government Engineering College, Patan
+            <div class="clearfix margin_top5"></div>
+        </h1>
+
+        <div class="New_container">
+
+            <div class="updates_section">
+
+                <ul>
+                    <li class="tab-heading">UPDATES</li>
+                </ul><!-- /# end tab links -->
+
+                <div style="min-height:270px;">
+                    <div>
+                        <marquee scrollamount="3" direction="up" onMouseOver="this.stop()" onMouseOut="this.start()" style="min-height:225px;">
+                            <ul class="newssection">
+                                @if (!Model.News.Any())
+                                {
+                                    <li><strong>NO UPDATES FOUND</strong></li>
+                                }
+                                else
+                                {
+                                    foreach (var item in Model.News)
+                                    {
+                                        <li>
+                                            <a href="@item.Link" target="@(item.Link is not null && item.Link.StartsWith("http") ? "_blank" : null)">@item.Title</a>
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                        </marquee>
+                    </div>
+                </div>
+            </div>
+
+            <div class="one_halfs">
+                <div class="one_fourth">
+
+                    @{ var f1Icon = Model.Stats?.Feature1Icon; }
+                    @if (!string.IsNullOrWhiteSpace(f1Icon))
+                    {
+                        <i class="@f1Icon cirimg-icon animate" data-anim-type="zoomIn" data-anim-delay="100" aria-hidden="true"></i>
+                    }
+                    else
+                    {
+                        <img src="@Url.Content("~/images/Home/icon1.jpg")" alt="" class="cirimg animate" data-anim-type="zoomIn" data-anim-delay="100" />
+                    }
+
+                    <h4 class="color2">@(Model.Stats?.Feature1Text ?? "Five UG Engineering Programs")</h4>
+                    <br /><br />
+
+                </div>
+                <!-- end section -->
+
+                <div class="one_fourth">
+
+                    @{ var f2Icon = Model.Stats?.Feature2Icon; }
+                    @if (!string.IsNullOrWhiteSpace(f2Icon))
+                    {
+                        <i class="@f2Icon cirimg-icon animate" data-anim-type="zoomIn" data-anim-delay="200" aria-hidden="true"></i>
+                    }
+                    else
+                    {
+                        <img src="@Url.Content("~/images/Home/icon2.jpg")" alt="" class="cirimg animate" data-anim-type="zoomIn" data-anim-delay="200" />
+                    }
+
+                    <h4 class="color2">@(Model.Stats?.Feature2Text ?? "Well Qualified Faculties")</h4>
+                    <br /><br />
+
+                </div>
+                <!-- end section -->
+
+                <div class="one_fourth">
+
+                    @{ var f3Icon = Model.Stats?.Feature3Icon; }
+                    @if (!string.IsNullOrWhiteSpace(f3Icon))
+                    {
+                        <i class="@f3Icon cirimg-icon animate" data-anim-type="zoomIn" data-anim-delay="300" aria-hidden="true"></i>
+                    }
+                    else
+                    {
+                        <img src="@Url.Content("~/images/Home/icon3.jpg")" alt="" class="cirimg animate" data-anim-type="zoomIn" data-anim-delay="300" />
+                    }
+
+                    <h4 class="color2">@(Model.Stats?.Feature3Text ?? "Center of Excellence")</h4>
+                    <br /><br />
+
+                </div>
+                <!-- end section -->
+
+                <div class="one_fourth last">
+
+                    @{ var f4Icon = Model.Stats?.Feature4Icon; }
+                    @if (!string.IsNullOrWhiteSpace(f4Icon))
+                    {
+                        <i class="@f4Icon cirimg-icon animate" data-anim-type="zoomIn" data-anim-delay="400" aria-hidden="true"></i>
+                    }
+                    else
+                    {
+                        <img src="@Url.Content("~/images/Home/icon4.jpg")" alt="" class="cirimg animate" data-anim-type="zoomIn" data-anim-delay="400" />
+                    }
+
+                    <h4 class="color2">@(Model.Stats?.Feature4Text ?? "Holistic Development of Students")</h4>
+                    <br /><br />
+
+                </div>
+                <!-- end section -->
+            </div>
+
+            <div class="updates_section">
+
+                <ul>
+                    <li class="tab-heading">ACTIVITIES</li>
+                </ul>
+
+                <div style="min-height:270px;">
+                    <div>
+                        <marquee scrollamount="3" direction="up" onMouseOver="this.stop()" onMouseOut="this.start()" style="min-height:225px;">
+                            <ul class="newssection">
+                                @{
+                                    var currentYearActivities = Model.Activities
+                                        .Where(a => a.Year == currentYear)
+                                        .ToList();
+                                }
+                                @if (!currentYearActivities.Any())
+                                {
+                                    <li><strong>NO ACTIVITIES FOUND</strong></li>
+                                }
+                                else
+                                {
+                                    foreach (var item in currentYearActivities)
+                                    {
+                                        <li><a href="@item.Link" target="_blank">@item.Title</a></li>
+                                    }
+                                }
+                            </ul>
+                        </marquee>
+                    </div>
+                    <div class="clearfix"></div>
+                    <a href="@Url.Action("Index", "Achievement")" class="btn btn-success">View All</a>
+                </div>
+
+            </div><!-- end section -->
+        </div>
+    </div>
+</div>
+<!-- end featured section 13 -->
+<div class="clearfix margin_top5"></div>
+
+<div class="vision_section">
+    <div class="clearfix margin_top5"></div>
+
+    <div class="one_half stcode_title4">
+
+        <h3 class="text-center"><span class="text"><i class="fa fa fa-institution" aria-hidden="true"></i><strong>&nbsp; VISION</strong></span></h3>
+
+        <p class="large-text text-justify">
+            @(Model.Settings?.Vision ?? "To prepare human resources with value-based competency for technical advancements and growth of society.")
+        </p>
+    </div>
+
+    <div class="one_half last stcode_title4">
+
+        <h3 class="text-center"><span class="text"><i class="fa fa fa-mortar-board" aria-hidden="true"></i><strong>&nbsp; MISSION</strong></span></h3>
+        @if (mission.Any())
+        {
+            <ul class="text-justify">
+                @foreach (var line in mission)
+                {
+                    <li><i class="fa fa fa-toggle-on" aria-hidden="true"></i> @line</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <ul class="text-justify">
+                <li><i class="fa fa fa-toggle-on" aria-hidden="true"></i> To deliver technical programs and services to cater the current needs of society and industry.</li>
+                <li><i class="fa fa fa-toggle-on" aria-hidden="true"></i> Helping industries in solving challenges by means of providing best technical human resources.</li>
+                <li><i class="fa fa fa-toggle-on" aria-hidden="true"></i> To contribute in sustainable growth of society.</li>
+            </ul>
+        }
+    </div>
+    <div class="clearfix margin_top5"></div>
+
+</div>
+<div class="clearfix"></div>
+
+@if (!string.IsNullOrWhiteSpace(principalName))
+{
+    <div class="full-container pri_message">
+        <div class="clearfix margin_top5"></div>
+        <div class="row align-items-center">
+            <!-- Principal Image -->
+            <div class="col-md-4 text-center">
+                <div class="principalimage">
+                    <img src="@ResolveApiFileUrl(principalPhoto)" alt="Principal Photo" />
+                </div>
+                <h4 class="principalname">@principalName</h4>
+                <p class="principaldesignation">@(principalDesignation?.ToUpperInvariant() ?? "PRINCIPAL")</p>
+                <p class="principaldesignations">@principalInstitute</p>
+            </div>
+
+            <!-- Principal Message -->
+            <div class="col-md-8">
+                <div class="principalmessage">
+                    <h2 class="mb-3">Message from the Principal</h2>
+                    <div class="border-left pl-3" style="border-color: #007bff;">
+                        <p style="text-align: justify; font-size: 1.1rem;">
+                            @principalMessage
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix margin_top5"></div>
+        </div>
+
+    </div>
+}
+
+<!-- end featured section 14 -->
+<div class="clearfix margin_top5"></div>
+<div class="featured_section16">
+    <div class="container">
+
+        <h1 class="caps text-center">Departments</h1>
+
+        <div class="box">
+            @{
+                var deptList = Model.Departments;
+                var firstRow = deptList.Take(3).ToList();
+                var secondRow = deptList.Skip(3).ToList();
+            }
+            @for (int i = 0; i < firstRow.Count; i++)
+            {
+                var dept = firstRow[i];
+                <a href="@Url.Action("Index", "Department", new { id = dept.DeptId })">
+                    <div class="hexagon @HexClass(i) animate" data-anim-type="spinLeft" data-anim-delay="300">
+                        <i class="@DeptIcon(dept.ShortCode)"></i>
+                        <h6>@(dept.ShortCode ?? dept.Name)</h6>
+                    </div>
+                </a>
+            }
+            <div class="clearfix haxmargin"></div>
+            @for (int i = 0; i < secondRow.Count; i++)
+            {
+                var dept = secondRow[i];
+                <a href="@Url.Action("Index", "Department", new { id = dept.DeptId })">
+                    <div class="hexagon @HexClass(i + 3) animate" data-anim-type="spinRight" data-anim-delay="300">
+                        <i class="@DeptIcon(dept.ShortCode)"></i>
+                        <h6>@(dept.ShortCode ?? dept.Name)</h6>
+                    </div>
+                </a>
+            }
+
+        </div>
+
+    </div>
+</div>
+
+<div class="clearfix margin_bottom6"></div>
+<div class="full-container">
+    <h1 class="caps text-center">
+        TOP RECRUITERS
+    </h1>
+    <div class="clearfix"></div>
+    @if (Model.TopRecruiters.Any())
+    {
+        <div class="owl-carousel owl-theme" id="owl-demo">
+            @foreach (var r in Model.TopRecruiters)
+            {
+                <div class="item"><img src="@ResolveApiFileUrl(r.LogoPath)" alt="@r.Name"></div>
+            }
+        </div>
+    }
+</div>
+
+@* @if (Model.Testimonials.Any()) *@
+{
+    <div class="clearfix"></div>
+    <div class="parallax_section1">
+        <div class="clearfix margin_bottom6"></div>
+        <div class="container">
+
+            <div class="owl-carousel owl-theme" id="owl-testimonials">
+                @foreach (var item in Model.Testimonials)
+                {
+                    <div class="item">
+                        <img src="@Url.Content("~/images/Home/icon-user-90.png")" alt="" />
+                        <h5>@item.StudentName <em>@item.Department - @item.PassoutYear</em></h5>
+                        <p>
+                            @item.TestimonialText
+                        </p>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </div>
+    <div class="clearfix margin_bottom6"></div>
+    <!-- end parallax section 1 -->
+}
+
+@section tabs {
+
+    <script src="@Url.Content("~/js/tabs2/index.js")"></script>
+    <script>
+        $('.accordion, .tabs').TabsAccordion({
+        hashWatch: true,
+        pauseMedia: true,
+        responsiveSwitch: 'tablist',
+        saveState: sessionStorage,
+        });
+    </script>
+    <script defer src="@Url.Content("~/js/flexslider/jquery.flexslider.js")"></script>
+    <script defer src="@Url.Content("~/js/flexslider/custom.js")"></script>
+    <script src="@Url.Content("~/js/tabs/assets/js/responsive-tabs.min.js")" type="text/javascript"></script>
+}
+
+@section master_slider {
+    <script src="@Url.Content("~/js/modalwindow/jquery.simplePopup.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/js/masterslider/masterslider.min.js")"></script>
+    <script type="text/javascript">
+        (function ($) {
+        "use strict";
+        var slider = new MasterSlider();
+        // adds Arrows navigation control to the slider.
+        slider.control('arrows');
+        slider.control('bullets');
+
+        slider.setup('masterslider', {
+        width: 1400, // slider standard width
+        height: 680, // slider standard height
+        space: 0,
+        speed: 45,
+        layout: 'fullwidth',
+        loop: true,
+        preload: 0,
+        autoplay: true,
+        view: "parallaxMask"
+        });
+        })(jQuery);
+    </script>
+    <script>
+        function openInNewTab(url) {
+        if (url) {
+        window.open(url, '_blank');
+        } else {
+        console.error("No URL provided for the marquee link.");
+        }
+        }
+    </script>
+}
+
+@section styles {
+    <!-- flexslider -->
+    <link rel="stylesheet" href="@Url.Content("~/js/flexslider/flexslider.css")" type="text/css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="@Url.Content("~/js/flexslider/skin.css")" />
+
+    <!-- modal window -->
+    <link rel="stylesheet" type="text/css" href="@Url.Content("~/js/modalwindow/style.css")" />
+    <link rel="stylesheet" type="text/css" href="@Url.Content("~/js/tabs/assets/css/responsive-tabs3.css")">
+    <style>
+        .text-center {
+        text-align: center !important;
+        }
+
+        .large-text {
+        font-size: 20px;
+        width: 98%;
+        }
+
+        .one_half ul {
+        list-style: none;
+        }
+
+        .cirimg-icon {
+        display: block;
+        margin: 0 auto 15px;
+        font-size: 48px;
+        color: #1a237e;
+        text-align: center;
+        }
+    </style>
 }

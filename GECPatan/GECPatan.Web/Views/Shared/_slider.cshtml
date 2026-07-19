@@ -1,0 +1,104 @@
+﻿@model List<GECPatan.Web.Models.Dtos.SliderDTO>
+@{
+    int count = 1;
+
+    // Shared with the parent view via ViewData (Html.Partial/PartialAsync
+    // shares the caller's ViewDataDictionary by default), same pattern used
+    // for ApiBaseUrl elsewhere -- see Views/Home/Index.cshtml.
+    var apiBaseUrl = ViewData["ApiBaseUrl"] as string ?? string.Empty;
+
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(apiBaseUrl))
+        {
+            return path;
+        }
+        return apiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+
+    string ResolveSliderLink(string? link)
+    {
+        if (string.IsNullOrWhiteSpace(link))
+        {
+            return "#";
+        }
+        // External links come back absolute already; internal ones are
+        // root-relative paths like "/Department/2" -- Url.Content handles both.
+        return link;
+    }
+}
+
+<!-- Slider
+        ======================================= -->
+<!-- masterslider -->
+<div class="slidermar">
+    <div class="master-slider ms-skin-default" id="masterslider">
+
+        @if (Model is not null)
+        {
+            @foreach (var item in Model)
+
+            {
+                <div class="ms-slide slide-@count" data-delay="9">
+
+                    <div class="slide-pattern"></div>
+
+                    <img src="@Url.Content("~/js/masterslider/blank.gif")" data-src="@ResolveApiFileUrl(item.ImagePath)" alt="">
+
+                    @if (!string.IsNullOrWhiteSpace(item.H3Text))
+
+                    {
+                        <h3 class="ms-layer text1" style="left: 115px; top: 200px;" data-type="text" data-effect="top(45)" data-duration="2000" data-delay="500" data-ease="easeOutExpo">
+                            @item.H3Text
+                        </h3>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(item.H4Text))
+
+                    {
+                        <h4 class="ms-layer text2 caps" style="left: 115px; top: 255px;" data-type="text" data-effect="top(45)" data-duration="2000" data-delay="1000" data-ease="easeOutExpo">
+                            @item.H4Text
+                        </h4>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(item.H5Text))
+
+                    {
+                        <h5 class="ms-layer text3" style="left: 115px; top: 340px;" data-type="text" data-effect="bottom(45)" data-duration="2000" data-delay="1500" data-ease="easeOutExpo">
+                            @item.H5Text
+
+                        </h5>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(item.Anchor1Text))
+
+                    {
+                        <a href="@ResolveSliderLink(item.Anchor1Link)" class="ms-layer sbut1" style="left: 115px; top: 450px;" data-type="text" data-delay="2000" data-ease="easeOutExpo" data-duration="1200" data-effect="scale(1.5,1.6)">
+                           @item.Anchor1Text
+                        </a>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(item.Anchor2Text))
+
+                    {
+                        <a href="@ResolveSliderLink(item.Anchor2Link)" class="ms-layer sbut2" style="left: 300px; top: 450px;" data-type="text" data-delay="2200" data-ease="easeOutExpo" data-duration="1200" data-effect="scale(1.5,1.6)">
+                           @item.Anchor2Text
+                        </a>
+                    }
+
+                </div>
+
+                <!-- end slide @count -->
+                count++;
+            }
+        }
+
+    </div>
+</div>
+<!-- end of masterslider -->
