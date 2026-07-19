@@ -387,7 +387,7 @@
     }
 </div>
 
-@* @if (Model.Testimonials.Any()) *@
+@if (Model.Testimonials.Any())
 {
     <div class="clearfix"></div>
     <div class="parallax_section1">
@@ -482,10 +482,6 @@
         width: 98%;
         }
 
-        .one_half ul {
-        list-style: none;
-        }
-
         .cirimg-icon {
         display: block;
         margin: 0 auto 15px;
@@ -493,5 +489,154 @@
         color: #1a237e;
         text-align: center;
         }
+
+        .one_half {
+        margin-right: 2%;
+        }
+
+        .one_half ul {
+        list-style: none;
+        padding-left: 0;
+        }
+
+        .one_half ul li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        }
+
+        .one_half ul li i {
+        color: #007bff;
+        font-size: 18px;
+        }
+
+        /* --- Grid & Layout (CRITICAL FOR FIXING BREAKAGE) --- */
+        .New_container {
+        display: inline-flex;
+        gap: 1%;
+        flex-wrap: wrap;
+        }
+
+        .one_halfs {
+        width: 48%;
+        position: relative;
+        float: left;
+        margin-top: 20px;
+        }
+
+        .updates_section {
+        width: 25%;
+        padding: 0%;
+        border: 1px solid #000;
+        }
+
+        .tab-heading {
+        background-color: #4f75ba;
+        display: block;
+        color: white;
+        padding: 10px;
+        }
+
+        /* --- Principal Section --- */
+        .principalimage {
+        padding-top: 5%;
+        }
+
+        .principalimage img {
+        max-height: 375px;
+        border-radius: 50px;
+        border: 3px solid #5076bb;
+        box-shadow: 10px 10px 5px grey;
+        }
+
+        .principalname {
+        font-size: 30px;
+        line-height: 25px;
+        margin-bottom: 20px;
+        font-style: italic;
+        font-family: emoji;
+        font-weight: bold;
+        padding-top: 10px;
+        }
+
+        .principaldesignation {
+        font: 16px 'Open Sans', sans-serif;
+        font-weight: bold;
+        line-height: 23px;
+        }
+
+        .principaldesignations {
+        font: 16px 'Open Sans', sans-serif;
+        line-height: 23px;
+        margin-bottom: 10px;
+        }
+
+        .principalmessage {
+        padding-top: 4%;
+        }
+
+        /* --- Marquee / Updates --- */
+        marquee {
+        min-height: 225px;
+        padding-left: 7px;
+        padding-right: 7px;
+        height: 200px;
+        }
+
+        .marquee-container {
+        position: relative;
+        width: 100%;
+        height: 45px;
+        overflow: hidden;
+        background-color: red;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        }
+
+        .marquee-track {
+        display: flex;
+        align-items: center;
+        width: max-content;
+        animation: scroll-left 20s linear infinite;
+        }
+
+        .marquee-content {
+        cursor: pointer;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        font-size: 20px;
+        text-decoration: none;
+        white-space: nowrap;
+        margin: 0 10px;
+        }
+
+        .marquee-separator {
+        color: white;
+        font-weight: bold;
+        font-size: 20px;
+        margin: 0 5px;
+        }
+
+        .marquee-container:hover .marquee-track {
+        animation-play-state: paused;
+        }
+
+        .marquee-content:hover {
+        text-decoration: underline;
+        color: white;
+        }
+
+       @@keyframes scroll-left {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
+        }
     </style>
+
+    <!-- Restored custom CSS link -->
+    <link rel="stylesheet" type="text/css" href="@Url.Content("~/css/custom.css")">
 }
