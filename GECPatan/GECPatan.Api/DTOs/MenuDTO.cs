@@ -21,7 +21,14 @@
         public string Title { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
         public string? HtmlContent { get; set; }
-
+        public List<ContentPageImageDTO> Images { get; set; } = new();
         public List<DynamicSectionDTO> DynamicSections { get; set; } = new();
     }
+    public class ContentPageImageDTO
+    {
+        public string ImageUrl { get; set; } = string.Empty;
+        public string? Caption { get; set; }
+        public int DisplayOrder { get; set; }
+    }
+
 }

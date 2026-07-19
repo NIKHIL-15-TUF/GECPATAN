@@ -1,0 +1,103 @@
+﻿@model GECPatan.Web.Models.ViewModels.ContentPageDetailsVM
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = Model.Title;
+}
+<div class="clearfix"></div>
+ 
+<div class="page_title3 engg_title">
+    <div class="container">
+        <h1>
+            @Model.Title
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+<!-- end page title -->
+ 
+<div class="clearfix margin_top2"></div>
+ 
+<div class="content_fullwidth">
+    <div class="full-container">
+ 
+        @if (Model.HasImages)
+        {
+            <div class="one_half">
+                <div id="owl-demo2" class="owl-carousel">
+                    @foreach (var img in Model.Images)
+                    {
+                        <div>
+                            <img src="@img.ImageUrl" alt="@img.Caption" class="rimg" />
+                            @if (!string.IsNullOrWhiteSpace(img.Caption))
+                            {
+                                <p class="text-center small text-muted">@img.Caption</p>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+            <!-- end section -->
+ 
+            <div class="one_half last text-justify">
+                <div class="stcode_title5">
+                    <h3 class="nmb"><strong>@Model.Title</strong></h3>
+                </div>
+                <p>@Html.Raw(Model.HtmlContent)</p>
+            </div>
+            <!-- end section -->
+        }
+        else
+        {
+            <div class="full_width text-justify">
+                <div class="stcode_title5">
+                    <h3 class="nmb"><strong>@Model.Title</strong></h3>
+                </div>
+                <p>@Html.Raw(Model.HtmlContent)</p>
+            </div>
+            <!-- end section -->
+        }
+ 
+        @if (Model.DynamicSections.Any())
+        {
+            <div class="clearfix marb12"></div>
+ 
+            @foreach (var sec in Model.DynamicSections)
+            {
+                <div class="full_width dynamic-section mb-4">
+                    <div class="stcode_title5">
+                        <h4 class="nmb"><strong>@sec.Title</strong></h4>
+                    </div>
+ 
+                    @if (!string.IsNullOrWhiteSpace(sec.HtmlContent))
+                    {
+                        <p>@Html.Raw(sec.HtmlContent)</p>
+                    }
+ 
+                    @if (!string.IsNullOrWhiteSpace(sec.FilePath))
+                    {
+                        <p>
+                            <a href="@sec.FilePath" target="_blank" class="btn btn-sm btn-primary">
+                                <i class="fa fa-download"></i> @(sec.FileName ?? "Download")
+                            </a>
+                        </p>
+                    }
+ 
+                    @if (sec.Files.Any())
+                    {
+                        <ul class="list-unstyled">
+                            @foreach (var f in sec.Files)
+                            {
+                                <li>
+                                    <a href="@f.FilePath" target="_blank">
+                                        <i class="fa fa-file"></i> @(f.Title ?? f.FilePath)
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            }
+        }
+ 
+    </div>
+</div>

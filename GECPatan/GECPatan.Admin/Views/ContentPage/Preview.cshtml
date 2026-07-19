@@ -1,8 +1,9 @@
-﻿@using  GECPatan.Core.Models.Domain
+﻿@using GECPatan.Core.Models.Domain
 @model ContentPage
 @{
     Layout = null;
     ViewData["Title"] = Model.Title;
+    var images = Model.Images?.OrderBy(i => i.DisplayOrder).ToList() ?? new List<ContentPageImage>();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -22,6 +23,8 @@
             font-size: 13px;
         }
         img { max-width: 100%; }
+        .content-carousel { max-height: 420px; overflow: hidden; border-radius: 6px; margin-bottom: 24px; }
+        .content-carousel .carousel-item img { width: 100%; height: 420px; object-fit: cover; }
     </style>
 </head>
 <body>
@@ -38,9 +41,45 @@
         </button>
     </div>
     <div class="container">
+        @if (images.Any())
+        {
+            <div id="pageCarousel" class="carousel slide content-carousel" data-ride="carousel">
+                <ol class="carousel-indicators">
+                    @for (var i = 0; i < images.Count; i++)
+                    {
+                        <li data-target="#pageCarousel" data-slide-to="@i" class="@(i == 0 ? "active" : "")"></li>
+                    }
+                </ol>
+                <div class="carousel-inner">
+                    @for (var i = 0; i < images.Count; i++)
+                    {
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <img src="@images[i].ImageUrl" alt="@images[i].Caption" />
+                            @if (!string.IsNullOrWhiteSpace(images[i].Caption))
+                            {
+                                <div class="carousel-caption d-none d-md-block">
+                                    <p>@images[i].Caption</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                @if (images.Count > 1)
+                {
+                    <a class="carousel-control-prev" href="#pageCarousel" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </a>
+                    <a class="carousel-control-next" href="#pageCarousel" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </a>
+                }
+            </div>
+        }
         <h1 class="mb-4">@Model.Title</h1>
         <hr />
         @Html.Raw(Model.HtmlContent)
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
