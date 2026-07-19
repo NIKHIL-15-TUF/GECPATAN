@@ -242,27 +242,26 @@ namespace GECPatan.Core.Data
 
             // Committees / Cell children
             db.MenuItems.AddRange(
-                M("Women Development Cell", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
-                  dynId: 1, dynType: "Committee", pos: 0),
-                M("SSIP", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
-                  dynId: 2, dynType: "Committee", pos: 1),
-                M("NSS", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
-                  dynId: 3, dynType: "Committee", pos: 2),
-                M("Anti Ragging Cell", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
-                  dynId: 4, dynType: "Committee", pos: 3),
-                M("Student Counsellor", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
-                  dynId: 5, dynType: "Committee", pos: 4),
-                M("SC/ST Committee", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
-                  dynId: 7, dynType: "Committee", pos: 5),
-                M("Student Section", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
-                  dynId: 8, dynType: "Committee", pos: 6),
-                M("Gymkhana", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
-                  dynId: 10, dynType: "Committee", pos: 7),
-                M("Psychology Cell", commCell.Id, "dynamic", "CampusCommittee", "CommitteePage",
-                  dynId: 12, dynType: "Committee", pos: 8)
-            );
+                 M("Women Development Cell", commCell.Id, "dynamic", "Committee", "Index",
+                   dynId: 1, dynType: "Committee", pos: 0),
+                 M("SSIP", commCell.Id, "dynamic", "Committee", "Index",
+                   dynId: 2, dynType: "Committee", pos: 1),
+                 M("NSS", commCell.Id, "dynamic", "Committee", "Index",
+                   dynId: 3, dynType: "Committee", pos: 2),
+                 M("Anti Ragging Cell", commCell.Id, "dynamic", "Committee", "Index",
+                   dynId: 4, dynType: "Committee", pos: 3),
+                 M("Student Counsellor", commCell.Id, "dynamic", "Committee", "Index",
+                   dynId: 5, dynType: "Committee", pos: 4),
+                 M("SC/ST Committee", commCell.Id, "dynamic", "Committee", "Index",
+                   dynId: 7, dynType: "Committee", pos: 5),
+                 M("Student Section", commCell.Id, "dynamic", "Committee", "Index",
+                   dynId: 8, dynType: "Committee", pos: 6),
+                 M("Gymkhana", commCell.Id, "dynamic", "Committee", "Index",
+                   dynId: 10, dynType: "Committee", pos: 7),
+                 M("Psychology Cell", commCell.Id, "dynamic", "Committee", "Index",
+                   dynId: 12, dynType: "Committee", pos: 8)
+             );
             await db.SaveChangesAsync();
-
             // ═══════════════════════════════════════════════
             // DOWNLOADS CHILDREN
             // ═══════════════════════════════════════════════
