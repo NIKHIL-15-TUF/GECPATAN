@@ -204,6 +204,32 @@ namespace GECPatan.Api.Controllers
 
             return Ok(ApiResponse<SiteSettingsDTO>.Ok(data));
         }
+        // GET /api/home/principal
+        // Lightweight dedicated endpoint for home page
+        // principal message section
+        [HttpGet("principal")]
+        public async Task<ActionResult<ApiResponse<PrincipalMessageDTO>>>
+            GetPrincipalMessage()
+        {
+            var p = await _context.Principals
+                .Where(x => x.IsActive && !x.IsDeleted)
+                .Select(x => new PrincipalMessageDTO
+                {
+                    Name = x.Name,
+                    Designation = x.Designation,
+                    PhotoPath = x.PhotoPath,
+                    Message = x.Message,
+                    Institute = "Government Engineering College, Patan"
+                })
+                .FirstOrDefaultAsync();
+
+            if (p == null)
+                return NotFound(ApiResponse<PrincipalMessageDTO>.Fail(
+                    "No active principal profile found."));
+
+            return Ok(ApiResponse<PrincipalMessageDTO>.Ok(p));
+        }
+
         // GET /api/home/activities?take=10
         // Latest activities across all committees/depts
         // Used for home page ticker/feed

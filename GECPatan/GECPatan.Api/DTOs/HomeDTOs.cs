@@ -31,6 +31,14 @@
         public string? LogoPath { get; set; }
         public int DisplayOrder { get; set; }
     }
+    public class PrincipalMessageDTO
+    {
+        public string? Name { get; set; }
+        public string? Designation { get; set; }
+        public string? PhotoPath { get; set; }
+        public string? Message { get; set; }
+        public string? Institute { get; set; }
+    }
     public class MarqueeDTO
     {
         public int Id { get; set; }
