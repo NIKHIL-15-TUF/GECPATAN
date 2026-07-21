@@ -9,8 +9,14 @@ namespace GECPatan.Web.Services
         // GET /api/home/slider
         Task<List<SliderDTO>> GetSlidersAsync(CancellationToken ct = default);
 
-        // GET /api/home/marquee
+        // GET /api/home/marquee -- horizontal ticker below the slider ONLY
+        // (Admin > Marquee items with HorizontalMarquee == true).
         Task<List<MarqueeDTO>> GetMarqueeAsync(CancellationToken ct = default);
+
+        // GET /api/home/updates?take=20 -- vertical "UPDATES" list. Merges
+        // Marquee items with HorizontalMarquee == false and NewsItem items
+        // with ShowInMarquee == true.
+        Task<List<UpdateItemDTO>> GetUpdatesAsync(int take = 20, CancellationToken ct = default);
 
         // GET /api/home/testimonials
         Task<List<TestimonialDTO>> GetTestimonialsAsync(CancellationToken ct = default);
@@ -18,7 +24,9 @@ namespace GECPatan.Web.Services
         // GET /api/home/toprecruiters
         Task<List<TopRecruiterDTO>> GetTopRecruitersAsync(CancellationToken ct = default);
 
-        // GET /api/home/news?take=5
+        // GET /api/home/news?take=5 -- unfiltered latest news; not used by
+        // the homepage's Updates section anymore (see GetUpdatesAsync), kept
+        // for any other "latest news" use elsewhere.
         Task<List<HomeNewsDTO>> GetLatestNewsAsync(int take = 5, CancellationToken ct = default);
 
         // GET /api/home/stats

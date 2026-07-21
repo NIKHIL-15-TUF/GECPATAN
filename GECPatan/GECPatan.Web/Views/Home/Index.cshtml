@@ -2,10 +2,10 @@
 @{
     ViewData["Title"] = "Home Page";
 
-    // Uploaded images (testimonials/recruiters/principal/activity thumbnails)
-    // are served by GECPatan.Api's own static file middleware, not by this
-    // Web app -- same ResolveApiFileUrl() pattern used on the Department and
-    // Achievement pages.
+    // Uploaded images/files (testimonials/recruiters/principal/activity/
+    // marquee) are served by GECPatan.Api's own static file middleware, not
+    // by this Web app -- same ResolveApiFileUrl() pattern used on the
+    // Department and Achievement pages.
     string ResolveApiFileUrl(string? path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -25,10 +25,26 @@
         return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
     }
 
+    // Shared href-resolution for both the horizontal ticker (Model.Marquee)
+    // and the vertical Updates list (Model.Updates): both DTOs carry the
+    // same LinkType/Link/FilePath shape.
+    //   - "file"  -> FilePath lives on GECPatan.Api's own host, so it MUST
+    //                go through ResolveApiFileUrl, not be used as-is.
+    //   - anything else -> Link is already a fully resolved, same-origin-safe
+    //                path/URL from the API.
+    string ResolveItemHref(string linkType, string? link, string? filePath)
+        => linkType == "file" ? ResolveApiFileUrl(filePath) : (link ?? "#");
+
+    // file/external links open in a new tab; internal/dynamic navigation
+    // stays in the same tab; "none" items aren't links at all.
+    string? OpenTarget(string linkType)
+        => linkType is "external" or "file" ? "_blank" : null;
+
     // Font-awesome class for each department hexagon. The API doesn't carry
     // an icon field for departments, so this maps the (fairly stable)
     // ShortCode values to an icon, falling back to a generic cap icon for
     // anything unrecognised so new departments never render blank.
+    // (Currently unused while the Departments section below is commented out.)
     string DeptIcon(string? shortCode) => (shortCode ?? string.Empty).ToUpperInvariant() switch
     {
         "AM" => "fa fa-graduation-cap",
@@ -41,8 +57,8 @@
         _ => "fa fa-graduation-cap"
     };
 
-    // Cycles through the theme's existing hexagon-@@N colour classes (one..seven)
-    // instead of hardcoding a class per department id.
+    // Cycles through the theme's existing hexagon-@@N colour classes (one..seven).
+    // (Currently unused while the Departments section below is commented out.)
     string HexClass(int index) => (index % 7) switch
     {
         0 => "one",
@@ -54,16 +70,16 @@
         _ => "five"
     };
 
-    var mission = (Model.Settings?.Mission ?? string.Empty)
-        .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-        .ToList();
+    var vision = Model.Settings?.Vision ?? "To prepare human resources with value-based competency for technical advancements and growth of society.";
+    // Remove the incoming <p> and </p> tags
+    vision = vision.Replace("<p>", "").Replace("</p>", "");
 
-    int newscount = Model.News.Count();
+    var mission = Model.Settings?.Mission ?? string.Empty;
+    // Find every opening <li> tag and inject the FontAwesome icon right after it
+    mission = mission.Replace("<li>", "<li><i class=\"fa fa-toggle-on\" aria-hidden=\"true\"></i> ");
+
     int currentYear = DateTime.Now.Year;
 
-    // Prefer the dedicated /api/home/principal profile; fall back to the
-    // Principal* fields on /api/home/settings if no active principal record
-    // exists yet, and finally to nothing (section hides itself below).
     var principalName = Model.Principal?.Name ?? Model.Settings?.PrincipalName;
     var principalDesignation = Model.Principal?.Designation ?? Model.Settings?.PrincipalDesignation;
     var principalMessage = Model.Principal?.Message ?? Model.Settings?.PrincipalMessage;
@@ -86,10 +102,11 @@
                 {
                     var item = Model.Marquee[i];
 
-                    if (!string.IsNullOrWhiteSpace(item.Link))
+                    if (item.LinkType != "none")
                     {
-                        var target = item.LinkType is "external" or "file" ? "_blank" : null;
-                        <a class="marquee-content" href="@item.Link" target="@target">
+                        <a class="marquee-content"
+                           href="@ResolveItemHref(item.LinkType, item.Link, item.FilePath)"
+                           target="@OpenTarget(item.LinkType)">
                             @item.Title
                         </a>
                     }
@@ -127,16 +144,24 @@
                     <div>
                         <marquee scrollamount="3" direction="up" onMouseOver="this.stop()" onMouseOut="this.start()" style="min-height:225px;">
                             <ul class="newssection">
-                                @if (!Model.News.Any())
+                                @if (!Model.Updates.Any())
                                 {
                                     <li><strong>NO UPDATES FOUND</strong></li>
                                 }
                                 else
                                 {
-                                    foreach (var item in Model.News)
+                                    foreach (var item in Model.Updates)
                                     {
                                         <li>
-                                            <a href="@item.Link" target="@(item.Link is not null && item.Link.StartsWith("http") ? "_blank" : null)">@item.Title</a>
+                                            @if (item.LinkType != "none")
+                                            {
+                                                <a href="@ResolveItemHref(item.LinkType, item.Link, item.FilePath)"
+                                                   target="@OpenTarget(item.LinkType)">@item.Title</a>
+                                            }
+                                            else
+                                            {
+                                                @item.Title
+                                            }
                                         </li>
                                     }
                                 }
@@ -149,7 +174,9 @@
             <div class="one_halfs">
                 <div class="one_fourth">
 
-                    @{ var f1Icon = Model.Stats?.Feature1Icon; }
+                    @{
+                        var f1Icon = Model.Stats?.Feature1Icon;
+                    }
                     @if (!string.IsNullOrWhiteSpace(f1Icon))
                     {
                         <i class="@f1Icon cirimg-icon animate" data-anim-type="zoomIn" data-anim-delay="100" aria-hidden="true"></i>
@@ -167,7 +194,9 @@
 
                 <div class="one_fourth">
 
-                    @{ var f2Icon = Model.Stats?.Feature2Icon; }
+                    @{
+                        var f2Icon = Model.Stats?.Feature2Icon;
+                    }
                     @if (!string.IsNullOrWhiteSpace(f2Icon))
                     {
                         <i class="@f2Icon cirimg-icon animate" data-anim-type="zoomIn" data-anim-delay="200" aria-hidden="true"></i>
@@ -185,7 +214,9 @@
 
                 <div class="one_fourth">
 
-                    @{ var f3Icon = Model.Stats?.Feature3Icon; }
+                    @{
+                        var f3Icon = Model.Stats?.Feature3Icon;
+                    }
                     @if (!string.IsNullOrWhiteSpace(f3Icon))
                     {
                         <i class="@f3Icon cirimg-icon animate" data-anim-type="zoomIn" data-anim-delay="300" aria-hidden="true"></i>
@@ -203,7 +234,9 @@
 
                 <div class="one_fourth last">
 
-                    @{ var f4Icon = Model.Stats?.Feature4Icon; }
+                    @{
+                        var f4Icon = Model.Stats?.Feature4Icon;
+                    }
                     @if (!string.IsNullOrWhiteSpace(f4Icon))
                     {
                         <i class="@f4Icon cirimg-icon animate" data-anim-type="zoomIn" data-anim-delay="400" aria-hidden="true"></i>
@@ -268,7 +301,7 @@
         <h3 class="text-center"><span class="text"><i class="fa fa fa-institution" aria-hidden="true"></i><strong>&nbsp; VISION</strong></span></h3>
 
         <p class="large-text text-justify">
-            @(Model.Settings?.Vision ?? "To prepare human resources with value-based competency for technical advancements and growth of society.")
+            @Html.Raw(vision)
         </p>
     </div>
 
@@ -277,12 +310,7 @@
         <h3 class="text-center"><span class="text"><i class="fa fa fa-mortar-board" aria-hidden="true"></i><strong>&nbsp; MISSION</strong></span></h3>
         @if (mission.Any())
         {
-            <ul class="text-justify">
-                @foreach (var line in mission)
-                {
-                    <li><i class="fa fa fa-toggle-on" aria-hidden="true"></i> @line</li>
-                }
-            </ul>
+            @Html.Raw(mission)
         }
         else
         {
@@ -332,6 +360,14 @@
 
 <!-- end featured section 14 -->
 <div class="clearfix margin_top5"></div>
+
+@* ──────────────────────────────────────────────────────────────────
+   DEPARTMENTS hexagon section -- commented out, not deleted.
+   Slated for removal; Student Testimonials (below) takes its slot on
+   the page instead for now. Re-enable by uncommenting this block and
+   removing/relocating the Testimonials block below.
+   ────────────────────────────────────────────────────────────────── *@
+
 <div class="featured_section16">
     <div class="container">
 
@@ -387,12 +423,15 @@
     }
 </div>
 
+@* Student Testimonials -- now in the Departments slot. *@
 @if (Model.Testimonials.Any())
 {
-    <div class="clearfix"></div>
     <div class="parallax_section1">
         <div class="clearfix margin_bottom6"></div>
         <div class="container">
+
+            <h1 class="caps text-center">Student Testimonials</h1>
+            <div class="clearfix margin_top5"></div>
 
             <div class="owl-carousel owl-theme" id="owl-testimonials">
                 @foreach (var item in Model.Testimonials)
@@ -409,7 +448,7 @@
 
         </div>
     </div>
-    <div class="clearfix margin_bottom6"></div>
+    //<div class="clearfix margin_bottom6"></div>
     <!-- end parallax section 1 -->
 }
 
@@ -418,10 +457,10 @@
     <script src="@Url.Content("~/js/tabs2/index.js")"></script>
     <script>
         $('.accordion, .tabs').TabsAccordion({
-        hashWatch: true,
-        pauseMedia: true,
-        responsiveSwitch: 'tablist',
-        saveState: sessionStorage,
+            hashWatch: true,
+            pauseMedia: true,
+            responsiveSwitch: 'tablist',
+            saveState: sessionStorage,
         });
     </script>
     <script defer src="@Url.Content("~/js/flexslider/jquery.flexslider.js")"></script>
@@ -433,34 +472,52 @@
     <script src="@Url.Content("~/js/modalwindow/jquery.simplePopup.js")" type="text/javascript"></script>
     <script src="@Url.Content("~/js/masterslider/masterslider.min.js")"></script>
     <script type="text/javascript">
-        (function ($) {
-        "use strict";
-        var slider = new MasterSlider();
-        // adds Arrows navigation control to the slider.
-        slider.control('arrows');
-        slider.control('bullets');
+        (function($) {
+            "use strict";
+            var slider = new MasterSlider();
+            // adds Arrows navigation control to the slider.
+            slider.control('arrows');
+            slider.control('bullets');
 
-        slider.setup('masterslider', {
-        width: 1400, // slider standard width
-        height: 680, // slider standard height
-        space: 0,
-        speed: 45,
-        layout: 'fullwidth',
-        loop: true,
-        preload: 0,
-        autoplay: true,
-        view: "parallaxMask"
-        });
+            slider.setup('masterslider', {
+                width: 1400, // slider standard width
+                height: 680, // slider standard height
+                space: 0,
+                speed: 45,
+                layout: 'fullwidth',
+                loop: true,
+                preload: 0,
+                autoplay: true,
+                view: "parallaxMask"
+            });
         })(jQuery);
     </script>
     <script>
         function openInNewTab(url) {
-        if (url) {
-        window.open(url, '_blank');
-        } else {
-        console.error("No URL provided for the marquee link.");
+            if (url) {
+                window.open(url, '_blank');
+            } else {
+                console.error("No URL provided for the marquee link.");
+            }
         }
-        }
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $("#owl-testimonials").owlCarousel({
+                loop: true,
+                margin: 10,
+                nav: true,
+                dots: true,
+                autoplay: true,
+                autoplayTimeout: 5000,
+                responsive: {
+                    0: { items: 1 },
+                    600: { items: 2 },
+                    1000: { items: 4 } // Adjust this if you want multiple items per slide
+                }
+            });
+        });
     </script>
 }
 
@@ -474,169 +531,201 @@
     <link rel="stylesheet" type="text/css" href="@Url.Content("~/js/tabs/assets/css/responsive-tabs3.css")">
     <style>
         .text-center {
-        text-align: center !important;
+            text-align: center !important;
         }
 
         .large-text {
-        font-size: 20px;
-        width: 98%;
-        }
-
-        .cirimg-icon {
-        display: block;
-        margin: 0 auto 15px;
-        font-size: 48px;
-        color: #1a237e;
-        text-align: center;
-        }
-
-        .one_half {
-        margin-right: 2%;
+            font-size: 20px;
+            width: 98%;
         }
 
         .one_half ul {
-        list-style: none;
-        padding-left: 0;
+            list-style: none; /* Removes default bullets */
+            padding-left: 0;
         }
 
-        .one_half ul li {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 8px;
+            .one_half ul li {
+                display: flex;
+                align-items: center; /* Aligns text with the icon */
+                gap: 10px; /* Adds space between the icon and text */
+                margin-bottom: 8px; /* Adds spacing between list items */
+            }
+
+                .one_half ul li i {
+                    color: #007bff; /* Change color as needed */
+                    font-size: 18px; /* Adjust icon size */
+                }
+
+        .vision-container {
+            text-align: center; /* Centers inline elements like <i> */
+            margin-top: 10px;
         }
 
-        .one_half ul li i {
-        color: #007bff;
-        font-size: 18px;
+            .vision-container i {
+                font-size: 60px; /* Adjust the size as needed */
+                color: #007bff; /* Blue color */
+            }
+
+        .large-text {
+            font-size: 25px;
+            text-align: center; /* Centers the paragraph text */
         }
 
-        /* --- Grid & Layout (CRITICAL FOR FIXING BREAKAGE) --- */
-        .New_container {
-        display: inline-flex;
-        gap: 1%;
-        flex-wrap: wrap;
+        .text-justify {
+            font-size: 18px;
         }
 
-        .one_halfs {
-        width: 48%;
-        position: relative;
-        float: left;
-        margin-top: 20px;
-        }
-
-        .updates_section {
-        width: 25%;
-        padding: 0%;
-        border: 1px solid #000;
+        .one_half {
+            margin-right: 2%;
         }
 
         .tab-heading {
-        background-color: #4f75ba;
-        display: block;
-        color: white;
-        padding: 10px;
+            background-color: #4f75ba;
+            font-display: block;
+            color: white;
+            padding: 10px;
         }
 
-        /* --- Principal Section --- */
-        .principalimage {
-        padding-top: 5%;
+        .New_container {
+            display: inline-flex;
+            gap: 1%;
+            flex-wrap: wrap; /* Optional: Helps for responsiveness */
+        }
+
+        .updates_section {
+            width: 25%;
+            padding: 0%;
+            border-left: 1px solid #000;
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+            border-right: 1px solid #000;
+        }
+
+        .one_halfs {
+            width: 48%;
+            position: relative;
+            float: left;
+            margin-top: 20px;
         }
 
         .principalimage img {
-        max-height: 375px;
-        border-radius: 50px;
-        border: 3px solid #5076bb;
-        box-shadow: 10px 10px 5px grey;
+            max-height: 375px;
+            border-radius: 50px;
+            border: 3px solid #5076bb;
+            box-shadow: 10px 10px 5px grey;
+        }
+
+        .principalimage {
+            padding-top: 5%;
         }
 
         .principalname {
-        font-size: 30px;
-        line-height: 25px;
-        margin-bottom: 20px;
-        font-style: italic;
-        font-family: emoji;
-        font-weight: bold;
-        padding-top: 10px;
+            font-size: 30px;
+            line-height: 25px;
+            margin-bottom: 20px;
+            font-style: italic;
+            font-family: emoji;
+            font-weight: bold;
+            padding-top: 10px;
         }
 
         .principaldesignation {
-        font: 16px 'Open Sans', sans-serif;
-        font-weight: bold;
-        line-height: 23px;
+            font: 16px 'Open Sans', sans-serif;
+            font-weight: bold;
+            line-height: 23px;
         }
 
         .principaldesignations {
-        font: 16px 'Open Sans', sans-serif;
-        line-height: 23px;
-        margin-bottom: 10px;
+            font: 16px 'Open Sans', sans-serif;
+            line-height: 23px;
+            margin-bottom: 10px;
         }
 
         .principalmessage {
-        padding-top: 4%;
+            padding-top: 4%;
         }
 
-        /* --- Marquee / Updates --- */
         marquee {
-        min-height: 225px;
-        padding-left: 7px;
-        padding-right: 7px;
-        height: 200px;
+            min-height: 225px;
+            padding-left: 7px;
+            padding-right: 7px;
+            height: 200px;
         }
 
+        /* 1. The Outer Container */
         .marquee-container {
-        position: relative;
-        width: 100%;
-        height: 45px;
-        overflow: hidden;
-        background-color: red;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
+            position: relative;
+            width: 100%;
+            height: 45px;
+            overflow: hidden;
+            background-color: red;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            box-sizing: border-box;
+            display: flex; /* This perfectly vertically centers the moving track inside the 45px box */
+            align-items: center;
         }
 
+        /* 2. The Inner Track (The ONLY thing that moves) */
         .marquee-track {
-        display: flex;
-        align-items: center;
-        width: max-content;
-        animation: scroll-left 20s linear infinite;
+            display: flex; /* Forces items into a strict row */
+            align-items: center;
+            width: max-content; /* Tells the track to stretch as long as all your links combined */
+            /* The Animation is ONLY applied here */
+            animation: scroll-left 20s linear infinite;
         }
 
+        /* 3. The Individual Links */
         .marquee-content {
-        cursor: pointer;
-        color: white;
-        font-family: Arial, sans-serif;
-        font-weight: bold;
-        font-size: 20px;
-        text-decoration: none;
-        white-space: nowrap;
-        margin: 0 10px;
+            cursor: pointer;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 20px;
+            text-decoration: none;
+            white-space: nowrap;
+            margin: 0 10px; /* Spacing between links */
         }
 
+        /* 4. The Separator Pipe */
         .marquee-separator {
-        color: white;
-        font-weight: bold;
-        font-size: 20px;
-        margin: 0 5px;
+            color: white; /* Ensures the pipe is visible against the red background */
+            font-weight: bold;
+            font-size: 20px;
+            margin: 0 5px;
         }
 
+        /* 5. Hover Effects */
+        /* Pause the conveyor belt when hovering anywhere over the red container */
         .marquee-container:hover .marquee-track {
-        animation-play-state: paused;
+            animation-play-state: paused;
         }
 
+        /* Underline only the specific link you are hovering over */
         .marquee-content:hover {
-        text-decoration: underline;
-        color: white;
+            text-decoration: underline;
+            color: white;
         }
 
-       @@keyframes scroll-left {
-            0% { transform: translateX(100vw); }
-            100% { transform: translateX(-100%); }
+        /* 6. The Animation Keyframes */
+        @@keyframes scroll-left {
+            0% {
+                transform: translateX(100vw); /* Start off-screen right */
+            }
+
+            100% {
+                transform: translateX(-100%); /* End off-screen left */
+            }
+        }
+
+        .cirimg-icon {
+            display: block;
+            margin: 0 auto 15px;
+            font-size: 48px;
+            color: #1a237e;
+            text-align: center;
         }
     </style>
 
-    <!-- Restored custom CSS link -->
     <link rel="stylesheet" type="text/css" href="@Url.Content("~/css/custom.css")">
 }

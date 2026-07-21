@@ -34,6 +34,9 @@ namespace GECPatan.Web.Services
         public async Task<List<MarqueeDTO>> GetMarqueeAsync(CancellationToken ct = default)
             => await GetAsync<List<MarqueeDTO>>("api/home/marquee", ct) ?? new();
 
+        public async Task<List<UpdateItemDTO>> GetUpdatesAsync(int take = 20, CancellationToken ct = default)
+            => await GetAsync<List<UpdateItemDTO>>($"api/home/updates?take={take}", ct) ?? new();
+
         public async Task<List<TestimonialDTO>> GetTestimonialsAsync(CancellationToken ct = default)
             => await GetAsync<List<TestimonialDTO>>("api/home/testimonials", ct) ?? new();
 
@@ -58,7 +61,6 @@ namespace GECPatan.Web.Services
             {
                 var response = await _http.GetAsync(url, ct);
 
-                // 404 (e.g. no active principal yet) is an expected outcome, not a failure to throw on.
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("API call to {Url} returned {StatusCode}.", url, response.StatusCode);

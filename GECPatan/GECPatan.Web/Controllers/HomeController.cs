@@ -27,13 +27,11 @@ namespace GECPatan.Web.Controllers
         // GET /
         public async Task<IActionResult> Index(CancellationToken ct)
         {
-            // Fire every call in parallel instead of one-at-a-time -- same
-            // approach as DepartmentController.Index.
             var slidersTask = _homeApi.GetSlidersAsync(ct);
             var marqueeTask = _homeApi.GetMarqueeAsync(ct);
+            var updatesTask = _homeApi.GetUpdatesAsync(20, ct);
             var testimonialsTask = _homeApi.GetTestimonialsAsync(ct);
             var topRecruitersTask = _homeApi.GetTopRecruitersAsync(ct);
-            var newsTask = _homeApi.GetLatestNewsAsync(10, ct);
             var activitiesTask = _homeApi.GetLatestActivitiesAsync(10, ct);
             var statsTask = _homeApi.GetStatsAsync(ct);
             var settingsTask = _homeApi.GetSettingsAsync(ct);
@@ -41,31 +39,24 @@ namespace GECPatan.Web.Controllers
             var departmentsTask = _departmentApi.GetAllDepartmentsAsync(ct);
 
             await Task.WhenAll(
-                slidersTask, marqueeTask, testimonialsTask, topRecruitersTask,
-                newsTask, activitiesTask, statsTask, settingsTask, principalTask,
-                departmentsTask);
+                slidersTask, marqueeTask, updatesTask, testimonialsTask,
+                topRecruitersTask, activitiesTask, statsTask, settingsTask,
+                principalTask, departmentsTask);
 
             var vm = new HomeViewModel
             {
                 ApiBaseUrl = _configuration["Api:BaseUrl"]?.TrimEnd('/') ?? string.Empty,
                 Sliders = slidersTask.Result,
                 Marquee = marqueeTask.Result,
-                Testimonials = testimonialsTask.Result
-                .OrderBy(d => d.DisplayOrder)
-                    .ToList(),
-                TopRecruiters = topRecruitersTask.Result
-                .OrderBy(d => d.DisplayOrder)
-                    .ToList(),
-                News = newsTask.Result,
+                Updates = updatesTask.Result,
+                Testimonials = testimonialsTask.Result,
+                TopRecruiters = topRecruitersTask.Result,
                 Activities = activitiesTask.Result,
                 Departments = departmentsTask.Result
                     .OrderBy(d => d.DisplayOrder)
                     .ToList(),
                 Stats = statsTask.Result,
                 Settings = settingsTask.Result,
-                // GET /api/home/principal 404s when no principal profile is
-                // marked active yet -- that's a normal "not configured yet"
-                // state here, not an error, so Principal is simply null.
                 Principal = principalTask.Result
             };
 

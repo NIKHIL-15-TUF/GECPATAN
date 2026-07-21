@@ -3,7 +3,7 @@
     ViewData["Title"] = "Marquee / Notice Ticker";
     var now = DateTime.Now;
 }
- 
+
 <div class="row mb-3">
     <div class="col-12 d-flex justify-content-between align-items-center">
         <div>
@@ -22,28 +22,28 @@
         </a>
     </div>
 </div>
- 
-<!-- Live preview -->
-@if (Model.Any(m => m.IsActive))
+
+<!-- Live preview --> @*
+@if (Model.Any(m => m.IsActive && m.HorizontalMarquee))
 {
     <div class="card mb-3 border-info">
         <div class="card-header bg-info text-white py-1">
             <small class="font-weight-bold">
                 <i class="fas fa-eye mr-1"></i>
-                Live Preview — This is how marquee appears on website
+                Live Preview — Horizontal Ticker (below the slider)
             </small>
         </div>
         <div class="card-body py-2 bg-dark" style="overflow:hidden;">
             <div class="marquee-preview" style="white-space:nowrap;
-                 overflow:hidden;color:#fff;font-size:14px;">
+                overflow:hidden;color:#fff;font-size:14px;">
                 <span class="marquee-inner" style="display:inline-block;
-                      animation:marqueeScroll 20s linear infinite;">
-                    @foreach (var item in Model.Where(m => m.IsActive))
+                    animation:marqueeScroll 20s linear infinite;">
+                    @foreach (var item in Model.Where(m => m.IsActive && m.HorizontalMarquee))
                     {
                         <span class="mx-4">
                             <i class="fas fa-circle"
                                style="font-size:6px;color:#ffc107;
-                                      vertical-align:middle;"></i>
+                            vertical-align:middle;"></i>
                             @item.Title
                         </span>
                     }
@@ -52,7 +52,8 @@
         </div>
     </div>
 }
- 
+*@
+
 <div class="card">
     <div class="card-body p-0">
         <table class="table table-sm table-hover mb-0">
@@ -62,6 +63,7 @@
                     <th>Title</th>
                     <th width="100">Link Type</th>
                     <th width="180">Links To</th>
+                    <th width="110">Shows In</th>
                     <th width="120">Valid From</th>
                     <th width="120">Valid To</th>
                     <th width="80">Status</th>
@@ -72,7 +74,7 @@
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">
+                        <td colspan="9" class="text-center py-4 text-muted">
                             <i class="fas fa-bullhorn fa-2x mb-2 d-block"></i>
                             No marquee items yet.
                         </td>
@@ -110,15 +112,15 @@
                             @{
                                 var (bc, bi, bl) = item.LinkType switch
                                 {
-                                    "internal" => ("badge-primary",   "fa-link",
+                                    "internal" => ("badge-primary", "fa-link",
                                                    "Internal"),
-                                    "dynamic"  => ("badge-success",   "fa-database",
+                                    "dynamic" => ("badge-success", "fa-database",
                                                    "Dynamic"),
-                                    "external" => ("badge-info",      "fa-external-link-alt",
+                                    "external" => ("badge-info", "fa-external-link-alt",
                                                    "External"),
-                                    "file"     => ("badge-warning",   "fa-file-pdf",
+                                    "file" => ("badge-warning", "fa-file-pdf",
                                                    "File"),
-                                    _          => ("badge-secondary", "fa-ban",
+                                    _ => ("badge-secondary", "fa-ban",
                                                    "No Link")
                                 };
                             }
@@ -133,7 +135,21 @@
                             </small>
                         </td>
                         <td>
-                            <small class="@(!item.ValidFrom.HasValue?"text-muted":"")">
+                            @if (item.HorizontalMarquee)
+                            {
+                                <span class="badge badge-dark" style="font-size:9px;">
+                                    <i class="fas fa-arrows-alt-h mr-1"></i>Ticker
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-light border" style="font-size:9px;">
+                                    <i class="fas fa-list mr-1"></i>Updates
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <small class="@(!item.ValidFrom.HasValue ? "text-muted" : "")">
                                 @(item.ValidFrom.HasValue
                                     ? item.ValidFrom.Value.ToString("dd MMM yyyy")
                                     : "Always")
@@ -143,7 +159,7 @@
                             @if (item.ValidTo.HasValue)
                             {
                                 bool expired = item.ValidTo < DateTime.Now;
-                                <small class="@(expired?"text-danger font-weight-bold":"")">
+                                <small class="@(expired ? "text-danger font-weight-bold" : "")">
                                     @item.ValidTo.Value.ToString("dd MMM yyyy")
                                     @if (expired)
                                     {
@@ -190,9 +206,9 @@
                                   class="d-inline">
                                 <input type="hidden" name="id" value="@item.Id" />
                                 <button type="submit"
-                                        class="btn btn-xs @(item.IsVisible?"btn-warning":"btn-success")"
-                                        title="@(item.IsVisible?"Hide":"Show")">
-                                    <i class="fas @(item.IsVisible?"fa-eye-slash":"fa-eye")"></i>
+                                        class="btn btn-xs @(item.IsVisible ? "btn-warning" : "btn-success")"
+                                        title="@(item.IsVisible ? "Hide" : "Show")">
+                                    <i class="fas @(item.IsVisible ? "fa-eye-slash" : "fa-eye")"></i>
                                 </button>
                             </form>
                             <form asp-action="Delete" method="post"
@@ -210,12 +226,17 @@
         </table>
     </div>
 </div>
- 
+
 @section Scripts {
     <style>
         @@keyframes marqueeScroll {
-            0%   { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+            0% {
+                transform: translateX(100%);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
         }
     </style>
 }

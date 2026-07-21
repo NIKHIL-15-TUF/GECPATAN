@@ -48,6 +48,24 @@
         public string? FilePath { get; set; }
         public int DisplayOrder { get; set; }
     }
+
+    public class UpdateItemDTO
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string LinkType { get; set; } = "none"; // internal/dynamic/external/file/none
+
+        // Resolved link for internal/dynamic/external types only (same
+        // convention as MarqueeDTO.Link above).
+        public string? Link { get; set; }
+
+        // Only set when LinkType == "file" -- resolve against Api:BaseUrl.
+        public string? FilePath { get; set; }
+
+        // "marquee" | "news" -- not used for rendering logic, just useful
+        // if you ever want to badge/style the two sources differently.
+        public string Source { get; set; } = string.Empty;
+    }
     public class HomeNewsDTO
     {
         public int Id { get; set; }

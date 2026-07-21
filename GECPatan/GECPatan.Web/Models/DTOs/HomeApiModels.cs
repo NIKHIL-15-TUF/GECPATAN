@@ -39,18 +39,38 @@
         public int DisplayOrder { get; set; }
     }
 
-    // Mirrors GECPatan.Api.DTOs.MarqueeDTO (from GET /api/home/marquee).
-    // The API already resolves the final URL server-side (Link) and already
-    // filters to IsVisible + within ValidFrom/ValidTo, so nothing else needs
-    // to be re-checked client-side.
+    // Mirrors GECPatan.Api.DTOs.MarqueeDTO (from GET /api/home/marquee --
+    // horizontal ticker below the slider ONLY; the API already filters to
+    // HorizontalMarquee == true).
     public class MarqueeDTO
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string LinkType { get; set; } = "none"; // "internal" | "dynamic" | "external" | "file" | "none"
+        public string LinkType { get; set; } = "none"; // internal/dynamic/external/file/none
+
+        // Resolved for internal/dynamic/external only -- null for "file".
         public string? Link { get; set; }
+
+        // Only set when LinkType == "file". This is a relative path on
+        // GECPatan.Api's own static file host -- MUST be resolved against
+        // Api:BaseUrl before use (see ResolveApiFileUrl in the view), same
+        // as image paths. Using it as-is is the bug that made ticker/update
+        // files fail to open.
         public string? FilePath { get; set; }
         public int DisplayOrder { get; set; }
+    }
+
+    // Mirrors GECPatan.Api.DTOs.UpdateItemDTO (from GET /api/home/updates --
+    // the vertical "UPDATES" list). Merges Marquee items with
+    // HorizontalMarquee == false and NewsItem items with ShowInMarquee == true.
+    public class UpdateItemDTO
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string LinkType { get; set; } = "none";
+        public string? Link { get; set; }
+        public string? FilePath { get; set; } // resolve against Api:BaseUrl, same as MarqueeDTO
+        public string Source { get; set; } = string.Empty; // "marquee" | "news"
     }
 
     // Mirrors GECPatan.Api.DTOs.TestimonialDTO (from GET /api/home/testimonials).
@@ -74,6 +94,8 @@
     }
 
     // Mirrors GECPatan.Api.DTOs.HomeNewsDTO (from GET /api/home/news).
+    // Unfiltered "latest news" feed -- kept for potential reuse elsewhere;
+    // the homepage no longer uses this for the Updates list (see UpdateItemDTO).
     public class HomeNewsDTO
     {
         public int Id { get; set; }
@@ -93,8 +115,6 @@
         public int? LatestTotalPlaced { get; set; }
         public string? LatestHighestPackage { get; set; }
 
-        // Feature highlight icons (Admin sets these under Home.Feature1.Text/.Icon etc.)
-        // Icon values are font-awesome class strings, e.g. "fa fa-graduation-cap".
         public string? Feature1Text { get; set; }
         public string? Feature1Icon { get; set; }
         public string? Feature2Text { get; set; }
