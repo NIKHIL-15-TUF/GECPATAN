@@ -4,6 +4,7 @@ using GECPatan.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GECPatan.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260721124044_HorizontalMarquee")]
+    partial class HorizontalMarquee
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1326,57 +1329,6 @@ namespace GECPatan.Core.Migrations
                         .IsUnique();
 
                     b.ToTable("ContentPages");
-                });
-
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.ContentPageImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Caption")
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<int>("ContentPageId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContentPageId");
-
-                    b.ToTable("ContentPageImages");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.CutoffRecord", b =>
@@ -5719,17 +5671,6 @@ namespace GECPatan.Core.Migrations
                     b.Navigation("Committee");
                 });
 
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.ContentPageImage", b =>
-                {
-                    b.HasOne("GECPatan.Core.Models.Domain.ContentPage", "ContentPage")
-                        .WithMany("Images")
-                        .HasForeignKey("ContentPageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ContentPage");
-                });
-
             modelBuilder.Entity("GECPatan.Core.Models.Domain.CutoffRecord", b =>
                 {
                     b.HasOne("GECPatan.Core.Models.Domain.Department", "Department")
@@ -6306,11 +6247,6 @@ namespace GECPatan.Core.Migrations
                     b.Navigation("SubObjectives");
 
                     b.Navigation("Visions");
-                });
-
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.ContentPage", b =>
-                {
-                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.Department", b =>

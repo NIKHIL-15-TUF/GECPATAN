@@ -3,7 +3,7 @@
     bool isEdit = Model.Id > 0;
     ViewData["Title"] = isEdit ? "Edit Marquee Item" : "Add Marquee Item";
 }
- 
+
 <div class="row">
     <div class="col-md-8">
         <div class="card">
@@ -12,7 +12,7 @@
                     <i class="fas fa-bullhorn mr-2"></i>@ViewData["Title"]
                 </h3>
             </div>
-            <form asp-action="@(isEdit?"Edit":"Create")" method="post"
+            <form asp-action="@(isEdit ? "Edit" : "Create")" method="post"
                   enctype="multipart/form-data">
                 @if (isEdit)
                 {
@@ -25,7 +25,7 @@
                             @Html.ValidationSummary(false)
                         </div>
                     }
- 
+
                     <!-- Title -->
                     <div class="form-group">
                         <label asp-for="Title" class="font-weight-bold"></label>
@@ -37,9 +37,9 @@
                             This text scrolls in the marquee bar on the website.
                         </small>
                     </div>
- 
+
                     <hr />
- 
+
                     <!-- LINK TYPE -->
                     <label class="font-weight-bold d-block mb-2">
                         Link Type
@@ -97,7 +97,7 @@
                             </div>
                         }
                     </div>
- 
+
                     <!-- INTERNAL FIELDS -->
                     <div id="fields-internal" class="lt-fields d-none">
                         <div class="card border-primary mb-3">
@@ -130,7 +130,7 @@
                             </div>
                         </div>
                     </div>
- 
+
                     <!-- DYNAMIC FIELDS -->
                     <div id="fields-dynamic" class="lt-fields d-none">
                         <div class="card border-success mb-3">
@@ -171,7 +171,7 @@
                                             @foreach (var opt in Model.DynamicIdOptions)
                                             {
                                                 <option value="@opt.Value"
-                                                        selected="@(opt.Value==Model.DynamicId?.ToString())">
+                                                        selected="@(opt.Value == Model.DynamicId?.ToString())">
                                                     @opt.Text
                                                 </option>
                                             }
@@ -204,7 +204,7 @@
                             </div>
                         </div>
                     </div>
- 
+
                     <!-- EXTERNAL FIELDS -->
                     <div id="fields-external" class="lt-fields d-none">
                         <div class="card border-info mb-3">
@@ -219,7 +219,7 @@
                             </div>
                         </div>
                     </div>
- 
+
                     <!-- FILE FIELDS -->
                     <div id="fields-file" class="lt-fields d-none">
                         <div class="card border-warning mb-3">
@@ -231,7 +231,7 @@
                                 {
                                     <div class="mb-2">
                                         <a href="@Model.ExistingFilePath" target="_blank"
-                                               class="btn btn-sm btn-outline-danger">
+                                           class="btn btn-sm btn-outline-danger">
                                             <i class="fas fa-file-pdf mr-1"></i>
                                             View Current File
                                         </a>
@@ -255,12 +255,12 @@
                             </div>
                         </div>
                     </div>
- 
+
                     <hr />
- 
+
                     <!-- VALIDITY + OPTIONS -->
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label asp-for="ValidFrom" class="font-weight-bold"></label>
                                 <input asp-for="ValidFrom" class="form-control"
@@ -270,7 +270,7 @@
                                 </small>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label asp-for="ValidTo" class="font-weight-bold"></label>
                                 <input asp-for="ValidTo" class="form-control"
@@ -303,6 +303,25 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-md-2">
+                            <div class="form-group mt-4">
+                                <div class="custom-control custom-switch">
+                                    <input asp-for="HorizontalMarquee" type="checkbox"
+                                           class="custom-control-input"
+                                           id="horizontalMarquee" />
+                                    <label class="custom-control-label"
+                                           for="horizontalMarquee">
+                                        Horizontal Ticker
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    Checked: shows in the scrolling ticker
+                                    below the homepage slider. Unchecked
+                                    (default): shows in the "UPDATES" list
+                                    instead.
+                                </small>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card-footer d-flex justify-content-between">
@@ -317,7 +336,7 @@
             </form>
         </div>
     </div>
- 
+
     <!-- Guide -->
     <div class="col-md-4">
         <div class="card">
@@ -340,6 +359,15 @@
                     <p class="small text-muted mb-0">
                         Item stops showing after this date.
                         Leave blank for no expiry.
+                    </p>
+                </div>
+                <div class="p-2 border-bottom">
+                    <strong class="small">Horizontal Ticker vs. Updates</strong>
+                    <p class="small text-muted mb-0">
+                        By default a marquee item shows in the vertical
+                        "UPDATES" list on the homepage. Check
+                        <strong>Horizontal Ticker</strong> to have it scroll
+                        in the ticker bar below the slider instead.
                     </p>
                 </div>
                 <div class="p-2 border-bottom">
@@ -375,78 +403,78 @@
         </div>
     </div>
 </div>
- 
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
     <script>
         const dynRoutes = {
-        'Department':  { ctrl: 'Department',      action: 'DepartmentDetails' },
-        'Committee':   { ctrl: 'CampusCommittee', action: 'CommitteePage'     },
-        'Facility':    { ctrl: 'Facility',         action: 'FacilityPage'      },
-        'ContentPage': { ctrl: 'Page',             action: 'View'              },
-        'Document':    { ctrl: 'Documents',        action: 'Index'             }
+            'Department': { ctrl: 'Department', action: 'DepartmentDetails' },
+            'Committee': { ctrl: 'CampusCommittee', action: 'CommitteePage' },
+            'Facility': { ctrl: 'Facility', action: 'FacilityPage' },
+            'ContentPage': { ctrl: 'Page', action: 'View' },
+            'Document': { ctrl: 'Documents', action: 'Index' }
         };
- 
+
         function switchType(type) {
-        document.querySelectorAll('.lt-fields')
-        .forEach(f => f.classList.add('d-none'));
-        document.querySelectorAll('.lt-card')
-        .forEach(c => {
-        c.style.border = '2px solid #dee2e6';
-        c.style.background = '';
-        });
-        const card = document.getElementById('lt-' + type);
-        if (card) {
-        card.style.border = '2px solid #1a237e';
-        card.style.background = '#eef0fb';
+            document.querySelectorAll('.lt-fields')
+                .forEach(f => f.classList.add('d-none'));
+            document.querySelectorAll('.lt-card')
+                .forEach(c => {
+                    c.style.border = '2px solid #dee2e6';
+                    c.style.background = '';
+                });
+            const card = document.getElementById('lt-' + type);
+            if (card) {
+                card.style.border = '2px solid #1a237e';
+                card.style.background = '#eef0fb';
+            }
+            const sec = document.getElementById('fields-' + type);
+            if (sec) sec.classList.remove('d-none');
         }
-        const sec = document.getElementById('fields-' + type);
-        if (sec) sec.classList.remove('d-none');
-        }
- 
+
         async function loadDynOptions(type) {
-        const sel  = document.getElementById('dynIdSelect');
-        const ctrl = document.getElementById('dynCtrl');
-        const act  = document.getElementById('dynAction');
- 
-        sel.innerHTML = '<option>Loading…</option>';
- 
-        const route = dynRoutes[type];
-        if (route) {
-        ctrl.value = route.ctrl;
-        act.value  = route.action;
+            const sel = document.getElementById('dynIdSelect');
+            const ctrl = document.getElementById('dynCtrl');
+            const act = document.getElementById('dynAction');
+
+            sel.innerHTML = '<option>Loading…</option>';
+
+            const route = dynRoutes[type];
+            if (route) {
+                ctrl.value = route.ctrl;
+                act.value = route.action;
+            }
+
+            try {
+                const res = await fetch(
+                    `/Marquee/GetDynamicOptions?type=${type}`);
+                const data = await res.json();
+                sel.innerHTML = '<option value="">-- Select --</option>';
+                data.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = item.text;
+                    sel.appendChild(opt);
+                });
+            } catch (e) {
+                sel.innerHTML = '<option>Error loading</option>';
+            }
         }
- 
-        try {
-        const res  = await fetch(
-        `/Marquee/GetDynamicOptions?type=${type}`);
-        const data = await res.json();
-        sel.innerHTML = '<option value="">-- Select --</option>';
-        data.forEach(item => {
-        const opt      = document.createElement('option');
-        opt.value      = item.id;
-        opt.textContent= item.text;
-        sel.appendChild(opt);
-        });
-        } catch(e) {
-        sel.innerHTML = '<option>Error loading</option>';
-        }
-        }
- 
+
         document.addEventListener('DOMContentLoaded', function() {
-        const current = '@Model.LinkType';
-        switchType(current);
- 
-        const dynType = '@Model.DynamicType';
-        if (dynType && current === 'dynamic') {
-        document.getElementById('dynCtrl').value   = '@Model.ControllerName';
-        document.getElementById('dynAction').value = '@Model.ActionName';
-        loadDynOptions(dynType).then(() => {
-        document.getElementById('dynIdSelect').value
-        = '@Model.DynamicId';
-        });
-        }
+            const current = '@Model.LinkType';
+            switchType(current);
+
+            const dynType = '@Model.DynamicType';
+            if (dynType && current === 'dynamic') {
+                document.getElementById('dynCtrl').value = '@Model.ControllerName';
+                document.getElementById('dynAction').value = '@Model.ActionName';
+                loadDynOptions(dynType).then(() => {
+                    document.getElementById('dynIdSelect').value
+                        = '@Model.DynamicId';
+                });
+            }
         });
     </script>
 }

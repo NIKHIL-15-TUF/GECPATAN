@@ -23,20 +23,20 @@
             {
                 <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
             }
- 
+
             <div class="form-group">
                 <label asp-for="Title" class="font-weight-bold"></label>
                 <textarea asp-for="Title" class="form-control" rows="2"
                           placeholder="News headline..."></textarea>
                 <span asp-validation-for="Title" class="text-danger small"></span>
             </div>
- 
+
             <div class="form-group">
                 <label class="font-weight-bold">Description</label>
                 <textarea asp-for="Description" class="form-control" rows="5"
                           placeholder="Full news description..."></textarea>
             </div>
- 
+
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
@@ -53,7 +53,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                @* <div class="col-md-4">
                     <div class="form-group mt-4">
                         <div class="custom-control custom-switch">
                             <input asp-for="ShowInMarquee" type="checkbox"
@@ -62,10 +62,16 @@
                                 Show in Marquee
                             </label>
                         </div>
+                        <small class="text-muted d-block mt-1">
+                            Shows this news in the scrolling ticker below the
+                            homepage slider <strong>instead of</strong> the
+                            "UPDATES" list. Leave unchecked to keep it in
+                            UPDATES only.
+                        </small>
                     </div>
-                </div>
+                </div> *@
             </div>
- 
+
             <!-- Banner + Thumbnail -->
             <div class="row">
                 <div class="col-md-6">
@@ -111,7 +117,7 @@
                     </div>
                 </div>
             </div>
- 
+
             <!-- Link to Dept OR Committee OR External -->
             <div class="card bg-light mb-3">
                 <div class="card-body py-2">
@@ -151,9 +157,9 @@
                     </small>
                 </div>
             </div>
- 
+
             <hr />
- 
+
             <!-- Existing Images -->
             @if (existingImages.Any())
             {
@@ -178,7 +184,7 @@
                     }
                 </div>
             }
- 
+
             <div class="form-group">
                 <label class="font-weight-bold">
                     @(isEdit ? "Add More Images" : "Images")
@@ -190,7 +196,7 @@
                     <label class="custom-file-label">Choose images (multiple)...</label>
                 </div>
             </div>
- 
+
             <!-- Existing Files -->
             @if (existingFiles.Any())
             {
@@ -218,7 +224,7 @@
                     }
                 </ul>
             }
- 
+
             <div class="form-group">
                 <label class="font-weight-bold">
                     @(isEdit ? "Add More Files (PDF)" : "Files (PDF)")

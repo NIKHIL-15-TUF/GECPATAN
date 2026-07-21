@@ -1,5 +1,5 @@
 ﻿using GECPatan.Core.Data;
-using  GECPatan.Core.Models.Domain;
+using GECPatan.Core.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,7 +43,8 @@ namespace GECPatan.Admin.Controllers
                 IsActive = m.IsVisible
                     && (!m.ValidFrom.HasValue || m.ValidFrom <= now)
                     && (!m.ValidTo.HasValue || m.ValidTo >= now),
-                DisplayOrder = m.DisplayOrder
+                DisplayOrder = m.DisplayOrder,
+                HorizontalMarquee = m.HorizontalMarquee
             }).ToList();
 
             return View(list);
@@ -328,7 +329,8 @@ namespace GECPatan.Admin.Controllers
             ValidFrom = m.ValidFrom,
             ValidTo = m.ValidTo,
             DisplayOrder = m.DisplayOrder,
-            IsVisible = m.IsVisible
+            IsVisible = m.IsVisible,
+            HorizontalMarquee = m.HorizontalMarquee
         };
 
         private static void UpdateEntity(Marquee e, MarqueeFormVM m)
@@ -346,6 +348,7 @@ namespace GECPatan.Admin.Controllers
             e.ValidTo = m.ValidTo;
             e.DisplayOrder = m.DisplayOrder;
             e.IsVisible = m.IsVisible;
+            e.HorizontalMarquee = m.HorizontalMarquee;
         }
 
         private static MarqueeFormVM EntityToForm(Marquee m)
@@ -370,7 +373,8 @@ namespace GECPatan.Admin.Controllers
                 ValidFrom = m.ValidFrom,
                 ValidTo = m.ValidTo,
                 DisplayOrder = m.DisplayOrder,
-                IsVisible = m.IsVisible
+                IsVisible = m.IsVisible,
+                HorizontalMarquee = m.HorizontalMarquee
             };
         }
 

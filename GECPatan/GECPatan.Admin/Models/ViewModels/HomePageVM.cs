@@ -34,74 +34,81 @@ namespace GECPatan.Admin.Models.ViewModels
         public string? ExistingImagePath { get; set; }
     }
     public class MarqueeListVM
-        {
-            public int Id { get; set; }
-            public string Title { get; set; } = string.Empty;
-            public string LinkType { get; set; } = "none";
-            public string? LinkDescription { get; set; }
-            public DateTime? ValidFrom { get; set; }
-            public DateTime? ValidTo { get; set; }
-            public bool IsVisible { get; set; }
-            public bool IsActive { get; set; }  // computed from dates
-            public int DisplayOrder { get; set; }
-        }
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string LinkType { get; set; } = "none";
+        public string? LinkDescription { get; set; }
+        public DateTime? ValidFrom { get; set; }
+        public DateTime? ValidTo { get; set; }
+        public bool IsVisible { get; set; }
+        public bool IsActive { get; set; }  // computed from dates
+        public int DisplayOrder { get; set; }
 
-        public class MarqueeFormVM
-        {
-            public int Id { get; set; }
+        // NEW: true = shows in the horizontal ticker below the slider;
+        // false (default) = shows in the vertical "UPDATES" list instead.
+        public bool HorizontalMarquee { get; set; }
+    }
 
-            [Required(ErrorMessage = "Title is required")]
-            [MaxLength(500)]
-            [Display(Name = "Marquee Text")]
-            public string Title { get; set; } = string.Empty;
+    public class MarqueeFormVM
+    {
+        public int Id { get; set; }
 
-            [Required]
-            [Display(Name = "Link Type")]
-            public string LinkType { get; set; } = "none";
+        [Required(ErrorMessage = "Title is required")]
+        [MaxLength(500)]
+        [Display(Name = "Marquee Text")]
+        public string Title { get; set; } = string.Empty;
 
-            // Internal
-            [MaxLength(100)]
-            [Display(Name = "Controller")]
-            public string? ControllerName { get; set; }
+        [Required]
+        [Display(Name = "Link Type")]
+        public string LinkType { get; set; } = "none";
 
-            [MaxLength(100)]
-            [Display(Name = "Action")]
-            public string? ActionName { get; set; }
+        // Internal
+        [MaxLength(100)]
+        [Display(Name = "Controller")]
+        public string? ControllerName { get; set; }
 
-            // Dynamic
-            [MaxLength(50)]
-            [Display(Name = "Dynamic Type")]
-            public string? DynamicType { get; set; }
+        [MaxLength(100)]
+        [Display(Name = "Action")]
+        public string? ActionName { get; set; }
 
-            [Display(Name = "Select Item")]
-            public int? DynamicId { get; set; }
+        // Dynamic
+        [MaxLength(50)]
+        [Display(Name = "Dynamic Type")]
+        public string? DynamicType { get; set; }
 
-            // External
-            [MaxLength(500)]
-            [Display(Name = "External URL")]
-            public string? ExternalLink { get; set; }
+        [Display(Name = "Select Item")]
+        public int? DynamicId { get; set; }
 
-            // File
-            public string? ExistingFilePath { get; set; }
+        // External
+        [MaxLength(500)]
+        [Display(Name = "External URL")]
+        public string? ExternalLink { get; set; }
 
-            // Validity
-            [Display(Name = "Valid From")]
-            [DataType(DataType.Date)]
-            public DateTime? ValidFrom { get; set; }
+        // File
+        public string? ExistingFilePath { get; set; }
 
-            [Display(Name = "Valid To")]
-            [DataType(DataType.Date)]
-            public DateTime? ValidTo { get; set; }
+        // Validity
+        [Display(Name = "Valid From")]
+        [DataType(DataType.Date)]
+        public DateTime? ValidFrom { get; set; }
 
-            [Display(Name = "Display Order")]
-            public int DisplayOrder { get; set; } = 0;
+        [Display(Name = "Valid To")]
+        [DataType(DataType.Date)]
+        public DateTime? ValidTo { get; set; }
 
-            public bool IsVisible { get; set; } = true;
+        [Display(Name = "Display Order")]
+        public int DisplayOrder { get; set; } = 0;
 
-            // Dropdowns
-            public List<SelectListItem> DynamicIdOptions { get; set; } = new();
-        }
-    
+        public bool IsVisible { get; set; } = true;
+
+        // NEW: see MarqueeListVM.HorizontalMarquee above.
+        [Display(Name = "Show in Horizontal Ticker")]
+        public bool HorizontalMarquee { get; set; } = false;
+
+        // Dropdowns
+        public List<SelectListItem> DynamicIdOptions { get; set; } = new();
+    }
 
     // ── TESTIMONIAL ────
     public class TestimonialVM
