@@ -83,6 +83,9 @@
     var principalName = Model.Principal?.Name ?? Model.Settings?.PrincipalName;
     var principalDesignation = Model.Principal?.Designation ?? Model.Settings?.PrincipalDesignation;
     var principalMessage = Model.Principal?.Message ?? Model.Settings?.PrincipalMessage;
+    principalMessage = (principalMessage ?? string.Empty)
+    .Replace("<p>", "")
+    .Replace("</p>", "");
     var principalPhoto = Model.Principal?.PhotoPath ?? Model.Settings?.PrincipalPhoto;
     var principalInstitute = Model.Principal?.Institute ?? "Government Engineering College, Patan";
 }
