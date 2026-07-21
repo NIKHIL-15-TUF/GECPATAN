@@ -9,16 +9,58 @@ namespace GECPatan.Web.Controllers
     {
         private readonly IMenuApiService _menuApi;
         private readonly IHomeApiService _homeApi;
+        private readonly IDepartmentApiService _departmentApi;
+        private readonly IConfiguration _configuration;
 
-        public HomeController(IMenuApiService menuApi, IHomeApiService homeApi)
+        public HomeController(
+            IMenuApiService menuApi,
+            IHomeApiService homeApi,
+            IDepartmentApiService departmentApi,
+            IConfiguration configuration)
         {
             _menuApi = menuApi;
             _homeApi = homeApi;
+            _departmentApi = departmentApi;
+            _configuration = configuration;
         }
 
-        public IActionResult Index()
+        // GET /
+        public async Task<IActionResult> Index(CancellationToken ct)
         {
-            return View();
+            var slidersTask = _homeApi.GetSlidersAsync(ct);
+            var marqueeTask = _homeApi.GetMarqueeAsync(ct);
+            var updatesTask = _homeApi.GetUpdatesAsync(20, ct);
+            var testimonialsTask = _homeApi.GetTestimonialsAsync(ct);
+            var topRecruitersTask = _homeApi.GetTopRecruitersAsync(ct);
+            var activitiesTask = _homeApi.GetLatestActivitiesAsync(10, ct);
+            var statsTask = _homeApi.GetStatsAsync(ct);
+            var settingsTask = _homeApi.GetSettingsAsync(ct);
+            var principalTask = _homeApi.GetPrincipalMessageAsync(ct);
+            var departmentsTask = _departmentApi.GetAllDepartmentsAsync(ct);
+
+            await Task.WhenAll(
+                slidersTask, marqueeTask, updatesTask, testimonialsTask,
+                topRecruitersTask, activitiesTask, statsTask, settingsTask,
+                principalTask, departmentsTask);
+
+            var vm = new HomeViewModel
+            {
+                ApiBaseUrl = _configuration["Api:BaseUrl"]?.TrimEnd('/') ?? string.Empty,
+                Sliders = slidersTask.Result,
+                Marquee = marqueeTask.Result,
+                Updates = updatesTask.Result,
+                Testimonials = testimonialsTask.Result,
+                TopRecruiters = topRecruitersTask.Result,
+                Activities = activitiesTask.Result,
+                Departments = departmentsTask.Result
+                    .OrderBy(d => d.DisplayOrder)
+                    .ToList(),
+                Stats = statsTask.Result,
+                Settings = settingsTask.Result,
+                Principal = principalTask.Result
+            };
+
+            return View(vm);
         }
 
         // GET /Home/Menu — loaded via AJAX by _Layout.cshtml into <header id="menuload">

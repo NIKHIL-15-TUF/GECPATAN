@@ -1,6 +1,7 @@
 ﻿using GECPatan.Api.Common;
 using GECPatan.Api.DTOs;
 using GECPatan.Core.Data;
+using GECPatan.Core.Models.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,7 +40,13 @@ namespace GECPatan.Api.Controllers
 
             return Ok(ApiResponse<List<SliderDTO>>.Ok(data));
         }
+
         // GET /api/home/marquee
+        // The HORIZONTAL scrolling ticker directly below the slider.
+        // Only Admin > Marquee items explicitly flagged HorizontalMarquee = true
+        // show here. Everything else (HorizontalMarquee = false, plus any
+        // NewsItem flagged ShowInMarquee) shows in GET /api/home/updates
+        // (the vertical "UPDATES" list) instead -- see GetUpdates() below.
         [HttpGet("marquee")]
         public async Task<ActionResult<ApiResponse<List<MarqueeDTO>>>> GetMarquee()
         {
@@ -47,6 +54,7 @@ namespace GECPatan.Api.Controllers
 
             var items = await _context.Marquees
                 .Where(m => m.IsVisible
+                    && m.HorizontalMarquee
                     && (!m.ValidFrom.HasValue || m.ValidFrom <= now)
                     && (!m.ValidTo.HasValue || m.ValidTo >= now))
                 .OrderBy(m => m.DisplayOrder)
@@ -58,11 +66,77 @@ namespace GECPatan.Api.Controllers
                 Title = m.Title,
                 LinkType = m.LinkType,
                 Link = ResolveMarqueeLink(m),
-                FilePath = m.FilePath,
+                FilePath = m.LinkType == "file" ? m.FilePath : null,
                 DisplayOrder = m.DisplayOrder
             }).ToList();
 
             return Ok(ApiResponse<List<MarqueeDTO>>.Ok(data));
+        }
+
+        // GET /api/home/updates?take=20
+        // The vertical "UPDATES" list. Merges:
+        //   - Marquee items where HorizontalMarquee == false (the default --
+        //     most marquee items land here, not in the ticker)
+        //   - NewsItem items explicitly flagged ShowInMarquee == true
+        // Ordered newest-first by each source's own natural date
+        // (Marquee.CreatedDate, NewsItem.PublishDate).
+        [HttpGet("updates")]
+        public async Task<ActionResult<ApiResponse<List<UpdateItemDTO>>>> GetUpdates(
+            [FromQuery] int take = 20)
+        {
+            if (take < 1 || take > 100) take = 20;
+
+            var now = DateTime.Now;
+
+            var marqueeItems = await _context.Marquees
+                .Where(m => m.IsVisible
+                    && !m.HorizontalMarquee
+                    && (!m.ValidFrom.HasValue || m.ValidFrom <= now)
+                    && (!m.ValidTo.HasValue || m.ValidTo >= now))
+                .ToListAsync();
+
+            var updates = marqueeItems
+                .Select(m => new
+                {
+                    SortDate = m.CreatedDate,
+                    Dto = new UpdateItemDTO
+                    {
+                        Id = m.Id,
+                        Title = m.Title,
+                        LinkType = m.LinkType,
+                        Link = ResolveMarqueeLink(m),
+                        FilePath = m.LinkType == "file" ? m.FilePath : null,
+                        Source = "marquee"
+                    }
+                })
+                .ToList();
+
+            var newsItems = await _context.NewsItems
+                .Where(n => n.IsVisible && n.ShowInMarquee)
+                .ToListAsync();
+
+            var newsUpdates = newsItems.Select(n => new
+            {
+                SortDate = n.PublishDate ?? n.CreatedDate,
+                Dto = new UpdateItemDTO
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    LinkType = "internal",
+                    Link = $"/news/{n.Id}",
+                    FilePath = null,
+                    Source = "news"
+                }
+            });
+
+            var data = updates
+                .Concat(newsUpdates)
+                .OrderByDescending(u => u.SortDate)
+                .Take(take)
+                .Select(u => u.Dto)
+                .ToList();
+
+            return Ok(ApiResponse<List<UpdateItemDTO>>.Ok(data));
         }
 
         // GET /api/home/testimonials
@@ -106,6 +180,10 @@ namespace GECPatan.Api.Controllers
         }
 
         // GET /api/home/news?take=5
+        // Unchanged/unfiltered -- general "latest news" feed, independent of
+        // ShowInMarquee. ShowInMarquee only controls whether an item ALSO
+        // appears in GET /api/home/updates (see GetUpdates above); it does
+        // not remove the item from here.
         [HttpGet("news")]
         public async Task<ActionResult<ApiResponse<List<HomeNewsDTO>>>> GetLatestNews(
             [FromQuery] int take = 5)
@@ -204,9 +282,32 @@ namespace GECPatan.Api.Controllers
 
             return Ok(ApiResponse<SiteSettingsDTO>.Ok(data));
         }
+
+        // GET /api/home/principal
+        [HttpGet("principal")]
+        public async Task<ActionResult<ApiResponse<PrincipalMessageDTO>>>
+            GetPrincipalMessage()
+        {
+            var p = await _context.Principals
+                .Where(x => x.IsActive && !x.IsDeleted)
+                .Select(x => new PrincipalMessageDTO
+                {
+                    Name = x.Name,
+                    Designation = x.Designation,
+                    PhotoPath = x.PhotoPath,
+                    Message = x.Message,
+                    Institute = "Government Engineering College, Patan"
+                })
+                .FirstOrDefaultAsync();
+
+            if (p == null)
+                return NotFound(ApiResponse<PrincipalMessageDTO>.Fail(
+                    "No active principal profile found."));
+
+            return Ok(ApiResponse<PrincipalMessageDTO>.Ok(p));
+        }
+
         // GET /api/home/activities?take=10
-        // Latest activities across all committees/depts
-        // Used for home page ticker/feed
         [HttpGet("activities")]
         public async Task<ActionResult<ApiResponse<List<HomeActivityDTO>>>> GetLatestActivities(
             [FromQuery] int take = 10)
@@ -246,16 +347,20 @@ namespace GECPatan.Api.Controllers
 
             return Ok(ApiResponse<List<HomeActivityDTO>>.Ok(data));
         }
+
         // ── HELPERS ───────────────────────────────────────
-        private static string? ResolveMarqueeLink(
-            GECPatan.Core.Models.Domain.Marquee m)
+        // Resolves Link for internal/dynamic/external types only. Returns
+        // null for "file" and "none" -- file links are exposed separately
+        // via FilePath (see MarqueeDTO/UpdateItemDTO), since a raw
+        // Api-relative file path needs Api:BaseUrl resolution on the
+        // consumer side, not a same-origin href.
+        private static string? ResolveMarqueeLink(Marquee m)
         {
             return m.LinkType switch
             {
                 "internal" => $"/{m.ControllerName}/{m.ActionName}",
                 "dynamic" => $"/{m.ControllerName}/{m.ActionName}/{m.DynamicId}",
                 "external" => m.ExternalLink,
-                "file" => m.FilePath,
                 _ => null
             };
         }

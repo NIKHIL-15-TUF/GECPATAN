@@ -16,11 +16,12 @@ namespace GECPatan.Api.Controllers
         public PagesController(ApplicationDbContext context)
             => _context = context;
         // GET /api/pages/{slug}
-        // Content page by slug, with Dynamic Sections
+        // Content page by slug, with carousel images and Dynamic Sections
         [HttpGet("{slug}")]
         public async Task<ActionResult<ApiResponse<ContentPageDTO>>> GetBySlug(string slug)
         {
             var page = await _context.ContentPages
+                .Include(p => p.Images)
                 .FirstOrDefaultAsync(p => p.Slug == slug && p.IsVisible);
 
             if (page == null)
@@ -42,6 +43,14 @@ namespace GECPatan.Api.Controllers
                 Title = page.Title,
                 Slug = page.Slug,
                 HtmlContent = page.HtmlContent,
+                Images = page.Images
+                    .OrderBy(i => i.DisplayOrder)
+                    .Select(i => new ContentPageImageDTO
+                    {
+                        ImageUrl = i.ImageUrl,
+                        Caption = i.Caption,
+                        DisplayOrder = i.DisplayOrder
+                    }).ToList(),
                 DynamicSections = dynamicSections.Select(s => new DynamicSectionDTO
                 {
                     Id = s.Id,

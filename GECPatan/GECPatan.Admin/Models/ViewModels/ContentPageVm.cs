@@ -12,7 +12,13 @@ namespace GECPatan.Admin.Models.ViewModels
         public bool IsVisible { get; set; }
         public string PublicUrl => $"/page/{Slug}";
     }
-
+    public class ContentPageImageVM
+    {
+        public int Id { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
+        public string? Caption { get; set; }
+        public int DisplayOrder { get; set; }
+    }
     public class ContentPageCreateVM
     {
         [Required(ErrorMessage = "Title is required")]
@@ -27,12 +33,17 @@ namespace GECPatan.Admin.Models.ViewModels
         public string? HtmlContent { get; set; }
 
         public bool IsVisible { get; set; } = true;
+        [Display(Name = "Carousel Images")]
+        public List<IFormFile>? CarouselImages { get; set; }
     }
 
     public class ContentPageEditVM : ContentPageCreateVM
     {
         public int Id { get; set; }
         public string GeneratedUrl { get; set; } = string.Empty;
+        // Already-saved images, shown for reorder/preview/delete
+        public List<ContentPageImageVM> ExistingImages { get; set; } = new();
+
     }
 
     // ── AUDIT LOG ──────────────────────────────────────────

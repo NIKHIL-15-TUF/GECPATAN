@@ -112,6 +112,7 @@ namespace GECPatan.Core.Data
         public DbSet<GalleryImage> GalleryImages { get; set; }
         public DbSet<ContactInfo> ContactInfos { get; set; }
         public DbSet<ContentPage> ContentPages { get; set; }
+        public DbSet<ContentPageImage> ContentPageImages { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
 
         // ── PRINCIPAL ─────────────────────────────────────
@@ -226,7 +227,8 @@ namespace GECPatan.Core.Data
 
             modelBuilder.Entity<StudentClub>()
                 .HasQueryFilter(x => !x.IsDeleted);
-
+            modelBuilder.Entity<ContentPageImage>()
+                .HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<Alumni>()
                 .HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<ProgramIntake>()
@@ -280,11 +282,15 @@ namespace GECPatan.Core.Data
                 .HasForeignKey(u => u.FacultyId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
-
             // SiteSetting → unique key
             modelBuilder.Entity<SiteSetting>()
                 .HasIndex(s => s.Key)
                 .IsUnique();
+            modelBuilder.Entity<ContentPageImage>()
+                .HasOne(i => i.ContentPage)
+                .WithMany(p => p.Images)
+                .HasForeignKey(i => i.ContentPageId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
 

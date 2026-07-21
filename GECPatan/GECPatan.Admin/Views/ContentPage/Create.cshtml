@@ -8,7 +8,7 @@
             <i class="fas fa-file-alt mr-2"></i>New Content Page
         </h3>
     </div>
-    <form asp-action="Create" method="post">
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
         <div class="card-body">
             @if (!ViewData.ModelState.IsValid)
             {
@@ -41,6 +41,18 @@
                         <span asp-validation-for="Slug" class="text-danger small"></span>
                     </div>
                 </div>
+            </div>
+ 
+            <!-- Carousel Images (separate from page content) -->
+            <div class="form-group">
+                <label class="font-weight-bold">Carousel Images</label>
+                <small class="text-muted d-block mb-1">
+                    Optional. These are shown as a slideshow above the page content —
+                    separate from what you write in the editor below. You can add more later.
+                </small>
+                <input type="file" name="CarouselImages" id="carouselInput"
+                       class="form-control-file" accept="image/*" multiple />
+                <div id="carouselPreview" class="d-flex flex-wrap mt-2" style="gap:8px;"></div>
             </div>
  
             <!-- TinyMCE Editor -->
@@ -114,5 +126,21 @@
                 .replace(/^-|-$/g, '');
             document.getElementById('slugInput').value = slug;
         }
+ 
+        // Live thumbnail preview for picked carousel images
+        document.getElementById('carouselInput').addEventListener('change', function (e) {
+            const preview = document.getElementById('carouselPreview');
+            preview.innerHTML = '';
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const img = document.createElement('img');
+                    img.src = ev.target.result;
+                    img.style.cssText = 'width:100px;height:75px;object-fit:cover;border-radius:4px;border:1px solid #ddd;';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
     </script>
 }

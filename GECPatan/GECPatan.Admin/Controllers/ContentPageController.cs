@@ -1,12 +1,12 @@
 ﻿using GECPatan.Core.Data;
-using  GECPatan.Core.Models.Domain;
+using GECPatan.Core.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
 using GECPatan.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
-
+ 
 namespace GECPatan.Admin.Controllers
 {
     [Authorize(Roles = "SuperAdmin,ContentEditor,Principal")]
@@ -14,10 +14,13 @@ namespace GECPatan.Admin.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly NotificationService _notify;
-        public ContentPageController(ApplicationDbContext context,NotificationService notify)
+        private readonly IWebHostEnvironment _env;
+
+        public ContentPageController(ApplicationDbContext context, NotificationService notify, IWebHostEnvironment env)
         {
             _context = context;
             _notify = notify;
+            _env = env;
         }
 
         // ── INDEX ─────────────────────────────────────────
@@ -83,6 +86,9 @@ namespace GECPatan.Admin.Controllers
             _context.ContentPages.Add(page);
             await _context.SaveChangesAsync();
 
+            // Save carousel images (separate from HtmlContent)
+            await SaveCarouselImages(page.Id, page.Slug, model.CarouselImages);
+
             // Audit log
             await WriteAuditLog("Created", "ContentPage", page.Id, page.Title);
             //Notificcation Send
@@ -103,7 +109,9 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             ViewData["Title"] = "Edit Page";
-            var p = await _context.ContentPages.FindAsync(id);
+            var p = await _context.ContentPages
+                .Include(x => x.Images)
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (p == null) return NotFound();
 
             return View(new ContentPageEditVM
@@ -113,7 +121,16 @@ namespace GECPatan.Admin.Controllers
                 Slug = p.Slug,
                 HtmlContent = p.HtmlContent,
                 IsVisible = p.IsVisible,
-                GeneratedUrl = $"/page/{p.Slug}"
+                GeneratedUrl = $"/page/{p.Slug}",
+                ExistingImages = p.Images
+                    .OrderBy(i => i.DisplayOrder)
+                    .Select(i => new ContentPageImageVM
+                    {
+                        Id = i.Id,
+                        ImageUrl = i.ImageUrl,
+                        Caption = i.Caption,
+                        DisplayOrder = i.DisplayOrder
+                    }).ToList()
             });
         }
 
@@ -137,7 +154,21 @@ namespace GECPatan.Admin.Controllers
                     "This slug is already in use by another page.");
             }
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                var existing = await _context.ContentPages.Include(x => x.Images)
+                    .FirstOrDefaultAsync(x => x.Id == id);
+                model.ExistingImages = existing?.Images
+                    .OrderBy(i => i.DisplayOrder)
+                    .Select(i => new ContentPageImageVM
+                    {
+                        Id = i.Id,
+                        ImageUrl = i.ImageUrl,
+                        Caption = i.Caption,
+                        DisplayOrder = i.DisplayOrder
+                    }).ToList() ?? new List<ContentPageImageVM>();
+                return View(model);
+            }
 
             var p = await _context.ContentPages.FindAsync(id);
             if (p == null) return NotFound();
@@ -148,6 +179,10 @@ namespace GECPatan.Admin.Controllers
             p.IsVisible = model.IsVisible;
 
             await _context.SaveChangesAsync();
+
+            // Append any newly-picked carousel images
+            await SaveCarouselImages(p.Id, p.Slug, model.CarouselImages);
+
             await WriteAuditLog("Updated", "ContentPage", p.Id, p.Title);
 
             TempData["Success"] = $"Page updated. URL: /page/{p.Slug}";
@@ -156,6 +191,26 @@ namespace GECPatan.Admin.Controllers
                 return RedirectToAction("Index", "Home");
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        // ── DELETE ONE CAROUSEL IMAGE ─────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteImage(int id, int pageId)
+        {
+            var img = await _context.ContentPageImages.FindAsync(id);
+            if (img != null)
+            {
+                var physicalPath = Path.Combine(_env.WebRootPath, img.ImageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                if (System.IO.File.Exists(physicalPath))
+                {
+                    System.IO.File.Delete(physicalPath);
+                }
+                _context.ContentPageImages.Remove(img);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Image removed.";
+            }
+            return RedirectToAction(nameof(Edit), new { id = pageId });
         }
 
         // ── TOGGLE VISIBLE ────────────────────────────────
@@ -184,10 +239,12 @@ namespace GECPatan.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ── PREVIEW (renders TinyMCE content) ────────────
+        // ── PREVIEW (renders TinyMCE content + carousel) ──
         public async Task<IActionResult> Preview(int id)
         {
-            var p = await _context.ContentPages.FindAsync(id);
+            var p = await _context.ContentPages
+                .Include(x => x.Images)
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (p == null) return NotFound();
             ViewData["Title"] = p.Title;
             return View(p);
@@ -207,6 +264,50 @@ namespace GECPatan.Admin.Controllers
             // Trim hyphens from ends
             text = text.Trim('-');
             return text;
+        }
+
+        // ── CAROUSEL IMAGE UPLOAD HELPER ──────────────────
+        private async Task SaveCarouselImages(int contentPageId, string slug, List<IFormFile>? files)
+        {
+            if (files == null || files.Count == 0) return;
+
+            var folderRelative = $"/uploads/content-pages/{slug}";
+            var folderPhysical = Path.Combine(_env.WebRootPath, "uploads", "content-pages", slug);
+            Directory.CreateDirectory(folderPhysical);
+
+            var nextOrder = await _context.ContentPageImages
+                .Where(i => i.ContentPageId == contentPageId)
+                .Select(i => (int?)i.DisplayOrder)
+                .MaxAsync() ?? -1;
+            nextOrder++;
+
+            var allowedExt = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+
+            foreach (var file in files)
+            {
+                if (file == null || file.Length == 0) continue;
+
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExt.Contains(ext)) continue;
+
+                var fileName = $"{Guid.NewGuid():N}{ext}";
+                var physicalPath = Path.Combine(folderPhysical, fileName);
+
+                using (var stream = new FileStream(physicalPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                _context.ContentPageImages.Add(new ContentPageImage
+                {
+                    ContentPageId = contentPageId,
+                    ImageUrl = $"{folderRelative}/{fileName}",
+                    DisplayOrder = nextOrder
+                });
+                nextOrder++;
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         // ── AUDIT HELPER ──────────────────────────────────
