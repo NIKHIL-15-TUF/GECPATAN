@@ -1,0 +1,102 @@
+﻿@model GECPatan.Web.Models.StudentClubsViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = Model.Title;
+    int count = 1;
+
+    // Uploaded club cover images are served by GECPatan.Api's own static file
+    // middleware, not by this Web app -- same reasoning as
+    // DepartmentViewModel.ApiBaseUrl / ResolveApiFileUrl in Department/Index.cshtml.
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            return Url.Content("~/" + path.TrimStart('~', '/'));
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+}
+
+<style>
+    .width {
+        color: black;
+        width: 100%;
+    }
+
+    .border {
+        border: 1px solid #eee;
+        border-radius: 6px;
+    }
+
+    .hieght-150 {
+        max-height: 150px;
+        min-height: 150px
+    }
+
+    .border:hover {
+        background-color: #f9f9f9e8;
+    }
+</style>
+<div class="clearfix"></div>
+
+<div class="page_title3 general_title">
+    <div class="container">
+        <h1>
+            @Model.Title
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+<div class="clearfix margin_bottom6"></div>
+<!-- end page title -->
+
+<div class="featured_section48">
+    <div class="container">
+        @if (Model.Clubs.Any())
+        {
+            @foreach (var item in Model.Clubs)
+            {
+                <div class="one_fourth animate @(count % 4 == 0 ? "last" : "")" data-anim-type="fadeInUp" data-anim-delay="100">
+
+                    @if (!string.IsNullOrWhiteSpace(item.CoverImage))
+                    {
+                        <img src="@ResolveApiFileUrl(item.CoverImage)" alt="@item.Title" class="hieght-150">
+                    }
+
+                    <h5>@item.Title</h5>
+                    <h5>
+                        <a href="@(item.Link ?? Url.Action("ClubDetails", "StudentCorner", new { id = item.Id }))" class="btn btn-success">
+                            Read More
+                        </a>
+                    </h5>
+                </div>
+                @if (count % 4 == 0)
+                {
+                    <div class="clearfix margin_bottom3"></div>
+                }
+                count++;
+            }
+            <div class="clearfix margin_bottom3"></div>
+        }
+        else
+        {
+            <h2>No Student Clubs Available</h2>
+        }
+    </div>
+</div>
+
+<div class="clearfix"></div>
+
+@section styles {
+    <link rel="stylesheet" href="@Url.Content("~/images/CampusCommittee/Placement/graph.css")" />
+}
