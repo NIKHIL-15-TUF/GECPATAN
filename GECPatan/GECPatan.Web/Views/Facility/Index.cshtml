@@ -1,0 +1,60 @@
+﻿@model GECPatan.Web.Models.FacilityListViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Facilities";
+ 
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            return Url.Content("~/" + path.TrimStart('~', '/'));
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+}
+ 
+<div class="clearfix"></div>
+ 
+<div class="page_title3 general_title">
+    <div class="full-container">
+        <h1>
+            Facilities
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+<div class="clearfix"></div>
+ 
+<div class="margin_top10"></div>
+<div class="full-container">
+    @foreach (var f in Model.Facilities.OrderBy(x => x.DisplayOrder))
+    {
+        <div class="one_third">
+            <div class="boxdetail">
+                @if (!string.IsNullOrWhiteSpace(f.TitleImagePath))
+                {
+                    <img src="@ResolveApiFileUrl(f.TitleImagePath)" alt="@f.Title" class="rimg" onerror="this.style.display='none'" />
+                }
+                <h3 class="boxtitle">@f.Title</h3>
+                @if (!string.IsNullOrWhiteSpace(f.Tagline))
+                {
+                    <p>@f.Tagline</p>
+                }
+                <p class="text-muted small">@f.MemberCount Members</p>
+                <a asp-controller="Facility" asp-action="Details" asp-route-id="@f.Id" class="read-more-button">
+                    View Facility
+                </a>
+            </div>
+        </div>
+    }
+</div>

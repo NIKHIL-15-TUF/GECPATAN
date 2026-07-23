@@ -1,0 +1,314 @@
+﻿@model GECPatan.Web.Models.FacilityViewModel
+@using GECPatan.Web.Models.Dtos
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = Model.Title;
+ 
+    var dynamicSections = Model.DynamicSections
+        .Where(s => !string.IsNullOrWhiteSpace(s.Title))
+        .OrderBy(s => s.DisplayOrder)
+        .ToList();
+ 
+    string SafeId(string title)
+    {
+        return "Sec_" + System.Text.RegularExpressions.Regex
+            .Replace(title ?? "", @"[^a-zA-Z0-9]", "");
+    }
+ 
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            return Url.Content("~/" + path.TrimStart('~', '/'));
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+}
+ 
+<div class="clearfix"></div>
+ 
+<div class="page_title3 general_title">
+    <div class="full-container">
+        <h1>
+            @Model.Title
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+<div class="clearfix"></div>
+ 
+<div class="margin_top10"></div>
+<div class="full-container">
+ 
+    @{
+        void RenderTabButtons()
+        {
+            <button class="tablinks" onclick="openTab(event, 'About')" id="defaultOpen">About</button>
+            @if (Model.Visions.Any() && Model.Missions.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'VisionMission')">Vision &amp; Mission</button>
+            }
+            @if (Model.Members.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'Members')">Members</button>
+            }
+            @foreach (var sec in dynamicSections)
+            {
+                var sid = SafeId(sec.Title);
+                <button class="tablinks" onclick="openTab(event,'@sid')">@sec.Title</button>
+            }
+        }
+    }
+ 
+    <div class="tab hidden-xs">
+        @{
+            RenderTabButtons();
+        }
+    </div>
+    <div class="tab-xs visible-xs">
+        @{
+            RenderTabButtons();
+        }
+    </div>
+ 
+    <!-- ABOUT -->
+    <div id="About" class="tabcontent">
+        <div class="full-container">
+            <div class="one_half">
+                @{
+                    var bannerImages = Model.BannerImages.Where(b => !string.IsNullOrWhiteSpace(b)).ToList();
+                }
+                @if (bannerImages.Any())
+                {
+                    <div id="owl-demo2" class="owl-carousel">
+                        @foreach (var img in bannerImages)
+                        {
+                            <div><img src="@ResolveApiFileUrl(img)" alt="" class="rimg" onerror="this.parentElement.style.display='none'"></div>
+                        }
+                    </div>
+                }
+                else if (!string.IsNullOrWhiteSpace(Model.TitleImagePath))
+                {
+                    <img src="@ResolveApiFileUrl(Model.TitleImagePath)" alt="@Model.Title" class="rimg" onerror="this.style.display='none'" />
+                }
+            </div>
+            <!-- end section -->
+ 
+            <div class="one_half last text-justify">
+                <div class="stcode_title5">
+                    <h3 class="nmb"><strong>@Model.Title</strong></h3>
+                </div>
+                <p class="text-justify">@Html.Raw(Model.About)</p>
+                <div class="clearfix marb12"></div>
+            </div>
+            <!-- end section -->
+        </div>
+    </div>
+ 
+    <!-- VISION & MISSION -->
+    <div id="VisionMission" class="tabcontent">
+        <div class="featured_section106" style="background-color:white">
+            <div style="padding-left:10px;">
+                <div class="margin_top2"></div>
+                <h2 class="roboto thin">Vision</h2>
+                <div class="hsmline7"></div>
+                <br><br>
+                @foreach (var v in Model.Visions)
+                {
+                    <h4 class="roboto thin text-justify">@v</h4>
+                }
+ 
+                <div class="clearfix margin_top2"></div>
+ 
+                <div class="margin_top2"></div>
+                <h2 class="roboto thin">Mission</h2>
+                <div class="hsmline7"></div>
+                <br><br>
+                @foreach (var m in Model.Missions)
+                {
+                    <h4 class="roboto thin text-justify"><i class="fa fa-check"></i> @Html.Raw(m)</h4>
+                }
+                <div class="margin_top2"></div>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- MEMBERS -->
+    <div id="Members" class="tabcontent">
+        @{
+            var members = Model.Members.OrderBy(x => x.DisplayOrder).ToList();
+        }
+
+        @if (members.Any())
+        {
+            <div class="boxdetails">
+                <h3 class="boxtitle" style="font-size:2rem">Members</h3>
+                <div class="line"></div>
+            </div>
+
+            int i = 1;
+            foreach (var m in members)
+            {
+                <div class="one_half @(i % 2 == 0 ? "last" : "") animate" data-anim-type="fadeIn" data-anim-delay="300">
+                    <div class="faculties_img_div">
+                        @if (!string.IsNullOrWhiteSpace(m.ImagePath))
+                        {
+                            <img src="@ResolveApiFileUrl(m.ImagePath)" alt="@m.Name" onerror="this.style.display='none'" />
+                        }
+                    </div>
+
+                    <div class="b-portfolio_info col-sm-6">
+                        <div class="b-portfolio_info_title f-primary-b f-portfolio_info_title">
+                            <a href="#">@m.Name</a>
+                        </div>
+                        <hr />
+
+                        <div class="b-portfolio_info_description f-portfolio_info_description">
+                            <div class="b-information-box f-information-box f-primary-b">
+                                <ul>
+                                    @if (!string.IsNullOrWhiteSpace(m.Position))
+                                    {
+                                        <li><strong>Position:</strong> @m.Position</li>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(m.Department))
+                                    {
+                                        <li><strong>Department:</strong> @m.Department</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                if (i % 2 == 0)
+                {
+                    <div class="clearfix margin_top5"></div>
+                }
+
+                i++;
+            }
+
+            <div class="clearfix margin_top4"></div>
+            <div class="clearfix"></div>
+        }
+    </div>
+ 
+    <!-- DYNAMIC SECTIONS -->
+    @foreach (var sec in dynamicSections)
+    {
+        var sid = SafeId(sec.Title);
+        var secFiles = sec.Files ?? new List<DynamicSectionFileDTO>();
+        <div id="@sid" class="tabcontent">
+            <div class="full-container">
+                @if (!string.IsNullOrWhiteSpace(sec.HtmlContent))
+                {
+                    <p>@Html.Raw(sec.HtmlContent)</p>
+                }
+                @if (secFiles.Any())
+                {
+                    <ul class="Activitesfile">
+                        @foreach (var file in secFiles)
+                        {
+                            <li>
+                                @if ((file.FileType ?? "").ToUpper() == "PDF")
+                                {
+                                    <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(file.FilePath)','@file.Title')">
+                                        <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @file.Title
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a href="@ResolveApiFileUrl(file.FilePath)" download>
+                                        <i class="fa @((file.FileType ?? "").ToUpper() == "WORD" ? "fa-file-word-o" : "fa-file-excel-o")" aria-hidden="true"></i>
+                                        @file.Title
+                                    </a>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+                else if (!string.IsNullOrEmpty(sec.FilePath))
+                {
+                    <ul>
+                        <li class="minheight">
+                            <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(sec.FilePath)','@sec.FileName')">
+                                <i class="fa fa-file-pdf-o fabig" aria-hidden="true"></i>
+                                @sec.FileName
+                            </a>
+                        </li>
+                    </ul>
+                }
+            </div>
+        </div>
+    }
+ 
+</div>
+ 
+@if (!string.IsNullOrWhiteSpace(Model.Tagline))
+{
+    <div class="clearfix margin_top2"></div>
+    <div class="featured_section38">
+        <div class="full-container">
+            @Html.Raw(Model.Tagline)
+        </div>
+    </div>
+}
+ 
+<a id="lnkPopup" href="#animatedModal" class="popup-trigger hidden" data-target="#popup"></a>
+<div id="popup" class="popup">
+    <h2 id="newsname"></h2>
+    <div id="pdfreader" style="height:600px"></div>
+    <span class="popup-btn-close">&times;</span>
+</div>
+ 
+@section scripts {
+    <script src="@Url.Content("~/js/pdfobject/pdfobject.min.js")"></script>
+    <script>
+        function loadPdf(path, name) {
+        if (path && path.trim() !== '') {
+        $("#newsname").text(name);
+        popupOpenClose($("#popup"));
+        PDFObject.embed(path, "#pdfreader");
+        }
+        }
+ 
+        function popupOpenClose(popup) {
+        if ($(".wrapper", popup).length == 0) {
+        $(popup).wrapInner("<div class='wrapper'></div>");
+        }
+        $(popup).show();
+        $(popup).click(function (e) {
+        if (e.target == this && $(popup).is(':visible')) {
+        $(popup).hide();
+        resetPopUpScroll();
+        }
+        });
+        $(popup).find(".popup-btn-close").on("click", function () {
+        $(popup).hide();
+        resetPopUpScroll();
+        });
+        }
+ 
+        function resetPopUpScroll() {
+        $("#pdfreader").scrollTop(0);
+        }
+ 
+        $(document).ready(function () {
+        $(".popup-trigger").on("click", function () {
+        popupOpenClose($($(this).data('target')));
+        resetPopUpScroll();
+        });
+        });
+    </script>
+}
