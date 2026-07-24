@@ -6,6 +6,7 @@
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Tagline { get; set; }
+        public string? BlogspotLink { get; set; }
         public string? TitleImagePath { get; set; }
         public int DisplayOrder { get; set; }
         public int MemberCount { get; set; }
@@ -17,6 +18,7 @@
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Tagline { get; set; }
+        public string? BlogspotLink { get; set; }
         public string? About { get; set; }
         public string? TitleImagePath { get; set; }
 

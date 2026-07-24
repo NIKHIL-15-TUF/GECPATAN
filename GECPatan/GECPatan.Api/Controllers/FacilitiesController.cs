@@ -40,6 +40,7 @@ namespace GECPatan.Api.Controllers
                 Id = f.Id,
                 Title = f.Title,
                 Tagline = f.Tagline,
+                BlogspotLink = f.BlogspotLink,
                 TitleImagePath = f.TitleImagePath,
                 DisplayOrder = f.DisplayOrder,
                 MemberCount = memberCounts
@@ -80,6 +81,7 @@ namespace GECPatan.Api.Controllers
                 Id = f.Id,
                 Title = f.Title,
                 Tagline = f.Tagline,
+                BlogspotLink = f.BlogspotLink,
                 About = f.About,
                 TitleImagePath = f.TitleImagePath,
 

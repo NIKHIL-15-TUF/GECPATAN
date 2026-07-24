@@ -15,7 +15,7 @@ namespace GECPatan.Core.Models.Domain
 
         [MaxLength(300)]
         public string? Tagline { get; set; }
-
+        public string? BlogspotLink { get; set; }
         public string? About { get; set; }
 
         public string? TitleImagePath { get; set; }

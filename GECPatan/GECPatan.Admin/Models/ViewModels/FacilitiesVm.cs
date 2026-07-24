@@ -11,6 +11,7 @@ namespace GECPatan.Admin.Models.ViewModels
         public string? TitleImagePath { get; set; }
         public bool IsActive { get; set; }
         public int DisplayOrder { get; set; }
+        public string? BlogspotLink { get; set; }
         public int MemberCount { get; set; }
         public int SectionCount { get; set; }
     }
@@ -25,6 +26,7 @@ namespace GECPatan.Admin.Models.ViewModels
         public string? Tagline { get; set; }
 
         public string? About { get; set; }
+        public string? BlogspotLink { get; set; }
         public int DisplayOrder { get; set; } = 0;
     }
 
