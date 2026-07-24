@@ -58,6 +58,10 @@
             {
                 <button class="tablinks" onclick="openTab(event, 'VisionMission')">Vision &amp; Mission</button>
             }
+            @if (!string.IsNullOrWhiteSpace(Model.BlogspotLink))
+            {
+                <a href="@Model.BlogspotLink" target="_blank"><button class="tablinks">Blogspot Link</button></a>
+            }
             @if (Model.Members.Any())
             {
                 <button class="tablinks" onclick="openTab(event, 'Members')">Members</button>

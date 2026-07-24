@@ -14,7 +14,7 @@
     <Folder Include="Views\CampusCommittee\" />
     <Folder Include="Views\Academics\" />
     <Folder Include="Views\Administration\" />
-    <Folder Include="Views\Facilities\" />
+    <Folder Include="Views\Facili\" />
     <Folder Include="Views\Alumni\" />
     <Folder Include="Views\CampusLife\" />
     <Folder Include="Views\ContactUs\" />

@@ -15,7 +15,7 @@ namespace GECPatan.Web.Models
         public string? Tagline { get; set; }
         public string? About { get; set; }
         public string? TitleImagePath { get; set; }
-
+        public string? BlogspotLink { get; set; }
         public List<string> BannerImages { get; set; } = new();
         public List<string> Visions { get; set; } = new();
         public List<string> Missions { get; set; } = new();

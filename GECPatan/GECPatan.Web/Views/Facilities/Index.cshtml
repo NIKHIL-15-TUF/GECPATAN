@@ -46,14 +46,19 @@
                     <img src="@ResolveApiFileUrl(f.TitleImagePath)" alt="@f.Title" class="rimg" onerror="this.style.display='none'" />
                 }
                 <h3 class="boxtitle">@f.Title</h3>
-                @if (!string.IsNullOrWhiteSpace(f.Tagline))
+               @* @if (!string.IsNullOrWhiteSpace(f.Tagline))
                 {
                     <p>@f.Tagline</p>
-                }
-                <p class="text-muted small">@f.MemberCount Members</p>
-                <a asp-controller="Facility" asp-action="Details" asp-route-id="@f.Id" class="read-more-button">
-                    View Facility
-                </a>
+                } 
+                <p class="text-muted small">@f.MemberCount Members</p>*@
+                <div class="text-center" style="margin-top:15px;">
+                    <a asp-controller="Facilities"
+                           asp-action="Details"
+                           asp-route-id="@f.Id"
+                           class="btn btn-success">
+                        View Facility
+                    </a>
+                </div>
             </div>
         </div>
     }

@@ -4,18 +4,18 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GECPatan.Web.Controllers
 {
-    public class FacilityController : Controller
+    public class FacilitiesController : Controller
     {
         private readonly IFacilityApiService _facilities;
         private readonly IConfiguration _config;
 
-        public FacilityController(IFacilityApiService facilities, IConfiguration config)
+        public FacilitiesController(IFacilityApiService facilities, IConfiguration config)
         {
             _facilities = facilities;
             _config = config;
         }
 
-        // GET /Facility
+        // GET /Facilities
         public async Task<IActionResult> Index(CancellationToken ct)
         {
             var facilities = await _facilities.GetAllFacilitiesAsync(ct);
@@ -30,7 +30,7 @@ namespace GECPatan.Web.Controllers
             return View(vm);
         }
 
-        // GET /Facility/Details/{id}
+        // GET /Facilities/Details/{id}
         public async Task<IActionResult> Details(int id, CancellationToken ct)
         {
             var f = await _facilities.GetFacilityDetailAsync(id, ct);
@@ -41,6 +41,7 @@ namespace GECPatan.Web.Controllers
                 Id = f.Id,
                 Title = f.Title,
                 Tagline = f.Tagline,
+                BlogspotLink = f.BlogspotLink,
                 About = f.About,
                 TitleImagePath = f.TitleImagePath,
                 BannerImages = f.BannerImages,

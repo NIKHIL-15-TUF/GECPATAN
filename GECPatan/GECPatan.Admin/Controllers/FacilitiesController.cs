@@ -41,6 +41,7 @@ namespace GECPatan.Admin.Controllers
                     Tagline = f.Tagline,
                     TitleImagePath = f.TitleImagePath,
                     IsActive = f.IsActive,
+                    BlogspotLink = f.BlogspotLink,
                     DisplayOrder = f.DisplayOrder,
                     MemberCount = f.Members.Count,
                     SectionCount = sectionCount
@@ -74,6 +75,7 @@ namespace GECPatan.Admin.Controllers
                 Title = model.Title,
                 Tagline = model.Tagline,
                 About = model.About,
+                BlogspotLink=model.BlogspotLink,
                 DisplayOrder = maxOrder + 1,
                 IsActive = true
             };
@@ -110,6 +112,7 @@ namespace GECPatan.Admin.Controllers
                 Tagline = f.Tagline,
                 About = f.About,
                 DisplayOrder = f.DisplayOrder,
+                BlogspotLink=f.BlogspotLink,
                 ExistingTitleImagePath = f.TitleImagePath,
                 MemberCount = f.Members.Count,
                 SectionCount = sectionCount,
@@ -135,7 +138,8 @@ namespace GECPatan.Admin.Controllers
             f.Title = model.Title;
             f.Tagline = model.Tagline;
             f.About = model.About;
-            f.DisplayOrder = model.DisplayOrder;
+            f.BlogspotLink = model.BlogspotLink;
+            f.DisplayOrder = model.DisplayOrder; 
 
             if (TitleImage != null && TitleImage.Length > 0)
             {
