@@ -48,6 +48,15 @@
                                        type="date" />
                             </div>
                         </div>
+                        <div class="col-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                Month/Year <span class="text-danger">*</span>
+                            </label>
+                            <input name="MonthYear" class="form-control"
+                                   placeholder="e.g. 2023-2024" required />
+                        </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">PDF File</label>
@@ -101,6 +110,7 @@
                                 <th>Title</th>
                                 <th width="130">Valid From</th>
                                 <th width="130">Valid To</th>
+                                <th width="130">Month/Year</th>
                                 <th width="70">File</th>
                                 <th width="80">Status</th>
                                 <th width="100">Actions</th>
@@ -122,6 +132,9 @@
                                             @(doc.ValidTo.HasValue
                                                 ? doc.ValidTo.Value.ToString("dd MMM yyyy") : "—")
                                         </small>
+                                    </td>
+                                    <td>
+                                        <small>@(doc.MonthYear ?? "—")</small>
                                     </td>
                                     <td>
                                         @if (!string.IsNullOrEmpty(doc.ExistingFilePath))

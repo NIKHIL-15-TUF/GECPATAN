@@ -173,6 +173,7 @@ namespace GECPatan.Admin.Controllers
                 DocTitle = d.DocTitle,
                 ValidFrom = d.ValidFrom,
                 ValidTo = d.ValidTo,
+                MonthYear= d.MonthYear,
                 IsVisible = d.IsVisible,
                 ExistingFilePath = d.FilePath,
                 CategoryTitle = category.Title
@@ -191,6 +192,7 @@ namespace GECPatan.Admin.Controllers
                     DocTitle = model.DocTitle,
                     ValidFrom = model.ValidFrom,
                     ValidTo = model.ValidTo,
+                    MonthYear = model.MonthYear,
                     IsVisible = model.IsVisible
                 };
 

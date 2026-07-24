@@ -64,7 +64,6 @@ namespace GECPatan.Core.Models.Domain
 
         [Required, MaxLength(300)]
         public string Title { get; set; } = string.Empty;
-
         public int DisplayOrder { get; set; } = 0;
         public bool IsVisible { get; set; } = true;
 
@@ -87,6 +86,7 @@ namespace GECPatan.Core.Models.Domain
         // Valid from/to dates
         public DateTime? ValidFrom { get; set; }
         public DateTime? ValidTo { get; set; }
+        public string? MonthYear { get; set; }
 
         public string? FilePath { get; set; }
         public bool IsVisible { get; set; } = true;

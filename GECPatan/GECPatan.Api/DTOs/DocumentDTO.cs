@@ -50,6 +50,7 @@
         public string DocTitle { get; set; } = string.Empty;
         public string? ValidFrom { get; set; }
         public string? ValidTo { get; set; }
+        public string? MonthYear { get; set; }
         public string? FilePath { get; set; }
         public bool IsActive { get; set; }  // within validity window
         public bool IsExpired { get; set; }

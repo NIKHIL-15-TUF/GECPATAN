@@ -112,6 +112,7 @@ namespace GECPatan.Api.Controllers
                             ? d.ValidFrom.Value.ToString("yyyy-MM-dd") : null,
                         ValidTo = d.ValidTo.HasValue
                             ? d.ValidTo.Value.ToString("yyyy-MM-dd") : null,
+                        MonthYear = d.MonthYear,
                         FilePath = d.FilePath,
                         IsActive = (!d.ValidFrom.HasValue || d.ValidFrom <= now)
                                  && (!d.ValidTo.HasValue || d.ValidTo >= now),

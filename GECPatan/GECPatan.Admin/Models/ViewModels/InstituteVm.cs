@@ -93,6 +93,9 @@ namespace GECPatan.Admin.Models.ViewModels
         [Required(ErrorMessage = "Document title is required")]
         [MaxLength(300)]
         public string DocTitle { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Month/Year is required in YYYY-YYYY Format")]
+        [MaxLength(11)]
+        public string? MonthYear { get; set; }
 
         [Display(Name = "Valid From")]
         [DataType(DataType.Date)]
