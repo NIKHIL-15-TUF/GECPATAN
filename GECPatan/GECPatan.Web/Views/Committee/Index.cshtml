@@ -1,0 +1,633 @@
+﻿@model GECPatan.Web.Models.CommitteeViewModel
+@using GECPatan.Web.Models.Dtos
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = Model.Title;
+
+    var dynamicSections = Model.DynamicSections
+        .Where(s => !string.IsNullOrWhiteSpace(s.Title))
+        .OrderBy(s => s.DisplayOrder)
+        .ToList();
+
+    string SafeId(string title)
+    {
+        return "Sec_" + System.Text.RegularExpressions.Regex
+            .Replace(title ?? "", @"[^a-zA-Z0-9]", "");
+    }
+
+    // Files/images here are served by GECPatan.Api's static file middleware,
+    // not by this Web app -- same reasoning as ResolveApiFileUrl in
+    // Department/Index.cshtml.
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            return Url.Content("~/" + path.TrimStart('~', '/'));
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+
+    var hasObjectivesTabContent = Model.Objectives.Any()
+        || Model.SubObjectives.Any()
+        || !string.IsNullOrWhiteSpace(Model.Message)
+        || !string.IsNullOrWhiteSpace(Model.Account);
+}
+
+<div class="clearfix"></div>
+
+<div class="page_title3 @Model.TitleImageCSSClass"
+     style="background: #999 url(@ResolveApiFileUrl(Model.TitleImagePath)) no-repeat center top;background-size: cover;">
+    <div class="full-container">
+        <h1>
+            @Model.Title
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+<div class="clearfix"></div>
+
+<div class="margin_top10"></div>
+
+<div class="full-container">
+
+    @{
+        void RenderTabButtons()
+        {
+            <button class="tablinks" onclick="openTab(event, 'About')" id="defaultOpen">@Model.TabAbout</button>
+            @if (Model.Vision.Any() && Model.Mission.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'VisionMission')">@Model.TabVisionMission</button>
+            }
+            @if (hasObjectivesTabContent)
+            {
+                <button class="tablinks" onclick="openTab(event, 'Objectives')">@Model.TabObjectives</button>
+            }
+            @if (Model.Members.Any() || Model.AdditionalMemberGroups.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'Members')">@Model.TabMembers</button>
+            }
+            @if (Model.Activities.Any())
+            {
+                <button class="tablinks" onclick="openTab(event, 'Activities')">@Model.TabActivities</button>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.BlogLink))
+            {
+                <a href="@Model.BlogLink" target="_blank"><button class="tablinks">Blogspot</button></a>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Link))
+            {
+                <a href="@Model.Link" target="_blank"><button class="tablinks">@Model.TabLink</button></a>
+            }
+            @if (Model.ShowDocument)
+            {
+                <a href="@Url.Action("Index", "Documents", new { id = Model.Id })" target="_blank"><button class="tablinks">@Model.TabDocuments</button></a>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.NationalTaskForce))
+            {
+                <a href="@ResolveApiFileUrl(Model.NationalTaskForce)" target="_blank"><button class="tablinks">National Task Force</button></a>
+            }
+            @foreach (var sec in dynamicSections)
+            {
+                var sid = SafeId(sec.Title);
+                <button class="tablinks" onclick="openTab(event,'@sid')">@sec.Title</button>
+            }
+        }
+    }
+
+    <div class="tab hidden-xs">
+        @{
+            RenderTabButtons();
+        }
+    </div>
+    <div class="tab-xs visible-xs">
+        @{
+            RenderTabButtons();
+        }
+    </div>
+
+    <!-- ABOUT -->
+    <div id="About" class="tabcontent">
+        <div class="featured_section55 animate" data-anim-type="fadeIn" data-anim-delay="100">
+            <div class="full-container">
+                @if (!string.IsNullOrEmpty(Model.MeasureImagePath))
+                {
+                    <div class="center-block">
+                        <img src="@ResolveApiFileUrl(Model.MeasureImagePath)" alt="" class="center-block" onerror="this.style.display='none'" />
+                    </div>
+                    <div class="clearfix margin_top1"></div>
+                }
+
+                <div class="text-justify">
+                    <h4 class="color3 margin_bottom2">About @Model.Title</h4>
+                    <p class="bigtfont text-justify overflowCommittes">
+                        @Html.Raw(Model.About)
+                    </p>
+                    <div class="clearfix margin_top3"></div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Measures))
+                    {
+                        <h4 class="color3 margin_bottom2">@Model.Title Measures</h4>
+                        <div class="bigtfont text-justify overflowCommittes">
+                            @Html.Raw(Model.Measures)
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.PageFlyerPath))
+                    {
+                        <div class="clearfix margin_top3"></div>
+                        <a href="@ResolveApiFileUrl(Model.PageFlyerPath)" class="read-more-button" download>
+                            Download Flyer
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISION & MISSION -->
+    <div id="VisionMission" class="tabcontent">
+        <div class="featured_section106" style="background-color:white">
+            <div style="padding-left:10px;">
+                <div class="margin_top2"></div>
+                <h2 class="roboto thin">Vision</h2>
+                <div class="hsmline7"></div>
+                <br><br>
+                @foreach (var v in Model.Vision)
+                {
+                    <h4 class="roboto thin text-justify">@Html.Raw(v)</h4>
+                }
+
+                <div class="margin_top2"></div>
+                <div class="clearfix margin_top2"></div>
+                <h2 class="roboto thin">Mission</h2>
+                <div class="hsmline7"></div>
+                <br><br>
+                @foreach (var m in Model.Mission)
+                {
+                    <h4 class="roboto thin text-justify"><i class="fa fa-check"></i> @Html.Raw(m)</h4>
+                }
+                <div class="margin_top2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OBJECTIVES (merges the old BulletPoints tab -- Message/BulletPoints/Account --
+         with the old SubObjectives tab, since the API only exposes a single
+         "tabObjectives" label covering both) -->
+    <div id="Objectives" class="tabcontent">
+        @if (!string.IsNullOrWhiteSpace(Model.Message))
+        {
+            <div class="featured_section37">
+                <div class="clearfix margin_top3"></div>
+                <div class="full-container">
+                    <div class="text-justify">@Html.Raw(Model.Message)</div>
+                </div>
+                <div class="clearfix margin_top3"></div>
+            </div>
+        }
+
+        @if (Model.Objectives.Any())
+        {
+            <div class="featured_section37">
+                <div class="clearfix margin_top5"></div>
+                <div class="full-container text-justify">
+                    @if (!string.IsNullOrEmpty(Model.BulletPointsImagePath))
+                    {
+                        <div class="center-block">
+                            <img src="@ResolveApiFileUrl(Model.BulletPointsImagePath)" alt="" class="center-block" onerror="this.style.display='none'" />
+                        </div>
+                        <div class="clearfix margin_top1"></div>
+                    }
+                    @foreach (var item in Model.Objectives)
+                    {
+                        <div class="ibox animate fadeInUp" data-anim-type="fadeInUp" data-anim-delay="100">
+                            <h5><i class="fa fa-check" aria-hidden="true"></i> @Html.Raw(item)</h5>
+                        </div>
+                    }
+                </div>
+                <div class="clearfix margin_top5"></div>
+            </div>
+        }
+
+        @if (Model.SubObjectives.Any())
+        {
+            <div class="featured_section37">
+                <div class="clearfix margin_top5"></div>
+                <div class="full-container text-justify">
+                    <h2 class="roboto thin">Sub-Objectives</h2>
+                    <div class="hsmline7"></div>
+                    <br />
+                    @if (!string.IsNullOrEmpty(Model.SubObjImagePath))
+                    {
+                        <div class="center-block">
+                            <img src="@ResolveApiFileUrl(Model.SubObjImagePath)" alt="" class="center-block" onerror="this.style.display='none'" />
+                        </div>
+                        <div class="clearfix margin_top1"></div>
+                    }
+                    @foreach (var item in Model.SubObjectives)
+                    {
+                        <div class="ibox animate fadeInUp" data-anim-type="fadeInUp" data-anim-delay="100">
+                            <h5><i class="fa fa-check" aria-hidden="true"></i> @Html.Raw(item)</h5>
+                        </div>
+                    }
+                </div>
+                <div class="clearfix margin_top5"></div>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Account))
+        {
+            <div class="featured_section37 bg">
+                <div class="clearfix margin_top5"></div>
+                <div class="full-container">
+                    <div class="text-justify">@Html.Raw(Model.Account)</div>
+                </div>
+                <div class="clearfix margin_top5"></div>
+            </div>
+        }
+    </div>
+
+    <!-- MEMBERS -->
+    <div id="Members" class="tabcontent table-responsive">
+        @{
+            var memberCount = 1;
+        }
+        @if (!Model.TableView)
+        {
+            <div class="featured_section30">
+                @if (Model.Members.Any())
+                {
+                    <div class="full-container table-responsive">
+                        <h1 class="title22 animate" data-anim-type="fadeIn" data-anim-delay="100" style="color: black !important;">
+                            @Model.Title Members
+                        </h1>
+                        @foreach (var item in Model.Members)
+                        {
+                            <div class="one_half animate @(memberCount % 2 == 0 ? "last" : "")" data-anim-type="fadeIn" data-anim-delay="400">
+                                <img src="@ResolveApiFileUrl(item.ImagePath)" alt="" onerror="this.style.display='none'">
+                                <h5>@item.Name <em>@item.Position</em></h5>
+                                <text>@item.Department</text>
+                                <text>@item.Email</text>
+                            </div>
+                            <div class="@(memberCount % 2 == 0 ? "clearfix margin_top5" : "")"></div>
+                            memberCount++;
+                        }
+                    </div>
+                }
+                @foreach (var group in Model.AdditionalMemberGroups)
+                {
+                    <div class="clearfix margin_top5"></div>
+                    <div class="full-container">
+                        <h1 class="title22 animate" data-anim-type="fadeIn" data-anim-delay="100" style="color: black !important;">
+                            @group.CommitteeTitle
+                        </h1>
+                        @foreach (var item in group.Members)
+                        {
+                            <div class="one_half animate @(memberCount % 2 == 0 ? "last" : "")" data-anim-type="fadeIn" data-anim-delay="400">
+                                <img src="@ResolveApiFileUrl(item.ImagePath)" alt="" onerror="this.style.display='none'">
+                                <h5>@item.Name <em>@item.Position</em></h5>
+                                <text>@item.Department</text>
+                                <text>@item.Email</text>
+                            </div>
+                            <div class="@(memberCount % 2 == 0 ? "clearfix margin_top5" : "")"></div>
+                            memberCount++;
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="featured_section30">
+                @if (Model.Members.Any())
+                {
+                    <div class="full-container">
+                        <h1 class="title22 animate" data-anim-type="fadeIn" data-anim-delay="100" style="color: black !important;">
+                            @Model.Title Members
+                        </h1>
+                        <table class="table table-responsive table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <td>Sr. No</td>
+                                    <td>Name</td>
+                                    <td>Department</td>
+                                    <td>Position</td>
+                                    <td>Email</td>
+                                </tr>
+                            </thead>
+                            @{
+                                var rowCount = 1;
+                            }
+                            @foreach (var item in Model.Members)
+                            {
+                                <tr>
+                                    <td>@rowCount</td>
+                                    <td>@item.Name</td>
+                                    <td>
+                                        @if (string.IsNullOrWhiteSpace(item.Department))
+                                        {
+                                            <div class="text-center">-</div>
+                                        }
+                                        else
+                                        {
+                                            @item.Department
+                                        }
+                                    </td>
+                                    <td>@item.Position</td>
+                                    <td>
+                                        @if (string.IsNullOrWhiteSpace(item.Email))
+                                        {
+                                            <div class="text-center">-</div>
+                                        }
+                                        else
+                                        {
+                                            @item.Email
+                                        }
+                                    </td>
+                                </tr>
+                                rowCount++;
+                            }
+                        </table>
+                    </div>
+                }
+                @foreach (var group in Model.AdditionalMemberGroups)
+                {
+                    <div class="clearfix margin_top5"></div>
+                    <div class="full-container">
+                        <h1 class="title22 animate" data-anim-type="fadeIn" data-anim-delay="100" style="color: black !important;">
+                            @group.CommitteeTitle
+                        </h1>
+                        <table class="table table-responsive table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <td>Sr. No</td>
+                                    <td>Name</td>
+                                    <td>Department</td>
+                                    <td>Position</td>
+                                    <td>Email</td>
+                                </tr>
+                            </thead>
+                            @{
+                                var groupRowCount = 1;
+                            }
+                            @foreach (var item in group.Members)
+                            {
+                                <tr>
+                                    <td>@groupRowCount</td>
+                                    <td>@item.Name</td>
+                                    <td>
+                                        @if (string.IsNullOrWhiteSpace(item.Department))
+                                        {
+                                            <div class="text-center">-</div>
+                                        }
+                                        else
+                                        {
+                                            @item.Department
+                                        }
+                                    </td>
+                                    <td>@item.Position</td>
+                                    <td>
+                                        @if (string.IsNullOrWhiteSpace(item.Email))
+                                        {
+                                            <div class="text-center">-</div>
+                                        }
+                                        else
+                                        {
+                                            @item.Email
+                                        }
+                                    </td>
+                                </tr>
+                                groupRowCount++;
+                            }
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- ACTIVITIES -->
+    @if (Model.Activities.Any())
+    {
+        <div id="Activities" class="tabcontent">
+            @foreach (var item in Model.Activities.OrderByDescending(m => m.Year))
+            {
+                <div class="box">
+                    <h2 class="boxtitle">@item.Title</h2>
+                    <div class="boxinfo">
+                        <ul class="post_meta_links">
+                            <li class="post_categoty">@item.EventDate</li>
+                            <li class="post_categoty">@item.EventTime</li>
+                            @if (!string.IsNullOrWhiteSpace(item.Keywords))
+                            {
+                                foreach (var key in item.Keywords.Split(','))
+                                {
+                                    <li class="post_categoty">@key</li>
+                                }
+                            }
+                        </ul>
+                        <div class="clearfix margin_top1"></div>
+
+                        @{
+                            var firstImg = item.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault();
+                        }
+                        @if (firstImg != null)
+                        {
+                            <div class="image_section">
+                                <div class="col-md-2">
+                                    <img src="@ResolveApiFileUrl(firstImg.ImagePath)" class="rimg" onerror="this.parentElement.parentElement.style.display='none'" />
+                                </div>
+                            </div>
+                        }
+                        @Html.Raw(item.Description)
+                    </div>
+
+                    @if (item.Images.Count > 1 && !string.IsNullOrEmpty(item.Link))
+                    {
+                        <a href="@item.Link" target="_blank">
+                            <button class="btn btn-outline-primary">More..</button>
+                        </a>
+                    }
+
+                    <div class="clearfix margin_top1"></div>
+                    <ul class="Activitesfile">
+                        @foreach (var file in item.Files.Where(f => !string.IsNullOrEmpty(f.FilePath)))
+                        {
+                            <li>
+                                @if ((file.FileType ?? "").ToUpper() == "PDF")
+                                {
+                                    <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(file.FilePath)','@file.Title')">
+                                        <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @file.Title
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a href="@ResolveApiFileUrl(file.FilePath)" download>
+                                        <i class="fa @((file.FileType ?? "").ToUpper() == "WORD" ? "fa-file-word-o" : "fa-file-excel-o")" aria-hidden="true"></i>
+                                        @file.Title
+                                    </a>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </div>
+                <div class="clearfix margin_bottom1"></div>
+            }
+        </div>
+    }
+
+    <!-- DYNAMIC SECTIONS (anything the CMS adds generically) -->
+    @foreach (var sec in dynamicSections)
+    {
+        var sid = SafeId(sec.Title);
+        <div id="@sid" class="tabcontent">
+            <div class="box">
+                <div class="boxinfo">
+                    @if (!string.IsNullOrWhiteSpace(sec.HtmlContent))
+                    {
+                        @Html.Raw(sec.HtmlContent)
+                    }
+                </div>
+
+                @{
+                    var secFiles = sec.Files.Where(f => !string.IsNullOrEmpty(f.FilePath)).OrderBy(f => f.DisplayOrder).ToList();
+                }
+                @if (secFiles.Any())
+                {
+                    <ul class="Activitesfile">
+                        @foreach (var file in secFiles)
+                        {
+                            <li>
+                                @if ((file.FileType ?? "").ToUpper() == "PDF")
+                                {
+                                    <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(file.FilePath)','@file.Title')">
+                                        <i class="fa fa-file-pdf-o" aria-hidden="true"></i> @file.Title
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a href="@ResolveApiFileUrl(file.FilePath)" download>
+                                        <i class="fa @((file.FileType ?? "").ToUpper() == "WORD" ? "fa-file-word-o" : "fa-file-excel-o")" aria-hidden="true"></i>
+                                        @file.Title
+                                    </a>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+                else if (!string.IsNullOrEmpty(sec.FilePath))
+                {
+                    <ul>
+                        <li class="minheight">
+                            <a href="javascript:void(0)" onclick="loadPdf('@ResolveApiFileUrl(sec.FilePath)','@sec.FileName')">
+                                <i class="fa fa-file-pdf-o fabig" aria-hidden="true"></i>
+                                @sec.FileName
+                            </a>
+                        </li>
+                    </ul>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Tagline))
+{
+    <div class="featured_section38">
+        <div class="full-container">
+            @Html.Raw(Model.Tagline)
+        </div>
+    </div>
+}
+
+<a id="lnkPopup" href="#animatedModal" class="popup-trigger hidden" data-target="#popup"></a>
+<div id="popup" class="popup">
+    <h2 id="newsname"></h2>
+    <div id="pdfreader" style="height:600px"></div>
+    <span class="popup-btn-close">&times;</span>
+</div>
+
+@section scripts {
+    <script src="@Url.Content("~/js/pdfobject/pdfobject.min.js")"></script>
+
+    <script>
+        function loadPdf(path, name) {
+        if (path && path.trim() !== '') {
+        $("#newsname").text(name);
+        popupOpenClose($("#popup"));
+        PDFObject.embed(path, "#pdfreader");
+        }
+        }
+
+        function popupOpenClose(popup) {
+        if ($(".wrapper", popup).length == 0) {
+        $(popup).wrapInner("<div class='wrapper'></div>");
+        }
+        $(popup).show();
+        $(popup).click(function (e) {
+        if (e.target == this && $(popup).is(':visible')) {
+        $(popup).hide();
+        resetPopUpScroll();
+        }
+        });
+        $(popup).find(".popup-btn-close").on("click", function () {
+        if ($(".formElementError").is(':visible')) {
+        $(".formElementError").remove();
+        }
+        $(popup).hide();
+        resetPopUpScroll();
+        });
+        }
+
+        function resetPopUpScroll() {
+        $("#pdfreader").scrollTop(0);
+        }
+
+        $(document).ready(function () {
+        $(".popup-trigger").on("click", function () {
+        popupOpenClose($($(this).data('target')));
+        resetPopUpScroll();
+        });
+        });
+    </script>
+}
+
+@section styles {
+    <style>
+        .Activitesfile > li {
+        display: block;
+        margin: auto;
+        float: left;
+        margin-right: 15px;
+        }
+
+        .read-more-button {
+        display: inline-block;
+        background-color: #5076bb;
+        color: white !important;
+        text-align: center;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background 0.3s ease-in-out;
+        }
+
+        .read-more-button:hover {
+        background-color: #0056b3;
+        }
+    </style>
+    <link rel="stylesheet" href="~/css/graph.css" />
+    <link rel="stylesheet" href="@Url.Content("~/css/custom.css")" />
+}

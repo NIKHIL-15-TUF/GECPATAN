@@ -193,6 +193,7 @@ namespace GECPatan.Api.Controllers
                     Position = m.Position,
                     ImagePath = m.ImagePath,
                     Department = m.Department,
+                    Email = m.Email,
                     DisplayOrder = m.DisplayOrder
                 })
                 .ToListAsync();
@@ -213,6 +214,7 @@ namespace GECPatan.Api.Controllers
                         Position = m.Position,
                         ImagePath = m.ImagePath,
                         Department = m.Department,
+                        Email=m.Email,
                         DisplayOrder = m.DisplayOrder
                     }).ToList()
                 })

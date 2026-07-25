@@ -65,6 +65,7 @@
         public string? Position { get; set; }
         public string? ImagePath { get; set; }
         public string? Department { get; set; }
+        public string? Email { get; set; }
         public int DisplayOrder { get; set; }
         // Email/Contact intentionally excluded from public API
     }
@@ -84,6 +85,7 @@
         public string? Position { get; set; }
         public string? ImagePath { get; set; }
         public string? Department { get; set; }
+        public string? Email { get; set; }
         public int DisplayOrder { get; set; }
     }
 

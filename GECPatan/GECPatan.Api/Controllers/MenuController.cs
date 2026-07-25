@@ -108,7 +108,7 @@ namespace GECPatan.Api.Controllers
                     return m.DynamicType switch
                     {
                         "Department" => $"/Department/{m.DynamicId}",
-                        "Committee" => $"/Committees/{m.DynamicId}",
+                        "Committee" => $"/Committee/{m.DynamicId}",
                         "Facility" => $"/Facilities/{m.DynamicId}",
                         "Club" => $"/Clubs/{m.DynamicId}",
                         "ContentPage" => pageSlugs.ContainsKey(m.DynamicId.Value)

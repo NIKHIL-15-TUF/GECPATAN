@@ -50,7 +50,7 @@ namespace GECPatan.Admin.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "SuperAdmin")]
-        public async Task<IActionResult> Create(CommitteeCreateVM model, IFormFile? TitleImage)
+        public async Task<IActionResult> Create(CommitteeCreateVM model, IFormFile? TitleImage, IFormFile? MeasureImage)
         {
             ViewData["Title"] = "Add Committee";
             if (!ModelState.IsValid) return View(model);
@@ -80,6 +80,9 @@ namespace GECPatan.Admin.Controllers
 
             if (TitleImage != null && TitleImage.Length > 0)
                 committee.TitleImagePath = await SaveFileAsync(TitleImage, "committees");
+
+            if (MeasureImage != null && MeasureImage.Length > 0)    
+                committee.MeasureImagePath = await SaveFileAsync(MeasureImage, "committees");
 
             _context.CampusCommittees.Add(committee);
             await _context.SaveChangesAsync();
