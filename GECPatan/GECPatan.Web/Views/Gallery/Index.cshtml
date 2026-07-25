@@ -1,0 +1,87 @@
+﻿@model GECPatan.Web.Models.GalleryViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Gallery";
+ 
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            return Url.Content("~/" + path.TrimStart('~', '/'));
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+ 
+    // cubeportfolio filter classes must be valid CSS identifiers —
+    // slugify the category name the same way for both the filter
+    // button's data-filter and each item's class.
+    string SlugifyCategory(string category)
+    {
+        var slug = System.Text.RegularExpressions.Regex
+            .Replace(category.ToLowerInvariant(), @"[^a-z0-9]+", "-")
+            .Trim('-');
+        return string.IsNullOrEmpty(slug) ? "uncategorized" : slug;
+    }
+}
+ 
+<div class="clearfix"></div>
+ 
+<div class="page_title3 gallery_title">
+    <div class="container">
+        <h1>
+            Gallery
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+<div class="margin_top2"></div>
+ 
+<div class="works01">
+    <div class="container">
+ 
+        <div id="filters-container" class="cbp-l-filters-button">
+            <div data-filter="*" class="cbp-filter-item-active cbp-filter-item">
+                All
+                <div class="cbp-filter-counter"></div>
+            </div>
+            @foreach (var category in Model.Categories)
+            {
+                <div data-filter=".@SlugifyCategory(category)" class="cbp-filter-item">
+                    @category
+                    <div class="cbp-filter-counter"></div>
+                </div>
+            }
+        </div>
+ 
+        <div id="grid-container" class="cbp-l-grid-fullWidth">
+            @foreach (var img in Model.Images)
+            {
+                <div class="cbp-item @SlugifyCategory(img.Category)">
+                    <div class="cbp-caption">
+                        <div class="cbp-caption-defaultWrap">
+                            <img src="@ResolveApiFileUrl(img.ImagePath)" alt="@img.Caption" onerror="this.parentElement.parentElement.style.display='none'">
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+ 
+    </div>
+</div>
+<!-- end works section -->
+ 
+<div class="clearfix margin_top2"></div>
+ 
+@section tabs {
+    <script type="text/javascript" src="@Url.Content("~/js/cubeportfolio/main32.js")"></script>
+}
