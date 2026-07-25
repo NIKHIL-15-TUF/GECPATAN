@@ -48,7 +48,7 @@
         public string? Position { get; set; }
         public string? Department { get; set; }
         public string? Email { get; set; }
-        public string? Image { get; set; }
+        public string? ImagePath { get; set; }
     }
 
     public class CommitteeMemberGroupDTO

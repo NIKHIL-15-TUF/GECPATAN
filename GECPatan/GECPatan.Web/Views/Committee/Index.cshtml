@@ -274,7 +274,7 @@
                         @foreach (var item in Model.Members)
                         {
                             <div class="one_half animate @(memberCount % 2 == 0 ? "last" : "")" data-anim-type="fadeIn" data-anim-delay="400">
-                                <img src="@ResolveApiFileUrl(item.Image)" alt="" onerror="this.style.display='none'">
+                                <img src="@ResolveApiFileUrl(item.ImagePath)" alt="" onerror="this.style.display='none'">
                                 <h5>@item.Name <em>@item.Position</em></h5>
                                 <text>@item.Department</text>
                                 <text>@item.Email</text>
@@ -294,7 +294,7 @@
                         @foreach (var item in group.Members)
                         {
                             <div class="one_half animate @(memberCount % 2 == 0 ? "last" : "")" data-anim-type="fadeIn" data-anim-delay="400">
-                                <img src="@ResolveApiFileUrl(item.Image)" alt="" onerror="this.style.display='none'">
+                                <img src="@ResolveApiFileUrl(item.ImagePath)" alt="" onerror="this.style.display='none'">
                                 <h5>@item.Name <em>@item.Position</em></h5>
                                 <text>@item.Department</text>
                                 <text>@item.Email</text>
