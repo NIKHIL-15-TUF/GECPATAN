@@ -26,7 +26,7 @@ namespace GECPatan.Web.Models
         public string Title { get; set; } = string.Empty;
         public string? About { get; set; }
         public string? BlogLink { get; set; }
-        public string? CoverImage { get; set; } // first image, if any
+        public string? CoverImage { get; set; } 
 
         public List<ClubImageDTO> Images { get; set; } = new();
         public List<ClubMemberDTO> Members { get; set; } = new();

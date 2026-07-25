@@ -1,8 +1,9 @@
-﻿using GECPatan.Core.Data;
-using  GECPatan.Core.Models.Domain;
-using GECPatan.Admin.Models.ViewModels;
+﻿using GECPatan.Admin.Models.ViewModels;
+using GECPatan.Core.Data;
+using GECPatan.Core.Models.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace GECPatan.Admin.Controllers
@@ -28,12 +29,12 @@ namespace GECPatan.Admin.Controllers
                 .OrderBy(c => c.DisplayOrder)
                 .Select(c => new StudentClubListVM
                 {
-                    Id           = c.Id,
-                    Title        = c.Title,
-                    ImageCount   = c.Images.Count,
-                    IsVisible    = c.IsVisible,
+                    Id = c.Id,
+                    Title = c.Title,
+                    ImageCount = c.Images.Count,
+                    IsVisible = c.IsVisible,
                     DisplayOrder = c.DisplayOrder,
-                    MemberCount  = c.Members.Count
+                    MemberCount = c.Members.Count
                 })
                 .ToListAsync();
             return View(clubs);
@@ -45,7 +46,8 @@ namespace GECPatan.Admin.Controllers
             return View(new StudentClubCreateVM());
         }
 
-        [HttpPost][ValidateAntiForgeryToken]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(StudentClubCreateVM model)
         {
             ViewData["Title"] = "Add Club";
@@ -54,13 +56,22 @@ namespace GECPatan.Admin.Controllers
             int maxOrder = await _context.StudentClubs
                 .Select(c => (int?)c.DisplayOrder).MaxAsync() ?? -1;
 
+            // Cover image is uploaded separately from the carousel images,
+            // and is stored directly on the StudentClub row (CoverImagePath).
+            string? coverImagePath = null;
+            if (model.CoverImageFile is { Length: > 0 })
+            {
+                coverImagePath = await SaveFileAsync(model.CoverImageFile, "clubs");
+            }
+
             _context.StudentClubs.Add(new StudentClub
             {
-                Title        = model.Title,
-                About        = model.About,
-                BlogLink     = model.BlogLink,
+                Title = model.Title,
+                About = model.About,
+                BlogLink = model.BlogLink,
+                CoverImagePath = coverImagePath,
                 DisplayOrder = maxOrder + 1,
-                IsVisible    = model.IsVisible
+                IsVisible = model.IsVisible
             });
 
             await _context.SaveChangesAsync();
@@ -78,27 +89,29 @@ namespace GECPatan.Admin.Controllers
 
             return View(new StudentClubEditVM
             {
-                Id             = c.Id,
-                Title          = c.Title,
-                About          = c.About,
-                BlogLink       = c.BlogLink,
-                DisplayOrder   = c.DisplayOrder,
-                IsVisible      = c.IsVisible,
+                Id = c.Id,
+                Title = c.Title,
+                About = c.About,
+                BlogLink = c.BlogLink,
+                CoverImagePath = c.CoverImagePath,
+                DisplayOrder = c.DisplayOrder,
+                IsVisible = c.IsVisible,
                 ExistingImages = c.Images
                     .Where(i => !i.IsDeleted)
                     .OrderBy(i => i.DisplayOrder)
                     .Select(i => new ClubImageVM
                     {
-                        Id           = i.Id,
-                        ImagePath    = i.ImagePath,
-                        Caption      = i.Caption,
+                        Id = i.Id,
+                        ImagePath = i.ImagePath,
+                        Caption = i.Caption,
                         DisplayOrder = i.DisplayOrder,
-                        ClubId       = i.ClubId
+                        ClubId = i.ClubId
                     }).ToList()
             });
         }
 
-        [HttpPost][ValidateAntiForgeryToken]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, StudentClubEditVM model)
         {
             ViewData["Title"] = "Edit Club";
@@ -107,11 +120,19 @@ namespace GECPatan.Admin.Controllers
             var c = await _context.StudentClubs.FindAsync(id);
             if (c == null) return NotFound();
 
-            c.Title        = model.Title;
-            c.About        = model.About;
-            c.BlogLink     = model.BlogLink;
+            c.Title = model.Title;
+            c.About = model.About;
+            c.BlogLink = model.BlogLink;
             c.DisplayOrder = model.DisplayOrder;
-            c.IsVisible    = model.IsVisible;
+            c.IsVisible = model.IsVisible;
+
+            // Cover image: only touched if a new file was uploaded. Leaving
+            // the field empty on the form keeps whatever is already saved.
+            if (model.CoverImageFile is { Length: > 0 })
+            {
+                DeleteFile(c.CoverImagePath);
+                c.CoverImagePath = await SaveFileAsync(model.CoverImageFile, "clubs");
+            }
 
             // Add new images
             int order = await _context.ClubImages
@@ -124,9 +145,9 @@ namespace GECPatan.Admin.Controllers
                 {
                     _context.ClubImages.Add(new ClubImage
                     {
-                        ClubId       = id,
-                        ImagePath    = await SaveFileAsync(file, "clubs"),
-                        Caption      = Path.GetFileNameWithoutExtension(file.FileName),
+                        ClubId = id,
+                        ImagePath = await SaveFileAsync(file, "clubs"),
+                        Caption = Path.GetFileNameWithoutExtension(file.FileName),
                         DisplayOrder = ++order
                     });
                 }
@@ -151,7 +172,8 @@ namespace GECPatan.Admin.Controllers
             return RedirectToAction(nameof(Edit), new { id = clubId });
         }
 
-        [HttpPost] public async Task<IActionResult> ToggleVisible(int id)
+        [HttpPost]
+        public async Task<IActionResult> ToggleVisible(int id)
         {
             var c = await _context.StudentClubs.FindAsync(id);
             if (c == null) return NotFound();
@@ -160,7 +182,8 @@ namespace GECPatan.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpPost] public async Task<IActionResult> Delete(int id)
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
         {
             var c = await _context.StudentClubs.FindAsync(id);
             if (c == null) return NotFound();
@@ -173,45 +196,79 @@ namespace GECPatan.Admin.Controllers
         // ── MEMBERS ───────────────────────────────────────
         public async Task<IActionResult> Members(int id)
         {
-            ViewData["Title"] = "Club Members";
             var club = await _context.StudentClubs.FindAsync(id);
             if (club == null) return NotFound();
 
-            ViewBag.ClubId    = id;
+            ViewBag.ClubId = id;
             ViewBag.ClubTitle = club.Title;
+            ViewBag.Faculties = await _context.Faculties
+                .Where(f => f.IsActive)
+                .OrderBy(f => f.Name)
+                .Select(f => new SelectListItem
+                {
+                    Value = f.FacultyId.ToString(),
+                    Text = f.Name + (f.Department != null ? " (" + f.Department.Name + ")" : "")
+                }).ToListAsync();
 
             var members = await _context.ClubMembers
+                .Include(m => m.Faculty).ThenInclude(f => f!.Department)
                 .Where(m => m.ClubId == id && !m.IsDeleted)
                 .OrderBy(m => m.DisplayOrder)
                 .ToListAsync();
+
             return View(members);
         }
 
-        [HttpPost][ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddMember(ClubMemberVM model)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddMember(ClubMemberVM model, IFormFile? Photo)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                _context.ClubMembers.Add(new ClubMember
-                {
-                    ClubId       = model.ClubId,
-                    Name         = model.Name,
-                    Position     = model.Position,
-                    Department   = model.Department,
-                    Email        = model.Email,
-                    DisplayOrder = model.DisplayOrder
-                });
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Member added.";
+                TempData["Error"] = string.Join(" ", ModelState.Values
+                    .SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                return RedirectToAction(nameof(Members), new { id = model.ClubId });
             }
+
+            var member = new ClubMember
+            {
+                ClubId = model.ClubId,
+                Position = model.Position,
+                DisplayOrder = model.DisplayOrder
+            };
+
+            if (model.MemberType == "Faculty")
+            {
+                member.MemberType = ClubMemberType.Faculty;
+                member.FacultyId = model.FacultyId;
+                // Name / Department / ImagePath intentionally left null —
+                // fetched from Faculty wherever this member is displayed.
+            }
+            else
+            {
+                member.MemberType = ClubMemberType.Student;
+                member.Name = model.Name;
+                member.Department = model.Department;
+                member.Email = model.Email;
+
+                if (Photo is { Length: > 0 })
+                {
+                    member.ImagePath = await SaveFileAsync(Photo, "clubs/members");
+                }
+            }
+
+            _context.ClubMembers.Add(member);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Member added.";
             return RedirectToAction(nameof(Members), new { id = model.ClubId });
         }
 
-        [HttpPost][ValidateAntiForgeryToken]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteMember(int id, int clubId)
         {
             var m = await _context.ClubMembers.FindAsync(id);
-            if (m != null) { m.IsDeleted = true; await _context.SaveChangesAsync(); }
+            if (m != null) { m.IsDeleted = true; await _context.SaveChangesAsync(); TempData["Success"] = "Member removed."; }
             return RedirectToAction(nameof(Members), new { id = clubId });
         }
 

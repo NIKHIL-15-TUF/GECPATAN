@@ -54,6 +54,7 @@ namespace GECPatan.Admin.Models.ViewModels
         // Dropdowns
         public List<SelectListItem> Departments { get; set; } = new();
         public List<SelectListItem> Committees { get; set; } = new();
+        public List<SelectListItem> Clubs { get; set; } = new();
     }
 
     public class ActivityEditVM : ActivityCreateVM

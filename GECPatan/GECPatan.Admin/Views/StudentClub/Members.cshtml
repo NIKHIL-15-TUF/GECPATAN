@@ -1,4 +1,4 @@
-﻿@using  GECPatan.Core.Models.Domain
+﻿@using GECPatan.Core.Models.Domain
 @model List<ClubMember>
 @{
     ViewData["Title"] = "Club Members";
@@ -7,7 +7,7 @@
 }
 <div class="d-flex align-items-center mb-3">
     <a asp-action="Edit" asp-route-id="@clubId"
-           class="btn btn-secondary btn-sm mr-3">
+       class="btn btn-secondary btn-sm mr-3">
         <i class="fas fa-arrow-left"></i>
     </a>
     <div>
@@ -23,33 +23,71 @@
                     <i class="fas fa-plus mr-2"></i>Add Member
                 </h6>
             </div>
-            <form asp-action="AddMember" method="post">
+            <form asp-action="AddMember" method="post" enctype="multipart/form-data" id="addMemberForm">
                 <div class="card-body">
                     <input type="hidden" name="ClubId" value="@clubId" />
+
                     <div class="form-group">
-                        <label class="font-weight-bold">
-                            Name <span class="text-danger">*</span>
-                        </label>
-                        <input name="Name" class="form-control"
-                               placeholder="Full name" required />
+                        <label class="font-weight-bold">Member Type <span class="text-danger">*</span></label>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="typeStudent" name="MemberType" value="Student"
+                                   class="custom-control-input" checked onchange="toggleMemberType()" />
+                            <label class="custom-control-label" for="typeStudent">Student</label>
+                        </div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="typeFaculty" name="MemberType" value="Faculty"
+                                   class="custom-control-input" onchange="toggleMemberType()" />
+                            <label class="custom-control-label" for="typeFaculty">Faculty</label>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="font-weight-bold">Position</label>
-                        <input name="Position" class="form-control"
-                               placeholder="e.g. President, Secretary" />
+
+                    <!-- Faculty -->
+                    <div id="facultyFields">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Select Faculty <span class="text-danger">*</span></label>
+                            <select name="FacultyId" class="form-control">
+                                <option value="">-- Select --</option>
+                                @foreach (var f in (List<SelectListItem>)ViewBag.Faculties)
+                                {
+                                    <option value="@f.Value">@f.Text</option>
+                                }
+                            </select>
+                            <small class="text-muted">Name, department & photo are pulled from the faculty's profile automatically.</small>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="font-weight-bold">Department</label>
-                        <input name="Department" class="form-control" />
+
+                    <!-- Student -->
+                    <div id="studentFields">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Name <span class="text-danger">*</span></label>
+                            <input name="Name" class="form-control" placeholder="Full name" />
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">Department</label>
+                            <input name="Department" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">Email</label>
+                            <input name="Email" class="form-control" type="email" />
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold">Photo</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" name="Photo" accept="image/*"
+                                       onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose photo...'" />
+                                <label class="custom-file-label">Choose photo...</label>
+                            </div>
+                            <small class="text-muted">Optional — a default image is used if none is given.</small>
+                        </div>
                     </div>
+
                     <div class="form-group">
-                        <label class="font-weight-bold">Email</label>
-                        <input name="Email" class="form-control" type="email" />
+                        <label class="font-weight-bold">Position in this Club <span class="text-danger">*</span></label>
+                        <input name="Position" class="form-control" placeholder="e.g. President, Faculty Coordinator" required />
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Order</label>
-                        <input name="DisplayOrder" class="form-control"
-                               type="number" value="@Model.Count" min="0" />
+                        <input name="DisplayOrder" class="form-control" type="number" value="@Model.Count" min="0" />
                     </div>
                 </div>
                 <div class="card-footer">
@@ -86,20 +124,25 @@
                         <tbody>
                             @foreach (var m in Model)
                             {
+                                var isFaculty = m.MemberType == ClubMemberType.Faculty;
+                                var displayName = isFaculty ? m.Faculty?.Name : m.Name;
+                                var displayDept = isFaculty ? m.Faculty?.Department?.Name : m.Department;
                                 <tr>
                                     <td>
-                                        <strong>@m.Name</strong>
+                                        <strong>@displayName</strong>
+                                        @if (isFaculty)
+                                        {
+                                            <span class="badge badge-info ml-1">Faculty</span>
+                                        }
                                         <small class="text-muted d-block">@m.Email</small>
                                     </td>
                                     <td>@m.Position</td>
-                                    <td><small>@m.Department</small></td>
+                                    <td><small>@displayDept</small></td>
                                     <td>
                                         <form asp-action="DeleteMember" method="post">
                                             <input type="hidden" name="id" value="@m.Id" />
                                             <input type="hidden" name="clubId" value="@clubId" />
-                                            <button type="submit"
-                                                    class="btn btn-xs btn-danger"
-                                                    onclick="return confirm('Remove?')">
+                                            <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Remove?')">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </form>
@@ -113,3 +156,11 @@
         </div>
     </div>
 </div>
+<script>
+    function toggleMemberType() {
+        var isFaculty = document.getElementById('typeFaculty').checked;
+        document.getElementById('facultyFields').style.display = isFaculty ? 'block' : 'none';
+        document.getElementById('studentFields').style.display = isFaculty ? 'none' : 'block';
+    }
+    toggleMemberType();
+</script>

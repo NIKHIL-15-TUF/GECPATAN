@@ -5,7 +5,7 @@
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string? CoverImage { get; set; } // first image, if any
+        public string? CoverImage { get; set; } // dedicated cover image, set separately from Images
         public int DisplayOrder { get; set; }
         public string? Link { get; set; } // resolved link if dynamic
     }
@@ -17,6 +17,7 @@
         public string Title { get; set; } = string.Empty;
         public string? About { get; set; }
         public string? BlogLink { get; set; }
+        public string? CoverImage { get; set; } // dedicated cover image, set separately from Images
         public string? Link { get; set; } // resolved internal link if dynamic
 
         public List<ClubImageDTO> Images { get; set; } = new();

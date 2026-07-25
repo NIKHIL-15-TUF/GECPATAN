@@ -55,6 +55,36 @@
 
             <hr />
 
+            <!-- Cover Image (separate from carousel) -->
+            <label class="font-weight-bold">Cover Image</label>
+            <small class="text-muted d-block mb-2">
+                <i class="fas fa-info-circle mr-1"></i>
+                Shown on the Student Clubs list and at the top of the club's page —
+                independent of the carousel images below.
+            </small>
+
+            @if (!string.IsNullOrWhiteSpace(Model.CoverImagePath))
+            {
+                <div class="mb-2">
+                    <img src="@Model.CoverImagePath" class="img-thumbnail"
+                         style="height:100px;object-fit:cover;" />
+                </div>
+            }
+
+            <div class="form-group">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" name="CoverImageFile"
+                           accept="image/*"
+                           onchange="this.nextElementSibling.textContent=this.files[0]?.name || 'Choose new cover image...'" />
+                    <label class="custom-file-label">
+                        @(string.IsNullOrWhiteSpace(Model.CoverImagePath) ? "Choose cover image..." : "Replace cover image...")
+                    </label>
+                </div>
+                <small class="text-muted">Leave empty to keep the current cover image.</small>
+            </div>
+
+            <hr />
+
             <!-- Club Images (carousel) -->
             <label class="font-weight-bold">
                 Club Images (Carousel)

@@ -46,7 +46,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="DeptId" class="font-weight-bold"></label>
                         <select asp-for="DeptId" asp-items="Model.Departments" class="form-control">
@@ -54,10 +54,18 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="CommitteeId" class="font-weight-bold"></label>
                         <select asp-for="CommitteeId" asp-items="Model.Committees" class="form-control">
+                            <option value="">-- None --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="ClubId" class="font-weight-bold"></label>
+                        <select asp-for="ClubId" asp-items="Model.Clubs" class="form-control">
                             <option value="">-- None --</option>
                         </select>
                     </div>

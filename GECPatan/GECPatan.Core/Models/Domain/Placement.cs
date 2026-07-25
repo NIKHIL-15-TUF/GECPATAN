@@ -44,6 +44,7 @@ namespace GECPatan.Core.Models.Domain
         public string Title { get; set; } = string.Empty;
         public string? About { get; set; }
         public string? BlogLink { get; set; }
+        public string? CoverImagePath { get; set; }
         public string? ActionName { get; set; }
         public string? ControllerName { get; set; }
         public bool IsDynamic { get; set; } = false;
@@ -75,6 +76,12 @@ namespace GECPatan.Core.Models.Domain
         public int DisplayOrder { get; set; } = 0;
     }
 
+    public enum ClubMemberType
+    {
+        Student = 0,
+        Faculty = 1
+    }
+
     public class ClubMember : BaseEntity
     {
         public int Id { get; set; }
@@ -84,11 +91,22 @@ namespace GECPatan.Core.Models.Domain
         [ForeignKey("ClubId")]
         public StudentClub? Club { get; set; }
 
-        [Required, MaxLength(200)]
-        public string Name { get; set; } = string.Empty;
+        public ClubMemberType MemberType { get; set; } = ClubMemberType.Student;
 
+        // ── Faculty members ──
+        // Link to the existing Faculty record. Name / Department / Photo are
+        // fetched live from Faculty at read time — never duplicated here —
+        // so any change to the faculty's photo/department reflects automatically.
+        public int? FacultyId { get; set; }
+
+        [ForeignKey("FacultyId")]
+        public Faculty? Faculty { get; set; }
+
+        // ── Student members ──
+        // Entered fresh, since there's no existing "Student" table to link to.
+        // Unused when MemberType == Faculty.
         [MaxLength(200)]
-        public string? Position { get; set; }
+        public string? Name { get; set; }          // was [Required] — now optional
 
         [MaxLength(200)]
         public string? Department { get; set; }
@@ -97,6 +115,14 @@ namespace GECPatan.Core.Models.Domain
 
         [MaxLength(200)]
         public string? Email { get; set; }
+
+        // ── Common ──
+        // The member's ROLE IN THIS CLUB — always entered here, for both types.
+        // For a faculty member this is intentionally separate from
+        // Faculty.Designation (their official college title, e.g. "Associate
+        // Professor"); the club role (e.g. "Faculty Coordinator") is different.
+        [MaxLength(200)]
+        public string? Position { get; set; }
 
         public int DisplayOrder { get; set; } = 0;
     }

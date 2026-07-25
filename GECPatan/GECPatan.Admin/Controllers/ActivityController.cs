@@ -274,6 +274,8 @@ namespace GECPatan.Admin.Controllers
                 .Select(d => new SelectListItem { Value = d.DeptId.ToString(), Text = d.Name }).ToListAsync();
             vm.Committees = await _context.CampusCommittees.OrderBy(c => c.Title)
                 .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Title }).ToListAsync();
+            vm.Clubs = await _context.StudentClubs.OrderBy(c => c.Title)                    
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Title }).ToListAsync();
             return vm;
         }
 
@@ -282,6 +284,8 @@ namespace GECPatan.Admin.Controllers
             vm.Departments = await _context.Departments.OrderBy(d => d.Name)
                 .Select(d => new SelectListItem { Value = d.DeptId.ToString(), Text = d.Name }).ToListAsync();
             vm.Committees = await _context.CampusCommittees.OrderBy(c => c.Title)
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Title }).ToListAsync();
+            vm.Clubs = await _context.StudentClubs.OrderBy(c => c.Title)               
                 .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Title }).ToListAsync();
             return vm;
         }

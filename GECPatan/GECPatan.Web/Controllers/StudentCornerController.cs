@@ -1,4 +1,5 @@
 ﻿using GECPatan.Web.Models;
+using GECPatan.Web.Models.Dtos;
 using GECPatan.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -67,9 +68,10 @@ namespace GECPatan.Web.Controllers
                 return NotFound();
             }
 
-            // GET /api/clubs/{id}/activities fetched separately in parallel,
-            // same shape as DepartmentController firing its detail calls together.
             var activities = await _clubApi.GetActivitiesAsync(id, ct);
+
+            // Default member image served by the Web app itself.
+            var defaultMemberImage = $"{Request.Scheme}://{Request.Host}/images/member/1000.jpg";
 
             var vm = new ClubDetailsViewModel
             {
@@ -78,9 +80,23 @@ namespace GECPatan.Web.Controllers
                 Title = club.Title,
                 About = club.About,
                 BlogLink = club.BlogLink,
-                CoverImage = club.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault()?.ImagePath,
+                CoverImage = club.CoverImage,
                 Images = club.Images,
-                Members = club.Members,
+
+                Members = club.Members
+                    .Select(m => new ClubMemberDTO
+                    {
+                        Id = m.Id,
+                        Name = m.Name,
+                        Position = m.Position,
+                        Department = m.Department,
+                        ImagePath = string.IsNullOrWhiteSpace(m.ImagePath)
+                            ? defaultMemberImage
+                            : m.ImagePath,
+                        DisplayOrder = m.DisplayOrder
+                    })
+                    .ToList(),
+
                 SubObjectives = club.Objectives,
                 DynamicSections = club.DynamicSections,
                 Activities = activities
