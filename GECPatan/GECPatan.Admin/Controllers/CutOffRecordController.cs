@@ -12,9 +12,13 @@ namespace GECPatan.Admin.Controllers
     public class CutoffRecordController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<CutoffRecordController> _logger;
 
-        public CutoffRecordController(ApplicationDbContext context)
-            => _context = context;
+        public CutoffRecordController(ApplicationDbContext context, ILogger<CutoffRecordController> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
 
         // ── INDEX — grouped by department ─────────────────
         public async Task<IActionResult> Index(int? deptId)
@@ -54,14 +58,7 @@ namespace GECPatan.Admin.Controllers
                 .OrderBy(g => g.DeptName)
                 .ToList();
 
-            ViewBag.Departments = await _context.Departments
-                .Where(d => d.IsActive)
-                .OrderBy(d => d.DisplayOrder)
-                .Select(d => new SelectListItem
-                {
-                    Value = d.DeptId.ToString(),
-                    Text = d.Name
-                }).ToListAsync();
+            ViewBag.Departments = await GetActiveDepartmentSelectListAsync();
             ViewBag.SelectedDeptId = deptId;
 
             return View(grouped);
@@ -88,12 +85,15 @@ namespace GECPatan.Admin.Controllers
         {
             ViewData["Title"] = "Add Cutoff Record";
 
+            if (!await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
             bool duplicate = await _context.CutoffRecords.AnyAsync(c =>
                 c.DeptId == model.DeptId &&
                 c.AcademicYear == model.AcademicYear);
 
             if (duplicate)
-                ModelState.AddModelError("AcademicYear",
+                ModelState.AddModelError(nameof(model.AcademicYear),
                     "A cutoff record for this department and year already exists.");
 
             if (!ModelState.IsValid)
@@ -115,11 +115,35 @@ namespace GECPatan.Admin.Controllers
                 IsVisible = model.IsVisible
             };
 
-            _context.CutoffRecords.Add(record);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.CutoffRecords.Add(record);
+                await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Cutoff record added.";
-            return RedirectToAction(nameof(Index), new { deptId = model.DeptId });
+                _logger.LogInformation(
+                    "Cutoff record {CutoffRecordId} created for department {DeptId}, year {AcademicYear}",
+                    record.Id, record.DeptId, record.AcademicYear);
+
+                TempData["Success"] = "Cutoff record added.";
+                return RedirectToAction(nameof(Index), new { deptId = model.DeptId });
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex,
+                    "Database error while creating cutoff record for department {DeptId}, year {AcademicYear}",
+                    model.DeptId, model.AcademicYear);
+                ModelState.AddModelError(string.Empty, "Unable to save the cutoff record. Please try again.");
+                await LoadDepartments(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Unexpected error while creating cutoff record for department {DeptId}", model.DeptId);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDepartments(model);
+                return View("Form", model);
+            }
         }
 
         // ── EDIT GET ──────────────────────────────────────
@@ -153,13 +177,16 @@ namespace GECPatan.Admin.Controllers
         {
             ViewData["Title"] = "Edit Cutoff Record";
 
+            if (!await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
             bool duplicate = await _context.CutoffRecords.AnyAsync(c =>
                 c.Id != id &&
                 c.DeptId == model.DeptId &&
                 c.AcademicYear == model.AcademicYear);
 
             if (duplicate)
-                ModelState.AddModelError("AcademicYear",
+                ModelState.AddModelError(nameof(model.AcademicYear),
                     "A cutoff record for this department and year already exists.");
 
             if (!ModelState.IsValid)
@@ -181,13 +208,42 @@ namespace GECPatan.Admin.Controllers
             record.DisplayOrder = model.DisplayOrder;
             record.IsVisible = model.IsVisible;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Cutoff record updated.";
-            return RedirectToAction(nameof(Index), new { deptId = record.DeptId });
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Cutoff record {CutoffRecordId} updated", record.Id);
+
+                TempData["Success"] = "Cutoff record updated.";
+                return RedirectToAction(nameof(Index), new { deptId = record.DeptId });
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogWarning(ex, "Concurrency conflict updating cutoff record {CutoffRecordId}", id);
+                ModelState.AddModelError(string.Empty,
+                    "This record was changed by someone else. Please reload and try again.");
+                await LoadDepartments(model);
+                return View("Form", model);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error while updating cutoff record {CutoffRecordId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the cutoff record. Please try again.");
+                await LoadDepartments(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while updating cutoff record {CutoffRecordId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDepartments(model);
+                return View("Form", model);
+            }
         }
 
         // ── DELETE ────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var record = await _context.CutoffRecords.FindAsync(id);
@@ -195,16 +251,37 @@ namespace GECPatan.Admin.Controllers
 
             int deptId = record.DeptId;
             record.IsDeleted = true;
-            await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Cutoff record deleted.";
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Cutoff record {CutoffRecordId} soft-deleted", id);
+
+                TempData["Success"] = "Cutoff record deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error while deleting cutoff record {CutoffRecordId}", id);
+                TempData["Error"] = "Unable to delete the cutoff record. Please try again.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while deleting cutoff record {CutoffRecordId}", id);
+                TempData["Error"] = "An unexpected error occurred. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index), new { deptId });
         }
 
-        // ── HELPER ────────────────────────────────────────
+        // ── HELPERS ───────────────────────────────────────
         private async Task LoadDepartments(CutoffRecordVM vm)
         {
-            vm.Departments = await _context.Departments
+            vm.Departments = await GetActiveDepartmentSelectListAsync();
+        }
+
+        private Task<List<SelectListItem>> GetActiveDepartmentSelectListAsync() =>
+            _context.Departments
                 .Where(d => d.IsActive)
                 .OrderBy(d => d.DisplayOrder)
                 .Select(d => new SelectListItem
@@ -212,6 +289,5 @@ namespace GECPatan.Admin.Controllers
                     Value = d.DeptId.ToString(),
                     Text = d.Name
                 }).ToListAsync();
-        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
+using GECPatan.Core.Services.FileStorage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -11,19 +12,30 @@ namespace GECPatan.Admin.Controllers
     [Authorize(Roles = "SuperAdmin,HOD,ContentEditor,Principal")]
     public class CampusCommitteeController : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private const string UploadFolder = "committees";
+        private const string SuperAdminRole = "SuperAdmin";
 
-        public CampusCommitteeController(ApplicationDbContext context, IWebHostEnvironment env)
+        private readonly ApplicationDbContext _context;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<CampusCommitteeController> _logger;
+
+        public CampusCommitteeController(
+            ApplicationDbContext context,
+            IFileStorageService fileStorage,
+            ILogger<CampusCommitteeController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
+        // ── INDEX ─────────────────────────────────────────
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Campus Committees";
             var committees = await _context.CampusCommittees
+                .AsNoTracking()
+                .Where(c => !c.IsDeleted)
                 .Include(c => c.Members)
                 .OrderBy(c => c.DisplayOrder)
                 .Select(c => new CommitteeListVM
@@ -34,62 +46,108 @@ namespace GECPatan.Admin.Controllers
                     TitleImagePath = c.TitleImagePath,
                     IsActive = c.IsActive,
                     DisplayOrder = c.DisplayOrder,
-                    MemberCount = c.Members.Count
+                    MemberCount = c.Members.Count(m => !m.IsDeleted)
                 })
                 .ToListAsync();
             return View(committees);
         }
 
-        [Authorize(Roles = "SuperAdmin")]
+        // ── CREATE GET ────────────────────────────────────
+        [Authorize(Roles = SuperAdminRole)]
         public IActionResult Create()
         {
             ViewData["Title"] = "Add Committee";
             return View(new CommitteeCreateVM());
         }
 
+        // ── CREATE POST ───────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = SuperAdminRole)]
         public async Task<IActionResult> Create(CommitteeCreateVM model, IFormFile? TitleImage, IFormFile? MeasureImage)
         {
             ViewData["Title"] = "Add Committee";
             if (!ModelState.IsValid) return View(model);
 
-            var committee = new CampusCommittee
-            {
-                Title = model.Title,
-                About = model.About,
-                Tagline = model.Tagline,
-                Measures = model.Measures,
-                Message = model.Message,
-                BlogLink = model.BlogLink,
-                Link = model.Link,
-                NationalTaskForce = model.NationalTaskForce,
-                ShowDocument = model.ShowDocument,
-                TableView = model.TableView,
-                DisplayOrder = model.DisplayOrder,
-                IsActive = true,
-                TabAbout = model.TabAbout,
-                TabVisionMission = model.TabVisionMission,
-                TabObjectives = model.TabObjectives,
-                TabMembers = model.TabMembers,
-                TabActivities = model.TabActivities,
-                TabDocuments = model.TabDocuments,
-                TabLink = model.TabLink
-            };
+            string? titleImagePath = null;
+            string? measureImagePath = null;
 
             if (TitleImage != null && TitleImage.Length > 0)
-                committee.TitleImagePath = await SaveFileAsync(TitleImage, "committees");
+            {
+                var result = await _fileStorage.SaveAsync(TitleImage, UploadFolder, FileCategory.Image);
+                if (!result.Success)
+                {
+                    ModelState.AddModelError(nameof(TitleImage), result.ErrorMessage!);
+                    return View(model);
+                }
+                titleImagePath = result.RelativePath;
+            }
 
-            if (MeasureImage != null && MeasureImage.Length > 0)    
-                committee.MeasureImagePath = await SaveFileAsync(MeasureImage, "committees");
+            if (MeasureImage != null && MeasureImage.Length > 0)
+            {
+                var result = await _fileStorage.SaveAsync(MeasureImage, UploadFolder, FileCategory.Image);
+                if (!result.Success)
+                {
+                    ModelState.AddModelError(nameof(MeasureImage), result.ErrorMessage!);
+                    CleanupOrphanFile(titleImagePath);
+                    return View(model);
+                }
+                measureImagePath = result.RelativePath;
+            }
 
-            _context.CampusCommittees.Add(committee);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"Committee '{committee.Title}' created.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                var committee = new CampusCommittee
+                {
+                    Title = model.Title,
+                    About = model.About,
+                    Tagline = model.Tagline,
+                    Measures = model.Measures,
+                    Message = model.Message,
+                    BlogLink = model.BlogLink,
+                    Link = model.Link,
+                    NationalTaskForce = model.NationalTaskForce,
+                    ShowDocument = model.ShowDocument,
+                    TableView = model.TableView,
+                    DisplayOrder = model.DisplayOrder,
+                    IsActive = true,
+                    TabAbout = model.TabAbout,
+                    TabVisionMission = model.TabVisionMission,
+                    TabObjectives = model.TabObjectives,
+                    TabMembers = model.TabMembers,
+                    TabActivities = model.TabActivities,
+                    TabDocuments = model.TabDocuments,
+                    TabLink = model.TabLink,
+                    TitleImagePath = titleImagePath,
+                    MeasureImagePath = measureImagePath
+                };
+
+                _context.CampusCommittees.Add(committee);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Committee {Id} '{Title}' created by {User}", committee.Id, committee.Title, User.Identity?.Name);
+                TempData["Success"] = $"Committee '{committee.Title}' created.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error while creating committee '{Title}'", model.Title);
+                CleanupOrphanFile(titleImagePath);
+                CleanupOrphanFile(measureImagePath);
+                ModelState.AddModelError(string.Empty, "Could not save the committee due to a database error. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while creating committee '{Title}'", model.Title);
+                CleanupOrphanFile(titleImagePath);
+                CleanupOrphanFile(measureImagePath);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred while creating the committee. Please try again.");
+                return View(model);
+            }
         }
 
+        // ── EDIT GET ──────────────────────────────────────
         public async Task<IActionResult> Edit(int id)
         {
             ViewData["Title"] = "Edit Committee";
@@ -98,7 +156,7 @@ namespace GECPatan.Admin.Controllers
                 .Include(x => x.Missions)
                 .Include(x => x.Objectives)
                 .Include(x => x.SubObjectives)
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
             if (c == null) return NotFound();
 
             return View(new CommitteeEditVM
@@ -134,6 +192,7 @@ namespace GECPatan.Admin.Controllers
             });
         }
 
+        // ── EDIT POST ─────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, CommitteeEditVM model,
@@ -151,8 +210,50 @@ namespace GECPatan.Admin.Controllers
                 .Include(x => x.Missions)
                 .Include(x => x.Objectives)
                 .Include(x => x.SubObjectives)
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
             if (c == null) return NotFound();
+
+            // Each entry: (posted file, current path on the entity, field name for
+            // validation errors, category). Uploaded up front, before any DB
+            // writes, and tracked so a failed save can clean them back up.
+            var uploads = new (IFormFile? File, string? CurrentPath, string FieldName, FileCategory Category)[]
+            {
+                (TitleImage, c.TitleImagePath, nameof(TitleImage), FileCategory.Image),
+                (MeasureImage, c.MeasureImagePath, nameof(MeasureImage), FileCategory.Image),
+                (SubObjImage, c.SubObjImagePath, nameof(SubObjImage), FileCategory.Image),
+                (BulletPointsImage, c.BulletPointsImagePath, nameof(BulletPointsImage), FileCategory.Image),
+                (PageFlyer, c.PageFlyerPath, nameof(PageFlyer), FileCategory.Document),
+            };
+
+            var newlySavedFiles = new List<string>();
+            var oldFilesToRemove = new List<string>();
+            string? newTitleImagePath = null, newMeasureImagePath = null,
+                    newSubObjImagePath = null, newBulletPointsImagePath = null, newPageFlyerPath = null;
+
+            foreach (var (file, currentPath, fieldName, category) in uploads)
+            {
+                if (file == null || file.Length == 0) continue;
+
+                var result = await _fileStorage.SaveAsync(file, UploadFolder, category);
+                if (!result.Success)
+                {
+                    ModelState.AddModelError(fieldName, result.ErrorMessage!);
+                    CleanupOrphanFiles(newlySavedFiles);
+                    return View(model);
+                }
+
+                newlySavedFiles.Add(result.RelativePath!);
+                if (currentPath != null) oldFilesToRemove.Add(currentPath);
+
+                switch (fieldName)
+                {
+                    case nameof(TitleImage): newTitleImagePath = result.RelativePath; break;
+                    case nameof(MeasureImage): newMeasureImagePath = result.RelativePath; break;
+                    case nameof(SubObjImage): newSubObjImagePath = result.RelativePath; break;
+                    case nameof(BulletPointsImage): newBulletPointsImagePath = result.RelativePath; break;
+                    case nameof(PageFlyer): newPageFlyerPath = result.RelativePath; break;
+                }
+            }
 
             c.Title = model.Title;
             c.About = model.About;
@@ -173,57 +274,106 @@ namespace GECPatan.Admin.Controllers
             c.TabDocuments = model.TabDocuments;
             c.TabLink = model.TabLink;
 
-            if (TitleImage != null && TitleImage.Length > 0) { DeleteFile(c.TitleImagePath); c.TitleImagePath = await SaveFileAsync(TitleImage, "committees"); }
-            if (MeasureImage != null && MeasureImage.Length > 0) { DeleteFile(c.MeasureImagePath); c.MeasureImagePath = await SaveFileAsync(MeasureImage, "committees"); }
-            if (SubObjImage != null && SubObjImage.Length > 0) { DeleteFile(c.SubObjImagePath); c.SubObjImagePath = await SaveFileAsync(SubObjImage, "committees"); }
-            if (BulletPointsImage != null && BulletPointsImage.Length > 0) { DeleteFile(c.BulletPointsImagePath); c.BulletPointsImagePath = await SaveFileAsync(BulletPointsImage, "committees"); }
-            if (PageFlyer != null && PageFlyer.Length > 0) { DeleteFile(c.PageFlyerPath); c.PageFlyerPath = await SaveFileAsync(PageFlyer, "committees"); }
+            if (newTitleImagePath != null) c.TitleImagePath = newTitleImagePath;
+            if (newMeasureImagePath != null) c.MeasureImagePath = newMeasureImagePath;
+            if (newSubObjImagePath != null) c.SubObjImagePath = newSubObjImagePath;
+            if (newBulletPointsImagePath != null) c.BulletPointsImagePath = newBulletPointsImagePath;
+            if (newPageFlyerPath != null) c.PageFlyerPath = newPageFlyerPath;
 
-            // Vision
             _context.CommitteeVisions.RemoveRange(c.Visions);
-            if (!string.IsNullOrEmpty(VisionItems))
-                SaveList(VisionItems, i => _context.CommitteeVisions.Add(new CommitteeVision { CommitteeId = id, VisionText = i.Trim(), DisplayOrder = 0 }));
+            ReplaceTextList(_context.CommitteeVisions, VisionItems,
+                (text, order) => new CommitteeVision { CommitteeId = id, VisionText = text, DisplayOrder = order });
 
-            // Mission
             _context.CommitteeMissions.RemoveRange(c.Missions);
-            if (!string.IsNullOrEmpty(MissionItems))
-                SaveList(MissionItems, i => _context.CommitteeMissions.Add(new CommitteeMission { CommitteeId = id, MissionText = i.Trim(), DisplayOrder = 0 }));
+            ReplaceTextList(_context.CommitteeMissions, MissionItems,
+                (text, order) => new CommitteeMission { CommitteeId = id, MissionText = text, DisplayOrder = order });
 
-            // Objectives
             _context.CommitteeObjectives.RemoveRange(c.Objectives);
-            if (!string.IsNullOrEmpty(ObjectiveItems))
-                SaveList(ObjectiveItems, i => _context.CommitteeObjectives.Add(new CommitteeObjective { CommitteeId = id, ObjectiveText = i.Trim(), DisplayOrder = 0 }));
+            ReplaceTextList(_context.CommitteeObjectives, ObjectiveItems,
+                (text, order) => new CommitteeObjective { CommitteeId = id, ObjectiveText = text, DisplayOrder = order });
 
-            // SubObjectives
             _context.CommitteeSubObjectives.RemoveRange(c.SubObjectives);
-            if (!string.IsNullOrEmpty(SubObjectiveItems))
-                SaveList(SubObjectiveItems, i => _context.CommitteeSubObjectives.Add(new CommitteeSubObjective { CommitteeId = id, SubObjectiveText = i.Trim(), DisplayOrder = 0 }));
+            ReplaceTextList(_context.CommitteeSubObjectives, SubObjectiveItems,
+                (text, order) => new CommitteeSubObjective { CommitteeId = id, SubObjectiveText = text, DisplayOrder = order });
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error while editing committee {Id}", id);
+                CleanupOrphanFiles(newlySavedFiles);
+                ModelState.AddModelError(string.Empty, "Could not save the committee due to a database error. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while editing committee {Id}", id);
+                CleanupOrphanFiles(newlySavedFiles);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred while saving the committee. Please try again.");
+                return View(model);
+            }
+
+            // Only remove replaced files once the new state is safely
+            // persisted, so a failed save never leaves the committee with a
+            // missing image or document.
+            foreach (var path in oldFilesToRemove)
+                TryDeleteFile(path, "replaced committee file");
+
+            _logger.LogInformation("Committee {Id} '{Title}' edited by {User}", c.Id, c.Title, User.Identity?.Name);
             TempData["Success"] = $"Committee '{c.Title}' updated.";
             return RedirectToAction(nameof(Index));
         }
 
+        // ── TOGGLE ACTIVE ─────────────────────────────────
         [HttpPost]
-        [Authorize(Roles = "SuperAdmin")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = SuperAdminRole)]
         public async Task<IActionResult> ToggleActive(int id)
         {
             var c = await _context.CampusCommittees.FindAsync(id);
             if (c == null) return NotFound();
             c.IsActive = !c.IsActive;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to toggle active state for committee {Id}", id);
+                TempData["Error"] = "Could not update the committee status. Please try again.";
+                return RedirectToAction(nameof(Index));
+            }
+
             TempData["Success"] = $"'{c.Title}' " + (c.IsActive ? "activated" : "deactivated") + ".";
             return RedirectToAction(nameof(Index));
         }
 
+        // ── DELETE ────────────────────────────────────────
         [HttpPost]
-        [Authorize(Roles = "SuperAdmin")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = SuperAdminRole)]
         public async Task<IActionResult> Delete(int id)
         {
             var c = await _context.CampusCommittees.FindAsync(id);
             if (c == null) return NotFound();
-            c.IsDeleted = true; c.IsActive = false;
-            await _context.SaveChangesAsync();
+            c.IsDeleted = true;
+            c.IsActive = false;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete committee {Id}", id);
+                TempData["Error"] = "Could not delete the committee. Please try again.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            _logger.LogInformation("Committee {Id} '{Title}' deleted by {User}", c.Id, c.Title, User.Identity?.Name);
             TempData["Success"] = $"Committee '{c.Title}' deleted.";
             return RedirectToAction(nameof(Index));
         }
@@ -232,18 +382,17 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Members(int id)
         {
             ViewData["Title"] = "Committee Members";
-            var c = await _context.CampusCommittees.FindAsync(id);
+            var c = await _context.CampusCommittees.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
             if (c == null) return NotFound();
 
             ViewBag.CommitteeId = id;
             ViewBag.CommitteeTitle = c.Title;
 
             var members = await _context.CommitteeMembers
-                .Where(m => m.CommitteeId == id)
+                .Where(m => m.CommitteeId == id && !m.IsDeleted)
                 .OrderBy(m => m.DisplayOrder)
                 .ToListAsync();
 
-            // Faculty dropdown for adding members
             ViewBag.FacultyList = await _context.Faculties
                 .Where(f => f.IsActive)
                 .OrderBy(f => f.Name)
@@ -277,11 +426,37 @@ namespace GECPatan.Admin.Controllers
             });
         }
 
+        // ── ADD MEMBER ────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddMember(CommitteeMemberVM model, IFormFile? MemberPhoto)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Could not add the member — please check the form and try again.";
+                return RedirectToAction(nameof(Members), new { id = model.CommitteeId });
+            }
+
+            string? photoPath = null;
+            if (MemberPhoto != null && MemberPhoto.Length > 0)
+            {
+                var result = await _fileStorage.SaveAsync(MemberPhoto, UploadFolder, FileCategory.Image);
+                if (!result.Success)
+                {
+                    TempData["Error"] = result.ErrorMessage;
+                    return RedirectToAction(nameof(Members), new { id = model.CommitteeId });
+                }
+                photoPath = result.RelativePath;
+            }
+            else if (model.FacultyId.HasValue)
+            {
+                // Use the faculty's existing photo if no new one was uploaded.
+                var f = await _context.Faculties.FindAsync(model.FacultyId.Value);
+                if (f?.ImagePath != null)
+                    photoPath = f.ImagePath;
+            }
+
+            try
             {
                 var member = new CommitteeMember
                 {
@@ -291,60 +466,102 @@ namespace GECPatan.Admin.Controllers
                     Email = model.Email,
                     Contact = model.Contact,
                     Department = model.Department,
-                    DisplayOrder = model.DisplayOrder
+                    DisplayOrder = model.DisplayOrder,
+                    ImagePath = photoPath
                 };
-
-                if (MemberPhoto != null && MemberPhoto.Length > 0)
-                    member.ImagePath = await SaveFileAsync(MemberPhoto, "committees");
-                else if (model.FacultyId.HasValue)
-                {
-                    // Use faculty photo if available
-                    var f = await _context.Faculties.FindAsync(model.FacultyId.Value);
-                    if (f?.ImagePath != null)
-                        member.ImagePath = f.ImagePath;
-                }
 
                 _context.CommitteeMembers.Add(member);
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Member '{Name}' added to committee {CommitteeId} by {User}", member.Name, model.CommitteeId, User.Identity?.Name);
                 TempData["Success"] = "Member added.";
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to add member to committee {CommitteeId}", model.CommitteeId);
+                // Only clean up a photo we actually saved ourselves — a
+                // reused faculty photo must never be deleted.
+                if (MemberPhoto != null) CleanupOrphanFile(photoPath);
+                TempData["Error"] = "Could not add the member due to an error. Please try again.";
+            }
+
             return RedirectToAction(nameof(Members), new { id = model.CommitteeId });
         }
 
+        // ── DELETE MEMBER ─────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteMember(int id, int committeeId)
         {
             var m = await _context.CommitteeMembers.FindAsync(id);
-            if (m != null) { m.IsDeleted = true; await _context.SaveChangesAsync(); TempData["Success"] = "Member removed."; }
+            if (m == null || m.CommitteeId != committeeId) return NotFound();
+
+            m.IsDeleted = true;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Member removed.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to remove member {MemberId} from committee {CommitteeId}", id, committeeId);
+                TempData["Error"] = "Could not remove the member. Please try again.";
+            }
+
             return RedirectToAction(nameof(Members), new { id = committeeId });
         }
 
         // ── HELPERS ───────────────────────────────────────
-        private void SaveList(string raw, Action<string> addItem)
+
+        /// <summary>
+        /// Replaces a committee's child text-list collection (Vision, Mission,
+        /// Objective, SubObjective items) with the newline-separated values
+        /// submitted by the form, assigning a real, increasing DisplayOrder to
+        /// each — the previous SaveList() helper took an order counter but
+        /// never actually passed it to the created entity, so every item was
+        /// silently saved with DisplayOrder = 0.
+        /// </summary>
+        private void ReplaceTextList<T>(DbSet<T> set, string? rawItems, Func<string, int, T> factory) where T : class
         {
+            if (string.IsNullOrEmpty(rawItems)) return;
+
+            var items = rawItems.Split('\n', StringSplitOptions.RemoveEmptyEntries);
             int order = 0;
-            foreach (var line in raw.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                if (!string.IsNullOrWhiteSpace(line))
-                    addItem(line);
+            foreach (var raw in items)
+            {
+                var text = raw.Trim();
+                if (text.Length == 0) continue;
+                set.Add(factory(text, order++));
+            }
         }
 
-        private async Task<string> SaveFileAsync(IFormFile file, string folder)
+        /// <summary>
+        /// Deletes a single file and never throws — a failed delete here
+        /// should never take down the request; it just gets logged so it can
+        /// be cleaned up manually.
+        /// </summary>
+        private void TryDeleteFile(string? path, string context)
         {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
+            if (string.IsNullOrEmpty(path)) return;
+
+            try
+            {
+                if (!_fileStorage.Delete(path))
+                    _logger.LogWarning("File delete returned false for {Path} ({Context})", path, context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete file {Path} ({Context})", path, context);
+            }
         }
 
-        private void DeleteFile(string? filePath)
+        private void CleanupOrphanFile(string? path) => TryDeleteFile(path, "orphan cleanup");
+
+        private void CleanupOrphanFiles(IEnumerable<string> paths)
         {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
+            foreach (var path in paths)
+                TryDeleteFile(path, "orphan cleanup");
         }
     }
 }

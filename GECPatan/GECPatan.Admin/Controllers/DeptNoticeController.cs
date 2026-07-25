@@ -1,5 +1,6 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,14 +14,18 @@ namespace GECPatan.Admin.Controllers
     public class DeptNoticeController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<DeptNoticeController> _logger;
+        private const string NoticesFolder = "notices";
 
         public DeptNoticeController(
             ApplicationDbContext context,
-            IWebHostEnvironment env)
+            IFileStorageService fileStorage,
+            ILogger<DeptNoticeController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         // ── INDEX — grouped by department ─────────────────
@@ -29,8 +34,7 @@ namespace GECPatan.Admin.Controllers
             ViewData["Title"] = "Department Noticeboard";
 
             var currentUser = await GetCurrentUserAsync();
-            var isAdmin = User.IsInRole("SuperAdmin") ||
-                              User.IsInRole("Principal");
+            var isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Principal");
 
             // HOD / Faculty — only see their dept
             if (!isAdmin && currentUser?.DeptId != null)
@@ -48,8 +52,6 @@ namespace GECPatan.Admin.Controllers
 
             ViewBag.SelectedDeptId = deptId;
 
-            var now = DateTime.Now;
-
             var query = _context.DeptNotices
                 .Include(n => n.Department)
                 .AsQueryable();
@@ -63,7 +65,6 @@ namespace GECPatan.Admin.Controllers
                 .OrderByDescending(n => n.CreatedDate)
                 .ToListAsync();
 
-            // Group by department
             var grouped = notices
                 .GroupBy(n => new { n.DeptId, Name = n.Department?.Name ?? "" })
                 .Select(g =>
@@ -111,10 +112,8 @@ namespace GECPatan.Admin.Controllers
             };
 
             var currentUser = await GetCurrentUserAsync();
-            bool isAdmin = User.IsInRole("SuperAdmin") ||
-                              User.IsInRole("Principal");
+            bool isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Principal");
 
-            // Pre-select dept for HOD/Faculty
             if (!isAdmin && currentUser?.DeptId != null)
                 vm.DeptId = currentUser.DeptId.Value;
             else if (deptId.HasValue)
@@ -127,15 +126,13 @@ namespace GECPatan.Admin.Controllers
         // ── CREATE POST ───────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(
-            DeptNoticeFormVM model, IFormFile? AttachFile)
+        public async Task<IActionResult> Create(DeptNoticeFormVM model, IFormFile? AttachFile)
         {
             ViewData["Title"] = "Add Notice";
             var currentUser = await GetCurrentUserAsync();
-            bool isAdmin = User.IsInRole("SuperAdmin") ||
-                                User.IsInRole("Principal");
+            bool isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Principal");
 
-            // HOD/Faculty can only post for their dept
+            // HOD/Faculty can only post for their own dept
             if (!isAdmin && currentUser?.DeptId != null)
                 model.DeptId = currentUser.DeptId.Value;
 
@@ -146,14 +143,33 @@ namespace GECPatan.Admin.Controllers
                 return View("Form", model);
             }
 
+            string? savedFilePath = null;
+            bool requiresFile = AttachFile != null && AttachFile.Length > 0 &&
+                                 model.FileType != "None" && model.FileType != "Link";
+
+            if (requiresFile)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(
+                    AttachFile, NoticesFolder, GetCategoryForFileType(model.FileType));
+
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError("AttachFile", uploadResult.ErrorMessage!);
+                    await LoadDepartments(model, isAdmin, currentUser?.DeptId);
+                    return View("Form", model);
+                }
+
+                savedFilePath = uploadResult.RelativePath;
+            }
+
             var notice = new DeptNotice
             {
                 DeptId = model.DeptId,
                 Title = model.Title,
                 Description = model.Description,
                 FileType = model.FileType,
-                ExternalLink = model.FileType == "Link"
-                    ? model.ExternalLink : null,
+                ExternalLink = model.FileType == "Link" ? model.ExternalLink : null,
+                FilePath = savedFilePath,
                 ValidFrom = model.ValidFrom,
                 ValidTo = model.ValidTo,
                 IsVisible = model.IsVisible,
@@ -161,16 +177,39 @@ namespace GECPatan.Admin.Controllers
                 PostedBy = User.Identity?.Name ?? "Admin"
             };
 
-            if (AttachFile != null && AttachFile.Length > 0 &&
-                model.FileType != "None" && model.FileType != "Link")
-                notice.FilePath = await SaveFileAsync(AttachFile, "notices");
+            try
+            {
+                _context.DeptNotices.Add(notice);
+                await _context.SaveChangesAsync();
 
-            _context.DeptNotices.Add(notice);
-            await _context.SaveChangesAsync();
+                _logger.LogInformation(
+                    "Notice {NoticeId} '{Title}' created for department {DeptId} by {User}",
+                    notice.Id, notice.Title, notice.DeptId, notice.PostedBy);
 
-            TempData["Success"] = $"Notice '{notice.Title}' added.";
-            return RedirectToAction(nameof(Index),
-                new { deptId = notice.DeptId });
+                TempData["Success"] = $"Notice '{notice.Title}' added.";
+                return RedirectToAction(nameof(Index), new { deptId = notice.DeptId });
+            }
+            catch (DbUpdateException ex)
+            {
+                // Prevent orphan file: the DB row never made it in.
+                _fileStorage.Delete(savedFilePath);
+                _logger.LogError(ex,
+                    "Database error creating notice '{Title}' for department {DeptId}",
+                    model.Title, model.DeptId);
+                ModelState.AddModelError(string.Empty, "Unable to save the notice. Please try again.");
+                await LoadDepartments(model, isAdmin, currentUser?.DeptId);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _fileStorage.Delete(savedFilePath);
+                _logger.LogError(ex,
+                    "Unexpected error creating notice '{Title}' for department {DeptId}",
+                    model.Title, model.DeptId);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDepartments(model, isAdmin, currentUser?.DeptId);
+                return View("Form", model);
+            }
         }
 
         // ── EDIT GET ──────────────────────────────────────
@@ -180,10 +219,8 @@ namespace GECPatan.Admin.Controllers
             var notice = await _context.DeptNotices.FindAsync(id);
             if (notice == null) return NotFound();
 
-            // HOD/Faculty can only edit their dept
             var currentUser = await GetCurrentUserAsync();
-            bool isAdmin = User.IsInRole("SuperAdmin") ||
-                              User.IsInRole("Principal");
+            bool isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Principal");
 
             if (!isAdmin && currentUser?.DeptId != notice.DeptId)
                 return Forbid();
@@ -210,13 +247,17 @@ namespace GECPatan.Admin.Controllers
         // ── EDIT POST ─────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(
-            int id, DeptNoticeFormVM model, IFormFile? AttachFile)
+        public async Task<IActionResult> Edit(int id, DeptNoticeFormVM model, IFormFile? AttachFile)
         {
             ViewData["Title"] = "Edit Notice";
             var currentUser = await GetCurrentUserAsync();
-            bool isAdmin = User.IsInRole("SuperAdmin") ||
-                                User.IsInRole("Principal");
+            bool isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Principal");
+
+            var notice = await _context.DeptNotices.FindAsync(id);
+            if (notice == null) return NotFound();
+
+            if (!isAdmin && currentUser?.DeptId != notice.DeptId)
+                return Forbid();
 
             ValidateForm(model, AttachFile);
             if (!ModelState.IsValid)
@@ -225,78 +266,162 @@ namespace GECPatan.Admin.Controllers
                 return View("Form", model);
             }
 
-            var notice = await _context.DeptNotices.FindAsync(id);
-            if (notice == null) return NotFound();
+            string? newFilePath = null;
+            bool replacingFile = AttachFile != null && AttachFile.Length > 0 &&
+                                   model.FileType != "None" && model.FileType != "Link";
 
-            if (!isAdmin && currentUser?.DeptId != notice.DeptId)
-                return Forbid();
+            if (replacingFile)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(
+                    AttachFile, NoticesFolder, GetCategoryForFileType(model.FileType));
+
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError("AttachFile", uploadResult.ErrorMessage!);
+                    await LoadDepartments(model, isAdmin, currentUser?.DeptId);
+                    return View("Form", model);
+                }
+
+                newFilePath = uploadResult.RelativePath;
+            }
+
+            string? previousFilePath = notice.FilePath;
 
             notice.Title = model.Title;
             notice.Description = model.Description;
             notice.FileType = model.FileType;
-            notice.ExternalLink = model.FileType == "Link"
-                ? model.ExternalLink : null;
+            notice.ExternalLink = model.FileType == "Link" ? model.ExternalLink : null;
             notice.ValidFrom = model.ValidFrom;
             notice.ValidTo = model.ValidTo;
             notice.IsVisible = model.IsVisible;
             notice.DisplayOrder = model.DisplayOrder;
 
-            if (AttachFile != null && AttachFile.Length > 0 &&
-                model.FileType != "None" && model.FileType != "Link")
-            {
-                DeleteFile(notice.FilePath);
-                notice.FilePath = await SaveFileAsync(AttachFile, "notices");
-            }
+            if (replacingFile)
+                notice.FilePath = newFilePath;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"Notice '{notice.Title}' updated.";
-            return RedirectToAction(nameof(Index),
-                new { deptId = notice.DeptId });
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Only remove the old file once the new state is safely persisted,
+                // so a failed save never leaves the notice pointing at a deleted file.
+                if (replacingFile)
+                    _fileStorage.Delete(previousFilePath);
+
+                _logger.LogInformation("Notice {NoticeId} '{Title}' updated by {User}",
+                    notice.Id, notice.Title, User.Identity?.Name ?? "Admin");
+
+                TempData["Success"] = $"Notice '{notice.Title}' updated.";
+                return RedirectToAction(nameof(Index), new { deptId = notice.DeptId });
+            }
+            catch (DbUpdateException ex)
+            {
+                // Prevent orphan file: DB update failed, so discard the newly uploaded file
+                // and leave the previously-saved file untouched.
+                if (replacingFile)
+                    _fileStorage.Delete(newFilePath);
+
+                _logger.LogError(ex, "Database error updating notice {NoticeId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the notice. Please try again.");
+                await LoadDepartments(model, isAdmin, currentUser?.DeptId);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                if (replacingFile)
+                    _fileStorage.Delete(newFilePath);
+
+                _logger.LogError(ex, "Unexpected error updating notice {NoticeId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDepartments(model, isAdmin, currentUser?.DeptId);
+                return View("Form", model);
+            }
         }
 
         // ── TOGGLE VISIBLE ────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var notice = await _context.DeptNotices.FindAsync(id);
             if (notice == null) return NotFound();
+
+            var currentUser = await GetCurrentUserAsync();
+            bool isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Principal");
+
+            if (!isAdmin && currentUser?.DeptId != notice.DeptId)
+                return Forbid();
+
             notice.IsVisible = !notice.IsVisible;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"'{notice.Title}' "
-                + (notice.IsVisible ? "shown" : "hidden") + ".";
-            return RedirectToAction(nameof(Index),
-                new { deptId = notice.DeptId });
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Notice {NoticeId} visibility set to {IsVisible} by {User}",
+                    notice.Id, notice.IsVisible, User.Identity?.Name ?? "Admin");
+                TempData["Success"] = $"'{notice.Title}' " + (notice.IsVisible ? "shown" : "hidden") + ".";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for notice {NoticeId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
+            return RedirectToAction(nameof(Index), new { deptId = notice.DeptId });
         }
 
         // ── DELETE ────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var notice = await _context.DeptNotices.FindAsync(id);
             if (notice == null) return NotFound();
 
             var currentUser = await GetCurrentUserAsync();
-            bool isAdmin = User.IsInRole("SuperAdmin") ||
-                              User.IsInRole("Principal");
+            bool isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Principal");
 
             if (!isAdmin && currentUser?.DeptId != notice.DeptId)
                 return Forbid();
 
             int deptId = notice.DeptId;
-            DeleteFile(notice.FilePath);
+            string? filePath = notice.FilePath;
             notice.IsDeleted = true;
-            await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Notice '{notice.Title}' deleted.";
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Only remove the physical file once the soft-delete is committed,
+                // so a failed save never leaves an orphaned "deleted" file reference.
+                _fileStorage.Delete(filePath);
+
+                _logger.LogInformation("Notice {NoticeId} '{Title}' deleted by {User}",
+                    notice.Id, notice.Title, User.Identity?.Name ?? "Admin");
+                TempData["Success"] = $"Notice '{notice.Title}' deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting notice {NoticeId}", id);
+                TempData["Error"] = "Unable to delete the notice. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index), new { deptId });
         }
 
         // ── REORDER ───────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reorder(int id, string dir)
         {
             var notice = await _context.DeptNotices.FindAsync(id);
             if (notice == null) return NotFound();
+
+            var currentUser = await GetCurrentUserAsync();
+            bool isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Principal");
+
+            if (!isAdmin && currentUser?.DeptId != notice.DeptId)
+                return Forbid();
 
             var siblings = await _context.DeptNotices
                 .Where(n => n.DeptId == notice.DeptId && !n.IsDeleted)
@@ -316,9 +441,17 @@ namespace GECPatan.Admin.Controllers
                 siblings[idx + 1].DisplayOrder--;
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index),
-                new { deptId = notice.DeptId });
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error reordering notice {NoticeId}", id);
+                TempData["Error"] = "Unable to reorder notices. Please try again.";
+            }
+
+            return RedirectToAction(nameof(Index), new { deptId = notice.DeptId });
         }
 
         // ══════════════════════════════════════════════════
@@ -326,24 +459,21 @@ namespace GECPatan.Admin.Controllers
         // ══════════════════════════════════════════════════
         private void ValidateForm(DeptNoticeFormVM m, IFormFile? file)
         {
-            if (m.ValidFrom.HasValue && m.ValidTo.HasValue
-                && m.ValidTo < m.ValidFrom)
-                ModelState.AddModelError("ValidTo",
-                    "Valid To must be after Valid From.");
+            if (m.ValidFrom.HasValue && m.ValidTo.HasValue && m.ValidTo < m.ValidFrom)
+                ModelState.AddModelError("ValidTo", "Valid To must be after Valid From.");
 
-            if (m.FileType == "Link" &&
-                string.IsNullOrWhiteSpace(m.ExternalLink))
-                ModelState.AddModelError("ExternalLink",
-                    "Please enter a URL for Link type.");
+            if (m.FileType == "Link" && string.IsNullOrWhiteSpace(m.ExternalLink))
+                ModelState.AddModelError("ExternalLink", "Please enter a URL for Link type.");
 
             if ((m.FileType == "PDF" || m.FileType == "Image") &&
                 file == null && string.IsNullOrEmpty(m.ExistingFilePath))
-                ModelState.AddModelError("AttachFile",
-                    $"Please upload a {m.FileType} file.");
+                ModelState.AddModelError("AttachFile", $"Please upload a {m.FileType} file.");
         }
 
-        private async Task LoadDepartments(
-            DeptNoticeFormVM vm, bool isAdmin, int? restrictedDeptId)
+        private static FileCategory GetCategoryForFileType(string fileType) =>
+            fileType == "Image" ? FileCategory.Image : FileCategory.Document;
+
+        private async Task LoadDepartments(DeptNoticeFormVM vm, bool isAdmin, int? restrictedDeptId)
         {
             if (isAdmin)
             {
@@ -358,51 +488,22 @@ namespace GECPatan.Admin.Controllers
             }
             else if (restrictedDeptId.HasValue)
             {
-                var dept = await _context.Departments
-                    .FindAsync(restrictedDeptId.Value);
+                var dept = await _context.Departments.FindAsync(restrictedDeptId.Value);
                 if (dept != null)
                     vm.Departments = new List<SelectListItem>
                     {
-                        new() {
-                            Value    = dept.DeptId.ToString(),
-                            Text     = dept.Name,
-                            Selected = true
-                        }
+                        new() { Value = dept.DeptId.ToString(), Text = dept.Name, Selected = true }
                     };
             }
         }
 
         private async Task<ApplicationUser?> GetCurrentUserAsync()
         {
-            var userId = User.FindFirst(
-                ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return null;
             return await _context.Users
                 .OfType<ApplicationUser>()
                 .FirstOrDefaultAsync(u => u.Id == userId);
-        }
-
-        private async Task<string> SaveFileAsync(
-            IFormFile file, string folder)
-        {
-            var uploadsFolder = Path.Combine(
-                _env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid()
-                + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
-        }
-
-        private void DeleteFile(string? filePath)
-        {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(
-                _env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath))
-                System.IO.File.Delete(fullPath);
         }
     }
 }

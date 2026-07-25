@@ -1,19 +1,25 @@
 ﻿using GECPatan.Admin.Models.ViewModels;
 using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace GECPatan.Admin.Controllers
 {
+    [Authorize(Roles = "SuperAdmin")]
     public class DisclosurePlacementController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<DisclosurePlacementController> _logger;
 
-        public DisclosurePlacementController(ApplicationDbContext context)
+        public DisclosurePlacementController(
+            ApplicationDbContext context,
+            ILogger<DisclosurePlacementController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // ── INDEX ─────────────────────────────────────────────
@@ -56,15 +62,7 @@ namespace GECPatan.Admin.Controllers
                 .OrderBy(g => g.DeptName)
                 .ToList();
 
-            ViewBag.Departments = await _context.Departments
-                .Where(d => d.IsActive)
-                .OrderBy(d => d.DisplayOrder)
-                .Select(d => new SelectListItem
-                {
-                    Value = d.DeptId.ToString(),
-                    Text = d.Name
-                }).ToListAsync();
-
+            ViewBag.Departments = await GetActiveDepartmentSelectListAsync();
             ViewBag.SelectedDeptId = deptId;
 
             return View(grouped);
@@ -95,13 +93,16 @@ namespace GECPatan.Admin.Controllers
         {
             ViewData["Title"] = "Add Placement Record";
 
+            if (!await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
             bool duplicate = await _context.DisclosurePlacements.AnyAsync(p =>
                 p.DeptId == model.DeptId &&
                 p.AcademicYear == model.AcademicYear);
 
             if (duplicate)
             {
-                ModelState.AddModelError("AcademicYear",
+                ModelState.AddModelError(nameof(model.AcademicYear),
                     "A placement record for this department and year already exists.");
             }
 
@@ -123,12 +124,35 @@ namespace GECPatan.Admin.Controllers
                 IsVisible = model.IsVisible
             };
 
-            _context.DisclosurePlacements.Add(record);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.DisclosurePlacements.Add(record);
+                await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Placement record added successfully.";
+                _logger.LogInformation(
+                    "Placement record {RecordId} created for department {DeptId}, year {AcademicYear}",
+                    record.Id, record.DeptId, record.AcademicYear);
 
-            return RedirectToAction(nameof(Index), new { deptId = model.DeptId });
+                TempData["Success"] = "Placement record added successfully.";
+                return RedirectToAction(nameof(Index), new { deptId = model.DeptId });
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex,
+                    "Database error creating placement record for department {DeptId}, year {AcademicYear}",
+                    model.DeptId, model.AcademicYear);
+                ModelState.AddModelError(string.Empty, "Unable to save the placement record. Please try again.");
+                await LoadDepartments(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Unexpected error creating placement record for department {DeptId}", model.DeptId);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDepartments(model);
+                return View("Form", model);
+            }
         }
 
         // ── EDIT GET ─────────────────────────────────────────
@@ -167,6 +191,9 @@ namespace GECPatan.Admin.Controllers
         {
             ViewData["Title"] = "Edit Placement Record";
 
+            if (!await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
             bool duplicate = await _context.DisclosurePlacements.AnyAsync(p =>
                 p.Id != id &&
                 p.DeptId == model.DeptId &&
@@ -174,7 +201,7 @@ namespace GECPatan.Admin.Controllers
 
             if (duplicate)
             {
-                ModelState.AddModelError("AcademicYear",
+                ModelState.AddModelError(nameof(model.AcademicYear),
                     "A placement record for this department and year already exists.");
             }
 
@@ -198,15 +225,42 @@ namespace GECPatan.Admin.Controllers
             record.DisplayOrder = model.DisplayOrder;
             record.IsVisible = model.IsVisible;
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Placement record updated successfully.";
+                _logger.LogInformation("Placement record {RecordId} updated", record.Id);
 
-            return RedirectToAction(nameof(Index), new { deptId = record.DeptId });
+                TempData["Success"] = "Placement record updated successfully.";
+                return RedirectToAction(nameof(Index), new { deptId = record.DeptId });
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogWarning(ex, "Concurrency conflict updating placement record {RecordId}", id);
+                ModelState.AddModelError(string.Empty,
+                    "This record was changed by someone else. Please reload and try again.");
+                await LoadDepartments(model);
+                return View("Form", model);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error updating placement record {RecordId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the placement record. Please try again.");
+                await LoadDepartments(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating placement record {RecordId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDepartments(model);
+                return View("Form", model);
+            }
         }
 
         // ── DELETE ───────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var record = await _context.DisclosurePlacements.FindAsync(id);
@@ -215,20 +269,33 @@ namespace GECPatan.Admin.Controllers
                 return NotFound();
 
             int deptId = record.DeptId;
-
             record.IsDeleted = true;
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Placement record deleted successfully.";
+                _logger.LogInformation("Placement record {RecordId} soft-deleted", id);
+
+                TempData["Success"] = "Placement record deleted successfully.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting placement record {RecordId}", id);
+                TempData["Error"] = "Unable to delete the placement record. Please try again.";
+            }
 
             return RedirectToAction(nameof(Index), new { deptId });
         }
 
-        // ── HELPER ───────────────────────────────────────────
+        // ── HELPERS ───────────────────────────────────────────
         private async Task LoadDepartments(DisclosurePlacementRowVM vm)
         {
-            vm.Departments = await _context.Departments
+            vm.Departments = await GetActiveDepartmentSelectListAsync();
+        }
+
+        private Task<List<SelectListItem>> GetActiveDepartmentSelectListAsync() =>
+            _context.Departments
                 .Where(d => d.IsActive)
                 .OrderBy(d => d.DisplayOrder)
                 .Select(d => new SelectListItem
@@ -236,6 +303,5 @@ namespace GECPatan.Admin.Controllers
                     Value = d.DeptId.ToString(),
                     Text = d.Name
                 }).ToListAsync();
-        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +13,18 @@ namespace GECPatan.Admin.Controllers
     public class DynamicSectionController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<DynamicSectionController> _logger;
+        private const string SectionsFolder = "sections";
 
-        public DynamicSectionController(ApplicationDbContext context, IWebHostEnvironment env)
+        public DynamicSectionController(
+            ApplicationDbContext context,
+            IFileStorageService fileStorage,
+            ILogger<DynamicSectionController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         // ── INDEX: list all sections for a page ───────────
@@ -79,6 +86,54 @@ namespace GECPatan.Admin.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
+            bool isGalleryOrFileList = model.SectionType == SectionType.ImageGallery ||
+                                        model.SectionType == SectionType.FileList;
+            bool isPdfType = model.SectionType == SectionType.PDFViewer ||
+                              model.SectionType == SectionType.PDFDownload;
+
+            // Validate & save all files up front, before touching the database,
+            // so we never end up with a half-saved section.
+            var savedPaths = new List<string>();
+
+            string? sectionFilePath = null;
+            if (UploadFile != null && UploadFile.Length > 0 && isPdfType)
+            {
+                var result = await _fileStorage.SaveAsync(UploadFile, SectionsFolder, FileCategory.Document);
+                if (!result.Success)
+                {
+                    ModelState.AddModelError(nameof(UploadFile), result.ErrorMessage!);
+                    return View(model);
+                }
+                sectionFilePath = result.RelativePath!;
+                savedPaths.Add(sectionFilePath);
+            }
+
+            var galleryFiles = new List<(string Path, string Title, string FileType)>();
+            if (isGalleryOrFileList && Request.Form.Files.Count > 0)
+            {
+                var category = model.SectionType == SectionType.ImageGallery
+                    ? FileCategory.Image : FileCategory.Document;
+                string fileType = model.SectionType == SectionType.ImageGallery ? "Image" : "PDF";
+
+                foreach (var file in Request.Form.Files)
+                {
+                    if (file.Length == 0) continue;
+
+                    var result = await _fileStorage.SaveAsync(file, SectionsFolder, category);
+                    if (!result.Success)
+                    {
+                        // Abort and clean up everything already saved in this request.
+                        foreach (var path in savedPaths) _fileStorage.Delete(path);
+                        ModelState.AddModelError(string.Empty,
+                            $"'{file.FileName}': {result.ErrorMessage}");
+                        return View(model);
+                    }
+
+                    savedPaths.Add(result.RelativePath!);
+                    galleryFiles.Add((result.RelativePath!, Path.GetFileNameWithoutExtension(file.FileName), fileType));
+                }
+            }
+
             int maxOrder = await _context.DynamicSections
                 .Where(s => s.PageType == model.PageType && s.PageId == model.PageId)
                 .Select(s => (int?)s.DisplayOrder)
@@ -92,49 +147,58 @@ namespace GECPatan.Admin.Controllers
                 PageType = model.PageType,
                 PageId = model.PageId,
                 DisplayOrder = maxOrder + 1,
-                IsVisible = true
+                IsVisible = true,
+                FilePath = sectionFilePath,
+                FileName = sectionFilePath != null ? UploadFile!.FileName : null
             };
 
-            // Handle file upload for PDF types
-            if (UploadFile != null && UploadFile.Length > 0 &&
-                (model.SectionType == SectionType.PDFViewer ||
-                 model.SectionType == SectionType.PDFDownload))
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                section.FilePath = await SaveFileAsync(UploadFile, "sections");
-                section.FileName = UploadFile.FileName;
-            }
+                _context.DynamicSections.Add(section);
+                await _context.SaveChangesAsync();
 
-            _context.DynamicSections.Add(section);
-            await _context.SaveChangesAsync();
-
-            // Handle gallery / file list uploads
-            if ((model.SectionType == SectionType.ImageGallery ||
-                 model.SectionType == SectionType.FileList) &&
-                Request.Form.Files.Count > 0)
-            {
-                int order = 0;
-                foreach (var file in Request.Form.Files)
+                foreach (var (path, title, fileType) in galleryFiles)
                 {
-                    if (file.Length > 0)
+                    _context.DynamicSectionFiles.Add(new DynamicSectionFile
                     {
-                        var path = await SaveFileAsync(file, "sections");
-                        _context.DynamicSectionFiles.Add(new DynamicSectionFile
-                        {
-                            DynamicSectionId = section.Id,
-                            FilePath = path,
-                            Title = Path.GetFileNameWithoutExtension(file.FileName),
-                            FileType = model.SectionType == SectionType.ImageGallery
-                                               ? "Image" : "PDF",
-                            DisplayOrder = order++
-                        });
-                    }
+                        DynamicSectionId = section.Id,
+                        FilePath = path,
+                        Title = title,
+                        FileType = fileType,
+                        DisplayOrder = galleryFiles.IndexOf((path, title, fileType))
+                    });
                 }
                 await _context.SaveChangesAsync();
-            }
 
-            TempData["Success"] = "Section added successfully.";
-            return RedirectToAction(nameof(Index),
-                new { pageType = model.PageType, pageId = model.PageId });
+                await transaction.CommitAsync();
+
+                _logger.LogInformation(
+                    "Section {SectionId} '{Title}' created on {PageType}/{PageId} with {FileCount} attached files",
+                    section.Id, section.Title, section.PageType, section.PageId, savedPaths.Count);
+
+                TempData["Success"] = "Section added successfully.";
+                return RedirectToAction(nameof(Index), new { pageType = model.PageType, pageId = model.PageId });
+            }
+            catch (DbUpdateException ex)
+            {
+                await transaction.RollbackAsync();
+                foreach (var path in savedPaths) _fileStorage.Delete(path);
+
+                _logger.LogError(ex, "Database error creating section '{Title}' on {PageType}/{PageId}",
+                    model.Title, model.PageType, model.PageId);
+                ModelState.AddModelError(string.Empty, "Unable to save the section. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                foreach (var path in savedPaths) _fileStorage.Delete(path);
+
+                _logger.LogError(ex, "Unexpected error creating section '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         // ── EDIT GET ──────────────────────────────────────
@@ -164,6 +228,7 @@ namespace GECPatan.Admin.Controllers
             };
 
             ViewBag.ExistingFiles = section.Files
+                .Where(f => !f.IsDeleted)
                 .OrderBy(f => f.DisplayOrder).ToList();
 
             return View(vm);
@@ -183,42 +248,94 @@ namespace GECPatan.Admin.Controllers
             var section = await _context.DynamicSections.FindAsync(id);
             if (section == null) return NotFound();
 
+            bool isPdfType = model.SectionType == SectionType.PDFViewer ||
+                              model.SectionType == SectionType.PDFDownload;
+            bool replacingFile = UploadFile != null && UploadFile.Length > 0 && isPdfType;
+
+            string? newFilePath = null;
+            if (replacingFile)
+            {
+                var result = await _fileStorage.SaveAsync(UploadFile, SectionsFolder, FileCategory.Document);
+                if (!result.Success)
+                {
+                    ModelState.AddModelError(nameof(UploadFile), result.ErrorMessage!);
+                    return View(model);
+                }
+                newFilePath = result.RelativePath!;
+            }
+
+            string? previousFilePath = section.FilePath;
+
             section.Title = model.Title;
             section.HtmlContent = model.HtmlContent;
             section.IsVisible = model.IsVisible;
 
-            if (UploadFile != null && UploadFile.Length > 0 &&
-                (model.SectionType == SectionType.PDFViewer ||
-                 model.SectionType == SectionType.PDFDownload))
+            if (replacingFile)
             {
-                DeleteFile(section.FilePath);
-                section.FilePath = await SaveFileAsync(UploadFile, "sections");
-                section.FileName = UploadFile.FileName;
+                section.FilePath = newFilePath;
+                section.FileName = UploadFile!.FileName;
             }
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Section updated.";
-            return RedirectToAction(nameof(Index),
-                new { pageType = section.PageType, pageId = section.PageId });
+                // Only remove the old file once the new state is safely persisted.
+                if (replacingFile)
+                    _fileStorage.Delete(previousFilePath);
+
+                _logger.LogInformation("Section {SectionId} updated", section.Id);
+
+                TempData["Success"] = "Section updated.";
+                return RedirectToAction(nameof(Index), new { pageType = section.PageType, pageId = section.PageId });
+            }
+            catch (DbUpdateException ex)
+            {
+                if (replacingFile)
+                    _fileStorage.Delete(newFilePath);
+
+                _logger.LogError(ex, "Database error updating section {SectionId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the section. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                if (replacingFile)
+                    _fileStorage.Delete(newFilePath);
+
+                _logger.LogError(ex, "Unexpected error updating section {SectionId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         // ── TOGGLE VISIBLE ────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var section = await _context.DynamicSections.FindAsync(id);
             if (section == null) return NotFound();
 
             section.IsVisible = !section.IsVisible;
-            await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index),
-                new { pageType = section.PageType, pageId = section.PageId });
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Section {SectionId} visibility set to {IsVisible}", id, section.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for section {SectionId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
+            return RedirectToAction(nameof(Index), new { pageType = section.PageType, pageId = section.PageId });
         }
 
         // ── DELETE ────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var section = await _context.DynamicSections
@@ -229,55 +346,95 @@ namespace GECPatan.Admin.Controllers
 
             var pageType = section.PageType;
             var pageId = section.PageId;
-
-            // Delete associated files
-            DeleteFile(section.FilePath);
-            foreach (var f in section.Files)
-                DeleteFile(f.FilePath);
+            var filePathsToDelete = new List<string?> { section.FilePath };
+            filePathsToDelete.AddRange(section.Files.Select(f => f.FilePath));
 
             section.IsDeleted = true;
-            await _context.SaveChangesAsync();
+            foreach (var f in section.Files)
+                f.IsDeleted = true;
 
-            TempData["Success"] = "Section deleted.";
-            return RedirectToAction(nameof(Index),
-                new { pageType, pageId });
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Physical files are removed only after the soft-delete is committed.
+                foreach (var path in filePathsToDelete)
+                    _fileStorage.Delete(path);
+
+                _logger.LogInformation("Section {SectionId} deleted with {FileCount} attached files",
+                    id, filePathsToDelete.Count(p => !string.IsNullOrEmpty(p)));
+
+                TempData["Success"] = "Section deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting section {SectionId}", id);
+                TempData["Error"] = "Unable to delete the section. Please try again.";
+            }
+
+            return RedirectToAction(nameof(Index), new { pageType, pageId });
         }
 
         // ── REORDER (AJAX) ────────────────────────────────
         [HttpPost]
-        public async Task<IActionResult> SaveOrder(
-            [FromBody] List<ReorderItem> items)
+        public async Task<IActionResult> SaveOrder([FromBody] List<ReorderItem> items)
         {
-            foreach (var item in items)
+            if (items == null || items.Count == 0)
+                return BadRequest();
+
+            try
             {
-                var section = await _context.DynamicSections.FindAsync(item.Id);
-                if (section != null)
-                    section.DisplayOrder = item.Order;
+                var ids = items.Select(i => i.Id).ToList();
+                var sections = await _context.DynamicSections
+                    .Where(s => ids.Contains(s.Id))
+                    .ToListAsync();
+
+                var orderById = items.ToDictionary(i => i.Id, i => i.Order);
+                foreach (var section in sections)
+                    section.DisplayOrder = orderById[section.Id];
+
+                await _context.SaveChangesAsync();
+                return Ok();
             }
-            await _context.SaveChangesAsync();
-            return Ok();
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error saving section order");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         // ── DELETE FILE FROM GALLERY ──────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFile(int fileId)
         {
             var file = await _context.DynamicSectionFiles.FindAsync(fileId);
             if (file == null) return NotFound();
 
             int sectionId = file.DynamicSectionId;
-            var section = await _context.DynamicSections.FindAsync(sectionId);
-
-            DeleteFile(file.FilePath);
+            string? filePath = file.FilePath;
             file.IsDeleted = true;
-            await _context.SaveChangesAsync();
 
-            TempData["Success"] = "File removed.";
+            try
+            {
+                await _context.SaveChangesAsync();
+                _fileStorage.Delete(filePath);
+
+                _logger.LogInformation("File {FileId} removed from section {SectionId}", fileId, sectionId);
+                TempData["Success"] = "File removed.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error removing file {FileId} from section {SectionId}", fileId, sectionId);
+                TempData["Error"] = "Unable to remove the file. Please try again.";
+            }
+
             return RedirectToAction(nameof(Edit), new { id = sectionId });
         }
 
         // ── ADD FILES TO EXISTING SECTION ─────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddFiles(int sectionId)
         {
             var section = await _context.DynamicSections
@@ -286,28 +443,64 @@ namespace GECPatan.Admin.Controllers
 
             if (section == null) return NotFound();
 
-            int order = section.Files.Any()
-                ? section.Files.Max(f => f.DisplayOrder) + 1 : 0;
+            if (Request.Form.Files.Count == 0)
+            {
+                TempData["Error"] = "No files were selected.";
+                return RedirectToAction(nameof(Edit), new { id = sectionId });
+            }
+
+            var category = section.SectionType == SectionType.ImageGallery
+                ? FileCategory.Image : FileCategory.Document;
+            string fileType = section.SectionType == SectionType.ImageGallery ? "Image" : "PDF";
+
+            var savedPaths = new List<string>();
+            var newFiles = new List<(string Path, string Title)>();
 
             foreach (var file in Request.Form.Files)
             {
-                if (file.Length > 0)
+                if (file.Length == 0) continue;
+
+                var result = await _fileStorage.SaveAsync(file, SectionsFolder, category);
+                if (!result.Success)
                 {
-                    var path = await SaveFileAsync(file, "sections");
+                    foreach (var path in savedPaths) _fileStorage.Delete(path);
+                    TempData["Error"] = $"'{file.FileName}': {result.ErrorMessage}";
+                    return RedirectToAction(nameof(Edit), new { id = sectionId });
+                }
+
+                savedPaths.Add(result.RelativePath!);
+                newFiles.Add((result.RelativePath!, Path.GetFileNameWithoutExtension(file.FileName)));
+            }
+
+            int order = section.Files.Any() ? section.Files.Max(f => f.DisplayOrder) + 1 : 0;
+
+            try
+            {
+                foreach (var (path, title) in newFiles)
+                {
                     _context.DynamicSectionFiles.Add(new DynamicSectionFile
                     {
                         DynamicSectionId = sectionId,
                         FilePath = path,
-                        Title = Path.GetFileNameWithoutExtension(file.FileName),
-                        FileType = section.SectionType == SectionType.ImageGallery
-                                           ? "Image" : "PDF",
+                        Title = title,
+                        FileType = fileType,
                         DisplayOrder = order++
                     });
                 }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("{Count} file(s) added to section {SectionId}", newFiles.Count, sectionId);
+                TempData["Success"] = "Files added.";
+            }
+            catch (DbUpdateException ex)
+            {
+                foreach (var path in savedPaths) _fileStorage.Delete(path);
+
+                _logger.LogError(ex, "Database error adding files to section {SectionId}", sectionId);
+                TempData["Error"] = "Unable to save the uploaded files. Please try again.";
             }
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Files added.";
             return RedirectToAction(nameof(Edit), new { id = sectionId });
         }
 
@@ -335,25 +528,6 @@ namespace GECPatan.Admin.Controllers
                 return comm?.Title ?? "Unknown";
             }
             return $"Page {pageId}";
-        }
-
-        private async Task<string> SaveFileAsync(IFormFile file, string folder)
-        {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
-        }
-
-        private void DeleteFile(string? filePath)
-        {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath))
-                System.IO.File.Delete(fullPath);
         }
     }
 
