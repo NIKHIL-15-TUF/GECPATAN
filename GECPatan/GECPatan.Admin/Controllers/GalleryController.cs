@@ -1,5 +1,6 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +12,18 @@ namespace GECPatan.Admin.Controllers
     public class GalleryController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<GalleryController> _logger;
+        private const string GalleryFolder = "gallery";
 
-        public GalleryController(ApplicationDbContext context, IWebHostEnvironment env)
+        public GalleryController(
+            ApplicationDbContext context,
+            IFileStorageService fileStorage,
+            ILogger<GalleryController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index(string? category)
@@ -54,65 +61,124 @@ namespace GECPatan.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Upload(string? category, string? caption)
         {
+            if (Request.Form.Files.Count == 0)
+            {
+                TempData["Error"] = "Please choose at least one image to upload.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Validate & save every file first. If any file fails validation,
+            // discard everything saved so far in this batch rather than
+            // uploading a partial set with a silent skip.
+            var savedPaths = new List<string>();
+            var newImages = new List<GalleryImage>();
+
             int order = await _context.GalleryImages
                 .Select(g => (int?)g.DisplayOrder).MaxAsync() ?? -1;
 
             foreach (var file in Request.Form.Files)
             {
-                if (file.Length > 0)
-                {
-                    var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "gallery");
-                    Directory.CreateDirectory(uploadsFolder);
-                    var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-                    var filePath = Path.Combine(uploadsFolder, fileName);
-                    using var stream = new FileStream(filePath, FileMode.Create);
-                    await file.CopyToAsync(stream);
+                if (file.Length == 0) continue;
 
-                    _context.GalleryImages.Add(new GalleryImage
-                    {
-                        Caption = string.IsNullOrEmpty(caption)
-                                       ? Path.GetFileNameWithoutExtension(file.FileName)
-                                       : caption,
-                        Category = category,
-                        ImagePath = $"/uploads/gallery/{fileName}",
-                        IsVisible = true,
-                        DisplayOrder = ++order
-                    });
+                var uploadResult = await _fileStorage.SaveAsync(file, GalleryFolder, FileCategory.Image);
+                if (!uploadResult.Success)
+                {
+                    foreach (var path in savedPaths) _fileStorage.Delete(path);
+
+                    _logger.LogWarning(
+                        "Gallery upload rejected file '{FileName}': {Reason}",
+                        file.FileName, uploadResult.ErrorMessage);
+
+                    TempData["Error"] = $"'{file.FileName}': {uploadResult.ErrorMessage}";
+                    return RedirectToAction(nameof(Index));
                 }
+
+                savedPaths.Add(uploadResult.RelativePath!);
+                newImages.Add(new GalleryImage
+                {
+                    Caption = string.IsNullOrEmpty(caption)
+                        ? Path.GetFileNameWithoutExtension(file.FileName)
+                        : caption,
+                    Category = category,
+                    ImagePath = uploadResult.RelativePath,
+                    IsVisible = true,
+                    DisplayOrder = ++order
+                });
             }
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Images uploaded.";
+            try
+            {
+                _context.GalleryImages.AddRange(newImages);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("{Count} gallery image(s) uploaded to category '{Category}'",
+                    newImages.Count, category ?? "(none)");
+
+                TempData["Success"] = $"{newImages.Count} image(s) uploaded.";
+            }
+            catch (DbUpdateException ex)
+            {
+                foreach (var path in savedPaths) _fileStorage.Delete(path);
+
+                _logger.LogError(ex, "Database error saving {Count} uploaded gallery image(s)", newImages.Count);
+                TempData["Error"] = "Unable to save the uploaded images. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var g = await _context.GalleryImages.FindAsync(id);
             if (g == null) return NotFound();
+
             g.IsVisible = !g.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Gallery image {ImageId} visibility set to {IsVisible}", id, g.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for gallery image {ImageId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var g = await _context.GalleryImages.FindAsync(id);
             if (g == null) return NotFound();
 
-            if (!string.IsNullOrEmpty(g.ImagePath))
+            string? imagePath = g.ImagePath;
+            g.IsDeleted = true;
+
+            try
             {
-                var fullPath = Path.Combine(_env.WebRootPath, g.ImagePath.TrimStart('/'));
-                if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
+                await _context.SaveChangesAsync();
+
+                // Physical file removed only after the soft-delete commits.
+                _fileStorage.Delete(imagePath);
+
+                _logger.LogInformation("Gallery image {ImageId} deleted", id);
+                TempData["Success"] = "Image deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting gallery image {ImageId}", id);
+                TempData["Error"] = "Unable to delete the image. Please try again.";
             }
 
-            g.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Image deleted.";
             return RedirectToAction(nameof(Index));
         }
     }

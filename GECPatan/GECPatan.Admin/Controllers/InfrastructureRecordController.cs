@@ -12,16 +12,22 @@ namespace GECPatan.Admin.Controllers
     public class InfrastructureRecordController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<InfrastructureRecordController> _logger;
 
-        private static readonly string[] RoomTypeOptions = new[]
+        private static readonly string[] RoomTypeOptions =
         {
             "Classroom", "Tutorial Room", "Laboratory",
             "Drawing Hall", "Computer Center",
             "Library & Reading Room", "Seminar Hall", "Other"
         };
 
-        public InfrastructureRecordController(ApplicationDbContext context)
-            => _context = context;
+        public InfrastructureRecordController(
+            ApplicationDbContext context,
+            ILogger<InfrastructureRecordController> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
 
         public async Task<IActionResult> Index()
         {
@@ -47,13 +53,21 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Create(InfrastructureRecordVM model)
         {
             ViewData["Title"] = "Add Infrastructure Record";
+
+            if (model.DeptId.HasValue &&
+                !await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId.Value))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
+            if (!RoomTypeOptions.Contains(model.RoomType))
+                ModelState.AddModelError(nameof(model.RoomType), "Please select a valid room type.");
+
             if (!ModelState.IsValid)
             {
                 await LoadLists(model);
                 return View("Form", model);
             }
 
-            _context.InfrastructureRecords.Add(new InfrastructureRecord
+            var record = new InfrastructureRecord
             {
                 RoomType = model.RoomType,
                 AreaSqm = model.AreaSqm,
@@ -61,11 +75,34 @@ namespace GECPatan.Admin.Controllers
                 DeptId = model.DeptId,
                 DisplayOrder = model.DisplayOrder,
                 IsVisible = model.IsVisible
-            });
-            await _context.SaveChangesAsync();
+            };
 
-            TempData["Success"] = "Infrastructure record added.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                _context.InfrastructureRecords.Add(record);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Infrastructure record {RecordId} created ({RoomType}, dept {DeptId})",
+                    record.Id, record.RoomType, record.DeptId);
+
+                TempData["Success"] = "Infrastructure record added.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error creating infrastructure record ({RoomType})", model.RoomType);
+                ModelState.AddModelError(string.Empty, "Unable to save the record. Please try again.");
+                await LoadLists(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error creating infrastructure record");
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadLists(model);
+                return View("Form", model);
+            }
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -93,6 +130,14 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Edit(int id, InfrastructureRecordVM model)
         {
             ViewData["Title"] = "Edit Infrastructure Record";
+
+            if (model.DeptId.HasValue &&
+                !await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId.Value))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
+            if (!RoomTypeOptions.Contains(model.RoomType))
+                ModelState.AddModelError(nameof(model.RoomType), "Please select a valid room type.");
+
             if (!ModelState.IsValid)
             {
                 await LoadLists(model);
@@ -109,19 +154,62 @@ namespace GECPatan.Admin.Controllers
             r.DisplayOrder = model.DisplayOrder;
             r.IsVisible = model.IsVisible;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Infrastructure record updated.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Infrastructure record {RecordId} updated", r.Id);
+
+                TempData["Success"] = "Infrastructure record updated.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogWarning(ex, "Concurrency conflict updating infrastructure record {RecordId}", id);
+                ModelState.AddModelError(string.Empty,
+                    "This record was changed by someone else. Please reload and try again.");
+                await LoadLists(model);
+                return View("Form", model);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error updating infrastructure record {RecordId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the record. Please try again.");
+                await LoadLists(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating infrastructure record {RecordId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadLists(model);
+                return View("Form", model);
+            }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var r = await _context.InfrastructureRecords.FindAsync(id);
             if (r == null) return NotFound();
+
             r.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Infrastructure record deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Infrastructure record {RecordId} soft-deleted", id);
+
+                TempData["Success"] = "Infrastructure record deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting infrastructure record {RecordId}", id);
+                TempData["Error"] = "Unable to delete the record. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 

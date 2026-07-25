@@ -1,5 +1,6 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -13,15 +14,20 @@ namespace GECPatan.Admin.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<HomeController> _logger;
+        private const string PrincipalPhotoFolder = "principal";
 
-        public HomeController(ApplicationDbContext context,
+        public HomeController(
+            ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment env)
+            IFileStorageService fileStorage,
+            ILogger<HomeController> logger)
         {
             _context = context;
             _userManager = userManager;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         // ── DASHBOARD ROUTER ──────────────────────────────
@@ -47,13 +53,11 @@ namespace GECPatan.Admin.Controllers
         }
 
         // ══════════════════════════════════════════════════
-        // SUPER ADMIN DASHBOARD (existing)
+        // SUPER ADMIN DASHBOARD
         // ══════════════════════════════════════════════════
-        private async Task<IActionResult> AdminDashboard(
-            ApplicationUser? user)
+        private async Task<IActionResult> AdminDashboard(ApplicationUser? user)
         {
             ViewData["Title"] = "Dashboard";
-            var now = DateTime.Now;
 
             var vm = new DashboardVM
             {
@@ -87,8 +91,7 @@ namespace GECPatan.Admin.Controllers
                 .OfType<ApplicationUser>()
                 .CountAsync(u => u.MustChangePassword && u.IsActive);
             if (pendingPwd > 0)
-                vm.Alerts.Add(
-                    $"{pendingPwd} user(s) haven't changed their password yet.");
+                vm.Alerts.Add($"{pendingPwd} user(s) haven't changed their password yet.");
 
             return View("Dashboard/Admin", vm);
         }
@@ -96,8 +99,7 @@ namespace GECPatan.Admin.Controllers
         // ══════════════════════════════════════════════════
         // PRINCIPAL DASHBOARD
         // ══════════════════════════════════════════════════
-        private async Task<IActionResult> PrincipalDashboard(
-            ApplicationUser? user)
+        private async Task<IActionResult> PrincipalDashboard(ApplicationUser? user)
         {
             ViewData["Title"] = "Principal Dashboard";
 
@@ -149,8 +151,7 @@ namespace GECPatan.Admin.Controllers
         // ══════════════════════════════════════════════════
         // HOD DASHBOARD
         // ══════════════════════════════════════════════════
-        private async Task<IActionResult> HodDashboard(
-            ApplicationUser? user)
+        private async Task<IActionResult> HodDashboard(ApplicationUser? user)
         {
             ViewData["Title"] = "HOD Dashboard";
 
@@ -170,10 +171,8 @@ namespace GECPatan.Admin.Controllers
                 .Select(p => new { p.Intake, p.IntakeYear })
                 .FirstOrDefaultAsync();
 
-            var labCount = await _context.Labs
-                .CountAsync(l => l.DeptId == deptId);
-            var facultyCount = await _context.Faculties
-                .CountAsync(f => f.DeptId == deptId && f.IsActive);
+            var labCount = await _context.Labs.CountAsync(l => l.DeptId == deptId);
+            var facultyCount = await _context.Faculties.CountAsync(f => f.DeptId == deptId && f.IsActive);
 
             var recentFaculty = await _context.Faculties
                 .Where(f => f.DeptId == deptId)
@@ -212,8 +211,7 @@ namespace GECPatan.Admin.Controllers
         // ══════════════════════════════════════════════════
         // FACULTY DASHBOARD
         // ══════════════════════════════════════════════════
-        private async Task<IActionResult> FacultyDashboard(
-            ApplicationUser? user)
+        private async Task<IActionResult> FacultyDashboard(ApplicationUser? user)
         {
             ViewData["Title"] = "My Profile";
 
@@ -268,37 +266,27 @@ namespace GECPatan.Admin.Controllers
         // ══════════════════════════════════════════════════
         // CONTENT EDITOR DASHBOARD
         // ══════════════════════════════════════════════════
-        private async Task<IActionResult> ContentEditorDashboard(
-            ApplicationUser? user)
+        private async Task<IActionResult> ContentEditorDashboard(ApplicationUser? user)
         {
             ViewData["Title"] = "My Content Page";
 
-            // No page assigned
             if (user?.ContentPageId == null)
-            {
-                return View("Dashboard/ContentEditor",
-                    new ContentEditorDashboardVM());
-            }
+                return View("Dashboard/ContentEditor", new ContentEditorDashboardVM());
 
-            var page = await _context.ContentPages
-                .FindAsync(user.ContentPageId.Value);
+            var page = await _context.ContentPages.FindAsync(user.ContentPageId.Value);
 
             if (page == null)
-            {
-                return View("Dashboard/ContentEditor",
-                    new ContentEditorDashboardVM());
-            }
+                return View("Dashboard/ContentEditor", new ContentEditorDashboardVM());
 
-            return View("Dashboard/ContentEditor",
-                new ContentEditorDashboardVM
-                {
-                    PageId = page.Id,
-                    PageTitle = page.Title,
-                    PageSlug = page.Slug,
-                    IsPublished = page.IsVisible,
-                    ContentPreview = page.HtmlContent,
-                    LastUpdated = page.UpdatedDate
-                });
+            return View("Dashboard/ContentEditor", new ContentEditorDashboardVM
+            {
+                PageId = page.Id,
+                PageTitle = page.Title,
+                PageSlug = page.Slug,
+                IsPublished = page.IsVisible,
+                ContentPreview = page.HtmlContent,
+                LastUpdated = page.UpdatedDate
+            });
         }
 
         // ══════════════════════════════════════════════════
@@ -340,8 +328,7 @@ namespace GECPatan.Admin.Controllers
         // ══════════════════════════════════════════════════
         // COMMITTEE HEAD DASHBOARD
         // ══════════════════════════════════════════════════
-        private async Task<IActionResult> CommitteeHeadDashboard(
-            ApplicationUser? user)
+        private async Task<IActionResult> CommitteeHeadDashboard(ApplicationUser? user)
         {
             ViewData["Title"] = "Committee Dashboard";
 
@@ -356,11 +343,8 @@ namespace GECPatan.Admin.Controllers
             if (committee == null)
                 return View("Dashboard/NoCommitteeAssigned");
 
-            var memberCount = await _context.CommitteeMembers
-                .CountAsync(m => m.CommitteeId == commId);
-
-            var activityCount = await _context.Activities
-                .CountAsync(a => a.CommitteeId == commId);
+            var memberCount = await _context.CommitteeMembers.CountAsync(m => m.CommitteeId == commId);
+            var activityCount = await _context.Activities.CountAsync(a => a.CommitteeId == commId);
 
             var recentActivities = await _context.Activities
                 .Where(a => a.CommitteeId == commId)
@@ -392,8 +376,7 @@ namespace GECPatan.Admin.Controllers
         private Task<IActionResult> GrievanceDashboard()
         {
             ViewData["Title"] = "Grievance Dashboard";
-            return Task.FromResult<IActionResult>(
-                View("Dashboard/GrievanceCoordinator"));
+            return Task.FromResult<IActionResult>(View("Dashboard/GrievanceCoordinator"));
         }
 
         // ── HOME PAGE SETTINGS ────────────────────────────
@@ -401,24 +384,29 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> HomePageSettings()
         {
             ViewData["Title"] = "Home Page Settings";
+
+            var settings = await _context.SiteSettings
+                .Where(s => SettingKeys.All.Contains(s.Key))
+                .ToDictionaryAsync(s => s.Key, s => s.Value);
+
             var vm = new HomePageSettingsVM
             {
-                Vision = await GetSetting("HomePage.Vision"),
-                Mission = await GetSetting("HomePage.Mission"),
-                PrincipalName = await GetSetting("Principal.Name"),
-                PrincipalDesignation = await GetSetting("Principal.Designation"),
-                PrincipalMessage = await GetSetting("Principal.Message"),
-                ExistingPrincipalPhoto = await GetSetting("Principal.Photo"),
-                EstablishedYear = await GetSetting("College.EstablishedYear"),
-                CollegeTagline = await GetSetting("College.Tagline"),
-                FacebookUrl = await GetSetting("Social.Facebook"),
-                TwitterUrl = await GetSetting("Social.Twitter"),
-                YouTubeUrl = await GetSetting("Social.YouTube"),
-                LinkedInUrl = await GetSetting("Social.LinkedIn"),
-                InstagramUrl = await GetSetting("Social.Instagram"),
-                Phone = await GetSetting("Contact.Phone"),
-                Email = await GetSetting("Contact.Email"),
-                Address = await GetSetting("Contact.Address")
+                Vision = settings.GetValueOrDefault(SettingKeys.Vision),
+                Mission = settings.GetValueOrDefault(SettingKeys.Mission),
+                PrincipalName = settings.GetValueOrDefault(SettingKeys.PrincipalName),
+                PrincipalDesignation = settings.GetValueOrDefault(SettingKeys.PrincipalDesignation),
+                PrincipalMessage = settings.GetValueOrDefault(SettingKeys.PrincipalMessage),
+                ExistingPrincipalPhoto = settings.GetValueOrDefault(SettingKeys.PrincipalPhoto),
+                EstablishedYear = settings.GetValueOrDefault(SettingKeys.EstablishedYear),
+                CollegeTagline = settings.GetValueOrDefault(SettingKeys.CollegeTagline),
+                FacebookUrl = settings.GetValueOrDefault(SettingKeys.Facebook),
+                TwitterUrl = settings.GetValueOrDefault(SettingKeys.Twitter),
+                YouTubeUrl = settings.GetValueOrDefault(SettingKeys.YouTube),
+                LinkedInUrl = settings.GetValueOrDefault(SettingKeys.LinkedIn),
+                InstagramUrl = settings.GetValueOrDefault(SettingKeys.Instagram),
+                Phone = settings.GetValueOrDefault(SettingKeys.Phone),
+                Email = settings.GetValueOrDefault(SettingKeys.Email),
+                Address = settings.GetValueOrDefault(SettingKeys.Address)
             };
             return View(vm);
         }
@@ -426,65 +414,99 @@ namespace GECPatan.Admin.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "SuperAdmin,Principal")]
-        public async Task<IActionResult> HomePageSettings(
-            HomePageSettingsVM model, IFormFile? PrincipalPhoto)
+        public async Task<IActionResult> HomePageSettings(HomePageSettingsVM model, IFormFile? PrincipalPhoto)
         {
             ViewData["Title"] = "Home Page Settings";
-            if (PrincipalPhoto != null && PrincipalPhoto.Length > 0)
+
+            string? newPhotoPath = null;
+            bool replacingPhoto = PrincipalPhoto != null && PrincipalPhoto.Length > 0;
+
+            if (replacingPhoto)
             {
-                var uploadsFolder = Path.Combine(
-                    _env.WebRootPath, "uploads", "principal");
-                Directory.CreateDirectory(uploadsFolder);
-                var fileName = "principal"
-                    + Path.GetExtension(PrincipalPhoto.FileName);
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await PrincipalPhoto.CopyToAsync(stream);
-                await SaveSetting("Principal.Photo",
-                    $"/uploads/principal/{fileName}");
+                var uploadResult = await _fileStorage.SaveAsync(PrincipalPhoto!, PrincipalPhotoFolder, FileCategory.Image);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(PrincipalPhoto), uploadResult.ErrorMessage!);
+                    return View(model);
+                }
+                newPhotoPath = uploadResult.RelativePath;
             }
-            await SaveSetting("HomePage.Vision", model.Vision ?? "");
-            await SaveSetting("HomePage.Mission", model.Mission ?? "");
-            await SaveSetting("Principal.Name", model.PrincipalName ?? "");
-            await SaveSetting("Principal.Designation", model.PrincipalDesignation ?? "");
-            await SaveSetting("Principal.Message", model.PrincipalMessage ?? "");
-            await SaveSetting("College.EstablishedYear", model.EstablishedYear ?? "");
-            await SaveSetting("College.Tagline", model.CollegeTagline ?? "");
-            await SaveSetting("Social.Facebook", model.FacebookUrl ?? "");
-            await SaveSetting("Social.Twitter", model.TwitterUrl ?? "");
-            await SaveSetting("Social.YouTube", model.YouTubeUrl ?? "");
-            await SaveSetting("Social.LinkedIn", model.LinkedInUrl ?? "");
-            await SaveSetting("Social.Instagram", model.InstagramUrl ?? "");
-            await SaveSetting("Contact.Phone", model.Phone ?? "");
-            await SaveSetting("Contact.Email", model.Email ?? "");
-            await SaveSetting("Contact.Address", model.Address ?? "");
-            TempData["Success"] = "Home page settings saved.";
-            return RedirectToAction(nameof(HomePageSettings));
+
+            try
+            {
+                string? previousPhotoPath = null;
+
+                var existing = await _context.SiteSettings
+                    .Where(s => SettingKeys.All.Contains(s.Key))
+                    .ToDictionaryAsync(s => s.Key, s => s);
+
+                void Upsert(string key, string value)
+                {
+                    if (existing.TryGetValue(key, out var setting))
+                        setting.Value = value;
+                    else
+                        _context.SiteSettings.Add(new SiteSetting
+                        {
+                            Key = key,
+                            Value = value,
+                            Group = key.Split('.')[0]
+                        });
+                }
+
+                if (replacingPhoto)
+                {
+                    previousPhotoPath = existing.GetValueOrDefault(SettingKeys.PrincipalPhoto)?.Value;
+                    Upsert(SettingKeys.PrincipalPhoto, newPhotoPath!);
+                }
+
+                Upsert(SettingKeys.Vision, model.Vision ?? "");
+                Upsert(SettingKeys.Mission, model.Mission ?? "");
+                Upsert(SettingKeys.PrincipalName, model.PrincipalName ?? "");
+                Upsert(SettingKeys.PrincipalDesignation, model.PrincipalDesignation ?? "");
+                Upsert(SettingKeys.PrincipalMessage, model.PrincipalMessage ?? "");
+                Upsert(SettingKeys.EstablishedYear, model.EstablishedYear ?? "");
+                Upsert(SettingKeys.CollegeTagline, model.CollegeTagline ?? "");
+                Upsert(SettingKeys.Facebook, model.FacebookUrl ?? "");
+                Upsert(SettingKeys.Twitter, model.TwitterUrl ?? "");
+                Upsert(SettingKeys.YouTube, model.YouTubeUrl ?? "");
+                Upsert(SettingKeys.LinkedIn, model.LinkedInUrl ?? "");
+                Upsert(SettingKeys.Instagram, model.InstagramUrl ?? "");
+                Upsert(SettingKeys.Phone, model.Phone ?? "");
+                Upsert(SettingKeys.Email, model.Email ?? "");
+                Upsert(SettingKeys.Address, model.Address ?? "");
+
+                await _context.SaveChangesAsync();
+
+                // Old photo removed only after the new settings are safely persisted.
+                if (replacingPhoto)
+                    _fileStorage.Delete(previousPhotoPath);
+
+                _logger.LogInformation("Home page settings updated by {User}", User.Identity?.Name ?? "Admin");
+
+                TempData["Success"] = "Home page settings saved.";
+                return RedirectToAction(nameof(HomePageSettings));
+            }
+            catch (DbUpdateException ex)
+            {
+                if (replacingPhoto)
+                    _fileStorage.Delete(newPhotoPath);
+
+                _logger.LogError(ex, "Database error saving home page settings");
+                ModelState.AddModelError(string.Empty, "Unable to save the settings. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                if (replacingPhoto)
+                    _fileStorage.Delete(newPhotoPath);
+
+                _logger.LogError(ex, "Unexpected error saving home page settings");
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         // ── HELPERS ───────────────────────────────────────
-        private async Task<string?> GetSetting(string key)
-        {
-            var s = await _context.SiteSettings
-                .FirstOrDefaultAsync(x => x.Key == key);
-            return s?.Value;
-        }
-
-        private async Task SaveSetting(string key, string value)
-        {
-            var s = await _context.SiteSettings
-                .FirstOrDefaultAsync(x => x.Key == key);
-            if (s == null)
-                _context.SiteSettings.Add(new SiteSetting
-                {
-                    Key = key,
-                    Value = value,
-                    Group = key.Split('.')[0]
-                });
-            else s.Value = value;
-            await _context.SaveChangesAsync();
-        }
-
         private static string GetTimeAgo(DateTime dt)
         {
             var diff = DateTime.Now - dt;
@@ -493,6 +515,33 @@ namespace GECPatan.Admin.Controllers
             if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
             if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
             return dt.ToString("dd MMM");
+        }
+
+        private static class SettingKeys
+        {
+            public const string Vision = "HomePage.Vision";
+            public const string Mission = "HomePage.Mission";
+            public const string PrincipalName = "Principal.Name";
+            public const string PrincipalDesignation = "Principal.Designation";
+            public const string PrincipalMessage = "Principal.Message";
+            public const string PrincipalPhoto = "Principal.Photo";
+            public const string EstablishedYear = "College.EstablishedYear";
+            public const string CollegeTagline = "College.Tagline";
+            public const string Facebook = "Social.Facebook";
+            public const string Twitter = "Social.Twitter";
+            public const string YouTube = "Social.YouTube";
+            public const string LinkedIn = "Social.LinkedIn";
+            public const string Instagram = "Social.Instagram";
+            public const string Phone = "Contact.Phone";
+            public const string Email = "Contact.Email";
+            public const string Address = "Contact.Address";
+
+            public static readonly string[] All =
+            {
+                Vision, Mission, PrincipalName, PrincipalDesignation, PrincipalMessage,
+                PrincipalPhoto, EstablishedYear, CollegeTagline, Facebook, Twitter,
+                YouTube, LinkedIn, Instagram, Phone, Email, Address
+            };
         }
     }
 }

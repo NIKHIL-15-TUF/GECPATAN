@@ -12,9 +12,13 @@ namespace GECPatan.Admin.Controllers
     public class FacultyTurnoverController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<FacultyTurnoverController> _logger;
 
-        public FacultyTurnoverController(ApplicationDbContext context)
-            => _context = context;
+        public FacultyTurnoverController(ApplicationDbContext context, ILogger<FacultyTurnoverController> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
 
         // ── INDEX — grouped by department ─────────────────
         public async Task<IActionResult> Index(int? deptId)
@@ -55,14 +59,7 @@ namespace GECPatan.Admin.Controllers
                 .OrderBy(g => g.DeptName)
                 .ToList();
 
-            ViewBag.Departments = await _context.Departments
-                .Where(d => d.IsActive)
-                .OrderBy(d => d.DisplayOrder)
-                .Select(d => new SelectListItem
-                {
-                    Value = d.DeptId.ToString(),
-                    Text = d.Name
-                }).ToListAsync();
+            ViewBag.Departments = await GetActiveDepartmentSelectListAsync();
             ViewBag.SelectedDeptId = deptId;
 
             return View(grouped);
@@ -89,11 +86,14 @@ namespace GECPatan.Admin.Controllers
         {
             ViewData["Title"] = "Add Faculty Turnover Record";
 
+            if (!await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
             bool duplicate = await _context.FacultyTurnoverRecords.AnyAsync(t =>
                 t.DeptId == model.DeptId &&
                 t.AcademicYear == model.AcademicYear);
             if (duplicate)
-                ModelState.AddModelError("AcademicYear",
+                ModelState.AddModelError(nameof(model.AcademicYear),
                     "A record for this department and academic year already exists.");
 
             if (!ModelState.IsValid)
@@ -102,7 +102,7 @@ namespace GECPatan.Admin.Controllers
                 return View("Form", model);
             }
 
-            _context.FacultyTurnoverRecords.Add(new FacultyTurnoverRecord
+            var record = new FacultyTurnoverRecord
             {
                 DeptId = model.DeptId,
                 AcademicYear = model.AcademicYear,
@@ -112,11 +112,37 @@ namespace GECPatan.Admin.Controllers
                 TeachingLeft = model.TeachingLeft,
                 DisplayOrder = model.DisplayOrder,
                 IsVisible = model.IsVisible
-            });
+            };
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Faculty turnover record added.";
-            return RedirectToAction(nameof(Index), new { deptId = model.DeptId });
+            try
+            {
+                _context.FacultyTurnoverRecords.Add(record);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Faculty turnover record {RecordId} created for department {DeptId}, year {AcademicYear}",
+                    record.Id, record.DeptId, record.AcademicYear);
+
+                TempData["Success"] = "Faculty turnover record added.";
+                return RedirectToAction(nameof(Index), new { deptId = model.DeptId });
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex,
+                    "Database error creating faculty turnover record for department {DeptId}, year {AcademicYear}",
+                    model.DeptId, model.AcademicYear);
+                ModelState.AddModelError(string.Empty, "Unable to save the record. Please try again.");
+                await LoadDepts(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Unexpected error creating faculty turnover record for department {DeptId}", model.DeptId);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDepts(model);
+                return View("Form", model);
+            }
         }
 
         // ── EDIT GET ──────────────────────────────────────
@@ -149,12 +175,15 @@ namespace GECPatan.Admin.Controllers
         {
             ViewData["Title"] = "Edit Faculty Turnover Record";
 
+            if (!await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
             bool duplicate = await _context.FacultyTurnoverRecords.AnyAsync(t =>
                 t.Id != id &&
                 t.DeptId == model.DeptId &&
                 t.AcademicYear == model.AcademicYear);
             if (duplicate)
-                ModelState.AddModelError("AcademicYear",
+                ModelState.AddModelError(nameof(model.AcademicYear),
                     "A record for this department and academic year already exists.");
 
             if (!ModelState.IsValid)
@@ -175,13 +204,42 @@ namespace GECPatan.Admin.Controllers
             t.DisplayOrder = model.DisplayOrder;
             t.IsVisible = model.IsVisible;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Faculty turnover record updated.";
-            return RedirectToAction(nameof(Index), new { deptId = t.DeptId });
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Faculty turnover record {RecordId} updated", t.Id);
+
+                TempData["Success"] = "Faculty turnover record updated.";
+                return RedirectToAction(nameof(Index), new { deptId = t.DeptId });
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogWarning(ex, "Concurrency conflict updating faculty turnover record {RecordId}", id);
+                ModelState.AddModelError(string.Empty,
+                    "This record was changed by someone else. Please reload and try again.");
+                await LoadDepts(model);
+                return View("Form", model);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error updating faculty turnover record {RecordId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the record. Please try again.");
+                await LoadDepts(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating faculty turnover record {RecordId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDepts(model);
+                return View("Form", model);
+            }
         }
 
         // ── DELETE ────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var t = await _context.FacultyTurnoverRecords.FindAsync(id);
@@ -189,16 +247,32 @@ namespace GECPatan.Admin.Controllers
 
             int deptId = t.DeptId;
             t.IsDeleted = true;
-            await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Record deleted.";
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Faculty turnover record {RecordId} soft-deleted", id);
+
+                TempData["Success"] = "Record deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting faculty turnover record {RecordId}", id);
+                TempData["Error"] = "Unable to delete the record. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index), new { deptId });
         }
 
-        // ── HELPER ────────────────────────────────────────
+        // ── HELPERS ───────────────────────────────────────
         private async Task LoadDepts(FacultyTurnoverVM vm)
         {
-            vm.Departments = await _context.Departments
+            vm.Departments = await GetActiveDepartmentSelectListAsync();
+        }
+
+        private Task<List<SelectListItem>> GetActiveDepartmentSelectListAsync() =>
+            _context.Departments
                 .Where(d => d.IsActive)
                 .OrderBy(d => d.DisplayOrder)
                 .Select(d => new SelectListItem
@@ -206,6 +280,5 @@ namespace GECPatan.Admin.Controllers
                     Value = d.DeptId.ToString(),
                     Text = d.Name
                 }).ToListAsync();
-        }
     }
 }
