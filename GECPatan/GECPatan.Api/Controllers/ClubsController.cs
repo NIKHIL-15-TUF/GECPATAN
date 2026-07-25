@@ -32,7 +32,7 @@ namespace GECPatan.Api.Controllers
             {
                 Id = c.Id,
                 Title = c.Title,
-                CoverImage = c.Images.FirstOrDefault()?.ImagePath,
+                CoverImage = c.CoverImagePath,
                 DisplayOrder = c.DisplayOrder,
                 Link = ResolveClubLink(c)
             }).ToList();
@@ -48,7 +48,7 @@ namespace GECPatan.Api.Controllers
         {
             var c = await _context.StudentClubs
                 .Include(x => x.Images.OrderBy(i => i.DisplayOrder))
-                .Include(x => x.Members.OrderBy(m => m.DisplayOrder))
+                .Include(x => x.Members.OrderBy(m => m.DisplayOrder)).ThenInclude(m => m.Faculty).ThenInclude(f => f!.Department)
                 .Include(x => x.Objectives.OrderBy(o => o.DisplayOrder))
                 .FirstOrDefaultAsync(x => x.Id == id && x.IsVisible);
 
@@ -69,6 +69,7 @@ namespace GECPatan.Api.Controllers
                 Title = c.Title,
                 About = c.About,
                 BlogLink = c.BlogLink,
+                CoverImage = c.CoverImagePath,
                 Link = ResolveClubLink(c),
 
                 Images = c.Images.Select(img => new ClubImageDTO
@@ -78,13 +79,22 @@ namespace GECPatan.Api.Controllers
                     DisplayOrder = img.DisplayOrder
                 }).ToList(),
 
-                Members = c.Members.Select(m => new ClubMemberDTO
+                Members = c.Members
+                .Where(m => !m.IsDeleted)
+                .OrderBy(m => m.DisplayOrder)
+                .Select(m => new ClubMemberDTO
                 {
                     Id = m.Id,
-                    Name = m.Name,
+                    Name = m.MemberType == ClubMemberType.Faculty
+                        ? (m.Faculty != null ? m.Faculty.Name : "")
+                        : (m.Name ?? ""),
                     Position = m.Position,
-                    Department = m.Department,
-                    ImagePath = m.ImagePath,
+                    Department = m.MemberType == ClubMemberType.Faculty
+                        ? (m.Faculty != null && m.Faculty.Department != null ? m.Faculty.Department.Name : null)
+                        : m.Department,
+                    ImagePath = m.MemberType == ClubMemberType.Faculty
+                        ? m.Faculty?.ImagePath
+                        : m.ImagePath,
                     DisplayOrder = m.DisplayOrder
                 }).ToList(),
 

@@ -10,7 +10,7 @@
                     <i class="fas fa-users mr-2"></i>Add Student Club
                 </h3>
             </div>
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 <div class="card-body">
                     @if (!ViewData.ModelState.IsValid)
                     {
@@ -21,6 +21,18 @@
                         <input asp-for="Title" class="form-control"
                                placeholder="e.g. Code Hives, GDG on Campus" />
                         <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Cover Image</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" name="CoverImageFile"
+                                   accept="image/*"
+                                   onchange="this.nextElementSibling.textContent=this.files[0]?.name || 'Choose cover image...'" />
+                            <label class="custom-file-label">Choose cover image...</label>
+                        </div>
+                        <small class="text-muted">
+                            Shown on the Student Clubs list and at the top of the club's page.
+                        </small>
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">About</label>

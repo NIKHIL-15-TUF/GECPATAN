@@ -88,11 +88,14 @@ namespace GECPatan.Admin.Models.ViewModels
         public string? BlogLink { get; set; }
         public int DisplayOrder { get; set; } = 0;
         public bool IsVisible { get; set; } = true;
+        public IFormFile? CoverImageFile { get; set; }
     }
 
     public class StudentClubEditVM : StudentClubCreateVM
     {
         public int Id { get; set; }
+        public string? CoverImagePath { get; set; }
+
         public List<ClubImageVM> ExistingImages { get; set; } = new();
     }
 
@@ -105,16 +108,20 @@ namespace GECPatan.Admin.Models.ViewModels
         public int ClubId { get; set; }
     }
 
-    public class ClubMemberVM
+    public class ClubMemberVM : IValidatableObject
     {
         public int Id { get; set; }
+        public int ClubId { get; set; }
 
-        [Required(ErrorMessage = "Name is required")]
-        [MaxLength(200)]
-        public string Name { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Choose Student or Faculty")]
+        public string MemberType { get; set; } = "Student"; // "Student" | "Faculty"
 
+        // Faculty path
+        public int? FacultyId { get; set; }
+
+        // Student path
         [MaxLength(200)]
-        public string? Position { get; set; }
+        public string? Name { get; set; }
 
         [MaxLength(200)]
         public string? Department { get; set; }
@@ -122,7 +129,22 @@ namespace GECPatan.Admin.Models.ViewModels
         [MaxLength(200)]
         public string? Email { get; set; }
 
+        // Common — role within the club, required either way
+        [Required(ErrorMessage = "Position is required")]
+        [MaxLength(200)]
+        public string? Position { get; set; }
+
         public int DisplayOrder { get; set; } = 0;
-        public int ClubId { get; set; }
+
+        public List<SelectListItem> Faculties { get; set; } = new();
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext ctx)
+        {
+            if (MemberType == "Faculty" && (FacultyId is null or 0))
+                yield return new ValidationResult("Please select a faculty member.", new[] { nameof(FacultyId) });
+
+            if (MemberType == "Student" && string.IsNullOrWhiteSpace(Name))
+                yield return new ValidationResult("Name is required for a student member.", new[] { nameof(Name) });
+        }
     }
 }

@@ -4,6 +4,7 @@ using GECPatan.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GECPatan.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260724161132_AddStudentClubCoverImage")]
+    partial class AddStudentClubCoverImage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -897,19 +900,14 @@ namespace GECPatan.Core.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<int?>("FacultyId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("MemberType")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -929,8 +927,6 @@ namespace GECPatan.Core.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClubId");
-
-                    b.HasIndex("FacultyId");
 
                     b.ToTable("ClubMembers");
                 });
@@ -2257,9 +2253,6 @@ namespace GECPatan.Core.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("About")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BlogspotLink")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
@@ -5256,9 +5249,6 @@ namespace GECPatan.Core.Migrations
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
-                    b.Property<string>("MonthYear")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("TenderCategoryId")
                         .HasColumnType("int");
 
@@ -5666,13 +5656,7 @@ namespace GECPatan.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GECPatan.Core.Models.Domain.Faculty", "Faculty")
-                        .WithMany()
-                        .HasForeignKey("FacultyId");
-
                     b.Navigation("Club");
-
-                    b.Navigation("Faculty");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.ClubObjective", b =>

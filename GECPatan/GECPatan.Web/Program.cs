@@ -97,6 +97,16 @@ builder.Services.AddHttpClient<INewsApiService, NewsApiService>(client =>
        client.DefaultRequestHeaders.Add("Accept", "application/json");
    });
 
+builder.Services.AddHttpClient<IStudentClubApiService, StudentClubApiService>(client =>
+{
+    var baseUrl = builder.Configuration["Api:BaseUrl"]
+        ?? throw new InvalidOperationException("Api:BaseUrl is not configured.");
+
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 
 
 // ── IDENTITY ───────────────────────────────────────── (REMOVED)
