@@ -1,4 +1,4 @@
-﻿using  GECPatan.Core.Models.Domain;
+﻿using GECPatan.Core.Models.Domain;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 

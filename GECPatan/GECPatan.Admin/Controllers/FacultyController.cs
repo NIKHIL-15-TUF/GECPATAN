@@ -1,5 +1,5 @@
 ﻿using GECPatan.Core.Data;
-using  GECPatan.Core.Models.Domain;
+using GECPatan.Core.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
 using GECPatan.Core.Services;
 using Microsoft.AspNetCore.Authorization;

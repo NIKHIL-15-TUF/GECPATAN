@@ -91,7 +91,7 @@ namespace GECPatan.Admin.Controllers
 
             // Audit log
             await WriteAuditLog("Created", "ContentPage", page.Id, page.Title);
-            //Notificcation Send
+            //Notification Send
             await _notify.SendAsync(
                 title: $"Content Page Published: {page.Title}",
                 message: $"URL: /page/{page.Slug}",

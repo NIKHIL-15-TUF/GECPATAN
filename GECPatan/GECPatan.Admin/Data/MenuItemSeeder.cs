@@ -1,5 +1,5 @@
 ﻿using GECPatan.Core.Data;
-using  GECPatan.Core.Models.Domain;
+using GECPatan.Core.Models.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace GECPatan.Core.Data

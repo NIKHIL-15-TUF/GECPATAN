@@ -1,7 +1,6 @@
-﻿using  GECPatan.Core.Models.Domain;
+﻿using GECPatan.Core.Models.Domain;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace GECPatan.Admin.Models.ViewModels
 {

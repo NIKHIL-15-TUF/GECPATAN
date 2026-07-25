@@ -1,4 +1,4 @@
-﻿using  GECPatan.Core.Models.Domain;
+﻿using GECPatan.Core.Models.Domain;
 using Microsoft.AspNetCore.Identity;
 
 namespace GECPatan.Core.Data

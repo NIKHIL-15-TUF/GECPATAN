@@ -4,8 +4,6 @@ using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GECPatan.Api.Controllers
 {

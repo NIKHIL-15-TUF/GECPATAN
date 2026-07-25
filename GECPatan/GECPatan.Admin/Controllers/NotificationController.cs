@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using  GECPatan.Core.Models.Domain;
+using GECPatan.Core.Models.Domain;
 using System.Security.Claims;
 
 namespace GECPatan.Admin.Controllers
