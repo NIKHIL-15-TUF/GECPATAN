@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
+using GECPatan.Core.Services.FileStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,10 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+builder.Services.AddScoped<IFileStorageService>(sp =>
+    new FileStorageService(
+        sp.GetRequiredService<IWebHostEnvironment>().WebRootPath,
+        sp.GetRequiredService<ILogger<FileStorageService>>()));
 //Notification
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddHttpContextAccessor();
