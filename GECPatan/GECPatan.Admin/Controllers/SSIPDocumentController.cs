@@ -1,5 +1,6 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +12,18 @@ namespace GECPatan.Admin.Controllers
     public class SSIPDocumentController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<SSIPDocumentController> _logger;
+        private const string SSIPFolder = "ssip";
 
-        public SSIPDocumentController(ApplicationDbContext context, IWebHostEnvironment env)
+        public SSIPDocumentController(
+            ApplicationDbContext context,
+            IFileStorageService fileStorage,
+            ILogger<SSIPDocumentController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -45,6 +52,18 @@ namespace GECPatan.Admin.Controllers
             ViewData["Title"] = "Add SSIP Document";
             if (!ModelState.IsValid) return View(model);
 
+            string? filePath = null;
+            if (DocFile != null && DocFile.Length > 0)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(DocFile, SSIPFolder, FileCategory.Document);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(DocFile), uploadResult.ErrorMessage!);
+                    return View(model);
+                }
+                filePath = uploadResult.RelativePath;
+            }
+
             int maxOrder = await _context.SSIPDocuments
                 .Select(s => (int?)s.DisplayOrder).MaxAsync() ?? -1;
 
@@ -53,16 +72,34 @@ namespace GECPatan.Admin.Controllers
                 Title = model.Title,
                 UploadDate = model.UploadDate,
                 IsVisible = model.IsVisible,
-                DisplayOrder = maxOrder + 1
+                DisplayOrder = maxOrder + 1,
+                FilePath = filePath
             };
 
-            if (DocFile != null && DocFile.Length > 0)
-                doc.FilePath = await SaveFileAsync(DocFile, "ssip");
+            try
+            {
+                _context.SSIPDocuments.Add(doc);
+                await _context.SaveChangesAsync();
 
-            _context.SSIPDocuments.Add(doc);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "SSIP Document added.";
-            return RedirectToAction(nameof(Index));
+                _logger.LogInformation("SSIP document {DocId} '{Title}' created", doc.Id, doc.Title);
+
+                TempData["Success"] = "SSIP Document added.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _fileStorage.Delete(filePath);
+                _logger.LogError(ex, "Database error creating SSIP document '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "Unable to save the document. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _fileStorage.Delete(filePath);
+                _logger.LogError(ex, "Unexpected error creating SSIP document '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -91,59 +128,111 @@ namespace GECPatan.Admin.Controllers
             var s = await _context.SSIPDocuments.FindAsync(id);
             if (s == null) return NotFound();
 
+            string? newFilePath = null;
+            bool replacingFile = DocFile != null && DocFile.Length > 0;
+            if (replacingFile)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(DocFile!, SSIPFolder, FileCategory.Document);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(DocFile), uploadResult.ErrorMessage!);
+                    return View(model);
+                }
+                newFilePath = uploadResult.RelativePath;
+            }
+
+            string? previousFilePath = s.FilePath;
+
             s.Title = model.Title;
             s.UploadDate = model.UploadDate;
             s.IsVisible = model.IsVisible;
 
-            if (DocFile != null && DocFile.Length > 0)
-            {
-                DeleteFile(s.FilePath);
-                s.FilePath = await SaveFileAsync(DocFile, "ssip");
-            }
+            if (replacingFile)
+                s.FilePath = newFilePath;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "SSIP Document updated.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Old file removed only after the new state is safely persisted.
+                if (replacingFile)
+                    _fileStorage.Delete(previousFilePath);
+
+                _logger.LogInformation("SSIP document {DocId} '{Title}' updated", s.Id, s.Title);
+
+                TempData["Success"] = "SSIP Document updated.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                if (replacingFile)
+                    _fileStorage.Delete(newFilePath);
+
+                _logger.LogError(ex, "Database error updating SSIP document {DocId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the document. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                if (replacingFile)
+                    _fileStorage.Delete(newFilePath);
+
+                _logger.LogError(ex, "Unexpected error updating SSIP document {DocId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var s = await _context.SSIPDocuments.FindAsync(id);
             if (s == null) return NotFound();
+
             s.IsVisible = !s.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("SSIP document {DocId} visibility set to {IsVisible}", id, s.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for SSIP document {DocId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var s = await _context.SSIPDocuments.FindAsync(id);
             if (s == null) return NotFound();
-            DeleteFile(s.FilePath);
+
+            string? filePath = s.FilePath;
             s.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Physical file removed only after the soft-delete commits.
+                _fileStorage.Delete(filePath);
+
+                _logger.LogInformation("SSIP document {DocId} '{Title}' deleted", id, s.Title);
+                TempData["Success"] = "Deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting SSIP document {DocId}", id);
+                TempData["Error"] = "Unable to delete the document. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
-        }
-
-        private async Task<string> SaveFileAsync(IFormFile file, string folder)
-        {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
-        }
-
-        private void DeleteFile(string? filePath)
-        {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
         }
     }
 }

@@ -1,24 +1,33 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Services;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Core.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
- 
+
 namespace GECPatan.Admin.Controllers
 {
     [Authorize(Roles = "SuperAdmin,ContentEditor")]
     public class TenderCategoryController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
         private readonly NotificationService _notify;
-        public TenderCategoryController(ApplicationDbContext context, IWebHostEnvironment env , NotificationService notify)
+        private readonly ILogger<TenderCategoryController> _logger;
+        private const string TendersFolder = "tenders";
+
+        public TenderCategoryController(
+            ApplicationDbContext context,
+            IFileStorageService fileStorage,
+            NotificationService notify,
+            ILogger<TenderCategoryController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
             _notify = notify;
+            _logger = logger;
         }
 
         // ── INDEX: list all categories ────────────────────
@@ -70,25 +79,46 @@ namespace GECPatan.Admin.Controllers
             int maxOrder = await _context.TenderCategories
                 .Select(t => (int?)t.DisplayOrder).MaxAsync() ?? -1;
 
-            _context.TenderCategories.Add(new TenderCategory
+            var category = new TenderCategory
             {
                 Title = model.Title,
                 DisplayOrder = maxOrder + 1,
                 IsVisible = model.IsVisible
-            });
+            };
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.TenderCategories.Add(category);
+                await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Tender category added.";
-            //Notification
-            await _notify.SendAsync(
-                title: $"New Tender Category: {model.Title}",
-                module: "Tender",
-                icon: "fa-file-contract",
-                color: "warning",
-                link: "/TenderCategory/Index",
-                forRole: "SuperAdmin"
-            );
+                _logger.LogInformation("Tender category {CategoryId} '{Title}' created", category.Id, category.Title);
+
+                TempData["Success"] = "Tender category added.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error creating tender category '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "Unable to save the category. Please try again.");
+                return View(model);
+            }
+
+            try
+            {
+                await _notify.SendAsync(
+                    title: $"New Tender Category: {category.Title}",
+                    module: "Tender",
+                    icon: "fa-file-contract",
+                    color: "warning",
+                    link: "/TenderCategory/Index",
+                    forRole: "SuperAdmin"
+                );
+            }
+            catch (Exception ex)
+            {
+                // A failed notification shouldn't undo or block an already-saved category.
+                _logger.LogError(ex, "Failed to send notification for tender category {CategoryId}", category.Id);
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -122,29 +152,77 @@ namespace GECPatan.Admin.Controllers
             c.DisplayOrder = model.DisplayOrder;
             c.IsVisible = model.IsVisible;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Category updated.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Tender category {CategoryId} updated", c.Id);
+
+                TempData["Success"] = "Category updated.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error updating tender category {CategoryId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the category. Please try again.");
+                return View(model);
+            }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var c = await _context.TenderCategories.FindAsync(id);
             if (c == null) return NotFound();
+
             c.IsVisible = !c.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Tender category {CategoryId} visibility set to {IsVisible}", id, c.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for tender category {CategoryId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var c = await _context.TenderCategories.FindAsync(id);
+            var c = await _context.TenderCategories
+                .Include(x => x.Documents)
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (c == null) return NotFound();
+
+            bool hasDocuments = c.Documents.Any(d => !d.IsDeleted);
+            if (hasDocuments)
+            {
+                TempData["Error"] = $"Cannot delete '{c.Title}' — it still has tender documents. Remove them first.";
+                return RedirectToAction(nameof(Index));
+            }
+
             c.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Category deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Tender category {CategoryId} '{Title}' deleted", id, c.Title);
+                TempData["Success"] = "Category deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting tender category {CategoryId}", id);
+                TempData["Error"] = "Unable to delete the category. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -162,7 +240,7 @@ namespace GECPatan.Admin.Controllers
             ViewBag.CategoryTitle = category.Title;
 
             var docs = await _context.TenderDocuments
-                .Where(d => d.TenderCategoryId == categoryId)
+                .Where(d => d.TenderCategoryId == categoryId && !d.IsDeleted)
                 .OrderByDescending(d => d.ValidFrom)
                 .ToListAsync();
 
@@ -173,7 +251,7 @@ namespace GECPatan.Admin.Controllers
                 DocTitle = d.DocTitle,
                 ValidFrom = d.ValidFrom,
                 ValidTo = d.ValidTo,
-                MonthYear= d.MonthYear,
+                MonthYear = d.MonthYear,
                 IsVisible = d.IsVisible,
                 ExistingFilePath = d.FilePath,
                 CategoryTitle = category.Title
@@ -184,67 +262,111 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddDocument(TenderDocumentVM model, IFormFile? DocFile)
         {
-            if (ModelState.IsValid)
+            if (!await _context.TenderCategories.AnyAsync(c => c.Id == model.TenderCategoryId))
             {
-                var doc = new TenderDocument
+                TempData["Error"] = "Please select a valid tender category.";
+                return RedirectToAction(nameof(Documents), new { categoryId = model.TenderCategoryId });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Please correct the errors and try again.";
+                return RedirectToAction(nameof(Documents), new { categoryId = model.TenderCategoryId });
+            }
+
+            string? filePath = null;
+            if (DocFile != null && DocFile.Length > 0)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(DocFile, TendersFolder, FileCategory.Document);
+                if (!uploadResult.Success)
                 {
-                    TenderCategoryId = model.TenderCategoryId,
-                    DocTitle = model.DocTitle,
-                    ValidFrom = model.ValidFrom,
-                    ValidTo = model.ValidTo,
-                    MonthYear = model.MonthYear,
-                    IsVisible = model.IsVisible
-                };
+                    TempData["Error"] = uploadResult.ErrorMessage;
+                    return RedirectToAction(nameof(Documents), new { categoryId = model.TenderCategoryId });
+                }
+                filePath = uploadResult.RelativePath;
+            }
 
-                if (DocFile != null && DocFile.Length > 0)
-                    doc.FilePath = await SaveFileAsync(DocFile, "tenders");
+            var doc = new TenderDocument
+            {
+                TenderCategoryId = model.TenderCategoryId,
+                DocTitle = model.DocTitle,
+                ValidFrom = model.ValidFrom,
+                ValidTo = model.ValidTo,
+                MonthYear = model.MonthYear,
+                IsVisible = model.IsVisible,
+                FilePath = filePath
+            };
 
+            try
+            {
                 _context.TenderDocuments.Add(doc);
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Tender document {DocId} '{DocTitle}' added to category {CategoryId}",
+                    doc.Id, doc.DocTitle, model.TenderCategoryId);
+
                 TempData["Success"] = "Document added.";
             }
+            catch (DbUpdateException ex)
+            {
+                _fileStorage.Delete(filePath);
+                _logger.LogError(ex, "Database error adding tender document to category {CategoryId}", model.TenderCategoryId);
+                TempData["Error"] = "Unable to add the document. Please try again.";
+            }
+
             return RedirectToAction(nameof(Documents), new { categoryId = model.TenderCategoryId });
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleDocVisible(int id, int categoryId)
         {
             var d = await _context.TenderDocuments.FindAsync(id);
             if (d == null) return NotFound();
+
             d.IsVisible = !d.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Tender document {DocId} visibility set to {IsVisible}", id, d.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for tender document {DocId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Documents), new { categoryId });
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteDocument(int id, int categoryId)
         {
             var d = await _context.TenderDocuments.FindAsync(id);
             if (d == null) return NotFound();
-            DeleteFile(d.FilePath);
+
+            string? filePath = d.FilePath;
             d.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Document deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Physical file removed only after the soft-delete commits.
+                _fileStorage.Delete(filePath);
+
+                _logger.LogInformation("Tender document {DocId} deleted from category {CategoryId}", id, categoryId);
+                TempData["Success"] = "Document deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting tender document {DocId}", id);
+                TempData["Error"] = "Unable to delete the document. Please try again.";
+            }
+
             return RedirectToAction(nameof(Documents), new { categoryId });
-        }
-
-        // ── HELPERS ───────────────────────────────────────
-        private async Task<string> SaveFileAsync(IFormFile file, string folder)
-        {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
-        }
-
-        private void DeleteFile(string? filePath)
-        {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +13,18 @@ namespace GECPatan.Admin.Controllers
     public class TimetableController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<TimetableController> _logger;
+        private const string TimetablesFolder = "timetables";
 
-        public TimetableController(ApplicationDbContext context, IWebHostEnvironment env)
+        public TimetableController(
+            ApplicationDbContext context,
+            IFileStorageService fileStorage,
+            ILogger<TimetableController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         // ── INDEX ─────────────────────────────────────────
@@ -29,7 +36,6 @@ namespace GECPatan.Admin.Controllers
                 "DeptId", "Name", deptId);
             ViewBag.SelectedDeptId = deptId;
 
-            // Available years
             var years = await _context.Timetables
                 .Select(t => t.Year).Distinct()
                 .OrderByDescending(y => y).ToListAsync();
@@ -46,10 +52,9 @@ namespace GECPatan.Admin.Controllers
 
             if (User.IsInRole(AppRoles.HOD))
             {
-                var cu = await _context.Users
-                    .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
-                if (cu?.DeptId != null)
-                    query = query.Where(t => t.DeptId == cu.DeptId);
+                var currentUser = await GetCurrentUserAsync();
+                if (currentUser?.DeptId != null)
+                    query = query.Where(t => t.DeptId == currentUser.DeptId);
             }
             else if (deptId.HasValue)
                 query = query.Where(t => t.DeptId == deptId.Value);
@@ -81,35 +86,49 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Create(int? deptId)
         {
             ViewData["Title"] = "Upload Timetable";
-            var vm = new TimetableCreateVM { DeptId = deptId ?? 0 };
+
+            var currentUser = await GetCurrentUserAsync();
+            var vm = new TimetableCreateVM
+            {
+                DeptId = User.IsInRole(AppRoles.HOD) && currentUser?.DeptId != null
+                    ? currentUser.DeptId.Value
+                    : deptId ?? 0
+            };
             return View(await BuildVM(vm));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(
-            TimetableCreateVM model, IFormFile? TimetableFile)
+        public async Task<IActionResult> Create(TimetableCreateVM model, IFormFile? TimetableFile)
         {
             ViewData["Title"] = "Upload Timetable";
+
+            var currentUser = await GetCurrentUserAsync();
+
+            // HOD can only upload timetables for their own department
+            if (User.IsInRole(AppRoles.HOD) && currentUser?.DeptId != null)
+                model.DeptId = currentUser.DeptId.Value;
+
+            if (!await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
             if (!ModelState.IsValid)
                 return View(await BuildVM(model));
 
             if (TimetableFile == null || TimetableFile.Length == 0)
             {
-                ModelState.AddModelError("", "Please select a file to upload.");
+                ModelState.AddModelError(string.Empty, "Please select a file to upload.");
                 return View(await BuildVM(model));
             }
 
-            // Mark previous timetable for same dept+sem as not latest
-            var previous = await _context.Timetables
-                .Where(t => t.DeptId == model.DeptId &&
-                            t.Semester == model.Semester &&
-                            t.Year == model.Year &&
-                            t.IsLatest)
-                .ToListAsync();
+            var uploadResult = await _fileStorage.SaveAsync(TimetableFile, TimetablesFolder, FileCategory.Document);
+            if (!uploadResult.Success)
+            {
+                ModelState.AddModelError(nameof(TimetableFile), uploadResult.ErrorMessage!);
+                return View(await BuildVM(model));
+            }
 
-            foreach (var p in previous)
-                p.IsLatest = false;
+            var filePath = uploadResult.RelativePath;
 
             var tt = new Timetable
             {
@@ -120,56 +139,120 @@ namespace GECPatan.Admin.Controllers
                 IsVisible = model.IsVisible,
                 IsLatest = true,
                 UploadedDate = DateTime.Now,
-                UploadedBy = User.Identity?.Name
+                UploadedBy = User.Identity?.Name,
+                FilePath = filePath
             };
 
-            tt.FilePath = await SaveFileAsync(TimetableFile, "timetables");
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Mark previous timetable for same dept+sem+year as not latest
+                var previous = await _context.Timetables
+                    .Where(t => t.DeptId == model.DeptId &&
+                                t.Semester == model.Semester &&
+                                t.Year == model.Year &&
+                                t.IsLatest)
+                    .ToListAsync();
 
-            _context.Timetables.Add(tt);
-            await _context.SaveChangesAsync();
+                foreach (var p in previous)
+                    p.IsLatest = false;
 
-            TempData["Success"] = "Timetable uploaded successfully.";
-            return RedirectToAction(nameof(Index),
-                new { deptId = model.DeptId });
+                _context.Timetables.Add(tt);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation(
+                    "Timetable {TimetableId} uploaded for dept {DeptId}, year {Year}, semester {Semester}",
+                    tt.Id, tt.DeptId, tt.Year, tt.Semester);
+
+                TempData["Success"] = "Timetable uploaded successfully.";
+                return RedirectToAction(nameof(Index), new { deptId = model.DeptId });
+            }
+            catch (DbUpdateException ex)
+            {
+                await transaction.RollbackAsync();
+                _fileStorage.Delete(filePath);
+
+                _logger.LogError(ex, "Database error uploading timetable for dept {DeptId}", model.DeptId);
+                ModelState.AddModelError(string.Empty, "Unable to save the timetable. Please try again.");
+                return View(await BuildVM(model));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _fileStorage.Delete(filePath);
+
+                _logger.LogError(ex, "Unexpected error uploading timetable for dept {DeptId}", model.DeptId);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(await BuildVM(model));
+            }
         }
 
         // ── TOGGLE VISIBLE ────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var tt = await _context.Timetables.FindAsync(id);
             if (tt == null) return NotFound();
+
+            if (!await CanAccessAsync(tt.DeptId))
+                return Forbid();
+
             tt.IsVisible = !tt.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Timetable {TimetableId} visibility set to {IsVisible}", id, tt.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for timetable {TimetableId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
-        // ── DELETE (only non-latest can be deleted by HOD)
+        // ── DELETE (only non-latest can be deleted, and only by SuperAdmin)
         // Latest file is KEPT as history — never deleted
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var tt = await _context.Timetables.FindAsync(id);
             if (tt == null) return NotFound();
 
-            // Latest file cannot be deleted — kept as history
             if (tt.IsLatest)
             {
                 TempData["Error"] = "Cannot delete the latest timetable. Upload a new one to replace it.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Old files CAN be deleted by SuperAdmin
-            if (User.IsInRole(AppRoles.SuperAdmin))
-            {
-                DeleteFile(tt.FilePath);
-                tt.IsDeleted = true;
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Old timetable deleted.";
-            }
-            else
+            if (!User.IsInRole(AppRoles.SuperAdmin))
             {
                 TempData["Error"] = "Only SuperAdmin can delete timetable history.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            string? filePath = tt.FilePath;
+            tt.IsDeleted = true;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Physical file removed only after the soft-delete commits.
+                _fileStorage.Delete(filePath);
+
+                _logger.LogInformation("Timetable {TimetableId} (history) deleted", id);
+                TempData["Success"] = "Old timetable deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting timetable {TimetableId}", id);
+                TempData["Error"] = "Unable to delete the timetable. Please try again.";
             }
 
             return RedirectToAction(nameof(Index));
@@ -188,22 +271,21 @@ namespace GECPatan.Admin.Controllers
             return vm;
         }
 
-        private async Task<string> SaveFileAsync(IFormFile file, string folder)
+        /// <summary>
+        /// SuperAdmin and ContentEditor can access any department's timetables.
+        /// HOD is restricted to their own department.
+        /// </summary>
+        private async Task<bool> CanAccessAsync(int deptId)
         {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
+            if (!User.IsInRole(AppRoles.HOD)) return true;
+
+            var currentUser = await GetCurrentUserAsync();
+            return currentUser?.DeptId == deptId;
         }
 
-        private void DeleteFile(string? filePath)
-        {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
-        }
+        private Task<ApplicationUser?> GetCurrentUserAsync() =>
+            _context.Users
+                .OfType<ApplicationUser>()
+                .FirstOrDefaultAsync(u => u.UserName == User.Identity!.Name);
     }
 }

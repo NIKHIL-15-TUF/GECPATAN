@@ -11,10 +11,12 @@ namespace GECPatan.Admin.Controllers
     public class ResearchGrantController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<ResearchGrantController> _logger;
 
-        public ResearchGrantController(ApplicationDbContext context)
+        public ResearchGrantController(ApplicationDbContext context, ILogger<ResearchGrantController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -39,7 +41,7 @@ namespace GECPatan.Admin.Controllers
             ViewData["Title"] = "Add Research Grant";
             if (!ModelState.IsValid) return View(model);
 
-            _ = _context.ResearchGrants.Add(new ResearchGrant
+            var grant = new ResearchGrant
             {
                 Title = model.Title,
                 PrincipalInvestigator = model.PrincipalInvestigator,
@@ -50,11 +52,30 @@ namespace GECPatan.Admin.Controllers
                 SponsoringAuthority = model.SponsoringAuthority,
                 IsVisible = model.IsVisible,
                 DisplayOrder = model.DisplayOrder
-            });
+            };
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Research Grant added.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                _context.ResearchGrants.Add(grant);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Research grant {GrantId} '{Title}' created", grant.Id, grant.Title);
+
+                TempData["Success"] = "Research Grant added.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error creating research grant '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "Unable to save the research grant. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error creating research grant '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -98,29 +119,70 @@ namespace GECPatan.Admin.Controllers
             r.IsVisible = model.IsVisible;
             r.DisplayOrder = model.DisplayOrder;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Research Grant updated.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Research grant {GrantId} '{Title}' updated", r.Id, r.Title);
+
+                TempData["Success"] = "Research Grant updated.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogWarning(ex, "Concurrency conflict updating research grant {GrantId}", id);
+                ModelState.AddModelError(string.Empty,
+                    "This record was changed by someone else. Please reload and try again.");
+                return View(model);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error updating research grant {GrantId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the research grant. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating research grant {GrantId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var r = await _context.ResearchGrants.FindAsync(id);
             if (r == null) return NotFound();
+
             r.IsVisible = !r.IsVisible;
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var r = await _context.ResearchGrants.FindAsync(id);
             if (r == null) return NotFound();
+
             r.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Research grant {GrantId} '{Title}' deleted", id, r.Title);
+                TempData["Success"] = "Deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting research grant {GrantId}", id);
+                TempData["Error"] = "Unable to delete the record. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
     }

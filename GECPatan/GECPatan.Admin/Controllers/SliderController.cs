@@ -1,5 +1,6 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +12,18 @@ namespace GECPatan.Admin.Controllers
     public class SliderController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<SliderController> _logger;
+        private const string SlidersFolder = "sliders";
 
-        public SliderController(ApplicationDbContext context, IWebHostEnvironment env)
+        public SliderController(
+            ApplicationDbContext context,
+            IFileStorageService fileStorage,
+            ILogger<SliderController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -41,6 +48,18 @@ namespace GECPatan.Admin.Controllers
             ViewData["Title"] = "Add Slider";
             if (!ModelState.IsValid) return View(model);
 
+            string? imagePath = null;
+            if (SliderImage != null && SliderImage.Length > 0)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(SliderImage, SlidersFolder, FileCategory.Image);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(SliderImage), uploadResult.ErrorMessage!);
+                    return View(model);
+                }
+                imagePath = uploadResult.RelativePath;
+            }
+
             int maxOrder = await _context.Sliders.Select(s => (int?)s.DisplayOrder).MaxAsync() ?? -1;
 
             var slider = new Slider
@@ -53,17 +72,34 @@ namespace GECPatan.Admin.Controllers
                 Anchor2Text = model.Anchor2Text,
                 Anchor2Link = model.Anchor2Link,
                 DisplayOrder = maxOrder + 1,
-                IsVisible = model.IsVisible
+                IsVisible = model.IsVisible,
+                ImagePath = imagePath
             };
 
-            if (SliderImage != null && SliderImage.Length > 0)
-                slider.ImagePath = await SaveFileAsync(SliderImage, "sliders");
+            try
+            {
+                _context.Sliders.Add(slider);
+                await _context.SaveChangesAsync();
 
-            _context.Sliders.Add(slider);
-            await _context.SaveChangesAsync();
+                _logger.LogInformation("Slider {SliderId} created", slider.Id);
 
-            TempData["Success"] = "Slider added.";
-            return RedirectToAction(nameof(Index));
+                TempData["Success"] = "Slider added.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _fileStorage.Delete(imagePath);
+                _logger.LogError(ex, "Database error creating slider");
+                ModelState.AddModelError(string.Empty, "Unable to save the slider. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _fileStorage.Delete(imagePath);
+                _logger.LogError(ex, "Unexpected error creating slider");
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -98,6 +134,21 @@ namespace GECPatan.Admin.Controllers
             var s = await _context.Sliders.FindAsync(id);
             if (s == null) return NotFound();
 
+            string? newImagePath = null;
+            bool replacingImage = SliderImage != null && SliderImage.Length > 0;
+            if (replacingImage)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(SliderImage!, SlidersFolder, FileCategory.Image);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(SliderImage), uploadResult.ErrorMessage!);
+                    return View(model);
+                }
+                newImagePath = uploadResult.RelativePath;
+            }
+
+            string? previousImagePath = s.ImagePath;
+
             s.H3Text = model.H3Text;
             s.H4Text = model.H4Text;
             s.H5Text = model.H5Text;
@@ -107,40 +158,96 @@ namespace GECPatan.Admin.Controllers
             s.Anchor2Link = model.Anchor2Link;
             s.IsVisible = model.IsVisible;
 
-            if (SliderImage != null && SliderImage.Length > 0)
-            {
-                DeleteFile(s.ImagePath);
-                s.ImagePath = await SaveFileAsync(SliderImage, "sliders");
-            }
+            if (replacingImage)
+                s.ImagePath = newImagePath;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Slider updated.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Old image removed only after the new state is safely persisted.
+                if (replacingImage)
+                    _fileStorage.Delete(previousImagePath);
+
+                _logger.LogInformation("Slider {SliderId} updated", s.Id);
+
+                TempData["Success"] = "Slider updated.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                if (replacingImage)
+                    _fileStorage.Delete(newImagePath);
+
+                _logger.LogError(ex, "Database error updating slider {SliderId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the slider. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                if (replacingImage)
+                    _fileStorage.Delete(newImagePath);
+
+                _logger.LogError(ex, "Unexpected error updating slider {SliderId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var s = await _context.Sliders.FindAsync(id);
             if (s == null) return NotFound();
+
             s.IsVisible = !s.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Slider {SliderId} visibility set to {IsVisible}", id, s.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for slider {SliderId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var s = await _context.Sliders.FindAsync(id);
             if (s == null) return NotFound();
-            DeleteFile(s.ImagePath);
+
+            string? imagePath = s.ImagePath;
             s.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Slider deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Physical file removed only after the soft-delete commits.
+                _fileStorage.Delete(imagePath);
+
+                _logger.LogInformation("Slider {SliderId} deleted", id);
+                TempData["Success"] = "Slider deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting slider {SliderId}", id);
+                TempData["Error"] = "Unable to delete the slider. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reorder(int id, string direction)
         {
             var s = await _context.Sliders.FindAsync(id);
@@ -151,32 +258,23 @@ namespace GECPatan.Admin.Controllers
                 var above = await _context.Sliders.Where(x => x.DisplayOrder == s.DisplayOrder - 1).FirstOrDefaultAsync();
                 if (above != null) { above.DisplayOrder++; s.DisplayOrder--; }
             }
-            else
+            else if (direction == "down")
             {
                 var below = await _context.Sliders.Where(x => x.DisplayOrder == s.DisplayOrder + 1).FirstOrDefaultAsync();
                 if (below != null) { below.DisplayOrder--; s.DisplayOrder++; }
             }
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error reordering slider {SliderId}", id);
+                TempData["Error"] = "Unable to reorder sliders. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
-        }
-
-        private async Task<string> SaveFileAsync(IFormFile file, string folder)
-        {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
-        }
-
-        private void DeleteFile(string? filePath)
-        {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
         }
     }
 }

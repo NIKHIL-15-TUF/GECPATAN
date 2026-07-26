@@ -11,10 +11,12 @@ namespace GECPatan.Admin.Controllers
     public class TestimonialController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<TestimonialController> _logger;
 
-        public TestimonialController(ApplicationDbContext context)
+        public TestimonialController(ApplicationDbContext context, ILogger<TestimonialController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -41,7 +43,7 @@ namespace GECPatan.Admin.Controllers
 
             int maxOrder = await _context.Testimonials.Select(t => (int?)t.DisplayOrder).MaxAsync() ?? -1;
 
-            _context.Testimonials.Add(new Testimonial
+            var testimonial = new Testimonial
             {
                 StudentName = model.StudentName,
                 Department = model.Department,
@@ -49,11 +51,31 @@ namespace GECPatan.Admin.Controllers
                 TestimonialText = model.TestimonialText,
                 DisplayOrder = maxOrder + 1,
                 IsVisible = model.IsVisible
-            });
+            };
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Testimonial added.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                _context.Testimonials.Add(testimonial);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Testimonial {TestimonialId} created for '{StudentName}'",
+                    testimonial.Id, testimonial.StudentName);
+
+                TempData["Success"] = "Testimonial added.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error creating testimonial for '{StudentName}'", model.StudentName);
+                ModelState.AddModelError(string.Empty, "Unable to save the testimonial. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error creating testimonial for '{StudentName}'", model.StudentName);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -90,29 +112,81 @@ namespace GECPatan.Admin.Controllers
             t.TestimonialText = model.TestimonialText;
             t.IsVisible = model.IsVisible;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Testimonial updated.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Testimonial {TestimonialId} updated", t.Id);
+
+                TempData["Success"] = "Testimonial updated.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogWarning(ex, "Concurrency conflict updating testimonial {TestimonialId}", id);
+                ModelState.AddModelError(string.Empty,
+                    "This testimonial was changed by someone else. Please reload and try again.");
+                return View(model);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error updating testimonial {TestimonialId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the testimonial. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating testimonial {TestimonialId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var t = await _context.Testimonials.FindAsync(id);
             if (t == null) return NotFound();
+
             t.IsVisible = !t.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Testimonial {TestimonialId} visibility set to {IsVisible}", id, t.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for testimonial {TestimonialId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var t = await _context.Testimonials.FindAsync(id);
             if (t == null) return NotFound();
+
             t.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Testimonial deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Testimonial {TestimonialId} deleted", id);
+                TempData["Success"] = "Testimonial deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting testimonial {TestimonialId}", id);
+                TempData["Error"] = "Unable to delete the testimonial. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
     }
