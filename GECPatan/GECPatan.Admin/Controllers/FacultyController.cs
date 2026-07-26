@@ -2,12 +2,11 @@
 using GECPatan.Core.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
 using GECPatan.Core.Services;
+using GECPatan.Core.Services.FileStorage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using NuGet.Protocol.Plugins;
 
 namespace GECPatan.Admin.Controllers
 {
@@ -15,14 +14,20 @@ namespace GECPatan.Admin.Controllers
     public class FacultyController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
         private readonly NotificationService _notify;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<FacultyController> _logger;
 
-        public FacultyController(ApplicationDbContext context, IWebHostEnvironment env, NotificationService notify)
+        public FacultyController(
+            ApplicationDbContext context,
+            NotificationService notify,
+            IFileStorageService fileStorage,
+            ILogger<FacultyController> logger)
         {
             _context = context;
-            _env = env;
             _notify = notify;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         // ── INDEX ─────────────────────────────────────────
@@ -92,6 +97,18 @@ namespace GECPatan.Admin.Controllers
             // Auto-set IsTeaching from designation
             bool isTeaching = AppRoles.TeachingDesignations.Contains(model.Designation);
 
+            string? savedImagePath = null;
+            if (Photo != null && Photo.Length > 0)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(Photo, "faculty", FileCategory.Image);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(Photo), uploadResult.ErrorMessage!);
+                    return View(await BuildCreateVM(model));
+                }
+                savedImagePath = uploadResult.RelativePath;
+            }
+
             var faculty = new Faculty
             {
                 Name = model.Name,
@@ -103,24 +120,24 @@ namespace GECPatan.Admin.Controllers
                 Website = model.Website,
                 IsTeaching = isTeaching,
                 SeniorityOrder = model.SeniorityOrder,
-                IsActive = true
+                IsActive = true,
+                ImagePath = savedImagePath
             };
-            var dept = await _context.Departments.FirstOrDefaultAsync(m =>m.DeptId == model.DeptId);
-
-            if (Photo != null && Photo.Length > 0)
-                faculty.ImagePath = await SaveFileAsync(Photo, "faculty");
+            var dept = await _context.Departments.FirstOrDefaultAsync(m => m.DeptId == model.DeptId);
 
             _context.Faculties.Add(faculty);
             await _context.SaveChangesAsync();
-            await _notify.SendAsync(
+
+            _logger.LogInformation("Faculty {FacultyId} '{Name}' created by {User}",
+                faculty.FacultyId, faculty.Name, User.Identity?.Name);
+
+            await TryNotifyAsync(
                 title: $"New Faculty Added: {faculty.Name}",
-                message: $"Added to {dept?.Name??"Unknown"} department",
-                module: "Faculty",
+                message: $"Added to {dept?.Name ?? "Unknown"} department",
                 icon: "fa-user-plus",
                 color: "success",
-                link: $"/Faculty/Edit/{faculty.FacultyId}",
-                forRole: "SuperAdmin"
-            );
+                link: $"/Faculty/Edit/{faculty.FacultyId}");
+
             TempData["Success"] = $"Faculty '{faculty.Name}' added.";
             return RedirectToAction(nameof(Index));
         }
@@ -140,7 +157,8 @@ namespace GECPatan.Admin.Controllers
             {
                 var cu = await GetCurrentUserAsync();
                 if (cu?.FacultyId != id) return Forbid();
-            };
+            }
+            ;
             var vm = new FacultyEditVM
             {
                 FacultyId = f.FacultyId,
@@ -169,6 +187,18 @@ namespace GECPatan.Admin.Controllers
             var f = await _context.Faculties.FindAsync(id);
             if (f == null) return NotFound();
 
+            // Was completely missing before — the GET action checked this,
+            // but this POST (the actual mutation) did not, meaning any
+            // authenticated Faculty user could edit ANY other faculty
+            // member's profile by submitting a form with a different id.
+            if (!await CanManageFacultyAsync(id))
+            {
+                _logger.LogWarning(
+                    "User {User} was denied edit access to faculty {FacultyId} (not their own profile / department)",
+                    User.Identity?.Name, id);
+                return Forbid();
+            }
+
             // Auto-set IsTeaching
             bool isTeaching = AppRoles.TeachingDesignations.Contains(model.Designation);
 
@@ -177,54 +207,71 @@ namespace GECPatan.Admin.Controllers
             f.DeptId = model.DeptId;
             f.DateOfJoining = model.DateOfJoining;
             f.AreaOfInterest = model.AreaOfInterest;
-            f.LetterNumber = model.LetterNumber; 
+            f.LetterNumber = model.LetterNumber;
             f.Website = model.Website;
             f.IsTeaching = isTeaching;
             f.SeniorityOrder = model.SeniorityOrder;
 
             if (Photo != null && Photo.Length > 0)
             {
-                DeleteFile(f.ImagePath);
-                f.ImagePath = await SaveFileAsync(Photo, "faculty");
+                var uploadResult = await _fileStorage.SaveAsync(Photo, "faculty", FileCategory.Image);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(Photo), uploadResult.ErrorMessage!);
+                    return View(await BuildEditVM(model));
+                }
+                // Save new before deleting old, so a failed upload never
+                // leaves the faculty member with no photo at all.
+                _fileStorage.Delete(f.ImagePath);
+                f.ImagePath = uploadResult.RelativePath;
             }
 
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Faculty '{f.Name}' updated.";
-            await _notify.SendAsync(
+
+            _logger.LogInformation("Faculty {FacultyId} '{Name}' edited by {User}",
+                f.FacultyId, f.Name, User.Identity?.Name);
+
+            await TryNotifyAsync(
                 title: $"Faculty Updated: {f.Name}",
                 message: "Profile details were changed",
-                module: "Faculty",
                 icon: "fa-edit",
                 color: "info",
-                link: $"/Faculty/Edit/{f.FacultyId}",
-                forRole: "SuperAdmin"
-            );
+                link: $"/Faculty/Edit/{f.FacultyId}");
+
             return RedirectToAction(nameof(Index));
         }
 
         // ── TOGGLE / DELETE / REORDER ─────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "SuperAdmin,HOD")]
         public async Task<IActionResult> ToggleActive(int id)
         {
             var f = await _context.Faculties.FindAsync(id);
             if (f == null) return NotFound();
+
+            if (!await CanManageFacultyAsync(id)) return Forbid();
+
             f.IsActive = !f.IsActive;
             await _context.SaveChangesAsync();
             TempData["Success"] = $"'{f.Name}' " + (f.IsActive ? "activated" : "deactivated") + ".";
-            await _notify.SendAsync(
+
+            _logger.LogInformation("Faculty {FacultyId} '{Name}' {Action} by {User}",
+                f.FacultyId, f.Name, f.IsActive ? "activated" : "deactivated", User.Identity?.Name);
+
+            await TryNotifyAsync(
                 title: $"Faculty {(f.IsActive ? "Activated" : "Deactivated")}: {f.Name}",
                 message: null,
-                module: "Faculty",
                 icon: f.IsActive ? "fa-user-check" : "fa-user-slash",
                 color: f.IsActive ? "success" : "warning",
-                link: $"/Faculty/Edit/{f.FacultyId}",
-                forRole: "SuperAdmin"
-            );
+                link: $"/Faculty/Edit/{f.FacultyId}");
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -233,24 +280,30 @@ namespace GECPatan.Admin.Controllers
             f.IsDeleted = true; f.IsActive = false;
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Faculty '{f.Name}' deleted.";
-            await _notify.SendAsync(
+
+            _logger.LogInformation("Faculty {FacultyId} '{Name}' deleted by {User}",
+                f.FacultyId, f.Name, User.Identity?.Name);
+
+            await TryNotifyAsync(
                 title: $"Faculty Deleted: {f.Name}",
                 message: null,
-                module: "Faculty",
                 icon: "fa-user-times",
                 color: "danger",
-                link: "/Faculty/Index",
-                forRole: "SuperAdmin"
-            );
+                link: "/Faculty/Index");
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "SuperAdmin,HOD")]
         public async Task<IActionResult> Reorder(int id, string direction)
         {
             var f = await _context.Faculties.FindAsync(id);
             if (f == null) return NotFound();
+
+            if (!await CanManageFacultyAsync(id)) return Forbid();
+
             if (direction == "up")
             {
                 var above = await _context.Faculties
@@ -288,6 +341,8 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddQualification(QualificationVM model)
         {
+            if (!await CanManageFacultyAsync(model.FacultyId)) return Forbid();
+
             if (ModelState.IsValid)
             {
                 _context.FacultyQualifications.Add(new FacultyQualification
@@ -301,15 +356,16 @@ namespace GECPatan.Admin.Controllers
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Qualification added.";
                 var faculty = await _context.Faculties.FirstOrDefaultAsync(f => f.FacultyId == model.FacultyId);
-                await _notify.SendAsync(
+                await TryNotifyAsync(
                    title: $"Qualification Added for {faculty?.Name}",
                    message: $"{model.Degree} - {model.Specialization}",
-                   module: "Faculty",
                    icon: "fa-graduation-cap",
                    color: "info",
-                   link: $"/Faculty/Edit/{model.FacultyId}",
-                   forRole: "SuperAdmin"
-               );
+                   link: $"/Faculty/Edit/{model.FacultyId}");
+            }
+            else
+            {
+                TempData["Error"] = "Could not add qualification — please check the form and try again.";
             }
             return RedirectToAction(nameof(Qualifications), new { id = model.FacultyId });
         }
@@ -318,23 +374,31 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteQualification(int id, int facultyId)
         {
+            if (!await CanManageFacultyAsync(facultyId)) return Forbid();
+
             var item = await _context.FacultyQualifications.FindAsync(id);
-            if (item != null) { item.IsDeleted = true; await _context.SaveChangesAsync(); }
-            var facultyName = await _context.Faculties
-             .Where(f => f.FacultyId == facultyId)
-             .Select(f => f.Name)
-             .FirstOrDefaultAsync();
-            var degree = item.Degree;
-            var specialization = item.Specialization;
-            await _notify.SendAsync(
-                title: $"Qualification Removed for {facultyName}",
-                message: $"{degree} - {specialization}",
-                module: "Faculty",
-                icon: "fa-user-minus",
-                color: "warning",
-                link: $"/Faculty/Edit/{facultyId}",
-                forRole: "SuperAdmin"
-            );
+            if (item != null)
+            {
+                // NOTE: previously item.Degree/item.Specialization were read
+                // AFTER this if-block (outside the null check), which threw a
+                // NullReferenceException whenever id didn't match an existing
+                // record. Moved inside, matching the safe pattern already used
+                // by DeleteExperience/DeleteTraining/DeletePublication below.
+                var degree = item.Degree;
+                var specialization = item.Specialization;
+
+                item.IsDeleted = true;
+                await _context.SaveChangesAsync();
+
+                var facultyName = await GetFacultyNameAsync(facultyId);
+
+                await TryNotifyAsync(
+                    title: $"Qualification Removed for {facultyName}",
+                    message: $"{degree} - {specialization}",
+                    icon: "fa-user-minus",
+                    color: "warning",
+                    link: $"/Faculty/Edit/{facultyId}");
+            }
             return RedirectToAction(nameof(Qualifications), new { id = facultyId });
         }
 
@@ -353,6 +417,8 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddExperience(ExperienceVM model)
         {
+            if (!await CanManageFacultyAsync(model.FacultyId)) return Forbid();
+
             if (ModelState.IsValid)
             {
                 _context.FacultyExperiences.Add(new FacultyExperience
@@ -363,22 +429,20 @@ namespace GECPatan.Admin.Controllers
                     FromDate = model.FromDate,
                     ToDate = model.ToDate
                 });
-                var facultyName = await _context.Faculties
-                    .Where(f => f.FacultyId == model.FacultyId)
-                    .Select(f => f.Name)
-                    .FirstOrDefaultAsync();
+                var facultyName = await GetFacultyNameAsync(model.FacultyId);
                 await _context.SaveChangesAsync();
-                await _notify.SendAsync(
+                await TryNotifyAsync(
                     title: $"Experience Added for {facultyName}",
                     message: $"{model.Position} at {model.Organization}",
-                    module: "Faculty",
                     icon: "fa-briefcase",
                     color: "info",
-                    link: $"/Faculty/Edit/{model.FacultyId}",
-                    forRole: "SuperAdmin"
-                );
+                    link: $"/Faculty/Edit/{model.FacultyId}");
 
                 TempData["Success"] = "Experience added.";
+            }
+            else
+            {
+                TempData["Error"] = "Could not add experience — please check the form and try again.";
             }
             return RedirectToAction(nameof(Experience), new { id = model.FacultyId });
         }
@@ -387,25 +451,22 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteExperience(int id, int facultyId)
         {
+            if (!await CanManageFacultyAsync(facultyId)) return Forbid();
+
             var item = await _context.FacultyExperiences.FindAsync(id);
-            if (item != null) {
-                var facultyName = await _context.Faculties
-                    .Where(f => f.FacultyId == facultyId)
-                    .Select(f => f.Name)
-                    .FirstOrDefaultAsync();
+            if (item != null)
+            {
+                var facultyName = await GetFacultyNameAsync(facultyId);
 
                 var position = item.Position;
                 var org = item.Organization;
-                await _notify.SendAsync(
+                await TryNotifyAsync(
                     title: $"Experience Removed for {facultyName}",
                     message: $"{position} at {org}",
-                    module: "Faculty",
                     icon: "fa-user-minus",
                     color: "warning",
-                    link: $"/Faculty/Edit/{facultyId}",
-                    forRole: "SuperAdmin"
-                );
-                item.IsDeleted = true; await _context.SaveChangesAsync(); 
+                    link: $"/Faculty/Edit/{facultyId}");
+                item.IsDeleted = true; await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Experience), new { id = facultyId });
         }
@@ -425,6 +486,8 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddTraining(TrainingVM model)
         {
+            if (!await CanManageFacultyAsync(model.FacultyId)) return Forbid();
+
             if (ModelState.IsValid)
             {
                 _context.FacultyTrainings.Add(new FacultyTraining
@@ -438,21 +501,19 @@ namespace GECPatan.Admin.Controllers
                 });
                 await _context.SaveChangesAsync();
 
-                var facultyName = await _context.Faculties
-                    .Where(f => f.FacultyId == model.FacultyId)
-                    .Select(f => f.Name)
-                    .FirstOrDefaultAsync();
+                var facultyName = await GetFacultyNameAsync(model.FacultyId);
 
-                await _notify.SendAsync(
+                await TryNotifyAsync(
                     title: $"Training Added for {facultyName}",
                     message: $"{model.Title} by {model.OrganizedBy}",
-                    module: "Faculty",
                     icon: "fa-chalkboard-teacher",
                     color: "info",
-                    link: $"/Faculty/Edit/{model.FacultyId}",
-                    forRole: "SuperAdmin"
-                );
+                    link: $"/Faculty/Edit/{model.FacultyId}");
                 TempData["Success"] = "Training added.";
+            }
+            else
+            {
+                TempData["Error"] = "Could not add training — please check the form and try again.";
             }
             return RedirectToAction(nameof(Training), new { id = model.FacultyId });
         }
@@ -461,26 +522,23 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteTraining(int id, int facultyId)
         {
+            if (!await CanManageFacultyAsync(facultyId)) return Forbid();
+
             var item = await _context.FacultyTrainings.FindAsync(id);
-            if (item != null) {
+            if (item != null)
+            {
                 item.IsDeleted = true;
                 await _context.SaveChangesAsync();
-                var title=item.Title;
+                var title = item.Title;
                 var org = item.OrganizedBy;
-                var facultyName = await _context.Faculties
-                .Where(f => f.FacultyId == facultyId)
-                .Select(f => f.Name)
-                .FirstOrDefaultAsync();
+                var facultyName = await GetFacultyNameAsync(facultyId);
 
-                        await _notify.SendAsync(
-                            title: $"Training Removed for {facultyName}",
-                            message: $"{title} by {org}",
-                            module: "Faculty",
-                            icon: "fa-user-minus",
-                            color: "warning",
-                            link: $"/Faculty/Edit/{facultyId}",
-                            forRole: "SuperAdmin"
-                        );
+                await TryNotifyAsync(
+                    title: $"Training Removed for {facultyName}",
+                    message: $"{title} by {org}",
+                    icon: "fa-user-minus",
+                    color: "warning",
+                    link: $"/Faculty/Edit/{facultyId}");
             }
             return RedirectToAction(nameof(Training), new { id = facultyId });
         }
@@ -501,6 +559,8 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddPublication(PublicationVM model)
         {
+            if (!await CanManageFacultyAsync(model.FacultyId)) return Forbid();
+
             if (ModelState.IsValid)
             {
                 _context.FacultyPublications.Add(new FacultyPublication
@@ -511,21 +571,19 @@ namespace GECPatan.Admin.Controllers
                     Type = model.Type,
 
                 });
-                var facultyName = await _context.Faculties
-                  .Where(f => f.FacultyId == model.FacultyId)
-                  .Select(f => f.Name)
-                  .FirstOrDefaultAsync();
+                var facultyName = await GetFacultyNameAsync(model.FacultyId);
                 await _context.SaveChangesAsync();
-                await _notify.SendAsync(
+                await TryNotifyAsync(
                    title: $"Publication Added for {facultyName}",
                    message: $"[{model.SrNo}] {model.Title}",
-                   module: "Faculty",
                    icon: "fa-book",
                    color: "info",
-                   link: $"/Faculty/Edit/{model.FacultyId}",
-                   forRole: "SuperAdmin"
-               );
+                   link: $"/Faculty/Edit/{model.FacultyId}");
                 TempData["Success"] = "Publication added.";
+            }
+            else
+            {
+                TempData["Error"] = "Could not add publication — please check the form and try again.";
             }
             return RedirectToAction(nameof(Publications), new { id = model.FacultyId });
         }
@@ -534,25 +592,22 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePublication(int id, int facultyId)
         {
+            if (!await CanManageFacultyAsync(facultyId)) return Forbid();
+
             var item = await _context.FacultyPublications.FindAsync(id);
-            if (item != null) {
+            if (item != null)
+            {
                 var title = item.Title;
                 var srNo = item.SrNo;
                 item.IsDeleted = true; await _context.SaveChangesAsync();
-                var facultyName = await _context.Faculties
-                .Where(f => f.FacultyId == facultyId)
-                .Select(f => f.Name)
-                .FirstOrDefaultAsync();
+                var facultyName = await GetFacultyNameAsync(facultyId);
 
-                await _notify.SendAsync(
+                await TryNotifyAsync(
                     title: $"Publication Removed for {facultyName}",
                     message: $"[{srNo}] {title}",
-                    module: "Faculty",
                     icon: "fa-trash",
                     color: "warning",
-                    link: $"/Faculty/Edit/{facultyId}",
-                    forRole: "SuperAdmin"
-                );
+                    link: $"/Faculty/Edit/{facultyId}");
             }
             return RedirectToAction(nameof(Publications), new { id = facultyId });
         }
@@ -579,6 +634,8 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SavePersonalDetails(PersonalDetailVM model)
         {
+            if (!await CanManageFacultyAsync(model.FacultyId)) return Forbid();
+
             var existing = await _context.PersonalDetails
                 .FirstOrDefaultAsync(p => p.FacultyId == model.FacultyId);
             if (existing == null)
@@ -598,20 +655,14 @@ namespace GECPatan.Admin.Controllers
                 existing.DateOfBirth = model.DateOfBirth;
             }
             await _context.SaveChangesAsync();
-            var facultyName = await _context.Faculties
-               .Where(f => f.FacultyId == model.FacultyId)
-               .Select(f => f.Name)
-               .FirstOrDefaultAsync();
+            var facultyName = await GetFacultyNameAsync(model.FacultyId);
 
-            await _notify.SendAsync(
+            await TryNotifyAsync(
                 title: $"Personal Details Updated",
                 message: $"{facultyName}'s profile updated",
-                module: "Faculty",
                 icon: "fa-id-card",
                 color: "primary",
-                link: $"/Faculty/Edit/{model.FacultyId}",
-                forRole: "SuperAdmin"
-            );
+                link: $"/Faculty/Edit/{model.FacultyId}");
             TempData["Success"] = "Personal details saved.";
             return RedirectToAction(nameof(PersonalDetails), new { id = model.FacultyId });
         }
@@ -653,8 +704,11 @@ namespace GECPatan.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddSubject(int FacultyId, string SubjectName, string Level)
         {
+            if (!await CanManageFacultyAsync(FacultyId)) return Forbid();
+
             if (!string.IsNullOrWhiteSpace(SubjectName))
             {
                 _context.FacultySubjects.Add(new FacultySubject
@@ -670,8 +724,11 @@ namespace GECPatan.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteSubject(int id, int facultyId)
         {
+            if (!await CanManageFacultyAsync(facultyId)) return Forbid();
+
             var s = await _context.FacultySubjects.FindAsync(id);
             if (s != null) { s.IsDeleted = true; await _context.SaveChangesAsync(); }
             return RedirectToAction("Subjects", new { id = facultyId });
@@ -689,10 +746,13 @@ namespace GECPatan.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveResearchGuidance(
             int FacultyId, string Level,
             int Ongoing, int Completed)
         {
+            if (!await CanManageFacultyAsync(FacultyId)) return Forbid();
+
             var existing = await _context.FacultyResearchGuidances
                 .FirstOrDefaultAsync(r => r.FacultyId == FacultyId
                                        && r.Level == Level);
@@ -729,9 +789,12 @@ namespace GECPatan.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddBookPublication(
             int FacultyId, string Title, string? Publisher, string? Year)
         {
+            if (!await CanManageFacultyAsync(FacultyId)) return Forbid();
+
             if (!string.IsNullOrWhiteSpace(Title))
             {
                 int srNo = await _context.FacultyBookPublications
@@ -753,8 +816,11 @@ namespace GECPatan.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteBookPublication(int id, int facultyId)
         {
+            if (!await CanManageFacultyAsync(facultyId)) return Forbid();
+
             var b = await _context.FacultyBookPublications.FindAsync(id);
             if (b != null) { b.IsDeleted = true; await _context.SaveChangesAsync(); }
             return RedirectToAction("BookPublications", new { id = facultyId });
@@ -773,10 +839,13 @@ namespace GECPatan.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddPatent(
             int FacultyId, string Title,
             string? ApplicationNo, string? GrantedYear, string Status)
         {
+            if (!await CanManageFacultyAsync(FacultyId)) return Forbid();
+
             if (!string.IsNullOrWhiteSpace(Title))
             {
                 _context.FacultyPatents.Add(new FacultyPatent
@@ -794,8 +863,11 @@ namespace GECPatan.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePatent(int id, int facultyId)
         {
+            if (!await CanManageFacultyAsync(facultyId)) return Forbid();
+
             var p = await _context.FacultyPatents.FindAsync(id);
             if (p != null) { p.IsDeleted = true; await _context.SaveChangesAsync(); }
             return RedirectToAction("Patents", new { id = facultyId });
@@ -814,9 +886,12 @@ namespace GECPatan.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddMembership(
             int FacultyId, string Community, string MembershipType)
         {
+            if (!await CanManageFacultyAsync(FacultyId)) return Forbid();
+
             if (!string.IsNullOrWhiteSpace(Community))
             {
                 _context.FacultyProfessionalMemberships.Add(
@@ -833,8 +908,11 @@ namespace GECPatan.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteMembership(int id, int facultyId)
         {
+            if (!await CanManageFacultyAsync(facultyId)) return Forbid();
+
             var m = await _context.FacultyProfessionalMemberships.FindAsync(id);
             if (m != null) { m.IsDeleted = true; await _context.SaveChangesAsync(); }
             return RedirectToAction("Memberships", new { id = facultyId });
@@ -900,6 +978,8 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateConsultancy(FacultyConsultancyVM vm)
         {
+            if (!await CanManageFacultyAsync(vm.FacultyId)) return Forbid();
+
             if (!ModelState.IsValid)
             {
                 ViewBag.Faculty = await _context.Faculties
@@ -961,6 +1041,8 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditConsultancy(FacultyConsultancyVM vm)
         {
+            if (!await CanManageFacultyAsync(vm.FacultyId)) return Forbid();
+
             if (!ModelState.IsValid)
                 return View("CreateConsultancy", vm);
 
@@ -981,6 +1063,7 @@ namespace GECPatan.Admin.Controllers
         }
         // DELETE
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConsultancy(int id)
         {
             var item = await _context.FacultyConsultancies.FindAsync(id);
@@ -988,12 +1071,20 @@ namespace GECPatan.Admin.Controllers
             if (item == null)
                 return NotFound();
 
+            if (!await CanManageFacultyAsync(item.FacultyId)) return Forbid();
+
             int facultyId = item.FacultyId;
 
-            _context.FacultyConsultancies.Remove(item);
+            // Soft delete, matching every other sub-resource in this
+            // controller (Qualifications/Experience/Training/Publications/
+            // Subjects/ResearchGuidance/BookPublications/Patents/
+            // Memberships) and the codebase-wide pattern — this entity
+            // already has the same HasQueryFilter(!IsDeleted) as the others,
+            // so a hard Remove() here was an inconsistency, not a requirement.
+            item.IsDeleted = true;
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Consultancy), new {id = facultyId });
+            return RedirectToAction(nameof(Consultancy), new { id = facultyId });
         }
 
 
@@ -1030,30 +1121,95 @@ namespace GECPatan.Admin.Controllers
             return vm;
         }
 
-        private async Task<string> SaveFileAsync(IFormFile file, string folder)
-        {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
-        }
-
-        private void DeleteFile(string? filePath)
-        {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
-        }
-
         private async Task<ApplicationUser?> GetCurrentUserAsync()
         {
             var userId = User.FindFirst(
                 System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return null;
             return await _context.Users.FindAsync(userId);
+        }
+
+        /// <summary>
+        /// The "look up this faculty member's name for a notification message"
+        /// query was copy-pasted ~8 times across the sub-resource actions
+        /// below. One place to change it if the notification format ever needs
+        /// more than just the name (e.g. department).
+        /// </summary>
+        private async Task<string?> GetFacultyNameAsync(int facultyId) =>
+            await _context.Faculties
+                .Where(f => f.FacultyId == facultyId)
+                .Select(f => f.Name)
+                .FirstOrDefaultAsync();
+
+        /// <summary>
+        /// True if the current user is allowed to add/edit/delete records on
+        /// the given faculty member's profile — SuperAdmin/Principal always,
+        /// the HOD of that faculty's own department, or the Faculty user
+        /// whose own profile it is.
+        ///
+        /// Every sub-resource mutating action in this controller (add/delete
+        /// qualifications, experience, training, publications, personal
+        /// details, subjects, research guidance, book publications, patents,
+        /// memberships, consultancy) MUST call this before making any
+        /// change. Previously NONE of them did — the only protection was the
+        /// class-level [Authorize(Roles = "...,Faculty")], which means any
+        /// authenticated Faculty user could add or delete records on ANY
+        /// OTHER faculty member's profile just by changing the FacultyId in
+        /// the submitted form. This is the single most important fix in this
+        /// file — logged on denial so attempted misuse is visible.
+        /// </summary>
+        private async Task<bool> CanManageFacultyAsync(int facultyId)
+        {
+            if (User.IsInRole(AppRoles.SuperAdmin) || User.IsInRole(AppRoles.Principal))
+                return true;
+
+            var cu = await GetCurrentUserAsync();
+            if (cu == null) return false;
+
+            if (User.IsInRole(AppRoles.HOD))
+            {
+                var facultyDeptId = await _context.Faculties
+                    .Where(f => f.FacultyId == facultyId)
+                    .Select(f => (int?)f.DeptId)
+                    .FirstOrDefaultAsync();
+
+                if (facultyDeptId != null && facultyDeptId == cu.DeptId)
+                    return true;
+            }
+
+            if (User.IsInRole(AppRoles.Faculty) && cu.FacultyId == facultyId)
+                return true;
+
+            _logger.LogWarning(
+                "User {User} (roles via claims) was denied access to manage faculty {FacultyId}",
+                User.Identity?.Name, facultyId);
+            return false;
+        }
+
+        /// <summary>
+        /// Sends an admin notification for a Faculty-module event, but never
+        /// lets a notification failure fail the request it's attached to —
+        /// the underlying data change has already been saved by the time
+        /// this is called, so a NotificationService problem should be logged,
+        /// not surfaced as an error on an otherwise-successful save.
+        /// </summary>
+        private async Task TryNotifyAsync(string title, string? message, string icon, string color, string link)
+        {
+            try
+            {
+                await _notify.SendAsync(
+                    title: title,
+                    message: message,
+                    module: "Faculty",
+                    icon: icon,
+                    color: color,
+                    link: link,
+                    forRole: "SuperAdmin");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send Faculty module notification: {Title}", title);
+            }
         }
     }
 }

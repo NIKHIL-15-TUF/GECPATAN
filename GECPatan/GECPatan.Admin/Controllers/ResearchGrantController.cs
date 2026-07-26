@@ -157,7 +157,18 @@ namespace GECPatan.Admin.Controllers
             if (r == null) return NotFound();
 
             r.IsVisible = !r.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Research grant {GrantId} visibility set to {IsVisible}", id, r.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for research grant {GrantId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
