@@ -12,9 +12,13 @@ namespace GECPatan.Admin.Controllers
     public class NBAAccreditationController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<NBAAccreditationController> _logger;
 
-        public NBAAccreditationController(ApplicationDbContext context)
-            => _context = context;
+        public NBAAccreditationController(ApplicationDbContext context, ILogger<NBAAccreditationController> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
 
         // ── INDEX ─────────────────────────────────────────
         public async Task<IActionResult> Index()
@@ -45,13 +49,18 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Create(NBAAccreditationVM model)
         {
             ViewData["Title"] = "Add NBA Accreditation";
+
+            if (model.DeptId.HasValue &&
+                !await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId.Value))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
             if (!ModelState.IsValid)
             {
                 await LoadDepts(model);
                 return View("Form", model);
             }
 
-            _context.NBAAccreditations.Add(new NBAAccreditation
+            var record = new NBAAccreditation
             {
                 ProgramName = model.ProgramName,
                 AccreditedBy = model.AccreditedBy,
@@ -61,11 +70,34 @@ namespace GECPatan.Admin.Controllers
                 DeptId = model.DeptId,
                 DisplayOrder = model.DisplayOrder,
                 IsVisible = model.IsVisible
-            });
+            };
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "NBA accreditation record added.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                _context.NBAAccreditations.Add(record);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "NBA accreditation record {RecordId} created for program '{ProgramName}'",
+                    record.Id, record.ProgramName);
+
+                TempData["Success"] = "NBA accreditation record added.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error creating NBA accreditation record for '{ProgramName}'", model.ProgramName);
+                ModelState.AddModelError(string.Empty, "Unable to save the record. Please try again.");
+                await LoadDepts(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error creating NBA accreditation record");
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDepts(model);
+                return View("Form", model);
+            }
         }
 
         // ── EDIT GET ──────────────────────────────────────
@@ -97,6 +129,11 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Edit(int id, NBAAccreditationVM model)
         {
             ViewData["Title"] = "Edit NBA Accreditation";
+
+            if (model.DeptId.HasValue &&
+                !await _context.Departments.AnyAsync(d => d.DeptId == model.DeptId.Value))
+                ModelState.AddModelError(nameof(model.DeptId), "Please select a valid department.");
+
             if (!ModelState.IsValid)
             {
                 await LoadDepts(model);
@@ -115,33 +152,87 @@ namespace GECPatan.Admin.Controllers
             item.DisplayOrder = model.DisplayOrder;
             item.IsVisible = model.IsVisible;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "NBA accreditation record updated.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("NBA accreditation record {RecordId} updated", item.Id);
+
+                TempData["Success"] = "NBA accreditation record updated.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogWarning(ex, "Concurrency conflict updating NBA accreditation record {RecordId}", id);
+                ModelState.AddModelError(string.Empty,
+                    "This record was changed by someone else. Please reload and try again.");
+                await LoadDepts(model);
+                return View("Form", model);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error updating NBA accreditation record {RecordId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the record. Please try again.");
+                await LoadDepts(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating NBA accreditation record {RecordId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDepts(model);
+                return View("Form", model);
+            }
         }
 
         // ── DELETE ────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var item = await _context.NBAAccreditations.FindAsync(id);
             if (item == null) return NotFound();
 
             item.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "Record deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("NBA accreditation record {RecordId} soft-deleted", id);
+
+                TempData["Success"] = "Record deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting NBA accreditation record {RecordId}", id);
+                TempData["Error"] = "Unable to delete the record. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         // ── TOGGLE VISIBLE ────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var item = await _context.NBAAccreditations.FindAsync(id);
             if (item == null) return NotFound();
 
             item.IsVisible = !item.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("NBA accreditation record {RecordId} visibility set to {IsVisible}", id, item.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for NBA accreditation record {RecordId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 

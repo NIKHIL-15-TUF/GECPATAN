@@ -1,5 +1,6 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,13 +13,18 @@ namespace GECPatan.Admin.Controllers
     public class MarqueeController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<MarqueeController> _logger;
+        private const string MarqueeFolder = "marquee";
 
-        public MarqueeController(ApplicationDbContext context,
-            IWebHostEnvironment env)
+        public MarqueeController(
+            ApplicationDbContext context,
+            IFileStorageService fileStorage,
+            ILogger<MarqueeController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         // ── INDEX ─────────────────────────────────────────
@@ -64,8 +70,7 @@ namespace GECPatan.Admin.Controllers
         // ── CREATE POST ───────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(
-            MarqueeFormVM model, IFormFile? UploadFile)
+        public async Task<IActionResult> Create(MarqueeFormVM model, IFormFile? UploadFile)
         {
             ViewData["Title"] = "Add Marquee Item";
             ValidateForm(model);
@@ -75,20 +80,53 @@ namespace GECPatan.Admin.Controllers
                 return View("Form", model);
             }
 
+            string? filePath = null;
+            bool hasFile = UploadFile != null && UploadFile.Length > 0;
+            if (hasFile)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(UploadFile!, MarqueeFolder, FileCategory.Document);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(UploadFile), uploadResult.ErrorMessage!);
+                    await LoadDynamicOptions(model);
+                    return View("Form", model);
+                }
+                filePath = uploadResult.RelativePath;
+            }
+
             int maxPos = await _context.Marquees
                 .Select(m => (int?)m.DisplayOrder).MaxAsync() ?? -1;
 
             var item = BuildEntity(model);
             item.DisplayOrder = maxPos + 1;
+            item.FilePath = filePath;
 
-            if (UploadFile != null && UploadFile.Length > 0)
-                item.FilePath = await SaveFileAsync(UploadFile, "marquee");
+            try
+            {
+                _context.Marquees.Add(item);
+                await _context.SaveChangesAsync();
 
-            _context.Marquees.Add(item);
-            await _context.SaveChangesAsync();
+                _logger.LogInformation("Marquee item {MarqueeId} '{Title}' created", item.Id, item.Title);
 
-            TempData["Success"] = $"Marquee item '{item.Title}' added.";
-            return RedirectToAction(nameof(Index));
+                TempData["Success"] = $"Marquee item '{item.Title}' added.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _fileStorage.Delete(filePath);
+                _logger.LogError(ex, "Database error creating marquee item '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "Unable to save the marquee item. Please try again.");
+                await LoadDynamicOptions(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _fileStorage.Delete(filePath);
+                _logger.LogError(ex, "Unexpected error creating marquee item '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDynamicOptions(model);
+                return View("Form", model);
+            }
         }
 
         // ── EDIT GET ──────────────────────────────────────
@@ -106,8 +144,7 @@ namespace GECPatan.Admin.Controllers
         // ── EDIT POST ─────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(
-            int id, MarqueeFormVM model, IFormFile? UploadFile)
+        public async Task<IActionResult> Edit(int id, MarqueeFormVM model, IFormFile? UploadFile)
         {
             ViewData["Title"] = "Edit Marquee Item";
             ValidateForm(model);
@@ -120,47 +157,119 @@ namespace GECPatan.Admin.Controllers
             var item = await _context.Marquees.FindAsync(id);
             if (item == null) return NotFound();
 
-            UpdateEntity(item, model);
-
-            if (UploadFile != null && UploadFile.Length > 0)
+            string? newFilePath = null;
+            bool replacingFile = UploadFile != null && UploadFile.Length > 0;
+            if (replacingFile)
             {
-                DeleteFile(item.FilePath);
-                item.FilePath = await SaveFileAsync(UploadFile, "marquee");
+                var uploadResult = await _fileStorage.SaveAsync(UploadFile!, MarqueeFolder, FileCategory.Document);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(UploadFile), uploadResult.ErrorMessage!);
+                    await LoadDynamicOptions(model);
+                    return View("Form", model);
+                }
+                newFilePath = uploadResult.RelativePath;
             }
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"'{item.Title}' updated.";
-            return RedirectToAction(nameof(Index));
+            string? previousFilePath = item.FilePath;
+
+            UpdateEntity(item, model);
+
+            if (replacingFile)
+                item.FilePath = newFilePath;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Old file is only removed once the new state is safely persisted.
+                if (replacingFile)
+                    _fileStorage.Delete(previousFilePath);
+
+                _logger.LogInformation("Marquee item {MarqueeId} '{Title}' updated", item.Id, item.Title);
+
+                TempData["Success"] = $"'{item.Title}' updated.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                if (replacingFile)
+                    _fileStorage.Delete(newFilePath);
+
+                _logger.LogError(ex, "Database error updating marquee item {MarqueeId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the marquee item. Please try again.");
+                await LoadDynamicOptions(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                if (replacingFile)
+                    _fileStorage.Delete(newFilePath);
+
+                _logger.LogError(ex, "Unexpected error updating marquee item {MarqueeId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadDynamicOptions(model);
+                return View("Form", model);
+            }
         }
 
         // ── TOGGLE VISIBLE ────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var item = await _context.Marquees.FindAsync(id);
             if (item == null) return NotFound();
+
             item.IsVisible = !item.IsVisible;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"'{item.Title}' "
-                + (item.IsVisible ? "shown" : "hidden") + ".";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Marquee item {MarqueeId} visibility set to {IsVisible}", id, item.IsVisible);
+                TempData["Success"] = $"'{item.Title}' " + (item.IsVisible ? "shown" : "hidden") + ".";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for marquee item {MarqueeId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         // ── DELETE ────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var item = await _context.Marquees.FindAsync(id);
             if (item == null) return NotFound();
-            DeleteFile(item.FilePath);
+
+            string? filePath = item.FilePath;
             item.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"'{item.Title}' deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _fileStorage.Delete(filePath);
+
+                _logger.LogInformation("Marquee item {MarqueeId} '{Title}' deleted", id, item.Title);
+                TempData["Success"] = $"'{item.Title}' deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting marquee item {MarqueeId}", id);
+                TempData["Error"] = "Unable to delete the item. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         // ── REORDER ───────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reorder(int id, string dir)
         {
             var item = await _context.Marquees.FindAsync(id);
@@ -184,7 +293,16 @@ namespace GECPatan.Admin.Controllers
                 all[idx + 1].DisplayOrder--;
             }
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error reordering marquee item {MarqueeId}", id);
+                TempData["Error"] = "Unable to reorder items. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -238,50 +356,34 @@ namespace GECPatan.Admin.Controllers
 
         private async Task LoadDynamicOptions(MarqueeFormVM vm)
         {
-            if (string.IsNullOrEmpty(vm.DynamicType) ||
-                vm.LinkType != "dynamic") return;
+            if (string.IsNullOrEmpty(vm.DynamicType) || vm.LinkType != "dynamic") return;
 
             vm.DynamicIdOptions = vm.DynamicType switch
             {
                 "Department" => await _context.Departments
                     .Where(d => d.IsActive).OrderBy(d => d.Name)
-                    .Select(d => new SelectListItem
-                    {
-                        Value = d.DeptId.ToString(),
-                        Text = d.Name
-                    }).ToListAsync(),
+                    .Select(d => new SelectListItem { Value = d.DeptId.ToString(), Text = d.Name })
+                    .ToListAsync(),
 
                 "Committee" => await _context.CampusCommittees
                     .OrderBy(c => c.Title)
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.Id.ToString(),
-                        Text = c.Title
-                    }).ToListAsync(),
+                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Title })
+                    .ToListAsync(),
 
                 "Facility" => await _context.Facilities
                     .Where(f => f.IsActive).OrderBy(f => f.Title)
-                    .Select(f => new SelectListItem
-                    {
-                        Value = f.Id.ToString(),
-                        Text = f.Title
-                    }).ToListAsync(),
+                    .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Title })
+                    .ToListAsync(),
 
                 "ContentPage" => await _context.ContentPages
                     .Where(p => p.IsVisible).OrderBy(p => p.Title)
-                    .Select(p => new SelectListItem
-                    {
-                        Value = p.Id.ToString(),
-                        Text = p.Title
-                    }).ToListAsync(),
+                    .Select(p => new SelectListItem { Value = p.Id.ToString(), Text = p.Title })
+                    .ToListAsync(),
 
                 "Document" => await _context.DocumentCategories
                     .Where(d => d.IsVisible).OrderBy(d => d.Title)
-                    .Select(d => new SelectListItem
-                    {
-                        Value = d.Id.ToString(),
-                        Text = d.Title
-                    }).ToListAsync(),
+                    .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Title })
+                    .ToListAsync(),
 
                 _ => new List<SelectListItem>()
             };
@@ -289,40 +391,30 @@ namespace GECPatan.Admin.Controllers
 
         private void ValidateForm(MarqueeFormVM m)
         {
-            if (m.LinkType == "internal" &&
-                string.IsNullOrWhiteSpace(m.ControllerName))
-                ModelState.AddModelError("ControllerName",
-                    "Controller is required for Internal links.");
+            if (m.LinkType == "internal" && string.IsNullOrWhiteSpace(m.ControllerName))
+                ModelState.AddModelError(nameof(m.ControllerName), "Controller is required for Internal links.");
 
             if (m.LinkType == "dynamic")
             {
                 if (string.IsNullOrWhiteSpace(m.DynamicType))
-                    ModelState.AddModelError("DynamicType",
-                        "Please select a dynamic type.");
+                    ModelState.AddModelError(nameof(m.DynamicType), "Please select a dynamic type.");
                 if (!m.DynamicId.HasValue)
-                    ModelState.AddModelError("DynamicId",
-                        "Please select an item.");
+                    ModelState.AddModelError(nameof(m.DynamicId), "Please select an item.");
             }
 
-            if (m.LinkType == "external" &&
-                string.IsNullOrWhiteSpace(m.ExternalLink))
-                ModelState.AddModelError("ExternalLink",
-                    "URL is required for External links.");
+            if (m.LinkType == "external" && string.IsNullOrWhiteSpace(m.ExternalLink))
+                ModelState.AddModelError(nameof(m.ExternalLink), "URL is required for External links.");
 
-            if (m.ValidFrom.HasValue && m.ValidTo.HasValue &&
-                m.ValidTo < m.ValidFrom)
-                ModelState.AddModelError("ValidTo",
-                    "Valid To must be after Valid From.");
+            if (m.ValidFrom.HasValue && m.ValidTo.HasValue && m.ValidTo < m.ValidFrom)
+                ModelState.AddModelError(nameof(m.ValidTo), "Valid To must be after Valid From.");
         }
 
         private static Marquee BuildEntity(MarqueeFormVM m) => new()
         {
             Title = m.Title,
             LinkType = m.LinkType,
-            ControllerName = m.LinkType is "internal" or "dynamic"
-                ? m.ControllerName : null,
-            ActionName = m.LinkType is "internal" or "dynamic"
-                ? m.ActionName : null,
+            ControllerName = m.LinkType is "internal" or "dynamic" ? m.ControllerName : null,
+            ActionName = m.LinkType is "internal" or "dynamic" ? m.ActionName : null,
             DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null,
             DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null,
             ExternalLink = m.LinkType == "external" ? m.ExternalLink : null,
@@ -337,10 +429,8 @@ namespace GECPatan.Admin.Controllers
         {
             e.Title = m.Title;
             e.LinkType = m.LinkType;
-            e.ControllerName = m.LinkType is "internal" or "dynamic"
-                ? m.ControllerName : null;
-            e.ActionName = m.LinkType is "internal" or "dynamic"
-                ? m.ActionName : null;
+            e.ControllerName = m.LinkType is "internal" or "dynamic" ? m.ControllerName : null;
+            e.ActionName = m.LinkType is "internal" or "dynamic" ? m.ActionName : null;
             e.DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null;
             e.DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null;
             e.ExternalLink = m.LinkType == "external" ? m.ExternalLink : null;
@@ -376,24 +466,6 @@ namespace GECPatan.Admin.Controllers
                 IsVisible = m.IsVisible,
                 HorizontalMarquee = m.HorizontalMarquee
             };
-        }
-
-        private async Task<string> SaveFileAsync(IFormFile file, string folder)
-        {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
-        }
-
-        private void DeleteFile(string? filePath)
-        {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
         }
     }
 }

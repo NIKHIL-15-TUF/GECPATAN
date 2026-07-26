@@ -1,5 +1,6 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +12,18 @@ namespace GECPatan.Admin.Controllers
     public class MoUController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<MoUController> _logger;
+        private const string MoUFolder = "mou";
 
-        public MoUController(ApplicationDbContext context, IWebHostEnvironment env)
+        public MoUController(
+            ApplicationDbContext context,
+            IFileStorageService fileStorage,
+            ILogger<MoUController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -41,21 +48,52 @@ namespace GECPatan.Admin.Controllers
             ViewData["Title"] = "Add MoU";
             if (!ModelState.IsValid) return View(model);
 
+            string? filePath = null;
+            bool hasFile = MoUFile != null && MoUFile.Length > 0;
+            if (hasFile)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(MoUFile!, MoUFolder, FileCategory.Document);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(MoUFile), uploadResult.ErrorMessage!);
+                    return View(model);
+                }
+                filePath = uploadResult.RelativePath;
+            }
+
             var mou = new MoUDocument
             {
                 Title = model.Title,
                 MonthYear = model.MonthYear,
                 IsVisible = model.IsVisible,
-                DisplayOrder = model.DisplayOrder
+                DisplayOrder = model.DisplayOrder,
+                FilePath = filePath
             };
 
-            if (MoUFile != null && MoUFile.Length > 0)
-                mou.FilePath = await SaveFileAsync(MoUFile, "mou");
+            try
+            {
+                _context.MoUDocuments.Add(mou);
+                await _context.SaveChangesAsync();
 
-            _context.MoUDocuments.Add(mou);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "MoU added.";
-            return RedirectToAction(nameof(Index));
+                _logger.LogInformation("MoU document {MoUId} '{Title}' created", mou.Id, mou.Title);
+
+                TempData["Success"] = "MoU added.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                _fileStorage.Delete(filePath);
+                _logger.LogError(ex, "Database error creating MoU '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "Unable to save the MoU. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _fileStorage.Delete(filePath);
+                _logger.LogError(ex, "Unexpected error creating MoU '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -84,55 +122,112 @@ namespace GECPatan.Admin.Controllers
             var m = await _context.MoUDocuments.FindAsync(id);
             if (m == null) return NotFound();
 
+            string? newFilePath = null;
+            bool replacingFile = MoUFile != null && MoUFile.Length > 0;
+            if (replacingFile)
+            {
+                var uploadResult = await _fileStorage.SaveAsync(MoUFile!, MoUFolder, FileCategory.Document);
+                if (!uploadResult.Success)
+                {
+                    ModelState.AddModelError(nameof(MoUFile), uploadResult.ErrorMessage!);
+                    return View(model);
+                }
+                newFilePath = uploadResult.RelativePath;
+            }
+
+            string? previousFilePath = m.FilePath;
+
             m.Title = model.Title;
             m.MonthYear = model.MonthYear;
             m.IsVisible = model.IsVisible;
             m.DisplayOrder = model.DisplayOrder;
 
-            if (MoUFile != null && MoUFile.Length > 0) { DeleteFile(m.FilePath); m.FilePath = await SaveFileAsync(MoUFile, "mou"); }
+            if (replacingFile)
+                m.FilePath = newFilePath;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "MoU updated.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Old file removed only after the new state is safely persisted.
+                if (replacingFile)
+                    _fileStorage.Delete(previousFilePath);
+
+                _logger.LogInformation("MoU document {MoUId} '{Title}' updated", m.Id, m.Title);
+
+                TempData["Success"] = "MoU updated.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                if (replacingFile)
+                    _fileStorage.Delete(newFilePath);
+
+                _logger.LogError(ex, "Database error updating MoU {MoUId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the MoU. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                if (replacingFile)
+                    _fileStorage.Delete(newFilePath);
+
+                _logger.LogError(ex, "Unexpected error updating MoU {MoUId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var m = await _context.MoUDocuments.FindAsync(id);
             if (m == null) return NotFound();
+
             m.IsVisible = !m.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("MoU document {MoUId} visibility set to {IsVisible}", id, m.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for MoU {MoUId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var m = await _context.MoUDocuments.FindAsync(id);
             if (m == null) return NotFound();
+
+            string? filePath = m.FilePath;
             m.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "MoU deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Physical file removed only after the soft-delete commits.
+                _fileStorage.Delete(filePath);
+
+                _logger.LogInformation("MoU document {MoUId} '{Title}' deleted", id, m.Title);
+                TempData["Success"] = "MoU deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting MoU {MoUId}", id);
+                TempData["Error"] = "Unable to delete the MoU. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
-        }
-
-        private async Task<string> SaveFileAsync(IFormFile file, string folder)
-        {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
-        }
-
-        private void DeleteFile(string? filePath)
-        {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
         }
     }
 }

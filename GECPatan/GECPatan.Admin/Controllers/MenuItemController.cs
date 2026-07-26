@@ -12,15 +12,18 @@ namespace GECPatan.Admin.Controllers
     public class MenuItemController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<MenuItemController> _logger;
 
-        public MenuItemController(ApplicationDbContext context)
-            => _context = context;
+        public MenuItemController(ApplicationDbContext context, ILogger<MenuItemController> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
 
         // ── INDEX ─────────────────────────────────────────
         public async Task<IActionResult> Index(string menuType = "Main")
         {
-            ViewData["Title"] = menuType == "Footer"
-                ? "Footer Menu" : "Navigation Menu";
+            ViewData["Title"] = menuType == "Footer" ? "Footer Menu" : "Navigation Menu";
             ViewBag.MenuType = menuType;
 
             var all = await _context.MenuItems
@@ -28,19 +31,12 @@ namespace GECPatan.Admin.Controllers
                 .OrderBy(m => m.Position)
                 .ToListAsync();
 
-            // Resolve dynamic labels
-            var deptMap = await _context.Departments
-                .ToDictionaryAsync(d => d.DeptId, d => d.Name);
-            var commMap = await _context.CampusCommittees
-                .ToDictionaryAsync(c => c.Id, c => c.Title);
-            var facMap = await _context.Facilities
-                .ToDictionaryAsync(f => f.Id, f => f.Title);
-            var clubMap = await _context.StudentClubs
-                .ToDictionaryAsync(c => c.Id, c => c.Title);
-            var docMap = await _context.DocumentCategories
-                .ToDictionaryAsync(d => d.Id, d => d.Title);
-            var pageMap = await _context.ContentPages
-                .ToDictionaryAsync(p => p.Id, p => p.Title);
+            var deptMap = await _context.Departments.ToDictionaryAsync(d => d.DeptId, d => d.Name);
+            var commMap = await _context.CampusCommittees.ToDictionaryAsync(c => c.Id, c => c.Title);
+            var facMap = await _context.Facilities.ToDictionaryAsync(f => f.Id, f => f.Title);
+            var clubMap = await _context.StudentClubs.ToDictionaryAsync(c => c.Id, c => c.Title);
+            var docMap = await _context.DocumentCategories.ToDictionaryAsync(d => d.Id, d => d.Title);
+            var pageMap = await _context.ContentPages.ToDictionaryAsync(p => p.Id, p => p.Title);
 
             string ResolveLabel(MenuItem m)
             {
@@ -63,8 +59,7 @@ namespace GECPatan.Admin.Controllers
         }
 
         // ── CREATE GET ────────────────────────────────────
-        public async Task<IActionResult> Create(
-            int? parentId, string menuType = "Main")
+        public async Task<IActionResult> Create(int? parentId, string menuType = "Main")
         {
             ViewData["Title"] = "Add Menu Item";
             var vm = new MenuItemFormVM
@@ -82,7 +77,7 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Create(MenuItemFormVM model)
         {
             ViewData["Title"] = "Add Menu Item";
-            await ValidateForm(model);
+            ValidateForm(model);
             if (!ModelState.IsValid)
             {
                 await LoadParentOptions(model, model.MenuType);
@@ -98,12 +93,34 @@ namespace GECPatan.Admin.Controllers
 
             var item = BuildEntity(model);
             item.Position = maxPos + 1;
-            _context.MenuItems.Add(item);
-            await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"'{item.MenuText}' added.";
-            return RedirectToAction(nameof(Index),
-                new { menuType = model.MenuType });
+            try
+            {
+                _context.MenuItems.Add(item);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Menu item {MenuItemId} '{MenuText}' created ({MenuType})",
+                    item.Id, item.MenuText, item.MenuType);
+
+                TempData["Success"] = $"'{item.MenuText}' added.";
+                return RedirectToAction(nameof(Index), new { menuType = model.MenuType });
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error creating menu item '{MenuText}'", model.MenuText);
+                ModelState.AddModelError(string.Empty, "Unable to save the menu item. Please try again.");
+                await LoadParentOptions(model, model.MenuType);
+                await LoadDynamicOptions(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error creating menu item '{MenuText}'", model.MenuText);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadParentOptions(model, model.MenuType);
+                await LoadDynamicOptions(model);
+                return View("Form", model);
+            }
         }
 
         // ── EDIT GET ──────────────────────────────────────
@@ -125,12 +142,24 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Edit(int id, MenuItemFormVM model)
         {
             ViewData["Title"] = "Edit Menu Item";
-            await ValidateForm(model);
+            ValidateForm(model);
 
-            // Circular check
             if (model.ParentId == id)
-                ModelState.AddModelError("ParentId",
-                    "An item cannot be its own parent.");
+            {
+                ModelState.AddModelError(nameof(model.ParentId), "An item cannot be its own parent.");
+            }
+            else if (model.ParentId.HasValue &&
+                     await WouldCreateCycleAsync(id, model.ParentId.Value))
+            {
+                // Original code only caught the direct self-parent case (ParentId == id).
+                // Assigning a menu item as a child of one of its own descendants was still
+                // possible and would corrupt the tree (infinite loop in BuildTree's recursion,
+                // and the item would silently vanish from Index since it filters by ParentId
+                // chains reachable from the root). This walks the proposed parent's ancestry
+                // chain to catch that case too.
+                ModelState.AddModelError(nameof(model.ParentId),
+                    "Cannot move this item under one of its own descendants.");
+            }
 
             if (!ModelState.IsValid)
             {
@@ -143,29 +172,62 @@ namespace GECPatan.Admin.Controllers
             if (item == null) return NotFound();
 
             UpdateEntity(item, model);
-            await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"'{item.MenuText}' updated.";
-            return RedirectToAction(nameof(Index),
-                new { menuType = item.MenuType });
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Menu item {MenuItemId} '{MenuText}' updated", item.Id, item.MenuText);
+
+                TempData["Success"] = $"'{item.MenuText}' updated.";
+                return RedirectToAction(nameof(Index), new { menuType = item.MenuType });
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error updating menu item {MenuItemId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the menu item. Please try again.");
+                await LoadParentOptions(model, model.MenuType);
+                await LoadDynamicOptions(model);
+                return View("Form", model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating menu item {MenuItemId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                await LoadParentOptions(model, model.MenuType);
+                await LoadDynamicOptions(model);
+                return View("Form", model);
+            }
         }
 
         // ── TOGGLE VISIBLE ────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var item = await _context.MenuItems.FindAsync(id);
             if (item == null) return NotFound();
+
             item.IsVisible = !item.IsVisible;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"'{item.MenuText}' "
-                + (item.IsVisible ? "shown" : "hidden") + ".";
-            return RedirectToAction(nameof(Index),
-                new { menuType = item.MenuType });
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Menu item {MenuItemId} visibility set to {IsVisible}", id, item.IsVisible);
+                TempData["Success"] = $"'{item.MenuText}' " + (item.IsVisible ? "shown" : "hidden") + ".";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for menu item {MenuItemId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
+            return RedirectToAction(nameof(Index), new { menuType = item.MenuType });
         }
 
         // ── DELETE ────────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var item = await _context.MenuItems.FindAsync(id);
@@ -177,22 +239,32 @@ namespace GECPatan.Admin.Controllers
 
             if (hasChildren)
             {
-                TempData["Error"] =
-                    $"Cannot delete '{item.MenuText}' — "
-                    + "it has child items. Remove children first.";
-                return RedirectToAction(nameof(Index),
-                    new { menuType = mType });
+                TempData["Error"] = $"Cannot delete '{item.MenuText}' — it has child items. Remove children first.";
+                return RedirectToAction(nameof(Index), new { menuType = mType });
             }
 
             item.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"'{item.MenuText}' deleted.";
-            return RedirectToAction(nameof(Index),
-                new { menuType = mType });
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Menu item {MenuItemId} '{MenuText}' deleted", id, item.MenuText);
+
+                TempData["Success"] = $"'{item.MenuText}' deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting menu item {MenuItemId}", id);
+                TempData["Error"] = "Unable to delete the item. Please try again.";
+            }
+
+            return RedirectToAction(nameof(Index), new { menuType = mType });
         }
 
         // ── REORDER ───────────────────────────────────────
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reorder(int id, string dir)
         {
             var item = await _context.MenuItems.FindAsync(id);
@@ -218,9 +290,17 @@ namespace GECPatan.Admin.Controllers
                 siblings[idx + 1].Position--;
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index),
-                new { menuType = item.MenuType });
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error reordering menu item {MenuItemId}", id);
+                TempData["Error"] = "Unable to reorder menu items. Please try again.";
+            }
+
+            return RedirectToAction(nameof(Index), new { menuType = item.MenuType });
         }
 
         // ── GET DYNAMIC OPTIONS (AJAX) ────────────────────
@@ -230,8 +310,7 @@ namespace GECPatan.Admin.Controllers
             var items = type switch
             {
                 "Department" => await _context.Departments
-                    .Where(d => d.IsActive)
-                    .OrderBy(d => d.Name)
+                    .Where(d => d.IsActive).OrderBy(d => d.Name)
                     .Select(d => new { id = d.DeptId, text = d.Name })
                     .ToListAsync<object>(),
 
@@ -241,26 +320,22 @@ namespace GECPatan.Admin.Controllers
                     .ToListAsync<object>(),
 
                 "Facility" => await _context.Facilities
-                    .Where(f => f.IsActive)
-                    .OrderBy(f => f.Title)
+                    .Where(f => f.IsActive).OrderBy(f => f.Title)
                     .Select(f => new { id = f.Id, text = f.Title })
                     .ToListAsync<object>(),
 
                 "Club" => await _context.StudentClubs
-                    .Where(c => c.IsVisible)
-                    .OrderBy(c => c.Title)
+                    .Where(c => c.IsVisible).OrderBy(c => c.Title)
                     .Select(c => new { id = c.Id, text = c.Title })
                     .ToListAsync<object>(),
 
                 "Document" => await _context.DocumentCategories
-                    .Where(d => d.IsVisible)
-                    .OrderBy(d => d.Title)
+                    .Where(d => d.IsVisible).OrderBy(d => d.Title)
                     .Select(d => new { id = d.Id, text = d.Title })
                     .ToListAsync<object>(),
 
                 "ContentPage" => await _context.ContentPages
-                    .Where(p => p.IsVisible)
-                    .OrderBy(p => p.Title)
+                    .Where(p => p.IsVisible).OrderBy(p => p.Title)
                     .Select(p => new { id = p.Id, text = p.Title })
                     .ToListAsync<object>(),
 
@@ -273,8 +348,7 @@ namespace GECPatan.Admin.Controllers
         // PRIVATE HELPERS
         // ══════════════════════════════════════════════════
         private static List<MenuItemTreeVM> BuildTree(
-            List<MenuItem> all, int? parentId, int level,
-            Func<MenuItem, string> resolveLabel)
+            List<MenuItem> all, int? parentId, int level, Func<MenuItem, string> resolveLabel)
         {
             var siblings = all
                 .Where(m => m.ParentId == parentId)
@@ -305,13 +379,35 @@ namespace GECPatan.Admin.Controllers
             }).ToList();
         }
 
-        private async Task LoadParentOptions(
-            MenuItemFormVM vm, string menuType)
+        /// <summary>
+        /// Walks up from <paramref name="proposedParentId"/> through its ancestor chain.
+        /// Returns true if <paramref name="itemId"/> appears anywhere in that chain,
+        /// which would mean assigning <paramref name="proposedParentId"/> as the parent
+        /// of <paramref name="itemId"/> creates a cycle.
+        /// </summary>
+        private async Task<bool> WouldCreateCycleAsync(int itemId, int proposedParentId)
+        {
+            int? currentId = proposedParentId;
+            var visited = new HashSet<int>();
+
+            while (currentId.HasValue)
+            {
+                if (currentId.Value == itemId) return true;
+                if (!visited.Add(currentId.Value)) break; // pre-existing cycle in data; stop rather than loop forever
+
+                currentId = await _context.MenuItems
+                    .Where(m => m.Id == currentId.Value)
+                    .Select(m => m.ParentId)
+                    .FirstOrDefaultAsync();
+            }
+
+            return false;
+        }
+
+        private async Task LoadParentOptions(MenuItemFormVM vm, string menuType)
         {
             var all = await _context.MenuItems
-                .Where(m => m.MenuType == menuType
-                         && !m.IsDeleted
-                         && m.Id != vm.Id)
+                .Where(m => m.MenuType == menuType && !m.IsDeleted && m.Id != vm.Id)
                 .OrderBy(m => m.Position)
                 .ToListAsync();
 
@@ -320,22 +416,12 @@ namespace GECPatan.Admin.Controllers
                 new() { Value = "", Text = "— Top Level (no parent) —" }
             };
 
-            // Level 1 items
             foreach (var top in all.Where(m => m.ParentId == null))
             {
-                opts.Add(new SelectListItem
-                {
-                    Value = top.Id.ToString(),
-                    Text = top.MenuText
-                });
-                // Level 2 items (can also be parents for 3rd level)
+                opts.Add(new SelectListItem { Value = top.Id.ToString(), Text = top.MenuText });
                 foreach (var sub in all.Where(m => m.ParentId == top.Id))
                 {
-                    opts.Add(new SelectListItem
-                    {
-                        Value = sub.Id.ToString(),
-                        Text = $"  └─ {sub.MenuText}"
-                    });
+                    opts.Add(new SelectListItem { Value = sub.Id.ToString(), Text = $"  └─ {sub.MenuText}" });
                 }
             }
 
@@ -344,8 +430,7 @@ namespace GECPatan.Admin.Controllers
 
         private async Task LoadDynamicOptions(MenuItemFormVM vm)
         {
-            if (string.IsNullOrEmpty(vm.DynamicType) ||
-                vm.LinkType != "dynamic")
+            if (string.IsNullOrEmpty(vm.DynamicType) || vm.LinkType != "dynamic")
             {
                 vm.DynamicIdOptions = new();
                 return;
@@ -359,132 +444,79 @@ namespace GECPatan.Admin.Controllers
             {
                 "Department" => await _context.Departments
                     .Where(d => d.IsActive).OrderBy(d => d.Name)
-                    .Select(d => new SelectListItem
-                    {
-                        Value = d.DeptId.ToString(),
-                        Text = d.Name
-                    }).ToListAsync(),
+                    .Select(d => new SelectListItem { Value = d.DeptId.ToString(), Text = d.Name })
+                    .ToListAsync(),
 
                 "Committee" => await _context.CampusCommittees
                     .OrderBy(c => c.Title)
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.Id.ToString(),
-                        Text = c.Title
-                    }).ToListAsync(),
+                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Title })
+                    .ToListAsync(),
 
                 "Facility" => await _context.Facilities
                     .Where(f => f.IsActive).OrderBy(f => f.Title)
-                    .Select(f => new SelectListItem
-                    {
-                        Value = f.Id.ToString(),
-                        Text = f.Title
-                    }).ToListAsync(),
+                    .Select(f => new SelectListItem { Value = f.Id.ToString(), Text = f.Title })
+                    .ToListAsync(),
 
                 "Club" => await _context.StudentClubs
                     .Where(c => c.IsVisible).OrderBy(c => c.Title)
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.Id.ToString(),
-                        Text = c.Title
-                    }).ToListAsync(),
+                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Title })
+                    .ToListAsync(),
 
                 "Document" => await _context.DocumentCategories
                     .Where(d => d.IsVisible).OrderBy(d => d.Title)
-                    .Select(d => new SelectListItem
-                    {
-                        Value = d.Id.ToString(),
-                        Text = d.Title
-                    }).ToListAsync(),
+                    .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Title })
+                    .ToListAsync(),
 
                 "ContentPage" => await _context.ContentPages
                     .Where(p => p.IsVisible).OrderBy(p => p.Title)
-                    .Select(p => new SelectListItem
-                    {
-                        Value = p.Id.ToString(),
-                        Text = p.Title
-                    }).ToListAsync(),
+                    .Select(p => new SelectListItem { Value = p.Id.ToString(), Text = p.Title })
+                    .ToListAsync(),
 
                 _ => new List<SelectListItem>()
             };
         }
 
-        private Task ValidateForm(MenuItemFormVM m)
+        private void ValidateForm(MenuItemFormVM m)
         {
-            if (m.LinkType == "internal" &&
-                string.IsNullOrWhiteSpace(m.ControllerName))
-                ModelState.AddModelError("ControllerName",
-                    "Controller name is required for Internal links.");
+            if (m.LinkType == "internal" && string.IsNullOrWhiteSpace(m.ControllerName))
+                ModelState.AddModelError(nameof(m.ControllerName), "Controller name is required for Internal links.");
 
             if (m.LinkType == "dynamic")
             {
                 if (string.IsNullOrWhiteSpace(m.DynamicType))
-                    ModelState.AddModelError("DynamicType",
-                        "Please select a dynamic type.");
+                    ModelState.AddModelError(nameof(m.DynamicType), "Please select a dynamic type.");
                 if (!m.DynamicId.HasValue)
-                    ModelState.AddModelError("DynamicId",
-                        "Please select an item.");
+                    ModelState.AddModelError(nameof(m.DynamicId), "Please select an item.");
             }
 
-            if (m.LinkType == "external" &&
-                string.IsNullOrWhiteSpace(m.ExternalLink))
-                ModelState.AddModelError("ExternalLink",
-                    "URL or PDF path is required for External links.");
-
-            return Task.CompletedTask;
+            if (m.LinkType == "external" && string.IsNullOrWhiteSpace(m.ExternalLink))
+                ModelState.AddModelError(nameof(m.ExternalLink), "URL or PDF path is required for External links.");
         }
 
-        private static string DefaultController(string? type) => type switch
+        private static MenuItem BuildEntity(MenuItemFormVM m) => new()
         {
-            "Department" => "Department",
-            "Committee" => "CampusCommittee",
-            "Facility" => "Facility",
-            "Club" => "StudentCorner",
-            "Document" => "Documents",
-            "ContentPage" => "Page",
-            _ => ""
+            MenuText = m.MenuText,
+            ParentId = m.ParentId == 0 ? null : m.ParentId,
+            LinkType = m.LinkType,
+            ControllerName = m.LinkType is "internal" or "dynamic" ? m.ControllerName : null,
+            ActionName = m.LinkType is "internal" or "dynamic" ? m.ActionName : null,
+            DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null,
+            DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null,
+            ExternalLink = m.LinkType == "external" ? m.ExternalLink : null,
+            CssClass = m.CssClass,
+            MenuType = m.MenuType,
+            Position = m.Position,
+            IsVisible = m.IsVisible,
+            OpenInNewTab = m.OpenInNewTab
         };
-
-        private static string DefaultAction(string? type) => type switch
-        {
-            "Department" => "DepartmentDetails",
-            "Committee" => "CommitteePage",
-            "Facility" => "FacilityPage",
-            "Club" => "ClubPage",
-            "Document" => "Index",
-            "ContentPage" => "View",
-            _ => ""
-        };
-
-        private static MenuItem BuildEntity(MenuItemFormVM m) =>
-            new()
-            {
-                MenuText = m.MenuText,
-                ParentId = m.ParentId == 0 ? null : m.ParentId,
-                LinkType = m.LinkType,
-                ControllerName = m.LinkType is "internal" or "dynamic"
-                    ? m.ControllerName : null,
-                ActionName = m.LinkType is "internal" or "dynamic"
-                    ? m.ActionName : null,
-                DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null,
-                DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null,
-                ExternalLink = m.LinkType == "external" ? m.ExternalLink : null,
-                CssClass = m.CssClass,
-                MenuType = m.MenuType,
-                Position = m.Position,
-                IsVisible = m.IsVisible,
-                OpenInNewTab = m.OpenInNewTab
-            };
 
         private static void UpdateEntity(MenuItem e, MenuItemFormVM m)
         {
             e.MenuText = m.MenuText;
             e.ParentId = m.ParentId == 0 ? null : m.ParentId;
             e.LinkType = m.LinkType;
-            e.ControllerName = m.LinkType is "internal" or "dynamic"
-                ? m.ControllerName : null;
-            e.ActionName = m.LinkType is "internal" or "dynamic"
-                ? m.ActionName : null;
+            e.ControllerName = m.LinkType is "internal" or "dynamic" ? m.ControllerName : null;
+            e.ActionName = m.LinkType is "internal" or "dynamic" ? m.ActionName : null;
             e.DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null;
             e.DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null;
             e.ExternalLink = m.LinkType == "external" ? m.ExternalLink : null;

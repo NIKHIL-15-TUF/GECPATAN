@@ -1,5 +1,6 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +12,18 @@ namespace GECPatan.Admin.Controllers
     public class NewsLetterController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileStorageService _fileStorage;
+        private readonly ILogger<NewsLetterController> _logger;
+        private const string NewslettersFolder = "newsletters";
 
-        public NewsLetterController(ApplicationDbContext context, IWebHostEnvironment env)
+        public NewsLetterController(
+            ApplicationDbContext context,
+            IFileStorageService fileStorage,
+            ILogger<NewsLetterController> logger)
         {
             _context = context;
-            _env = env;
+            _fileStorage = fileStorage;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -41,22 +48,70 @@ namespace GECPatan.Admin.Controllers
             ViewData["Title"] = "Add News Letter";
             if (!ModelState.IsValid) return View(model);
 
-            var nl = new NewsLetter
+            var savedPaths = new List<string>();
+
+            string? filePath = null;
+            if (PDF != null && PDF.Length > 0)
+            {
+                var result = await _fileStorage.SaveAsync(PDF, NewslettersFolder, FileCategory.Document);
+                if (!result.Success)
+                {
+                    ModelState.AddModelError(nameof(PDF), result.ErrorMessage!);
+                    return View(model);
+                }
+                filePath = result.RelativePath;
+                savedPaths.Add(filePath!);
+            }
+
+            string? thumbnailPath = null;
+            if (Thumbnail != null && Thumbnail.Length > 0)
+            {
+                var result = await _fileStorage.SaveAsync(Thumbnail, NewslettersFolder, FileCategory.Image);
+                if (!result.Success)
+                {
+                    foreach (var path in savedPaths) _fileStorage.Delete(path);
+                    ModelState.AddModelError(nameof(Thumbnail), result.ErrorMessage!);
+                    return View(model);
+                }
+                thumbnailPath = result.RelativePath;
+                savedPaths.Add(thumbnailPath!);
+            }
+
+            var newsLetter = new NewsLetter
             {
                 Title = model.Title,
                 DownloadName = model.DownloadName,
-                IsVisible = model.IsVisible
+                IsVisible = model.IsVisible,
+                FilePath = filePath,
+                ThumbnailPath = thumbnailPath
             };
 
-            if (PDF != null && PDF.Length > 0)
-                nl.FilePath = await SaveFileAsync(PDF, "newsletters");
-            if (Thumbnail != null && Thumbnail.Length > 0)
-                nl.ThumbnailPath = await SaveFileAsync(Thumbnail, "newsletters");
+            try
+            {
+                _context.NewsLetters.Add(newsLetter);
+                await _context.SaveChangesAsync();
 
-            _context.NewsLetters.Add(nl);
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "News Letter added.";
-            return RedirectToAction(nameof(Index));
+                _logger.LogInformation("Newsletter {NewsLetterId} '{Title}' created", newsLetter.Id, newsLetter.Title);
+
+                TempData["Success"] = "News Letter added.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                foreach (var path in savedPaths) _fileStorage.Delete(path);
+
+                _logger.LogError(ex, "Database error creating newsletter '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "Unable to save the newsletter. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                foreach (var path in savedPaths) _fileStorage.Delete(path);
+
+                _logger.LogError(ex, "Unexpected error creating newsletter '{Title}'", model.Title);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -85,55 +140,130 @@ namespace GECPatan.Admin.Controllers
             var n = await _context.NewsLetters.FindAsync(id);
             if (n == null) return NotFound();
 
+            var savedPaths = new List<string>();
+
+            bool replacingFile = PDF != null && PDF.Length > 0;
+            string? newFilePath = null;
+            if (replacingFile)
+            {
+                var result = await _fileStorage.SaveAsync(PDF!, NewslettersFolder, FileCategory.Document);
+                if (!result.Success)
+                {
+                    ModelState.AddModelError(nameof(PDF), result.ErrorMessage!);
+                    return View(model);
+                }
+                newFilePath = result.RelativePath;
+                savedPaths.Add(newFilePath!);
+            }
+
+            bool replacingThumbnail = Thumbnail != null && Thumbnail.Length > 0;
+            string? newThumbnailPath = null;
+            if (replacingThumbnail)
+            {
+                var result = await _fileStorage.SaveAsync(Thumbnail!, NewslettersFolder, FileCategory.Image);
+                if (!result.Success)
+                {
+                    foreach (var path in savedPaths) _fileStorage.Delete(path);
+                    ModelState.AddModelError(nameof(Thumbnail), result.ErrorMessage!);
+                    return View(model);
+                }
+                newThumbnailPath = result.RelativePath;
+                savedPaths.Add(newThumbnailPath!);
+            }
+
+            string? previousFilePath = n.FilePath;
+            string? previousThumbnailPath = n.ThumbnailPath;
+
             n.Title = model.Title;
             n.DownloadName = model.DownloadName;
             n.IsVisible = model.IsVisible;
 
-            if (PDF != null && PDF.Length > 0) { DeleteFile(n.FilePath); n.FilePath = await SaveFileAsync(PDF, "newsletters"); }
-            if (Thumbnail != null && Thumbnail.Length > 0) { DeleteFile(n.ThumbnailPath); n.ThumbnailPath = await SaveFileAsync(Thumbnail, "newsletters"); }
+            if (replacingFile) n.FilePath = newFilePath;
+            if (replacingThumbnail) n.ThumbnailPath = newThumbnailPath;
 
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "News Letter updated.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Old files removed only after the new state is safely persisted.
+                if (replacingFile) _fileStorage.Delete(previousFilePath);
+                if (replacingThumbnail) _fileStorage.Delete(previousThumbnailPath);
+
+                _logger.LogInformation("Newsletter {NewsLetterId} '{Title}' updated", n.Id, n.Title);
+
+                TempData["Success"] = "News Letter updated.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                foreach (var path in savedPaths) _fileStorage.Delete(path);
+
+                _logger.LogError(ex, "Database error updating newsletter {NewsLetterId}", id);
+                ModelState.AddModelError(string.Empty, "Unable to save the newsletter. Please try again.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                foreach (var path in savedPaths) _fileStorage.Delete(path);
+
+                _logger.LogError(ex, "Unexpected error updating newsletter {NewsLetterId}", id);
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                return View(model);
+            }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
             var n = await _context.NewsLetters.FindAsync(id);
             if (n == null) return NotFound();
+
             n.IsVisible = !n.IsVisible;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Newsletter {NewsLetterId} visibility set to {IsVisible}", id, n.IsVisible);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error toggling visibility for newsletter {NewsLetterId}", id);
+                TempData["Error"] = "Unable to update visibility. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var n = await _context.NewsLetters.FindAsync(id);
             if (n == null) return NotFound();
+
+            string? filePath = n.FilePath;
+            string? thumbnailPath = n.ThumbnailPath;
             n.IsDeleted = true;
-            await _context.SaveChangesAsync();
-            TempData["Success"] = "News Letter deleted.";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Physical files removed only after the soft-delete commits.
+                _fileStorage.Delete(filePath);
+                _fileStorage.Delete(thumbnailPath);
+
+                _logger.LogInformation("Newsletter {NewsLetterId} '{Title}' deleted", id, n.Title);
+                TempData["Success"] = "News Letter deleted.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error deleting newsletter {NewsLetterId}", id);
+                TempData["Error"] = "Unable to delete the newsletter. Please try again.";
+            }
+
             return RedirectToAction(nameof(Index));
-        }
-
-        private async Task<string> SaveFileAsync(IFormFile file, string folder)
-        {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            return $"/uploads/{folder}/{fileName}";
-        }
-
-        private void DeleteFile(string? filePath)
-        {
-            if (string.IsNullOrEmpty(filePath)) return;
-            var fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath)) System.IO.File.Delete(fullPath);
         }
     }
 }
