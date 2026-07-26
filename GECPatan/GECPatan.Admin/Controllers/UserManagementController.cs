@@ -1,7 +1,9 @@
 ﻿using GECPatan.Core.Data;
+using GECPatan.Core.Models.Common;
 using GECPatan.Core.Models.Domain;
 using GECPatan.Admin.Models.ViewModels;
 using GECPatan.Core.Services;
+using GECPatan.Core.Services.UserManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,82 +15,79 @@ namespace GECPatan.Admin.Controllers
     [Authorize(Roles = "SuperAdmin")]
     public class UserManagementController : Controller
     {
+        private const int PageSize = 25;
+
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApplicationDbContext _context;
         private readonly NotificationService _notify;
+        private readonly UserDirectoryService _directory;
+        private readonly ILogger<UserManagementController> _logger;
 
         public UserManagementController(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             ApplicationDbContext context,
-            NotificationService notify)
+            NotificationService notify,
+            UserDirectoryService directory,
+            ILogger<UserManagementController> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _context = context;
-            _notify= notify;
+            _notify = notify;
+            _directory = directory;
+            _logger = logger;
         }
 
         // ══════════════════════════════════════════════════
         // INDEX
         // ══════════════════════════════════════════════════
-        public async Task<IActionResult> Index()
+        // Previously: one GetRolesAsync() call plus one FindAsync() call per
+        // user, inside a foreach loop — up to 2N extra DB round-trips for N
+        // users. For "thousands of users" (the actual target scale for this
+        // app) this page would time out. Now: 2 queries total via
+        // UserDirectoryService, regardless of user count, plus pagination so
+        // the page itself never has to render an unbounded table.
+        public async Task<IActionResult> Index(int page = 1)
         {
             ViewData["Title"] = "User Management";
 
-            var users = await _context.Users
+            if (page < 1) page = 1;
+
+            var query = _context.Users
                 .OfType<ApplicationUser>()
-                .OrderBy(u => u.FullName)
+                .OrderBy(u => u.FullName);
+
+            var totalCount = await query.CountAsync();
+
+            var users = await query
+                .Skip((page - 1) * PageSize)
+                .Take(PageSize)
                 .ToListAsync();
 
-            var list = new List<UserListVM>();
-            foreach (var u in users)
+            var roles = await _directory.GetPrimaryRolesAsync(users.Select(u => u.Id));
+            var assignments = await _directory.GetAssignmentNamesAsync(users);
+
+            var list = users.Select(u => new UserListVM
             {
-                var roles = await _userManager.GetRolesAsync(u);
-                var role = roles.FirstOrDefault() ?? "—";
-                string assignment = "";
+                Id = u.Id,
+                FullName = u.FullName,
+                Email = u.Email,
+                Role = roles.GetValueOrDefault(u.Id, "—"),
+                Assignment = assignments.GetValueOrDefault(u.Id, ""),
+                IsActive = u.IsActive,
+                MustChangePassword = u.MustChangePassword,
+                CreatedDate = u.CreatedDate
+            }).ToList();
 
-                if (u.DeptId.HasValue)
-                {
-                    var dept = await _context.Departments.FindAsync(u.DeptId.Value);
-                    assignment = dept?.Name ?? "";
-                }
-                else if (u.CommitteeId.HasValue)
-                {
-                    var comm = await _context.CampusCommittees.FindAsync(u.CommitteeId.Value);
-                    assignment = comm?.Title ?? "";
-                }
-                else if (u.FacilityId.HasValue)
-                {
-                    var fac = await _context.Facilities.FindAsync(u.FacilityId.Value);
-                    assignment = fac?.Title ?? "";
-                }
-                else if (u.FacultyId.HasValue)
-                {
-                    var fac = await _context.Faculties.FindAsync(u.FacultyId.Value);
-                    assignment = fac?.Name ?? "";
-                }
-                else if (u.ContentPageId.HasValue)
-                {
-                    var page = await _context.ContentPages.FindAsync(u.ContentPageId.Value);
-                    assignment = page != null ? $"Page: {page.Title}" : "";
-                }
-
-                list.Add(new UserListVM
-                {
-                    Id = u.Id,
-                    FullName = u.FullName,
-                    Email = u.Email,
-                    Role = role,
-                    Assignment = assignment,
-                    IsActive = u.IsActive,
-                    MustChangePassword = u.MustChangePassword,
-                    CreatedDate = u.CreatedDate
-                });
-            }
-
-            return View(list);
+            return View(new PagedResult<UserListVM>
+            {
+                Items = list,
+                Page = page,
+                PageSize = PageSize,
+                TotalCount = totalCount
+            });
         }
 
         // ══════════════════════════════════════════════════
@@ -309,10 +308,10 @@ namespace GECPatan.Admin.Controllers
                 CommitteeId = committeeId,
                 FacultyId = facultyId,
                 FacilityId = facilityId,
-                ContentPageId = contentPageId,   // ← properly set
+                ContentPageId = contentPageId,
                 IsActive = true,
                 MustChangePassword = true,
-                CreatedDate = DateTime.Now,
+                CreatedDate = DateTime.UtcNow,
                 CreatedBy = currentUser?.Email
             };
 
@@ -320,6 +319,8 @@ namespace GECPatan.Admin.Controllers
 
             if (!result.Succeeded)
             {
+                _logger.LogWarning("User creation failed for {Email}: {Errors}",
+                    email, string.Join(" | ", result.Errors.Select(e => e.Description)));
                 TempData["Error"] = string.Join(" | ",
                     result.Errors.Select(e => e.Description));
                 return RedirectToAction(nameof(Create));
@@ -329,7 +330,23 @@ namespace GECPatan.Admin.Controllers
             if (!await _roleManager.RoleExistsAsync(role))
                 await _roleManager.CreateAsync(new IdentityRole(role));
 
-            await _userManager.AddToRoleAsync(user, role);
+            var roleResult = await _userManager.AddToRoleAsync(user, role);
+
+            if (!roleResult.Succeeded)
+            {
+                // The Identity user was created but couldn't be assigned a role —
+                // leaving it in place would create a "ghost" account with no
+                // permissions that nobody can log in and use meaningfully.
+                // Delete it so Create is all-or-nothing from the admin's point of view.
+                _logger.LogError(
+                    "Role assignment failed for new user {Email} (role {Role}): {Errors}. Rolling back user creation.",
+                    email, role, string.Join(" | ", roleResult.Errors.Select(e => e.Description)));
+
+                await _userManager.DeleteAsync(user);
+
+                TempData["Error"] = "The user account could not be fully created (role assignment failed). Please try again.";
+                return RedirectToAction(nameof(Create));
+            }
 
             // Clear TempData
             TempData.Remove("UserRole");
@@ -337,19 +354,32 @@ namespace GECPatan.Admin.Controllers
             TempData.Remove("UserEmail");
             TempData.Remove("UserPassword");
 
+            _logger.LogInformation("User {Email} created with role {Role} by {AdminEmail}",
+                email, role, currentUser?.Email);
+
             TempData["Success"] =
                 $" User '{fullName}' created with role '{role}'. " +
                 "They will be prompted to change their password on first login.";
-            //Notification
-            await _notify.SendAsync(
-                title: $"New User Created: {user.FullName}",
-                message: $"Role: {role}",
-                module: "UserManagement",
-                icon: "fa-user-plus",
-                color: "success",
-                link: "/UserManagement/Index",
-                forRole: "SuperAdmin"
-            );
+
+            // Best-effort: the user is already created and usable at this point,
+            // so a notification failure is logged, not surfaced as a request error.
+            try
+            {
+                await _notify.SendAsync(
+                    title: $"New User Created: {user.FullName}",
+                    message: $"Role: {role}",
+                    module: "UserManagement",
+                    icon: "fa-user-plus",
+                    color: "success",
+                    link: "/UserManagement/Index",
+                    forRole: "SuperAdmin"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send notification for new user {Email}", email);
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -432,6 +462,7 @@ namespace GECPatan.Admin.Controllers
         // TOGGLE ACTIVE
         // ══════════════════════════════════════════════════
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleActive(string id)
         {
             var appUser = await _context.Users
@@ -449,6 +480,9 @@ namespace GECPatan.Admin.Controllers
 
             appUser.IsActive = !appUser.IsActive;
             await _userManager.UpdateAsync(appUser);
+
+            _logger.LogInformation("User {Email} {Action} by {AdminEmail}",
+                appUser.Email, appUser.IsActive ? "activated" : "deactivated", currentUser?.Email);
 
             TempData["Success"] = $"'{appUser.FullName}' " +
                 (appUser.IsActive ? "activated" : "deactivated") + ".";
@@ -504,6 +538,10 @@ namespace GECPatan.Admin.Controllers
                 appUser.MustChangePassword = true;
                 await _userManager.UpdateAsync(appUser);
             }
+
+            var adminUser = await _userManager.GetUserAsync(User);
+            _logger.LogWarning("Password reset for user {Email} by admin {AdminEmail}",
+                appUser?.Email, adminUser?.Email);
 
             TempData["Success"] =
                 $"Password reset for '{model.UserName}'. " +

@@ -1,11 +1,11 @@
 using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
 using GECPatan.Core.Services;
+using GECPatan.Core.Services.FileStorage;
+using GECPatan.Core.Services.UserManagement;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
-using GECPatan.Core.Services.FileStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,10 +50,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-builder.Services.AddScoped<IFileStorageService>(sp =>
-    new FileStorageService(
-        sp.GetRequiredService<IWebHostEnvironment>().WebRootPath,
-        sp.GetRequiredService<ILogger<FileStorageService>>()));
 //Notification
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddHttpContextAccessor();
@@ -65,6 +61,21 @@ builder.Services.AddControllersWithViews();
 //DIscloure Data Service
 builder.Services.AddScoped<
     GECPatan.Admin.Services.DisclosureDataService>();
+
+// ── FILE STORAGE ──────────────────────────────────────
+// Centralized, validated file upload/delete service. Replaces the
+// per-controller SaveFileAsync/DeleteFile helpers (see Day 3 refactor).
+// Registered via factory because FileStorageService takes a plain string
+// (the web root path) rather than depending on IWebHostEnvironment directly,
+// keeping the Core project free of a hosting-abstractions dependency.
+builder.Services.AddScoped<IFileStorageService>(sp =>
+    new FileStorageService(
+        sp.GetRequiredService<IWebHostEnvironment>().WebRootPath,
+        sp.GetRequiredService<ILogger<FileStorageService>>()));
+
+// Batch-loading lookups for the User Management list page — see
+// UserDirectoryService for why this exists (fixes an N+1 query pattern).
+builder.Services.AddScoped<UserDirectoryService>();
 
 var app = builder.Build();
 
@@ -91,7 +102,7 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    
+
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
