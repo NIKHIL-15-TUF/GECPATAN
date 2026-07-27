@@ -66,11 +66,9 @@ namespace GECPatan.Admin.Models.ViewModels
         public string? PrincipalInvestigator { get; set; }
 
         [Display(Name = "Start Date")]
-        [MaxLength(50)]
         public DateTime? StartDate { get; set; }
 
         [Display(Name = "Completion Date")]
-        [MaxLength(50)]
         public DateTime? CompletionDate { get; set; }
 
         [MaxLength(100)]

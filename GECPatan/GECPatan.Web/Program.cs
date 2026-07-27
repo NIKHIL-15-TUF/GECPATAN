@@ -105,6 +105,15 @@ builder.Services.AddHttpClient<IGalleryApiService, GalleryApiService>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
+builder.Services.AddHttpClient<IResearchGrantApiService, ResearchGrantApiService>(client =>
+{
+    var baseUrl = builder.Configuration["Api:BaseUrl"]
+        ?? throw new InvalidOperationException("Api:BaseUrl is not configured.");
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 builder.Services.AddControllersWithViews()
     .ConfigureApplicationPartManager(apm =>
     {
