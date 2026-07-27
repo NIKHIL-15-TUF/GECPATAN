@@ -42,10 +42,12 @@ namespace GECPatan.Core.Models.Domain
         [MaxLength(50)]
         public string? DynamicType { get; set; }
 
-        // External URL or PDF path
+        // External URL
         [MaxLength(500)]
         public string? ExternalLink { get; set; }
-
+        // PDF path
+        [MaxLength(500)]
+        public string? PdfPath { get; set; }
         // Display
         [MaxLength(100)]
         public string? CssClass { get; set; }

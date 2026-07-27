@@ -3,7 +3,7 @@
     bool isEdit = Model.Id > 0;
     ViewData["Title"] = isEdit ? "Edit Menu Item" : "Add Menu Item";
 }
- 
+
 <div class="row">
     <div class="col-md-8">
         <div class="card">
@@ -12,11 +12,15 @@
                     <i class="fas fa-bars mr-2"></i>@ViewData["Title"]
                 </h3>
             </div>
-            <form asp-action="@(isEdit?"Edit":"Create")" method="post">
+            <form asp-action="@(isEdit?"Edit":"Create")" method="post" enctype="multipart/form-data">
                 @if (isEdit)
                 {
                     <input asp-for="Id" type="hidden" />
                 }
+                @* Preserve the already-saved PDF path across a failed re-submit
+                   (e.g. a validation error elsewhere on the form) when the
+                   user did NOT pick a new file this time. *@
+                <input asp-for="PdfPath" type="hidden" />
                 <div class="card-body">
                     @if (!ViewData.ModelState.IsValid)
                     {
@@ -24,7 +28,7 @@
                             @Html.ValidationSummary(false)
                         </div>
                     }
- 
+
                     <!-- Row 1: Text + Section -->
                     <div class="row">
                         <div class="col-md-8">
@@ -47,7 +51,7 @@
                             </div>
                         </div>
                     </div>
- 
+
                     <!-- Row 2: Parent + Position -->
                     <div class="row">
                         <div class="col-md-8">
@@ -71,9 +75,9 @@
                             </div>
                         </div>
                     </div>
- 
+
                     <hr />
- 
+
                     <!-- LINK TYPE CARDS -->
                     <label class="font-weight-bold d-block mb-2">
                         Link Type <span class="text-danger">*</span>
@@ -91,9 +95,12 @@
                         ("dynamic",  "fa-database",         "Dynamic Page",
                          "Auto-links to a Department, Committee, Facility etc.",
                          "success"),
-                        ("external", "fa-external-link-alt","External / PDF",
-                         "Link to an external website URL or PDF file path.",
-                         "info")
+                        ("external", "fa-external-link-alt","External Website",
+                         "Link to an external website URL.",
+                         "info"),
+                        ("PDF",      "fa-file-pdf",         "PDF Document",
+                         "Upload a PDF file to open directly.",
+                         "danger")
                     };
                         }
                         @foreach (var (val, icon, label, desc, color) in ltypes)
@@ -127,7 +134,7 @@
                             </div>
                         }
                     </div>
- 
+
                     <!-- INTERNAL FIELDS -->
                     <div id="fields-internal" class="lt-fields d-none">
                         <div class="card border-primary mb-3">
@@ -164,7 +171,7 @@
                             </div>
                         </div>
                     </div>
- 
+
                     <!-- DYNAMIC FIELDS -->
                     <div id="fields-dynamic" class="lt-fields d-none">
                         <div class="card border-success mb-3">
@@ -259,32 +266,74 @@
                             </div>
                         </div>
                     </div>
- 
+
                     <!-- EXTERNAL FIELDS -->
                     <div id="fields-external" class="lt-fields d-none">
                         <div class="card border-info mb-3">
                             <div class="card-header bg-info text-white py-1">
                                 <small class="font-weight-bold">
                                     <i class="fas fa-external-link-alt mr-1"></i>
-                                    External URL or PDF Path
+                                    External Website URL
                                 </small>
                             </div>
                             <div class="card-body py-2">
                                 <div class="form-group mb-0">
                                     <input asp-for="ExternalLink"
                                            class="form-control"
-                                           placeholder="https://example.com  or  /DataFiles/Documents/file.pdf" />
+                                           placeholder="https://example.com" />
                                     <span asp-validation-for="ExternalLink"
                                           class="text-danger small"></span>
                                     <small class="text-muted">
-                                        For PDFs stored in the project use path like
-                                        <code>/DataFiles/Documents/file.pdf</code>
+                                        For PDFs, use the "PDF Document" link type instead —
+                                        it lets you upload the file directly.
                                     </small>
                                 </div>
                             </div>
                         </div>
                     </div>
- 
+
+                    <!-- PDF FIELDS -->
+                    <div id="fields-PDF" class="lt-fields d-none">
+                        <div class="card border-danger mb-3">
+                            <div class="card-header bg-danger text-white py-1">
+                                <small class="font-weight-bold">
+                                    <i class="fas fa-file-pdf mr-1"></i>
+                                    Upload PDF
+                                </small>
+                            </div>
+                            <div class="card-body py-2">
+                                <div class="form-group mb-0">
+                                    <input type="file"
+                                           name="PdfFile"
+                                           id="pdfFileInput"
+                                           class="form-control-file"
+                                           accept="application/pdf,.pdf" />
+                                    <span asp-validation-for="PdfFile"
+                                          class="text-danger small d-block"></span>
+                                    <small class="text-muted d-block mt-1">
+                                        PDF only, up to 10 MB.
+                                        @if (isEdit && !string.IsNullOrEmpty(Model.PdfPath))
+                                        {
+                                            <text>Uploading a new file will replace the current one.</text>
+                                        }
+                                    </small>
+
+                                    @if (!string.IsNullOrEmpty(Model.PdfPath))
+                                    {
+                                        <div class="mt-2">
+                                            <a href="@Model.PdfPath"
+                                                   target="_blank"
+                                                   class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-file-pdf mr-1"></i>
+                                                View Current PDF
+                                            </a>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Options row -->
                     <div class="row">
                         <div class="col-md-4">
@@ -339,7 +388,7 @@
             </form>
         </div>
     </div>
- 
+
     <!-- Guide panel -->
     <div class="col-md-4">
         <div class="card">
@@ -374,20 +423,25 @@
                         fill automatically.
                     </p>
                 </div>
-                <div class="p-2">
-                    <strong class="small">🌐 External / PDF</strong>
+                <div class="p-2 border-bottom">
+                    <strong class="small">🌐 External Website</strong>
                     <p class="small text-muted mb-0">
-                        Full URL like <code>https://gtu.ac.in</code>
-                        or PDF path like
-                        <code>/DataFiles/Documents/file.pdf</code>.
+                        Full URL like <code>https://gtu.ac.in</code>.
                         Enable "Open in new tab" for external links.
+                    </p>
+                </div>
+                <div class="p-2">
+                    <strong class="small">📄 PDF Document</strong>
+                    <p class="small text-muted mb-0">
+                        Upload a PDF directly — no need to know a file path.
+                        The file is validated and stored automatically.
                     </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
- 
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
@@ -401,51 +455,51 @@
         'Document':    { ctrl: 'Documents',        action: 'Index'             },
         'ContentPage': { ctrl: 'Page',             action: 'View'              }
         };
- 
+
         function switchLinkType(type) {
         // Hide all field sections
         document.querySelectorAll('.lt-fields')
         .forEach(f => f.classList.add('d-none'));
- 
+
         // Reset all card borders
         document.querySelectorAll('.lt-card')
         .forEach(c => {
         c.style.border = '2px solid #dee2e6';
         c.style.background = '';
         });
- 
+
         // Highlight selected card
         const card = document.getElementById('lt-' + type);
         if (card) {
         card.style.border = '2px solid #1a237e';
         card.style.background = '#eef0fb';
         }
- 
+
         // Show relevant fields
         const sec = document.getElementById('fields-' + type);
         if (sec) sec.classList.remove('d-none');
         }
- 
+
         async function onDynTypeChange(type) {
         const sel   = document.getElementById('dynIdSelect');
         const ctrl  = document.getElementById('dynCtrl');
         const act   = document.getElementById('dynAction');
- 
+
         sel.innerHTML = '<option>Loading…</option>';
         sel.disabled  = true;
- 
+
         // Auto-fill route
         const route = dynRoutes[type];
         if (route) {
         ctrl.value = route.ctrl;
         act.value  = route.action;
         }
- 
+
         try {
         const res  = await fetch(
         `/MenuItem/GetDynamicOptions?type=${type}`);
         const data = await res.json();
- 
+
         sel.innerHTML = '<option value="">-- Select --</option>';
         data.forEach(item => {
         const opt      = document.createElement('option');
@@ -459,12 +513,12 @@
         sel.disabled  = false;
         }
         }
- 
+
         // ── Init ────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', function() {
         const current = '@Model.LinkType';
         switchLinkType(current);
- 
+
         // If editing dynamic — restore the select
         const dynType = '@Model.DynamicType';
         if (dynType && current === 'dynamic') {

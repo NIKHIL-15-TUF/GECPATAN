@@ -68,7 +68,12 @@ namespace GECPatan.Web.Controllers
         public async Task<IActionResult> Menu(CancellationToken ct)
         {
             var menu = await _menuApi.GetMainMenuAsync(ct);
-            return PartialView("~/Views/Shared/_Menu.cshtml", menu);
+            var vm = new MenuViewModel
+            {
+                ApiBaseUrl = _configuration["Api:BaseUrl"]?.TrimEnd('/') ?? string.Empty,
+                Items = menu
+            };
+            return PartialView("~/Views/Shared/_Menu.cshtml", vm);
         }
 
         // GET /Home/TopMenu — loaded via AJAX by _Layout.cshtml into <div id="topHeader">
@@ -84,11 +89,11 @@ namespace GECPatan.Web.Controllers
 
             var vm = new HeaderViewModel
             {
+                ApiBaseUrl = _configuration["Api:BaseUrl"]?.TrimEnd('/') ?? string.Empty,   // NEW
                 TopMenu = topMenuTask.Result,
                 ContactNo = settings?.Phone,
                 ContactEmail = settings?.Email
             };
-
             return PartialView("~/Views/Shared/_Header.cshtml", vm);
         }
 
@@ -105,6 +110,7 @@ namespace GECPatan.Web.Controllers
 
             var vm = new FooterViewModel
             {
+                ApiBaseUrl = _configuration["Api:BaseUrl"]?.TrimEnd('/') ?? string.Empty,
                 FooterMenu = footerMenuTask.Result,
                 ContactNo = settings?.Phone,
                 ContactEmail = settings?.Email,

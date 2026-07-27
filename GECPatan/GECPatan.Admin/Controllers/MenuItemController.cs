@@ -1,23 +1,29 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.FileStorage;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 
 namespace GECPatan.Admin.Controllers
 {
     [Authorize(Roles = "SuperAdmin")]
     public class MenuItemController : Controller
     {
+        private const string PdfUploadFolder = "menu-pdfs";
+
         private readonly ApplicationDbContext _context;
         private readonly ILogger<MenuItemController> _logger;
+        private readonly IFileStorageService _fileStorage;
 
-        public MenuItemController(ApplicationDbContext context, ILogger<MenuItemController> logger)
+        public MenuItemController(ApplicationDbContext context, ILogger<MenuItemController> logger, IFileStorageService fileStorage)
         {
             _context = context;
             _logger = logger;
+            _fileStorage = fileStorage;
         }
 
         // ── INDEX ─────────────────────────────────────────
@@ -78,6 +84,17 @@ namespace GECPatan.Admin.Controllers
         {
             ViewData["Title"] = "Add Menu Item";
             ValidateForm(model);
+
+            if (model.LinkType == "PDF" && model.PdfFile != null)
+            {
+                if (!await TrySavePdfAsync(model))
+                {
+                    await LoadParentOptions(model, model.MenuType);
+                    await LoadDynamicOptions(model);
+                    return View("Form", model);
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 await LoadParentOptions(model, model.MenuType);
@@ -109,6 +126,7 @@ namespace GECPatan.Admin.Controllers
             {
                 _logger.LogError(ex, "Database error creating menu item '{MenuText}'", model.MenuText);
                 ModelState.AddModelError(string.Empty, "Unable to save the menu item. Please try again.");
+                _fileStorage.Delete(item.PdfPath); // roll back the file we just saved
                 await LoadParentOptions(model, model.MenuType);
                 await LoadDynamicOptions(model);
                 return View("Form", model);
@@ -117,6 +135,7 @@ namespace GECPatan.Admin.Controllers
             {
                 _logger.LogError(ex, "Unexpected error creating menu item '{MenuText}'", model.MenuText);
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                _fileStorage.Delete(item.PdfPath);
                 await LoadParentOptions(model, model.MenuType);
                 await LoadDynamicOptions(model);
                 return View("Form", model);
@@ -161,6 +180,22 @@ namespace GECPatan.Admin.Controllers
                     "Cannot move this item under one of its own descendants.");
             }
 
+            string? oldPdfPath = null;
+            if (model.LinkType == "PDF" && model.PdfFile != null)
+            {
+                // Remember what's on disk now so we can delete it only after the
+                // new file is confirmed saved and the DB update succeeds.
+                oldPdfPath = await _context.MenuItems.AsNoTracking()
+                    .Where(m => m.Id == id).Select(m => m.PdfPath).FirstOrDefaultAsync();
+
+                if (!await TrySavePdfAsync(model))
+                {
+                    await LoadParentOptions(model, model.MenuType);
+                    await LoadDynamicOptions(model);
+                    return View("Form", model);
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 await LoadParentOptions(model, model.MenuType);
@@ -179,6 +214,10 @@ namespace GECPatan.Admin.Controllers
 
                 _logger.LogInformation("Menu item {MenuItemId} '{MenuText}' updated", item.Id, item.MenuText);
 
+                // Only remove the old file once the new one is safely persisted.
+                if (oldPdfPath != null && oldPdfPath != item.PdfPath)
+                    _fileStorage.Delete(oldPdfPath);
+
                 TempData["Success"] = $"'{item.MenuText}' updated.";
                 return RedirectToAction(nameof(Index), new { menuType = item.MenuType });
             }
@@ -186,6 +225,7 @@ namespace GECPatan.Admin.Controllers
             {
                 _logger.LogError(ex, "Database error updating menu item {MenuItemId}", id);
                 ModelState.AddModelError(string.Empty, "Unable to save the menu item. Please try again.");
+                if (model.PdfFile != null) _fileStorage.Delete(model.PdfPath); // roll back new upload
                 await LoadParentOptions(model, model.MenuType);
                 await LoadDynamicOptions(model);
                 return View("Form", model);
@@ -194,6 +234,7 @@ namespace GECPatan.Admin.Controllers
             {
                 _logger.LogError(ex, "Unexpected error updating menu item {MenuItemId}", id);
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                if (model.PdfFile != null) _fileStorage.Delete(model.PdfPath);
                 await LoadParentOptions(model, model.MenuType);
                 await LoadDynamicOptions(model);
                 return View("Form", model);
@@ -250,6 +291,9 @@ namespace GECPatan.Admin.Controllers
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Menu item {MenuItemId} '{MenuText}' deleted", id, item.MenuText);
+
+                if (item.LinkType == "PDF")
+                    _fileStorage.Delete(item.PdfPath);
 
                 TempData["Success"] = $"'{item.MenuText}' deleted.";
             }
@@ -367,6 +411,7 @@ namespace GECPatan.Admin.Controllers
                 DynamicType = m.DynamicType,
                 DynamicLabel = resolveLabel(m),
                 ExternalLink = m.ExternalLink,
+                PdfPath = m.PdfPath,
                 CssClass = m.CssClass,
                 MenuType = m.MenuType,
                 Position = m.Position,
@@ -402,6 +447,33 @@ namespace GECPatan.Admin.Controllers
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Validates and saves model.PdfFile via IFileStorageService, restricted to
+        /// .pdf specifically (FileCategory.Document also allows doc/docx/xls/xlsx,
+        /// which this menu-item upload should not accept). On success, sets
+        /// model.PdfPath and returns true. On failure, adds a ModelState error
+        /// (and cleans up any file it just wrote) and returns false.
+        /// </summary>
+        private async Task<bool> TrySavePdfAsync(MenuItemFormVM model)
+        {
+            var result = await _fileStorage.SaveAsync(model.PdfFile, PdfUploadFolder, FileCategory.Document);
+            if (!result.Success)
+            {
+                ModelState.AddModelError(nameof(model.PdfFile), result.ErrorMessage!);
+                return false;
+            }
+
+            if (!result.RelativePath!.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                _fileStorage.Delete(result.RelativePath); // FileCategory.Document allowed a non-PDF office doc
+                ModelState.AddModelError(nameof(model.PdfFile), "Only PDF files are allowed here.");
+                return false;
+            }
+
+            model.PdfPath = result.RelativePath;
+            return true;
         }
 
         private async Task LoadParentOptions(MenuItemFormVM vm, string menuType)
@@ -491,6 +563,9 @@ namespace GECPatan.Admin.Controllers
 
             if (m.LinkType == "external" && string.IsNullOrWhiteSpace(m.ExternalLink))
                 ModelState.AddModelError(nameof(m.ExternalLink), "URL or PDF path is required for External links.");
+
+            if (m.LinkType == "PDF" && m.PdfFile == null && string.IsNullOrWhiteSpace(m.PdfPath))
+                ModelState.AddModelError(nameof(m.PdfFile), "Please upload a PDF file.");
         }
 
         private static MenuItem BuildEntity(MenuItemFormVM m) => new()
@@ -503,6 +578,7 @@ namespace GECPatan.Admin.Controllers
             DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null,
             DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null,
             ExternalLink = m.LinkType == "external" ? m.ExternalLink : null,
+            PdfPath = m.LinkType == "PDF" ? m.PdfPath : null,
             CssClass = m.CssClass,
             MenuType = m.MenuType,
             Position = m.Position,
@@ -520,6 +596,7 @@ namespace GECPatan.Admin.Controllers
             e.DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null;
             e.DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null;
             e.ExternalLink = m.LinkType == "external" ? m.ExternalLink : null;
+            e.PdfPath = m.LinkType == "PDF" ? m.PdfPath : null;
             e.CssClass = m.CssClass;
             e.MenuType = m.MenuType;
             e.Position = m.Position;
@@ -538,6 +615,7 @@ namespace GECPatan.Admin.Controllers
             DynamicType = m.DynamicType,
             DynamicId = m.DynamicId,
             ExternalLink = m.ExternalLink,
+            PdfPath = m.PdfPath,
             CssClass = m.CssClass,
             MenuType = m.MenuType,
             Position = m.Position,

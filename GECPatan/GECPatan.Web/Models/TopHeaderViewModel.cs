@@ -6,6 +6,7 @@ namespace GECPatan.Web.Models
     // Populated from GET /api/home/settings + GET /api/menu/top.
     public class HeaderViewModel
     {
+        public string ApiBaseUrl { get; set; } = string.Empty;   
         public List<MenuItemDTO> TopMenu { get; set; } = new();
 
         public string? ContactNo { get; set; }

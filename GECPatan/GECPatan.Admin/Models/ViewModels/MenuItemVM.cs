@@ -16,6 +16,7 @@ namespace GECPatan.Admin.Models.ViewModels
         public string? DynamicType { get; set; }
         public string? DynamicLabel { get; set; }  // resolved name
         public string? ExternalLink { get; set; }
+        public string? PdfPath { get; set; }
         public string? CssClass { get; set; }
         public string MenuType { get; set; } = "Main";
         public int Position { get; set; }
@@ -63,8 +64,13 @@ namespace GECPatan.Admin.Models.ViewModels
 
         // External
         [MaxLength(500)]
-        [Display(Name = "URL / PDF Path")]
+        [Display(Name = "URL")]
         public string? ExternalLink { get; set; }
+        [Display(Name = "PDF Path")]
+        public string? PdfPath { get; set; }
+
+        [Display(Name = "PDF File")]
+        public IFormFile? PdfFile { get; set; }
 
         [MaxLength(100)]
         [Display(Name = "CSS Class")]

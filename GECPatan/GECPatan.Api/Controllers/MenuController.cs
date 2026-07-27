@@ -123,7 +123,8 @@ namespace GECPatan.Api.Controllers
 
                 case "external":
                     return m.ExternalLink;
-
+                case "PDF":
+                    return m.PdfPath;
                 default: // "none" — container, no link
                     return null;
             }

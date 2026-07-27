@@ -1,4 +1,16 @@
 @model GECPatan.Web.Models.HeaderViewModel
+@{
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+            return path;
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl)) return path;
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+}
 <div class="top_nav">
     <div class="full-container">
 
@@ -12,11 +24,11 @@
             @* API already resolves each item's final Link and sorts by Position *@
             @foreach (var item in Model.TopMenu.OrderBy(m => m.Position))
             {
-                var href = string.IsNullOrWhiteSpace(item.Link) ? "javascript:void(0)" : item.Link;
+                var href = string.IsNullOrWhiteSpace(item.Link)
+                    ? "javascript:void(0)"
+                    : (item.LinkType == "PDF" ? ResolveApiFileUrl(item.Link) : item.Link);
                 var target = item.OpenInNewTab ? "_blank" : "_self";
-                <a href="@href" target="@target" class="tpbut">
-                    @item.MenuText
-                </a>
+                <a href="@href" target="@target" class="tpbut">@item.MenuText</a>
             }
         </div>
 

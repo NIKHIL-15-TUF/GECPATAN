@@ -1,4 +1,33 @@
-@model List<GECPatan.Web.Models.Dtos.MenuItemDTO>
+@model GECPatan.Web.Models.MenuViewModel
+@{
+    var topLevel = (Model?.Items ?? new List<GECPatan.Web.Models.Dtos.MenuItemDTO>())
+        .OrderBy(m => m.Position);
+
+    // Same pattern as ResolveApiFileUrl in Views/Department/Index.cshtml —
+    // PdfPath comes back as a relative path saved on Admin's disk, which
+    // Api's static file middleware serves from Admin's wwwroot. It must be
+    // resolved against Api's host, not this Web app's.
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+            return path;
+        if (string.IsNullOrEmpty(Model?.ApiBaseUrl)) return path;
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+
+    string Href(GECPatan.Web.Models.Dtos.MenuItemDTO m)
+    {
+        if (string.IsNullOrWhiteSpace(m.Link)) return "javascript:void(0)";
+        return m.LinkType == "PDF" ? ResolveApiFileUrl(m.Link) : m.Link;
+    }
+
+    string Target(GECPatan.Web.Models.Dtos.MenuItemDTO m)
+        => m.OpenInNewTab ? "_blank" : "_self";
+}
+@* @model List<GECPatan.Web.Models.Dtos.MenuItemDTO>
 @{
     // The API only returns visible items already sorted by Position,
     // but we re-sort defensively in case a partial/failed call short-circuits that.
@@ -10,7 +39,7 @@
 
     string Target(GECPatan.Web.Models.Dtos.MenuItemDTO m)
         => m.OpenInNewTab ? "_blank" : "_self";
-}
+} *@
 
 <div class="full-container">
     <!-- Navigation Menu -->

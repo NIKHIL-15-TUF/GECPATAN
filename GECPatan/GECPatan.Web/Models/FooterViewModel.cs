@@ -7,7 +7,7 @@ namespace GECPatan.Web.Models
     public class FooterViewModel
     {
         public List<MenuItemDTO> FooterMenu { get; set; } = new();
-
+        public string ApiBaseUrl { get; set; } = string.Empty;   
         public string? ContactNo { get; set; }
         public string? ContactEmail { get; set; }
         public string? Address { get; set; }

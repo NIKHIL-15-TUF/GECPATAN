@@ -1,4 +1,16 @@
 @model GECPatan.Web.Models.FooterViewModel
+@{
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+            return path;
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl)) return path;
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+}
 <div class="clearfix"></div>
 
 
@@ -59,11 +71,11 @@
                     @* Driven by GET /api/menu/footer (MenuType="Footer" items configured in Admin) *@
                     @foreach (var item in Model.FooterMenu.OrderBy(m => m.Position))
                     {
-                        var href = string.IsNullOrWhiteSpace(item.Link) ? "javascript:void(0)" : item.Link;
+                        var href = string.IsNullOrWhiteSpace(item.Link)
+                            ? "javascript:void(0)"
+                            : (item.LinkType == "PDF" ? ResolveApiFileUrl(item.Link) : item.Link);
                         var target = item.OpenInNewTab ? "_blank" : "_self";
-                        <li>
-                            <a href="@href" target="@target"><i class="fa fa-circle"></i> @item.MenuText</a>
-                        </li>
+                        <li><a href="@href" target="@target"><i class="fa fa-circle"></i> @item.MenuText</a></li>
                     }
                 </ul>
 
