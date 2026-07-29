@@ -1,0 +1,245 @@
+@model GECPatan.Web.Models.DocumentCategoryDetailViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var category = Model.Category!;
+    ViewBag.Title = category.Title;
+
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            return Url.Content("~/" + path.TrimStart('~', '/'));
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+
+    // The API only stores a FilePath, not an explicit file type, so the icon
+    // and PDF-popup-vs-download behaviour is decided from the file extension.
+    string GetFileType(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return "OTHER";
+        var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+        return ext switch
+        {
+            ".pdf" => "PDF",
+            ".doc" or ".docx" => "WORD",
+            ".xls" or ".xlsx" => "EXCEL",
+            _ => "OTHER"
+        };
+    }
+
+    string IconFor(string fileType) => fileType switch
+    {
+        "PDF" => "fa-file-pdf-o",
+        "WORD" => "fa-file-word-o",
+        "EXCEL" => "fa-file-excel-o",
+        _ => "fa-file-o"
+    };
+}
+
+<style>
+    /* Document Icons & Items */
+    .fabig {
+        font-size: 70px;
+        margin: 0 auto 12px auto;
+        display: block !important;
+        transition: transform 0.2s ease-in-out;
+    }
+
+        .fabig:hover {
+            transform: scale(1.08);
+        }
+
+    .minheight {
+        min-height: 180px;
+        padding: 15px 10px !important;
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+        .minheight a {
+            color: #333;
+            text-decoration: none;
+            word-break: break-word;
+            width: 100%;
+            display: block;
+            text-align: center;
+        }
+
+            .minheight a:hover {
+                color: #1a237e;
+            }
+
+    /* Container Box with Margin & Padding Fixes */
+    .box {
+        position: relative;
+        border: 2px solid #222;
+        padding: 30px 20px 20px 20px;
+        width: 85%;
+        margin: 30px auto; /* Centers the box with proper margins */
+        display: flow-root; /* Prevents float collapse */
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+        .box .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-left: -10px;
+            margin-right: -10px;
+        }
+
+    .box-border-text {
+        position: absolute;
+        top: -14px;
+        left: 25px;
+        background: #fff;
+        padding: 0 12px;
+        font-weight: bold;
+        font-size: 16px;
+        color: #1a237e;
+    }
+
+    @@media (max-width: 768px) {
+        .box {
+            width: 95%;
+            padding: 25px 10px 10px 10px;
+        }
+    }
+</style>
+
+<div class="clearfix"></div>
+<div class="page_title3 general_title">
+    <div class="container">
+        <h1>
+            @category.Title
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+<div class="clearfix margin_bottom6"></div>
+
+<div class="content_fullwidth less">
+    <div class="featured_section77 two">
+        @if (!category.YearSections.Any(y => y.Files.Any()))
+        {
+            <div class="text-center" style="padding:40px 0;">
+                <h3>No documents available in this category yet.</h3>
+            </div>
+        }
+        else
+        {
+            @foreach (var yearSection in category.YearSections.Where(y => y.Files.Any()))
+            {
+                int count = 1;
+                <div class="container box">
+                    <div class="box-border-text">@yearSection.Year</div>
+                    <div class="client_logos3 animate fadeIn" data-anim-type="fadeIn" data-anim-delay="300">
+                        <ul>
+                            @foreach (var file in yearSection.Files.OrderBy(f => f.DisplayOrder))
+                            {
+                                var fileType = GetFileType(file.FilePath);
+                                var resolvedUrl = ResolveApiFileUrl(file.FilePath);
+                                <li class="minheight @(count % 5 == 0 ? "last" : "")">
+                                    @if (fileType == "PDF")
+                                    {
+                                        <a href="javascript:void(0)" onclick="loadPdf('@resolvedUrl','@file.Title')">
+                                            <i class="fa @IconFor(fileType) fabig" aria-hidden="true"></i>
+                                            @file.Title
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a href="@resolvedUrl" target="_blank" download>
+                                            <i class="fa @IconFor(fileType) fabig" aria-hidden="true"></i>
+                                            @file.Title
+                                        </a>
+                                    }
+                                </li>
+                                count++;
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <div class="clearfix margin_bottom4"></div>
+            }
+        }
+    </div>
+</div>
+
+<a id="lnkPopup" href="#animatedModal" class="popup-trigger hidden" data-target="#popup"></a>
+<div id="popup" class="popup">
+    <h2 id="newsname"></h2>
+    <div id="pdfreader" style="height:550px"></div>
+    <span class="popup-btn-close">&times;</span>
+</div>
+
+@section scripts {
+    <script src="@Url.Content("~/js/pdfobject/pdfobject.min.js")"></script>
+    <script>
+        function loadPdf(path, name) {
+            if (path !== '') {
+                path = path.replace("~", "");
+                if (PDFObject.supportsPDFs) {
+                    PDFObject.embed(path, "#pdfreader");
+                    $("#newsname").text(name);
+                    $("#lnkPopup").click();
+                } else {
+                    window.location.href = path;
+                }
+            }
+        }
+    </script>
+
+
+    <script>
+        function popupOpenClose(popup) {
+
+            /* Add div inside popup for layout if one doesn't exist */
+            if ($(".wrapper", popup).length == 0) {
+                $(popup).wrapInner("<div class='wrapper'></div>");
+            }
+
+            /* Open popup */
+            $(popup).show();
+
+            /* Close popup if user clicks on background */
+            $(popup).click(function(e) {
+                if (e.target == this) {
+                    if ($(popup).is(':visible')) {
+                        $(popup).hide();
+                    }
+                }
+            });
+
+            /* Close popup and remove errors if user clicks on cancel or close buttons */
+            $(popup).find(".popup-btn-close").on("click", function() {
+                if ($(".formElementError").is(':visible')) {
+                    $(".formElementError").remove();
+                }
+                $(popup).hide();
+            });
+        }
+
+        $(document).ready(function() {
+            $(".popup-trigger").on("click", function() {
+                var target = $(this).data('target');
+                popupOpenClose($(target));
+            });
+        });
+    </script>
+}
+<link rel="stylesheet" href="@Url.Content("~/css/popup.css")" />

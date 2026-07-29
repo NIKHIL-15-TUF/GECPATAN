@@ -110,27 +110,6 @@ namespace GECPatan.Admin.Models.ViewModels
         public string? CategoryTitle { get; set; }
     }
 
-    // ── IMPORTANT DOCUMENT ────────────────────────────────
-    public class ImportantDocumentVM
-    {
-        public int Id { get; set; }
-
-        [Required(ErrorMessage = "Title is required")]
-        [MaxLength(300)]
-        public string Title { get; set; } = string.Empty;
-
-        [Display(Name = "File Type")]
-        public string FileType { get; set; } = "PDF";
-
-        [Display(Name = "Upload Date")]
-        [DataType(DataType.Date)]
-        public DateTime? UploadDate { get; set; }
-
-        public bool IsVisible { get; set; } = true;
-        public int DisplayOrder { get; set; } = 0;
-        public string? ExistingFilePath { get; set; }
-    }
-
     // ── MOU DOCUMENT ──────────────────────────────────────
     public class MoUDocumentVM
     {

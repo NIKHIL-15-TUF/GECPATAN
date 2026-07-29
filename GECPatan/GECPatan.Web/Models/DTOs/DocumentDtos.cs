@@ -1,4 +1,4 @@
-﻿namespace GECPatan.Api.DTOs
+﻿namespace GECPatan.Web.Models.Dtos
 {
     // ── DOCUMENT CATEGORIES (for /api/documents/categories) ─
     public class DocumentCategoryListDTO
@@ -15,7 +15,6 @@
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
-
         public List<DocumentYearSectionDTO> YearSections { get; set; } = new();
     }
 
@@ -35,28 +34,6 @@
         public int DisplayOrder { get; set; }
     }
 
-    // ── TENDERS (for /api/documents/tenders) ───────────────
-    public class TenderCategoryDTO
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public int DisplayOrder { get; set; }
-        public List<TenderDocumentDTO> Documents { get; set; } = new();
-    }
-
-    public class TenderDocumentDTO
-    {
-        public int Id { get; set; }
-        public string DocTitle { get; set; } = string.Empty;
-        public string? ValidFrom { get; set; }
-        public string? ValidTo { get; set; }
-        public string? MonthYear { get; set; }
-        public string? FilePath { get; set; }
-        public bool IsActive { get; set; }  // within validity window
-        public bool IsExpired { get; set; }
-    }
-
-    // ── MOU DOCUMENTS (for /api/documents/mou) ─────────────
     public class MoUDocumentDTO
     {
         public int Id { get; set; }
@@ -66,7 +43,6 @@
         public int DisplayOrder { get; set; }
     }
 
-    // ── SSIP DOCUMENTS (for /api/documents/ssip) ───────────
     public class SSIPDocumentDTO
     {
         public int Id { get; set; }
@@ -76,7 +52,6 @@
         public int DisplayOrder { get; set; }
     }
 
-    // ── TIMETABLES (for /api/documents/timetable) ──────────
     public class TimetableDTO
     {
         public int Id { get; set; }

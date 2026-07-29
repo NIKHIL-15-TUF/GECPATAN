@@ -26,7 +26,7 @@ namespace GECPatan.Core.Data
         // ── LABS ──────────────────────────────────────────
         public DbSet<Lab> Labs { get; set; }
         public DbSet<LabImage> LabImages { get; set; }
-        
+
         // FACULTY
         public DbSet<Faculty> Faculties { get; set; }
         public DbSet<PersonalDetail> PersonalDetails { get; set; }
@@ -40,7 +40,6 @@ namespace GECPatan.Core.Data
         public DbSet<FacultyConsultancy> FacultyConsultancies { get; set; }
         public DbSet<FacultyPatent> FacultyPatents { get; set; }
         public DbSet<FacultyProfessionalMembership> FacultyProfessionalMemberships { get; set; }
-
 
         // CAMPUS COMMITTEES
         public DbSet<CampusCommittee> CampusCommittees { get; set; }
@@ -82,7 +81,6 @@ namespace GECPatan.Core.Data
         //public DbSet<Tender> Tenders { get; set; }
         public DbSet<TenderCategory> TenderCategories { get; set; }
         public DbSet<TenderDocument> TenderDocuments { get; set; }
-        public DbSet<ImportantDocument> ImportantDocuments { get; set; }
         public DbSet<MoUDocument> MoUDocuments { get; set; }
 
         // ACADEMICS
@@ -133,7 +131,7 @@ namespace GECPatan.Core.Data
         public DbSet<CutoffRecord> CutoffRecords { get; set; }
         public DbSet<ScholarshipRecord> ScholarshipRecords { get; set; }
         public DbSet<InfrastructureRecord> InfrastructureRecords { get; set; }
-        public DbSet<DisclosureNarrative> DisclosureNarratives{ get; set; }
+        public DbSet<DisclosureNarrative> DisclosureNarratives { get; set; }
         public DbSet<NBAAccreditation> NBAAccreditations { get; set; }
         public DbSet<DisclosurePlacementData> DisclosurePlacements { get; set; }
         public DbSet<FacultyApprovalInfo> FacultyApprovalInfos { get; set; }
@@ -167,19 +165,19 @@ namespace GECPatan.Core.Data
 
             modelBuilder.Entity<FacultySubject>().
                 HasQueryFilter(x => !x.IsDeleted);
-            
+
             modelBuilder.Entity<FacultyResearchGuidance>().
                 HasQueryFilter(x => !x.IsDeleted);
-            
+
             modelBuilder.Entity<FacultyBookPublication>().
                 HasQueryFilter(x => !x.IsDeleted);
-            
+
             modelBuilder.Entity<FacultyConsultancy>().
                 HasQueryFilter(x => !x.IsDeleted);
-            
+
             modelBuilder.Entity<FacultyPatent>().
                 HasQueryFilter(x => !x.IsDeleted);
-            
+
             modelBuilder.Entity<FacultyProfessionalMembership>().
                 HasQueryFilter(x => !x.IsDeleted);
 

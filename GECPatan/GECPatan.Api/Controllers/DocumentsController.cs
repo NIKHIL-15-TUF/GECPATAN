@@ -123,29 +123,6 @@ namespace GECPatan.Api.Controllers
             return Ok(ApiResponse<List<TenderCategoryDTO>>.Ok(data));
         }
 
-        // GET /api/documents/important
-        // Important documents list
-        [HttpGet("important")]
-        public async Task<ActionResult<ApiResponse<List<ImportantDocumentDTO>>>> GetImportant()
-        {
-            var data = await _context.ImportantDocuments
-                .Where(d => d.IsVisible)
-                .OrderBy(d => d.DisplayOrder)
-                .Select(d => new ImportantDocumentDTO
-                {
-                    Id = d.Id,
-                    Title = d.Title,
-                    FileType = d.FileType,
-                    UploadDate = d.UploadDate.HasValue
-                        ? d.UploadDate.Value.ToString("yyyy-MM-dd") : null,
-                    FilePath = d.FilePath,
-                    DisplayOrder = d.DisplayOrder
-                })
-                .ToListAsync();
-
-            return Ok(ApiResponse<List<ImportantDocumentDTO>>.Ok(data));
-        }
-
         // GET /api/documents/mou
         // MoU documents list
         [HttpGet("mou")]
@@ -165,6 +142,50 @@ namespace GECPatan.Api.Controllers
                 .ToListAsync();
 
             return Ok(ApiResponse<List<MoUDocumentDTO>>.Ok(data));
+        }
+
+        // GET /api/documents/ssip
+        [HttpGet("ssip")]
+        public async Task<ActionResult<ApiResponse<List<SSIPDocumentDTO>>>> GetSSIP()
+        {
+            var data = await _context.SSIPDocuments
+                .Where(d => d.IsVisible)
+                .OrderBy(d => d.DisplayOrder)
+                .Select(d => new SSIPDocumentDTO
+                {
+                    Id = d.Id,
+                    Title = d.Title,
+                    UploadDate = d.UploadDate,
+                    FilePath = d.FilePath,
+                    DisplayOrder = d.DisplayOrder
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponse<List<SSIPDocumentDTO>>.Ok(data));
+        }
+
+        // GET /api/documents/timetable
+        // Only the current/latest timetable per department+semester is public-facing;
+        // older uploads are retained as history (see Timetable.IsLatest in Admin).
+        [HttpGet("timetable")]
+        public async Task<ActionResult<ApiResponse<List<TimetableDTO>>>> GetTimetables()
+        {
+            var data = await _context.Timetables
+                .Include(t => t.Department)
+                .Where(t => t.IsVisible && t.IsLatest)
+                .OrderBy(t => t.Department!.Name).ThenBy(t => t.Semester)
+                .Select(t => new TimetableDTO
+                {
+                    Id = t.Id,
+                    DeptName = t.Department != null ? t.Department.Name : "",
+                    Year = t.Year,
+                    Semester = t.Semester,
+                    SemesterType = t.SemesterType == 1 ? "Odd" : "Even",
+                    FilePath = t.FilePath
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponse<List<TimetableDTO>>.Ok(data));
         }
     }
 }

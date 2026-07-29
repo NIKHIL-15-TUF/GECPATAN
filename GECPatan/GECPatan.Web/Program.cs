@@ -59,6 +59,16 @@ builder.Services.AddHttpClient<ITenderApiService, TenderApiService>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
+
+builder.Services.AddHttpClient<IDocumentApiService, DocumentApiService>(client =>
+{
+    var baseUrl = builder.Configuration["Api:BaseUrl"]
+        ?? throw new InvalidOperationException("Api:BaseUrl is not configured.");
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 builder.Services.AddHttpClient<ICommitteeApiService, CommitteeApiService>(client =>
 {
     var baseUrl = builder.Configuration["Api:BaseUrl"]

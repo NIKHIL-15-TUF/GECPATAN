@@ -1,0 +1,89 @@
+@model GECPatan.Web.Models.DocumentCategoryListViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Documents";
+}
+
+<div class="clearfix"></div>
+
+<div class="page_title3 general_title">
+    <div class="container">
+        <h1>
+            Documents
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+<div class="clearfix margin_bottom6"></div>
+
+<div class="content_fullwidth less">
+    <div class="container">
+        @if (!Model.HasAnyDocuments)
+        {
+            <div class="text-center" style="padding:40px 0;">
+                <h3>No documents available right now.</h3>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var cat in Model.Categories)
+                {
+                    <div class="col-md-4 col-sm-6" style="margin-bottom:30px;">
+                        <a href="@Url.Action("Category", "Documents", new { id = cat.Id })" style="text-decoration:none;color:inherit;">
+                            <div class="box" style="border:2px solid #ddd;border-radius:6px;padding:25px 20px;height:100%;transition:box-shadow .2s;">
+                                <i class="fa fa-folder-open" style="font-size:48px;color:#1a237e;"></i>
+                                <h4 style="margin-top:15px;margin-bottom:8px;">@cat.Title</h4>
+                                <p style="color:#777;margin:0;">
+                                    @cat.YearCount @(cat.YearCount == 1 ? "year" : "years")
+                                    &middot;
+                                    @cat.FileCount @(cat.FileCount == 1 ? "document" : "documents")
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                }
+
+                @if (Model.SSIPCount > 0)
+                {
+                    <div class="col-md-4 col-sm-6" style="margin-bottom:30px;">
+                        <a href="@Url.Action("SSIP", "Documents")" style="text-decoration:none;color:inherit;">
+                            <div class="box" style="border:2px solid #ddd;border-radius:6px;padding:25px 20px;height:100%;transition:box-shadow .2s;">
+                                <i class="fa fa-lightbulb-o" style="font-size:48px;color:#1a237e;"></i>
+                                <h4 style="margin-top:15px;margin-bottom:8px;">Student Startup &amp; Innovation Policy</h4>
+                                <p style="color:#777;margin:0;">@Model.SSIPCount @(Model.SSIPCount == 1 ? "document" : "documents")</p>
+                            </div>
+                        </a>
+                    </div>
+                }
+
+                @if (Model.TimetableCount > 0)
+                {
+                    <div class="col-md-4 col-sm-6" style="margin-bottom:30px;">
+                        <a href="@Url.Action("Timetable", "Documents")" style="text-decoration:none;color:inherit;">
+                            <div class="box" style="border:2px solid #ddd;border-radius:6px;padding:25px 20px;height:100%;transition:box-shadow .2s;">
+                                <i class="fa fa-calendar" style="font-size:48px;color:#1a237e;"></i>
+                                <h4 style="margin-top:15px;margin-bottom:8px;">Time Table</h4>
+                                <p style="color:#777;margin:0;">@Model.TimetableCount @(Model.TimetableCount == 1 ? "entry" : "entries")</p>
+                            </div>
+                        </a>
+                    </div>
+                }
+
+                @if (Model.MoUCount > 0)
+                {
+                    <div class="col-md-4 col-sm-6" style="margin-bottom:30px;">
+                        <a href="@Url.Action("MoU", "Documents")" style="text-decoration:none;color:inherit;">
+                            <div class="box" style="border:2px solid #ddd;border-radius:6px;padding:25px 20px;height:100%;transition:box-shadow .2s;">
+                                <i class="fa fa-handshake-o" style="font-size:48px;color:#1a237e;"></i>
+                                <h4 style="margin-top:15px;margin-bottom:8px;">Memorandum of Understanding</h4>
+                                <p style="color:#777;margin:0;">@Model.MoUCount @(Model.MoUCount == 1 ? "document" : "documents")</p>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+<div class="clearfix margin_bottom6"></div>

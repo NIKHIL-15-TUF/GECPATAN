@@ -92,24 +92,6 @@ namespace GECPatan.Core.Models.Domain
         public bool IsVisible { get; set; } = true;
     }
 
-    // IMPORTANT DOCUMENT
-    public class ImportantDocument : BaseEntity
-    {
-        public int Id { get; set; }
-
-        [Required, MaxLength(300)]
-        public string Title { get; set; } = string.Empty;
-
-        [MaxLength(50)]
-        public string FileType { get; set; } = "PDF";
-
-        // Changed from string to DateTime?
-        public DateTime? UploadDate { get; set; }
-
-        public string? FilePath { get; set; }
-        public bool IsVisible { get; set; } = true;
-        public int DisplayOrder { get; set; } = 0;
-    }
     // MOU DOCUMENT
     public class MoUDocument : BaseEntity
     {

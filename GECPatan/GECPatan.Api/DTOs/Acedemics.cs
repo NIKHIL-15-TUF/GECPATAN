@@ -12,16 +12,6 @@
     public int DisplayOrder { get; set; }
 }
 
-// ── SSIP DOCUMENT (for /api/academics/ssip) ────────────
-public class SSIPDocumentDTO
-{
-    public int Id { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string? FilePath { get; set; }
-    public string? UploadDate { get; set; }
-    public int DisplayOrder { get; set; }
-}
-
 // ── RESEARCH GRANT (for /api/academics/research) ───────
 public class ResearchGrantDTO
 {
