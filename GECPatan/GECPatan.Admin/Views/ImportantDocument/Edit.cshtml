@@ -1,8 +1,6 @@
-﻿@model GECPatan.Admin.Models.ViewModels.ImportantDocumentVM
+@model DocumentPageVM
 @{
-    bool isEdit = Model.Id > 0;
-    ViewData["Title"] = isEdit ? "Edit Document" : "Add Document";
-    string action = isEdit ? "Edit" : "Create";
+    ViewData["Title"] = ViewData["Title"] ?? "Edit Document Page";
 }
 <div class="row">
     <div class="col-md-7">
@@ -12,11 +10,10 @@
                     <i class="fas fa-folder-open mr-2"></i>@ViewData["Title"]
                 </h3>
             </div>
-            <form asp-action="@action" method="post" enctype="multipart/form-data">
-                @if (isEdit)
-                {
-                    <input asp-for="Id" type="hidden" />
-                }
+            <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input asp-for="Id" type="hidden" />
+                <input asp-for="ExistingBannerPath" type="hidden" />
                 <div class="card-body">
                     @if (!ViewData.ModelState.IsValid)
                     {
@@ -24,47 +21,64 @@
                     }
                     <div class="form-group">
                         <label asp-for="Title" class="font-weight-bold"></label>
-                        <input asp-for="Title" class="form-control" placeholder="Document title..." />
+                        <input asp-for="Title" class="form-control" placeholder="Page title, e.g. AICTE Approvals" />
                         <span asp-validation-for="Title" class="text-danger small"></span>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label asp-for="FileType" class="font-weight-bold"></label>
-                                <select asp-for="FileType" class="form-control">
-                                    <option value="PDF">PDF</option>
-                                    <option value="Excel">Excel</option>
-                                    <option value="Word">Word</option>
-                                    <option value="Image">Image</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label asp-for="UploadDate" class="font-weight-bold"></label>
-                                <input asp-for="UploadDate" class="form-control"
-                                       placeholder="e.g. 15 Jan 2025" />
-                            </div>
-                        </div>
-                    </div>
+
                     <div class="form-group">
-                        <label class="font-weight-bold">File</label>
-                        @if (!string.IsNullOrEmpty(Model.ExistingFilePath))
+                        <label class="font-weight-bold">Title Banner Image</label>
+                        @if (!string.IsNullOrEmpty(Model.ExistingBannerPath))
                         {
-                            <div class="mb-2 d-flex align-items-center">
-                                <i class="fas fa-file text-primary mr-2 fa-lg"></i>
-                                <a href="@Model.ExistingFilePath" target="_blank">Current File</a>
+                            <div class="mb-2">
+                                <img src="@Url.Content(Model.ExistingBannerPath)" alt="Current banner"
+                                     style="max-height:120px;border:1px solid #ddd;border-radius:4px;" />
+                                <div class="custom-control custom-checkbox mt-1">
+                                    <input asp-for="RemoveBanner" type="checkbox" class="custom-control-input" id="removeBanner" />
+                                    <label class="custom-control-label text-danger" for="removeBanner">Remove current banner</label>
+                                </div>
                             </div>
                         }
                         <div class="custom-file">
-                            <input type="file" class="custom-file-input" name="DocFile"
-                                   onchange="this.nextElementSibling.textContent=this.files[0]?.name||'Choose file...'" />
-                            <label class="custom-file-label">
-                                @(string.IsNullOrEmpty(Model.ExistingFilePath) ? "Choose file..." : "Replace file...")
+                            <input type="file" class="custom-file-input" id="titleBannerImage"
+                                   name="TitleBannerImage" accept=".jpg,.jpeg,.png,.webp" />
+                            <label class="custom-file-label" for="titleBannerImage">
+                                @(string.IsNullOrEmpty(Model.ExistingBannerPath) ? "Choose banner image..." : "Replace banner image...")
                             </label>
                         </div>
+                        <small class="form-text text-muted">Uploading a new image replaces the current banner (the remove checkbox is ignored in that case).</small>
                     </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold d-block">Display Layout</label>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="layoutList" name="TableView" value="false"
+                                   class="custom-control-input" checked="@(!Model.TableView)" />
+                            <label class="custom-control-label" for="layoutList">List View</label>
+                        </div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="layoutTable" name="TableView" value="true"
+                                   class="custom-control-input" checked="@Model.TableView" />
+                            <label class="custom-control-label" for="layoutTable">Table View</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold d-block">
+                            Group documents by year?
+                            <span class="badge badge-warning ml-1"><i class="fas fa-lock mr-1"></i>Locked</span>
+                        </label>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="hasYearSectionsDisplay"
+                                   checked="@Model.HasYearSections" disabled />
+                            <label class="custom-control-label" for="hasYearSectionsDisplay">
+                                @(Model.HasYearSections ? "Yes — Year-Grouped" : "No — Direct Uploads")
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Year grouping mode is permanently set at creation and cannot be modified.
+                        </small>
+                    </div>
+
                     <div class="form-group">
                         <label asp-for="DisplayOrder" class="font-weight-bold"></label>
                         <input asp-for="DisplayOrder" class="form-control" type="number" min="0" />
@@ -89,3 +103,14 @@
         </div>
     </div>
 </div>
+
+@section scripts {
+    <script>
+        $(document).on('change', '#titleBannerImage', function () {
+            var fileName = $(this).val().split('\\').pop();
+            $(this).next('.custom-file-label').text(fileName || 'Choose banner image...');
+            // Uploading a replacement supersedes the "remove" checkbox — uncheck it for clarity.
+            if (fileName) { $('#removeBanner').prop('checked', false); }
+        });
+    </script>
+}

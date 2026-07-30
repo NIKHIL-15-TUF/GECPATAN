@@ -1,0 +1,116 @@
+@model GECPatan.Web.Models.DocumentCategoryDetailViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var collection = Model.Category!;
+    ViewBag.Title = collection.Title;
+
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+        {
+            return path;
+        }
+        if (string.IsNullOrEmpty(Model.ApiBaseUrl))
+        {
+            return Url.Content("~/" + path.TrimStart('~', '/'));
+        }
+        return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+
+    string titleBgStyle = "";
+    if (!string.IsNullOrEmpty(collection.TitleImagePath))
+    {
+        titleBgStyle = $"background-image: url('{ResolveApiFileUrl(collection.TitleImagePath)}'); background-size: cover; background-position: center;";
+    }
+
+    bool hasAnyFiles = collection.HasYearSections
+        ? collection.YearSections.Any(y => y.Files.Any())
+        : collection.DirectFiles.Any();
+}
+
+<div class="clearfix"></div>
+
+<div class="page_title3 general_title" style="@titleBgStyle">
+    <div class="container">
+        <h1>
+            @collection.Title
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+
+<div class="clearfix margin_bottom6"></div>
+
+<div class="content_fullwidth less">
+    <div class="featured_section77 two">
+        @if (!hasAnyFiles)
+        {
+            <div class="text-center" style="padding:40px 0;">
+                <h3>No documents available in this collection yet.</h3>
+            </div>
+        }
+        else if (collection.TableView)
+        {
+            <partial name="_DocumentTable" model="Model" />
+        }
+        else
+        {
+            <partial name="_DocumentGrid" model="Model" />
+        }
+    </div>
+</div>
+
+<!-- PDF Popup Modal -->
+<a id="lnkPopup" href="#animatedModal" class="popup-trigger hidden" data-target="#popup"></a>
+<div id="popup" class="popup">
+    <h2 id="newsname"></h2>
+    <div id="pdfreader" style="height:550px"></div>
+    <span class="popup-btn-close">&times;</span>
+</div>
+
+@section scripts {
+    <script src="@Url.Content("~/js/pdfobject/pdfobject.min.js")"></script>
+    <script>
+        function loadPdf(path, name) {
+            if (path !== '') {
+                path = path.replace("~", "");
+                if (PDFObject.supportsPDFs) {
+                    PDFObject.embed(path, "#pdfreader");
+                    $("#newsname").text(name);
+                    $("#lnkPopup").click();
+                } else {
+                    window.location.href = path;
+                }
+            }
+        }
+    </script>
+    <script>
+        function popupOpenClose(popup) {
+            if ($(".wrapper", popup).length == 0) {
+                $(popup).wrapInner("<div class='wrapper'></div>");
+            }
+            $(popup).show();
+            $(popup).click(function(e) {
+                if (e.target == this && $(popup).is(':visible')) {
+                    $(popup).hide();
+                }
+            });
+            $(popup).find(".popup-btn-close").on("click", function() {
+                if ($(".formElementError").is(':visible')) {
+                    $(".formElementError").remove();
+                }
+                $(popup).hide();
+            });
+        }
+        $(document).ready(function() {
+            $(".popup-trigger").on("click", function() {
+                var target = $(this).data('target');
+                popupOpenClose($(target));
+            });
+        });
+    </script>
+}
+<link rel="stylesheet" href="@Url.Content("~/css/popup.css")" />

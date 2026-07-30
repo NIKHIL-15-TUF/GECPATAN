@@ -1,0 +1,166 @@
+﻿@model GECPatan.Web.Models.DocumentCategoryDetailViewModel
+@{
+    var collection = Model.Category!;
+
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || path.StartsWith("https://") || path.StartsWith("//"))
+            return path;
+        return string.IsNullOrEmpty(Model.ApiBaseUrl)
+            ? Url.Content("~/" + path.TrimStart('~', '/'))
+            : Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+
+    string GetFileType(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return "OTHER";
+        return System.IO.Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".pdf" => "PDF",
+            ".doc" or ".docx" => "WORD",
+            ".xls" or ".xlsx" => "EXCEL",
+            _ => "OTHER"
+        };
+    }
+
+    string IconFor(string fileType) => fileType switch
+    {
+        "PDF" => "fa-file-pdf-o",
+        "WORD" => "fa-file-word-o",
+        "EXCEL" => "fa-file-excel-o",
+        _ => "fa-file-o"
+    };
+}
+
+<style>
+    .fabig {
+        font-size: 70px;
+        margin: 0 auto 12px auto;
+        display: block !important;
+        transition: transform 0.2s ease-in-out;
+    }
+
+        .fabig:hover {
+            transform: scale(1.08);
+        }
+
+    .minheight {
+        min-height: 180px;
+        padding: 15px 10px !important;
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+        .minheight a {
+            color: #777;
+            text-decoration: none;
+            word-break: break-word;
+            width: 100%;
+            display: block;
+            text-align: center;
+        }
+
+            .minheight a:hover {
+                color: #1a237e;
+            }
+
+    .box {
+        position: relative;
+        border: 2px solid #222;
+        padding: 30px 20px 20px 20px;
+        width: 85%;
+        margin: 30px auto;
+        display: flow-root;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .box-border-text {
+        position: absolute;
+        top: -14px;
+        left: 25px;
+        background: #fff;
+        padding: 0 12px;
+        font-weight: bold;
+        font-size: 16px;
+        color: #1a237e;
+    }
+
+    @@media (max-width: 768px) {
+        .box {
+            width: 95%;
+            padding: 25px 10px 10px 10px;
+        }
+    }
+</style>
+
+@if (collection.HasYearSections)
+{
+    foreach (var yearSection in collection.YearSections.Where(y => y.Files.Any()))
+    {
+        int count = 1;
+        <div class="container box">
+            <div class="box-border-text">@yearSection.Year</div>
+            <div class="client_logos3 animate fadeIn" data-anim-type="fadeIn" data-anim-delay="300">
+                <ul>
+                    @foreach (var file in yearSection.Files.OrderBy(f => f.DisplayOrder))
+                    {
+                        var fileType = GetFileType(file.FilePath);
+                        var resolvedUrl = ResolveApiFileUrl(file.FilePath);
+                        <li class="minheight @(count % 5 == 0 ? "last" : "")">
+                            @if (fileType == "PDF")
+                            {
+                                <a href="javascript:void(0)" onclick="loadPdf('@resolvedUrl','@file.Title')">
+                                    <i class="fa @IconFor(fileType) fabig" aria-hidden="true"></i> @file.Title
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="@resolvedUrl" target="_blank" download>
+                                    <i class="fa @IconFor(fileType) fabig" aria-hidden="true"></i> @file.Title
+                                </a>
+                            }
+                        </li>
+                        count++;
+                    }
+                </ul>
+            </div>
+        </div>
+        <div class="clearfix margin_bottom4"></div>
+    }
+}
+else
+{
+    int count = 1;
+    <div class="container box">
+        <div class="client_logos3 animate fadeIn" data-anim-type="fadeIn" data-anim-delay="300">
+            <ul>
+                @foreach (var file in collection.DirectFiles.OrderBy(f => f.DisplayOrder))
+                {
+                    var fileType = GetFileType(file.FilePath);
+                    var resolvedUrl = ResolveApiFileUrl(file.FilePath);
+                    <li class="minheight @(count % 5 == 0 ? "last" : "")">
+                        @if (fileType == "PDF")
+                        {
+                            <a href="javascript:void(0)" onclick="loadPdf('@resolvedUrl','@file.Title')">
+                                <i class="fa @IconFor(fileType) fabig" aria-hidden="true"></i> @file.Title
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="@resolvedUrl" target="_blank" download>
+                                <i class="fa @IconFor(fileType) fabig" aria-hidden="true"></i> @file.Title
+                            </a>
+                        }
+                    </li>
+                    count++;
+                }
+            </ul>
+        </div>
+    </div>
+    <div class="clearfix margin_bottom4"></div>
+}

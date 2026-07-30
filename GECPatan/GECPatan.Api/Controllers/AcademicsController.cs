@@ -59,27 +59,6 @@ namespace GECPatan.Api.Controllers
             return Ok(ApiResponse<List<AcademicCalendarDTO>>.Ok(data));
         }
 
-        // GET /api/academics/ssip
-        // SSIP documents list
-        [HttpGet("ssip")]
-        public async Task<ActionResult<ApiResponse<List<SSIPDocumentDTO>>>> GetSSIP()
-        {
-            var data = await _context.SSIPDocuments
-                .Where(s => s.IsVisible)
-                .OrderBy(s => s.DisplayOrder)
-                .Select(s => new SSIPDocumentDTO
-                {
-                    Id = s.Id,
-                    Title = s.Title,
-                    FilePath = s.FilePath,
-                    UploadDate = s.UploadDate,
-                    DisplayOrder = s.DisplayOrder
-                })
-                .ToListAsync();
-
-            return Ok(ApiResponse<List<SSIPDocumentDTO>>.Ok(data));
-        }
-
         // GET /api/academics/research
         // Research grants list
         [HttpGet("research")]

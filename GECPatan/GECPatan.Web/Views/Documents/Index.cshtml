@@ -1,0 +1,235 @@
+@model GECPatan.Web.Models.DocumentCategoryListViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Documents";
+
+    string ResolveApiFileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || path.StartsWith("https://") || path.StartsWith("//"))
+            return path;
+        return string.IsNullOrEmpty(Model.ApiBaseUrl)
+            ? Url.Content("~/" + path.TrimStart('~', '/'))
+            : Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
+    }
+}
+
+<style>
+    /* Flexbox Grid Fixes */
+    .doc-grid-row {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .doc-grid-col {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 30px;
+    }
+
+    .doc-grid-link {
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex: 1;
+    }
+
+    .doc-grid-box {
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: box-shadow 0.2s ease-in-out;
+        background: #fff;
+    }
+
+        .doc-grid-box:hover {
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+    /* Standardized Top Area (110px height for BOTH Image and Icon) */
+    .doc-img-banner, .doc-icon-banner {
+        height: 110px;
+        width: 100%;
+        overflow: hidden;
+        transition: height 0.3s;
+    }
+
+        .doc-img-banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    /* Aligns the icon to the left and gives it space */
+    .doc-icon-banner {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding-left: 20px;
+        background-color: #fcfcfc;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+        .doc-icon-banner i {
+            font-size: 64px;
+            color: #1a237e;
+            transition: font-size 0.3s;
+        }
+
+    /* Standardized Text Area */
+    .doc-content {
+        padding: 15px 20px 20px 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    /* =========================================
+           Responsive Adjustments for Mobile/Tablet
+           ========================================= */
+    @@media (max-width: 768px) {
+        .doc-grid-col {
+            margin-bottom: 20px; /* Slightly tighter gap on mobile */
+        }
+
+        .doc-img-banner, .doc-icon-banner {
+            height: 90px; /* Reduces banner height on small screens */
+        }
+
+            .doc-icon-banner i {
+                font-size: 52px; /* Scales down the icon slightly */
+                padding-left: 15px;
+            }
+
+        .doc-icon-banner {
+            padding-left: 15px;
+        }
+
+        .doc-content {
+            padding: 15px; /* Reduces padding inside the card */
+        }
+
+            .doc-content h4 {
+                font-size: 16px; /* Ensures text doesn't overflow */
+            }
+    }
+</style>
+
+<div class="clearfix"></div>
+
+<div class="page_title3 general_title">
+    <div class="container">
+        <h1>
+            Documents
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+
+<div class="clearfix margin_bottom6"></div>
+
+<div class="content_fullwidth less">
+    <div class="container">
+        @if (!Model.HasAnyDocuments)
+        {
+            <div class="text-center" style="padding:40px 0;">
+                <h3>No documents available right now.</h3>
+            </div>
+        }
+        else
+        {
+            <div class="row doc-grid-row">
+
+                @foreach (var collection in Model.Categories.Where(m => m.FileCount > 0).ToList())
+                {
+                    <!-- Added col-xs-12 to ensure full width on mobile devices -->
+                    <div class="col-md-4 col-sm-6 col-xs-12 doc-grid-col">
+                        <a href="@Url.Action("Collection", "Documents", new { id = collection.Id })" class="doc-grid-link">
+                            <div class="doc-grid-box">
+                                @if (!string.IsNullOrEmpty(collection.TitleImagePath))
+                                {
+                                    <div class="doc-img-banner">
+                                        <img src="@ResolveApiFileUrl(collection.TitleImagePath)" alt="@collection.Title" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="doc-icon-banner">
+                                        <i class="fa fa-folder-open"></i>
+                                    </div>
+                                }
+
+                                <div class="doc-content">
+                                    <h4 style="margin-top:0;margin-bottom:8px;">@collection.Title</h4>
+                                    <p style="color:#777;margin:0;">
+                                        @if (collection.HasYearSections)
+                                        {
+                                            @collection.YearCount @(collection.YearCount == 1 ? "year" : "years") <text>&middot;</text>
+                                        }
+                                        @collection.FileCount @(collection.FileCount == 1 ? "document" : "documents")
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+
+                @if (Model.SSIPCount > 0)
+                {
+                    <div class="col-md-4 col-sm-6 col-xs-12 doc-grid-col">
+                        <a href="@Url.Action("SSIP", "Documents")" class="doc-grid-link">
+                            <div class="doc-grid-box">
+                                <div class="doc-icon-banner">
+                                    <i class="fa fa-lightbulb-o"></i>
+                                </div>
+                                <div class="doc-content">
+                                    <h4 style="margin-top:0;margin-bottom:8px;">Student Startup &amp; Innovation Policy</h4>
+                                    <p style="color:#777;margin:0;">@Model.SSIPCount @(Model.SSIPCount == 1 ? "document" : "documents")</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+
+                @if (Model.TimetableCount > 0)
+                {
+                    <div class="col-md-4 col-sm-6 col-xs-12 doc-grid-col">
+                        <a href="@Url.Action("Timetable", "Documents")" class="doc-grid-link">
+                            <div class="doc-grid-box">
+                                <div class="doc-icon-banner">
+                                    <i class="fa fa-calendar"></i>
+                                </div>
+                                <div class="doc-content">
+                                    <h4 style="margin-top:0;margin-bottom:8px;">Time Table</h4>
+                                    <p style="color:#777;margin:0;">@Model.TimetableCount @(Model.TimetableCount == 1 ? "entry" : "entries")</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+
+                @if (Model.MoUCount > 0)
+                {
+                    <div class="col-md-4 col-sm-6 col-xs-12 doc-grid-col">
+                        <a href="@Url.Action("MoU", "Documents")" class="doc-grid-link">
+                            <div class="doc-grid-box">
+                                <div class="doc-icon-banner">
+                                    <i class="fa fa-handshake-o"></i>
+                                </div>
+                                <div class="doc-content">
+                                    <h4 style="margin-top:0;margin-bottom:8px;">Memorandum of Understanding</h4>
+                                    <p style="color:#777;margin:0;">@Model.MoUCount @(Model.MoUCount == 1 ? "document" : "documents")</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+<div class="clearfix margin_bottom6"></div>

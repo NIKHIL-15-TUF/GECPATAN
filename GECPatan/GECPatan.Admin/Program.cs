@@ -6,6 +6,7 @@ using GECPatan.Core.Services.UserManagement;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,15 +64,37 @@ builder.Services.AddScoped<
     GECPatan.Admin.Services.DisclosureDataService>();
 
 // ── FILE STORAGE ──────────────────────────────────────
-// Centralized, validated file upload/delete service. Replaces the
-// per-controller SaveFileAsync/DeleteFile helpers (see Day 3 refactor).
-// Registered via factory because FileStorageService takes a plain string
-// (the web root path) rather than depending on IWebHostEnvironment directly,
-// keeping the Core project free of a hosting-abstractions dependency.
+// Blob-storage-backed implementation, targeting Azurite locally (see
+// docker-compose.yml at the repo root — `docker compose up -d azurite`)
+// and a real Azure Storage account in production via the same
+// "BlobStorage" configuration section (just swap the connection string).
+//
+// The original disk-based FileStorageService (wwwroot/uploads) is left
+// completely intact in the codebase — only this registration changed.
+// Every controller depends on IFileStorageService, not a concrete class,
+// so no controller changes were needed to make this swap.
+builder.Services.Configure<BlobStorageOptions>(
+    builder.Configuration.GetSection(BlobStorageOptions.SectionName));
+
 builder.Services.AddScoped<IFileStorageService>(sp =>
-    new FileStorageService(
-        sp.GetRequiredService<IWebHostEnvironment>().WebRootPath,
-        sp.GetRequiredService<ILogger<FileStorageService>>()));
+{
+    var options = sp.GetRequiredService<IOptions<BlobStorageOptions>>().Value;
+    return new BlobStorageService(
+        options.ConnectionString,
+        options.ContainerName,
+        options.PublicBaseUrl,
+        sp.GetRequiredService<ILogger<BlobStorageService>>());
+});
+
+// Disk-based alternative — kept here, commented, for an easy rollback.
+// To switch back, comment out the BlobStorageService registration above
+// and uncomment this block instead. No other code changes are required
+// either way, since both implement the same IFileStorageService interface.
+//
+// builder.Services.AddScoped<IFileStorageService>(sp =>
+//     new FileStorageService(
+//         sp.GetRequiredService<IWebHostEnvironment>().WebRootPath,
+//         sp.GetRequiredService<ILogger<FileStorageService>>()));
 
 // Batch-loading lookups for the User Management list page — see
 // UserDirectoryService for why this exists (fixes an N+1 query pattern).

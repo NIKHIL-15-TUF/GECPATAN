@@ -41,7 +41,7 @@ namespace GECPatan.Admin.Controllers
             var commMap = await _context.CampusCommittees.ToDictionaryAsync(c => c.Id, c => c.Title);
             var facMap = await _context.Facilities.ToDictionaryAsync(f => f.Id, f => f.Title);
             var clubMap = await _context.StudentClubs.ToDictionaryAsync(c => c.Id, c => c.Title);
-            var docMap = await _context.DocumentCategories.ToDictionaryAsync(d => d.Id, d => d.Title);
+            var docMap = await _context.DocumentPages.ToDictionaryAsync(d => d.Id, d => d.Title);
             var pageMap = await _context.ContentPages.ToDictionaryAsync(p => p.Id, p => p.Title);
 
             string ResolveLabel(MenuItem m)
@@ -373,7 +373,7 @@ namespace GECPatan.Admin.Controllers
                     .Select(c => new { id = c.Id, text = c.Title })
                     .ToListAsync<object>(),
 
-                "Document" => await _context.DocumentCategories
+                "Document" => await _context.DocumentPages
                     .Where(d => d.IsVisible).OrderBy(d => d.Title)
                     .Select(d => new { id = d.Id, text = d.Title })
                     .ToListAsync<object>(),
@@ -534,7 +534,7 @@ namespace GECPatan.Admin.Controllers
                     .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Title })
                     .ToListAsync(),
 
-                "Document" => await _context.DocumentCategories
+                "Document" => await _context.DocumentPages
                     .Where(d => d.IsVisible).OrderBy(d => d.Title)
                     .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Title })
                     .ToListAsync(),

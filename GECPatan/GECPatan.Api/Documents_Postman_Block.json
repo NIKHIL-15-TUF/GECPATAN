@@ -23,13 +23,6 @@
       }
     },
     {
-      "name": "Get Important Documents",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/documents/important"
-      }
-    },
-    {
       "name": "Get MoU Documents",
       "request": {
         "method": "GET",

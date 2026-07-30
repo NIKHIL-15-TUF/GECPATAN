@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  azurite:
+    # Official Azure Storage emulator. Provides Blob, Queue, and Table
+    # endpoints locally using the well-known "devstoreaccount1" account,
+    # matching the "UseDevelopmentStorage=true" connection-string shorthand
+    # used in appsettings.Development.json.
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: gecpatan-azurite
+    command: >
+      azurite
+      --blobHost 0.0.0.0
+      --queueHost 0.0.0.0
+      --tableHost 0.0.0.0
+      --location /data
+      --debug /data/debug.log
+    ports:
+      - "10000:10000" # Blob service — this is the one BlobStorageService uses
+      - "10001:10001" # Queue service (unused today, exposed for completeness)
+      - "10002:10002" # Table service (unused today, exposed for completeness)
+    volumes:
+      - azurite-data:/data
+    restart: unless-stopped
+
+volumes:
+  azurite-data:
