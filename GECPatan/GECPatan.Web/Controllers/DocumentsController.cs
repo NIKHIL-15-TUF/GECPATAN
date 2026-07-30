@@ -16,10 +16,14 @@ namespace GECPatan.Web.Controllers
         }
 
         // GET /Documents
-        // Lists all visible document categories (Mandatory Disclosure, Central Store
-        // & Purchase, Academic Calendar, or any other category the Admin creates).
+        // Lists all visible document pages (Mandatory Disclosure, Central Store
+        // & Purchase, Academic Calendar, or any other page the Admin creates).
         // MoU / SSIP / Timetable / Tenders keep their own dedicated pages and are not
         // listed here.
+        //
+        // No routing logic lives here — each page's card links to either the
+        // Category or TableView action depending on its own TableView flag; the
+        // Index view builds that link directly from DocumentCategoryListDTO.TableView.
         public async Task<IActionResult> Index(CancellationToken ct)
         {
             var categoriesTask = _documents.GetCategoriesAsync(ct);
@@ -42,47 +46,25 @@ namespace GECPatan.Web.Controllers
             return View(vm);
         }
 
-        // GET /Documents/TableView/5
-        // Flat, numbered table listing for a category — an alternate layout to
-        // the card/grid Category view, for categories better suited to a plain
-        // list (e.g. Academic Calendar, Mandatory Disclosure).
-        public async Task<IActionResult> TableView(int id, CancellationToken ct)
+        // GET /Documents/Collection/5
+        // Single endpoint that loads the document collection. The View will 
+        // dynamically route to the correct Partial View (Table or Grid).
+        public async Task<IActionResult> Collection(int id, CancellationToken ct)
         {
-            var category = await _documents.GetCategoryDetailAsync(id, ct);
+            var collection = await _documents.GetCategoryDetailAsync(id, ct);
 
-            if (category == null)
+            if (collection == null)
             {
                 return NotFound();
             }
 
             var vm = new DocumentCategoryDetailViewModel
             {
-                Category = category,
+                Category = collection,
                 ApiBaseUrl = _config["Api:BaseUrl"]
             };
 
-            ViewBag.Title = category.Title;
-            return View(vm);
-        }
-
-        // GET /Documents/Category/5
-        // Year-wise file listing for a single category.
-        public async Task<IActionResult> Category(int id, CancellationToken ct)
-        {
-            var category = await _documents.GetCategoryDetailAsync(id, ct);
-
-            if (category == null)
-            {
-                return NotFound();
-            }
-
-            var vm = new DocumentCategoryDetailViewModel
-            {
-                Category = category,
-                ApiBaseUrl = _config["Api:BaseUrl"]
-            };
-
-            ViewBag.Title = category.Title;
+            ViewBag.Title = collection.Title;
             return View(vm);
         }
 

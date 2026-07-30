@@ -1,22 +1,30 @@
 @model List<DocumentFileVM>
 @{
     ViewData["Title"] = ViewData["Title"] ?? "Files";
-    int categoryId = ViewBag.CategoryId;
-    string categoryTitle = ViewBag.CategoryTitle;
-    int yearSectionId = ViewBag.YearSectionId;
-    string year = ViewBag.Year;
+    int pageId = ViewBag.PageId;
+    string pageTitle = ViewBag.PageTitle;
+    int? yearSectionId = ViewBag.YearSectionId;
+    string? year = ViewBag.Year;
+    bool isYearBound = yearSectionId.HasValue;
 }
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-action="Index">Document Categories</a></li>
-        <li class="breadcrumb-item"><a asp-action="YearSections" asp-route-categoryId="@categoryId">@categoryTitle</a></li>
-        <li class="breadcrumb-item active" aria-current="page">@year</li>
+        <li class="breadcrumb-item"><a asp-action="Index">Document Pages</a></li>
+        @if (isYearBound)
+        {
+            <li class="breadcrumb-item"><a asp-action="YearSections" asp-route-pageId="@pageId">@pageTitle</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@year</li>
+        }
+        else
+        {
+            <li class="breadcrumb-item active" aria-current="page">@pageTitle</li>
+        }
     </ol>
 </nav>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">@categoryTitle — @year — Files</h3>
+    <h3 class="mb-0">@pageTitle @(isYearBound ? $"— {year}" : "") — Files</h3>
     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addFileModal">
         <i class="fa fa-plus"></i> Add File
     </button>
@@ -80,7 +88,8 @@
                                 }
                             </td>
                             <td class="text-center">
-                                <form asp-action="ToggleFileVisible" asp-route-id="@f.Id" asp-route-yearSectionId="@yearSectionId"
+                                <form asp-action="ToggleFileVisible" asp-route-id="@f.Id"
+                                      asp-route-yearSectionId="@yearSectionId" asp-route-pageId="@pageId"
                                       method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-sm @(f.IsVisible ? "btn-success" : "btn-secondary")">
@@ -89,7 +98,8 @@
                                 </form>
                             </td>
                             <td class="text-center">
-                                <form asp-action="DeleteFile" asp-route-id="@f.Id" asp-route-yearSectionId="@yearSectionId"
+                                <form asp-action="DeleteFile" asp-route-id="@f.Id"
+                                      asp-route-yearSectionId="@yearSectionId" asp-route-pageId="@pageId"
                                       method="post" class="d-inline"
                                       onsubmit="return confirm('Delete document \'@f.Title\'? This cannot be undone.');">
                                     @Html.AntiForgeryToken()
@@ -111,7 +121,11 @@
     <div class="modal-dialog">
         <form asp-action="AddFile" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
-            <input type="hidden" name="YearSectionId" value="@yearSectionId" />
+            @if (isYearBound)
+            {
+                <input type="hidden" name="YearSectionId" value="@yearSectionId" />
+            }
+            <input type="hidden" name="PageId" value="@pageId" />
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Add Document</h5>

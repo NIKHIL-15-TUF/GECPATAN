@@ -74,7 +74,7 @@ namespace GECPatan.Core.Data
         public DbSet<NewsLetter> NewsLetters { get; set; }
 
         // DOCUMENTS
-        public DbSet<DocumentCategory> DocumentCategories { get; set; }
+        public DbSet<DocumentPage> DocumentPages { get; set; }
         public DbSet<DocumentYearSection> DocumentYearSections { get; set; }
         public DbSet<DocumentFile> DocumentFiles { get; set; }
         // Add after TenderDocuments line:

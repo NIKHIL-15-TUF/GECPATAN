@@ -332,7 +332,7 @@ namespace GECPatan.Admin.Controllers
                     .Select(p => new { id = p.Id, text = p.Title })
                     .ToListAsync<object>(),
 
-                "Document" => await _context.DocumentCategories
+                "Document" => await _context.DocumentPages
                     .Where(d => d.IsVisible).OrderBy(d => d.Title)
                     .Select(d => new { id = d.Id, text = d.Title })
                     .ToListAsync<object>(),
@@ -380,7 +380,7 @@ namespace GECPatan.Admin.Controllers
                     .Select(p => new SelectListItem { Value = p.Id.ToString(), Text = p.Title })
                     .ToListAsync(),
 
-                "Document" => await _context.DocumentCategories
+                "Document" => await _context.DocumentPages
                     .Where(d => d.IsVisible).OrderBy(d => d.Title)
                     .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Title })
                     .ToListAsync(),

@@ -6,6 +6,17 @@
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public int DisplayOrder { get; set; }
+
+        /// <summary>Web-relative path to the page's title banner image, or null if none set.</summary>
+        public string? TitleImagePath { get; set; }
+
+        /// <summary>True = the page renders as a Table View, false = List/Card View.</summary>
+        public bool TableView { get; set; }
+
+        /// <summary>True = documents are grouped under Year Sections; false = uploaded directly under the page.</summary>
+        public bool HasYearSections { get; set; }
+
+        /// <summary>Only meaningful when HasYearSections = true.</summary>
         public int YearCount { get; set; }
         public int FileCount { get; set; }
     }
@@ -16,7 +27,15 @@
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
 
+        public string? TitleImagePath { get; set; }
+        public bool TableView { get; set; }
+        public bool HasYearSections { get; set; }
+
+        /// <summary>Populated only when HasYearSections = true.</summary>
         public List<DocumentYearSectionDTO> YearSections { get; set; } = new();
+
+        /// <summary>Populated only when HasYearSections = false (files uploaded directly under the page).</summary>
+        public List<DocumentFileDTO> DirectFiles { get; set; } = new();
     }
 
     public class DocumentYearSectionDTO

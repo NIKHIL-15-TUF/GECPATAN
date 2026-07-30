@@ -6,6 +6,11 @@
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public int DisplayOrder { get; set; }
+
+        public string? TitleImagePath { get; set; }
+        public bool TableView { get; set; }
+        public bool HasYearSections { get; set; }
+
         public int YearCount { get; set; }
         public int FileCount { get; set; }
     }
@@ -15,7 +20,16 @@
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
+
+        public string? TitleImagePath { get; set; }
+        public bool TableView { get; set; }
+        public bool HasYearSections { get; set; }
+
+        /// <summary>Populated only when HasYearSections = true.</summary>
         public List<DocumentYearSectionDTO> YearSections { get; set; } = new();
+
+        /// <summary>Populated only when HasYearSections = false.</summary>
+        public List<DocumentFileDTO> DirectFiles { get; set; } = new();
     }
 
     public class DocumentYearSectionDTO

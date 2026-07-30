@@ -16,68 +16,95 @@ namespace GECPatan.Api.Controllers
             => _context = context;
 
         // GET /api/documents/categories
-        // All visible document categories (list)
+        // All visible document pages (list) — the response is still called
+        // "categories" for URL/API-contract stability, even though the admin
+        // side now calls these "Document Pages".
         [HttpGet("categories")]
         public async Task<ActionResult<ApiResponse<List<DocumentCategoryListDTO>>>> GetCategories()
         {
-            var categories = await _context.DocumentCategories
-                .Include(c => c.YearSections)
+            var pages = await _context.DocumentPages
+                .Include(p => p.YearSections)
                     .ThenInclude(y => y.Files)
-                .Where(c => c.IsVisible)
-                .OrderBy(c => c.DisplayOrder)
+                .Include(p => p.Files)
+                .Where(p => p.IsVisible)
+                .OrderBy(p => p.DisplayOrder)
                 .ToListAsync();
 
-            var data = categories.Select(c => new DocumentCategoryListDTO
+            var data = pages.Select(p => new DocumentCategoryListDTO
             {
-                Id = c.Id,
-                Title = c.Title,
-                DisplayOrder = c.DisplayOrder,
-                YearCount = c.YearSections.Count,
-                FileCount = c.YearSections
-                    .SelectMany(y => y.Files)
-                    .Count(f => f.IsVisible)
+                Id = p.Id,
+                Title = p.Title,
+                DisplayOrder = p.DisplayOrder,
+                TitleImagePath = p.TitleBannerImagePath,
+                TableView = p.TableView,
+                HasYearSections = p.HasYearSections,
+                YearCount = p.YearSections.Count,
+                FileCount = p.HasYearSections
+                    ? p.YearSections.SelectMany(y => y.Files).Count(f => f.IsVisible)
+                    : p.Files.Count(f => f.IsVisible)
             }).ToList();
 
             return Ok(ApiResponse<List<DocumentCategoryListDTO>>.Ok(data));
         }
 
         // GET /api/documents/{categoryId}
-        // Year-wise documents in a category
+        // Year-wise documents (when HasYearSections = true) or direct files
+        // (when HasYearSections = false) for a single document page.
         [HttpGet("{categoryId}")]
         public async Task<ActionResult<ApiResponse<DocumentCategoryDetailDTO>>> GetCategoryDetail(int categoryId)
         {
-            var category = await _context.DocumentCategories
-                .Include(c => c.YearSections.OrderByDescending(y => y.Year))
+            var page = await _context.DocumentPages
+                .Include(p => p.YearSections.OrderByDescending(y => y.Year))
                     .ThenInclude(y => y.Files.OrderBy(f => f.DisplayOrder))
-                .FirstOrDefaultAsync(c => c.Id == categoryId && c.IsVisible);
+                .Include(p => p.Files.OrderBy(f => f.DisplayOrder))
+                .FirstOrDefaultAsync(p => p.Id == categoryId && p.IsVisible);
 
-            if (category == null)
+            if (page == null)
                 return NotFound(ApiResponse<DocumentCategoryDetailDTO>.Fail(
                     "Document category not found"));
 
             var data = new DocumentCategoryDetailDTO
             {
-                Id = category.Id,
-                Title = category.Title,
-                YearSections = category.YearSections
-                    .OrderByDescending(y => y.Year)
-                    .ThenBy(y => y.DisplayOrder)
-                    .Select(y => new DocumentYearSectionDTO
-                    {
-                        Id = y.Id,
-                        Year = y.Year,
-                        DisplayOrder = y.DisplayOrder,
-                        Files = y.Files
-                            .Where(f => f.IsVisible)
-                            .OrderBy(f => f.DisplayOrder)
-                            .Select(f => new DocumentFileDTO
-                            {
-                                Id = f.Id,
-                                Title = f.Title,
-                                FilePath = f.FilePath,
-                                DisplayOrder = f.DisplayOrder
-                            }).ToList()
-                    }).ToList()
+                Id = page.Id,
+                Title = page.Title,
+                TitleImagePath = page.TitleBannerImagePath,
+                TableView = page.TableView,
+                HasYearSections = page.HasYearSections,
+
+                YearSections = page.HasYearSections
+                    ? page.YearSections
+                        .OrderByDescending(y => y.Year)
+                        .ThenBy(y => y.DisplayOrder)
+                        .Select(y => new DocumentYearSectionDTO
+                        {
+                            Id = y.Id,
+                            Year = y.Year,
+                            DisplayOrder = y.DisplayOrder,
+                            Files = y.Files
+                                .Where(f => f.IsVisible)
+                                .OrderBy(f => f.DisplayOrder)
+                                .Select(f => new DocumentFileDTO
+                                {
+                                    Id = f.Id,
+                                    Title = f.Title,
+                                    FilePath = f.FilePath,
+                                    DisplayOrder = f.DisplayOrder
+                                }).ToList()
+                        }).ToList()
+                    : new List<DocumentYearSectionDTO>(),
+
+                DirectFiles = !page.HasYearSections
+                    ? page.Files
+                        .Where(f => f.IsVisible)
+                        .OrderBy(f => f.DisplayOrder)
+                        .Select(f => new DocumentFileDTO
+                        {
+                            Id = f.Id,
+                            Title = f.Title,
+                            FilePath = f.FilePath,
+                            DisplayOrder = f.DisplayOrder
+                        }).ToList()
+                    : new List<DocumentFileDTO>()
             };
 
             return Ok(ApiResponse<DocumentCategoryDetailDTO>.Ok(data));
