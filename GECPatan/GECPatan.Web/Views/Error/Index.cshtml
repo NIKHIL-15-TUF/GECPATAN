@@ -1,0 +1,45 @@
+﻿@model GECPatan.Web.Models.ErrorViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = Model.Title;
+}
+<div class="clearfix"></div>
+
+<div class="page_title3 engg_title" style="background-image: url('@Url.Content("~/images/Error-Banner.png")'); background-size: cover; background-position: center;">
+    <div class="container">
+        <h1>
+            @Model.StatusCode &mdash; @Model.Title
+            <div class="line"></div>
+        </h1>
+    </div>
+</div>
+<!-- end page title -->
+
+<div class="clearfix margin_top3"></div>
+
+<div class="content_fullwidth">
+    <div class="full-container">
+        <div class="full_width text-center">
+            <p class="lead">@Model.Message</p>
+
+            <div class="marb12"></div>
+
+            @if (Model.ShowGoHome)
+            {
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Go to Home</a>
+            }
+            @if (Model.ShowContactUs)
+            {
+                @* Adjust controller/action to match this site's actual Contact Us route. *@
+                <a asp-controller="Contact" asp-action="Index" class="btn btn-default">Contact Us</a>
+            }
+
+            @if (Model.ShowRequestId)
+            {
+                <p class="text-muted small" style="margin-top:20px;">Reference ID: @Model.RequestId</p>
+            }
+        </div>
+        <!-- end section -->
+    </div>
+</div>
+<div class="clearfix margin_bottom3"></div>

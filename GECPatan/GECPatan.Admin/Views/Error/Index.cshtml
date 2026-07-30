@@ -1,0 +1,50 @@
+﻿@model GECPatan.Admin.Models.ErrorViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "_AccountLayout";
+
+    // Same icon convention as the existing AccessDenied page.
+    var (iconClass, iconColor) = Model.StatusCode switch
+    {
+        404 => ("fa-map-signs", "text-warning"),
+        403 => ("fa-ban", "text-danger"),
+        400 => ("fa-exclamation-triangle", "text-warning"),
+        _ => ("fa-exclamation-circle", "text-danger")
+    };
+}
+
+<div class="login-box">
+
+    <div class="login-logo">
+        <a href="#">
+            <img src="/adminlte/img/GECP_LOGO_recreated.png"
+                 alt="GEC Patan Logo"
+                 style="width:100px; display:block; margin:0 auto 10px auto; opacity:.9;">
+
+            <strong style="display:block; color:#fff;">Government Engineering College, Patan</strong>
+            <small style="color:#ccc;">Admin Panel</small>
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body login-card-body text-center">
+
+            <i class="fas @iconClass fa-4x @iconColor mb-3 mt-2"></i>
+            <h4 class="mb-2">@Model.StatusCode &mdash; @Model.Title</h4>
+            <p class="text-muted mb-4">@Model.Message</p>
+
+            @if (Model.ShowGoToDashboard)
+            {
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-block mb-2">
+                    <i class="fas fa-home mr-2"></i> Go to Dashboard
+                </a>
+            }
+
+            @if (Model.ShowRequestId)
+            {
+                <small class="text-muted d-block mt-2">Reference ID: @Model.RequestId</small>
+            }
+        </div>
+    </div>
+
+</div>
