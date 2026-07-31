@@ -48,6 +48,7 @@ namespace GECPatan.Web.Controllers
                 Title = dept.Name,
                 About = dept.About,
                 TitleImagePath = dept.TitleImagePath,
+                TitleImageCSSClass = dept.TitleImageCSSClass,
                 Tagline = dept.Tagline,
                 ShowIntake = dept.ShowIntake,
                 Intake = dept.CurrentIntake,

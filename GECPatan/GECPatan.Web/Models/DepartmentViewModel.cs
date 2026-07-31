@@ -13,6 +13,7 @@ namespace GECPatan.Web.Models
         public string Title { get; set; } = string.Empty;
         public string? About { get; set; }
         public string? TitleImagePath { get; set; }
+        public string? TitleImageCSSClass { get; set; }
         public string? Tagline { get; set; }
 
         public bool ShowIntake { get; set; }

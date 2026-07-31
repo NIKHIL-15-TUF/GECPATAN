@@ -41,6 +41,7 @@
         public List<string> PEOs { get; set; } = new();
         public List<string> PSOs { get; set; } = new();
         public List<DynamicSectionDTO> DynamicSections { get; set; } = new();
+        public string TitleImageCSSClass { get; internal set; }
     }
 
     public class DynamicSectionDTO

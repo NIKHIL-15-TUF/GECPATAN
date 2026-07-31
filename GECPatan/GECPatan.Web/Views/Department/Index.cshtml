@@ -37,7 +37,8 @@
 
 <div class="clearfix"></div>
 
-<div class="page_title3 general_title">
+<div class="page_title3 @Model.TitleImageCSSClass"
+     style="background: #999 url(@ResolveApiFileUrl(Model.TitleImagePath)) no-repeat center top;background-size: cover;">
     <div class="full-container">
         <h1>
             @Model.Title
