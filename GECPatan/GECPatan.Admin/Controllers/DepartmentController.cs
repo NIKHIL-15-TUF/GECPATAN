@@ -192,8 +192,13 @@ namespace GECPatan.Admin.Controllers
                 Intake = intake,
                 ExistingTitleImagePath = d.TitleImagePath,
                 ExistingBannerImages = d.BannerImages
+                                          .Where(b => !b.IsDeleted)
                                           .OrderBy(b => b.DisplayOrder)
-                                          .Select(b => b.ImagePath)
+                                          .Select(b => new DepartmentBannerImageVM
+                                          {
+                                              Id = b.Id,
+                                              ImagePath = b.ImagePath
+                                          })
                                           .ToList(),
                 VisionItems = d.Visions.OrderBy(v => v.DisplayOrder).Select(v => v.VisionText).ToList(),
                 MissionItems = d.Missions.OrderBy(m => m.DisplayOrder).Select(m => m.MissionText).ToList(),
@@ -390,8 +395,7 @@ namespace GECPatan.Admin.Controllers
             // safely committed, so a failed save never leaves a dangling
             // reference to a file that no longer exists.
             TryDeleteFile(imagePath, "deleted banner image");
-
-            return RedirectToAction(nameof(Edit), new { id = deptId });
+            return Ok();
         }
 
         // ── TOGGLE ACTIVE ─────────────────────────────────

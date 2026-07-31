@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using GECPatan.Core.Models.Domain;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace GECPatan.Admin.Models.ViewModels
@@ -34,6 +35,11 @@ namespace GECPatan.Admin.Models.ViewModels
         public bool ShowIntake { get; set; } = true;
         public int DisplayOrder { get; set; } = 0;
     }
+    public class DepartmentBannerImageVM
+    {
+        public int Id { get; set; }
+        public string ImagePath { get; set; } = string.Empty;
+    }
 
     public class DepartmentEditVM : DepartmentCreateVM
     {
@@ -46,7 +52,7 @@ namespace GECPatan.Admin.Models.ViewModels
 
         // Images
         public string? ExistingTitleImagePath { get; set; }
-        public List<string> ExistingBannerImages { get; set; } = new();
+        public List<DepartmentBannerImageVM> ExistingBannerImages { get; set; } = new();
 
         // Vision/Mission/PEO/PSO as lists
         public List<string> VisionItems { get; set; } = new();

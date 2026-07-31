@@ -1,0 +1,17 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.DepartmentBannerImageVM>
+@{
+    var deptId = (int)ViewData["DeptId"]!;
+}
+<div class="row mb-3" id="bannerImageGrid">
+    @foreach (var img in Model)
+    {
+        <div class="col-md-3 col-6 mb-2 text-center" data-image-id="@img.Id">
+            <img src="@img.ImagePath" class="img-thumbnail"
+                 style="height:80px;object-fit:cover;width:100%;" />
+            <button type="button" class="btn btn-xs btn-danger btn-block mt-1 js-remove-banner"
+                    data-id="@img.Id" data-dept-id="@deptId">
+                <i class="fas fa-times mr-1"></i>Remove
+            </button>
+        </div>
+    }
+</div>

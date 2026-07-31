@@ -266,30 +266,10 @@
                         </small>
                     </label>
  
-                    @if (Model.ExistingBannerImages.Any())
-                    {
-                        <div class="row mb-3">
-                            @for (int i = 0; i < Model.ExistingBannerImages.Count; i++)
-                            {
-                                var imgPath = Model.ExistingBannerImages[i];
-                                <div class="col-md-3 col-6 mb-2 text-center">
-                                    <img src="@imgPath" class="img-thumbnail"
-                                         style="height:80px;object-fit:cover;width:100%;" />
-                                    <form asp-action="DeleteBannerImage" method="post" class="mt-1">
-                                        <input type="hidden" name="id"
-                                               value="@(i + 1)" />
-                                        <input type="hidden" name="deptId"
-                                               value="@Model.DeptId" />
-                                        <button type="submit"
-                                                class="btn btn-xs btn-danger btn-block"
-                                                onclick="return confirm('Remove?')">
-                                            <i class="fas fa-times mr-1"></i>Remove
-                                        </button>
-                                    </form>
-                                </div>
-                            }
-                        </div>
+                    @{
+                        ViewData["DeptId"] = Model.DeptId;
                     }
+                    <partial name="_BannerImages" model="Model.ExistingBannerImages" />
  
                     <div class="custom-file">
                         <input type="file" class="custom-file-input" name="BannerImages"
@@ -417,7 +397,27 @@
         input.nextElementSibling.textContent = input.files[0].name;
         }
         }
- 
+        document.getElementById('bannerImageGrid')?.addEventListener('click', async function (e) {
+        const btn = e.target.closest('.js-remove-banner');
+        if (!btn) return;
+        if (!confirm('Remove this image?')) return;
+
+        const id = btn.dataset.id;
+        const deptId = btn.dataset.deptId;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        const res = await fetch('/Department/DeleteBannerImage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `id=${id}&deptId=${deptId}&__RequestVerificationToken=${encodeURIComponent(token)}`
+        });
+
+        if (res.ok) {
+        btn.closest('[data-image-id]').remove();
+        } else {
+        alert('Could not remove the image. Please try again.');
+        }
+        });
         // ── Remember active tab ───────────────────────────────
         const activeTab = localStorage.getItem('deptActiveTab');
         if (activeTab) { $(`a[href="${activeTab}"]`).tab('show'); }
@@ -425,4 +425,5 @@
         localStorage.setItem('deptActiveTab', $(e.target).attr('href'));
         });
     </script>
+
 }
