@@ -89,14 +89,14 @@ builder.Services.AddHttpClient<IContentPageApiService, ContentPageApiService>(cl
 });
 
 builder.Services.AddHttpClient<INewsApiService, NewsApiService>(client =>
-   {
-       var baseUrl = builder.Configuration["Api:BaseUrl"]
-           ?? throw new InvalidOperationException("Api:BaseUrl is not configured.");
+{
+    var baseUrl = builder.Configuration["Api:BaseUrl"]
+        ?? throw new InvalidOperationException("Api:BaseUrl is not configured.");
 
-       client.BaseAddress = new Uri(baseUrl);
-       client.Timeout = TimeSpan.FromSeconds(30);
-       client.DefaultRequestHeaders.Add("Accept", "application/json");
-   });
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 builder.Services.AddHttpClient<IStudentClubApiService, StudentClubApiService>(client =>
 {
@@ -116,6 +116,16 @@ builder.Services.AddHttpClient<IGalleryApiService, GalleryApiService>(client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 builder.Services.AddHttpClient<IResearchGrantApiService, ResearchGrantApiService>(client =>
+{
+    var baseUrl = builder.Configuration["Api:BaseUrl"]
+        ?? throw new InvalidOperationException("Api:BaseUrl is not configured.");
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// Contact Us page: college info + form submission.
+builder.Services.AddHttpClient<IContactApiService, ContactApiService>(client =>
 {
     var baseUrl = builder.Configuration["Api:BaseUrl"]
         ?? throw new InvalidOperationException("Api:BaseUrl is not configured.");

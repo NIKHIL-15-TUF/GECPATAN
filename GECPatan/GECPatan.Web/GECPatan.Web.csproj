@@ -15,7 +15,6 @@
     <Folder Include="Views\Administration\" />
     <Folder Include="Views\Alumni\" />
     <Folder Include="Views\CampusLife\" />
-    <Folder Include="Views\ContactUs\" />
     <Folder Include="Views\Research\" />
     <Folder Include="Views\PlacementCell\" />
   </ItemGroup>
