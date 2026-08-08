@@ -1,0 +1,26 @@
+﻿{
+  "name": "Contact",
+  "item": [
+    {
+      "name": "Get Contact Settings",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/contact/settings"
+      }
+    },
+    {
+      "name": "Submit Contact Form",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/contact/submit",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"phone\": \"9876543210\",\n  \"category\": \"General Inquiry\",\n  \"subject\": \"Question about admissions\",\n  \"message\": \"Hello, I would like to know more about the admission process for the upcoming academic year.\"\n}"
+        }
+      }
+    }
+  ]
+}

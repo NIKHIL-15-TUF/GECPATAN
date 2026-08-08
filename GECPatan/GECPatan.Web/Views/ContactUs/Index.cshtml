@@ -1,0 +1,406 @@
+﻿@model GECPatan.Web.Models.ContactUsPageViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Contact Us";
+    var s = Model.Settings;
+    var categories = s.AllowedCategories != null && s.AllowedCategories.Any()
+        ? s.AllowedCategories
+        : new List<string> { "General Inquiry", "Admission Inquiry", "Feedback / Suggestion", "Website Issue", "Other" };
+}
+
+<style>
+    /* -- Info panel (left column) -- */
+    .contact-info-panel {
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        padding: 30px 25px;
+        height: 100%;
+    }
+
+        .contact-info-panel h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+    .contact-info-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+        .contact-info-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+            .contact-info-list li + li {
+                margin-top: 22px;
+            }
+
+        .contact-info-list .icon-wrap {
+            flex: 0 0 44px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #eef0fb;
+            color: #1a237e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .contact-info-list h5 {
+            margin: 0 0 4px 0;
+            font-size: 15px;
+        }
+
+        .contact-info-list p {
+            margin: 0;
+            color: #666;
+            word-break: break-word;
+        }
+
+    /* -- Map -- */
+    .contact-map-wrapper {
+        width: 100%;
+        height: 260px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 2px solid #ddd;
+        margin-top: 25px;
+    }
+
+        .contact-map-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+    /* -- Form (right column) -- */
+    .contact-form-card {
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        padding: 30px;
+        height: 100%;
+    }
+
+    #contactAlert {
+        display: none;
+    }
+
+    #contactSubmitBtn[disabled] {
+        opacity: .7;
+        cursor: not-allowed;
+    }
+
+    .contact-spinner {
+        display: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,.5);
+        border-top-color: #fff;
+        border-radius: 50%;
+        margin-right: 8px;
+        animation: contact-spin .7s linear infinite;
+    }
+
+    @@keyframes contact-spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@media (max-width: 991px) {
+        .contact-info-panel {
+            margin-bottom: 30px;
+        }
+    }
+
+    @@media (max-width: 767px) {
+        .contact-form-card, .contact-info-panel {
+            padding: 20px 15px;
+        }
+
+        .contact-map-wrapper {
+            height: 220px;
+        }
+    }
+</style>
+
+<div class="clearfix"></div>
+<div class="page_title3 general_title">
+    <div class="container">
+        <h1>
+            Contact Us
+            <div class="line"></div>
+        </h1>
+        <p class="lead" style="margin-top:10px;">
+            Have a question, feedback, suggestion, or need assistance? We'd love to hear from you.
+        </p>
+    </div>
+</div>
+<div class="clearfix margin_bottom6"></div>
+
+<div class="content_fullwidth less">
+    <div class="container">
+        <div class="row">
+
+            @* LEFT: College Contact Information + Map *@
+            <div class="col-lg-5">
+                <div class="contact-info-panel">
+                    @if (!string.IsNullOrEmpty(s.CollegeName))
+                    {
+                        <h3>@s.CollegeName</h3>
+                    }
+                    <ul class="contact-info-list">
+                        @if (!string.IsNullOrEmpty(s.Address))
+                        {
+                            <li>
+                                <span class="icon-wrap"><i class="fa fa-map-marker-alt" aria-hidden="true"></i></span>
+                                <div>
+                                    <h5>Address</h5>
+                                    <p>@s.Address</p>
+                                </div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrEmpty(s.Phone1) || !string.IsNullOrEmpty(s.Phone2))
+                        {
+                            <li>
+                                <span class="icon-wrap"><i class="fa fa-phone" aria-hidden="true"></i></span>
+                                <div>
+                                    <h5>Phone</h5>
+                                    <p>
+                                        @s.Phone1
+                                        @if (!string.IsNullOrEmpty(s.Phone2))
+                                        {
+                                            <br />
+                                            @s.Phone2
+                                        }
+                                    </p>
+                                </div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrEmpty(s.Email1) || !string.IsNullOrEmpty(s.Email2))
+                        {
+                            <li>
+                                <span class="icon-wrap"><i class="fa fa-envelope" aria-hidden="true"></i></span>
+                                <div>
+                                    <h5>Email</h5>
+                                    <p>
+                                        @s.Email1
+                                        @if (!string.IsNullOrEmpty(s.Email2))
+                                        {
+                                            <br />
+                                            @s.Email2
+                                        }
+                                    </p>
+                                </div>
+                            </li>
+                        }
+                        @if (!string.IsNullOrEmpty(s.OfficeHours))
+                        {
+                            <li>
+                                <span class="icon-wrap"><i class="fa fa-clock" aria-hidden="true"></i></span>
+                                <div>
+                                    <h5>Office Hours</h5>
+                                    <p>@s.OfficeHours</p>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+
+                    @if (!string.IsNullOrEmpty(s.MapEmbedUrl))
+                    {
+                        <div class="contact-map-wrapper">
+                            <iframe src="@s.MapEmbedUrl" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                                    title="College location map" allowfullscreen></iframe>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @* RIGHT: Contact Form *@
+            <div class="col-lg-7">
+                <div class="contact-form-card">
+                    <h3 style="margin-top:0;margin-bottom:5px;">Send Us a Message</h3>
+                    <p class="text-muted" style="margin-bottom:25px;">
+                        Fields marked <span class="text-danger">*</span> are required.
+                    </p>
+
+                    <div id="contactAlert" class="alert" role="alert"></div>
+
+                    <form id="contactForm" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="FullName">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" id="FullName" name="FullName" class="form-control"
+                                       maxlength="150" required />
+                                <div class="invalid-feedback">Please enter your full name.</div>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="Email">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" id="Email" name="Email" class="form-control"
+                                       maxlength="200" required />
+                                <div class="invalid-feedback">Please enter a valid email address.</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label for="Phone">Phone Number <span class="text-muted">(optional)</span></label>
+                                <input type="tel" id="Phone" name="Phone" class="form-control" maxlength="20" />
+                                <div class="invalid-feedback">Please enter a valid phone number.</div>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="Category">Category <span class="text-danger">*</span></label>
+                                <select id="Category" name="Category" class="form-control" required>
+                                    <option value="" disabled selected>Select a category</option>
+                                    @foreach (var c in categories)
+                                    {
+                                        <option value="@c">@c</option>
+                                    }
+                                </select>
+                                <div class="invalid-feedback">Please select a category.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Subject">Subject <span class="text-danger">*</span></label>
+                            <input type="text" id="Subject" name="Subject" class="form-control"
+                                   maxlength="300" required />
+                            <div class="invalid-feedback">Please enter a subject (at least 3 characters).</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Message">Message <span class="text-danger">*</span></label>
+                            <textarea id="Message" name="Message" class="form-control" rows="6"
+                                      maxlength="4000" required></textarea>
+                            <div class="invalid-feedback">Please enter your message (at least 10 characters).</div>
+                        </div>
+
+                        <div style="margin-top:10px;">
+                            <button type="submit" id="contactSubmitBtn" class="btn btn-primary" style="min-width:180px;">
+                                <span class="contact-spinner" id="contactSpinner"></span>
+                                <span id="contactSubmitLabel">Send Message</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="clearfix margin_bottom6"></div>
+
+@section scripts {
+    <script>
+        (function() {
+            var form = document.getElementById('contactForm');
+            var alertBox = document.getElementById('contactAlert');
+            var submitBtn = document.getElementById('contactSubmitBtn');
+            var spinner = document.getElementById('contactSpinner');
+            var submitLabel = document.getElementById('contactSubmitLabel');
+            var isSubmitting = false;
+
+            function showAlert(type, message) {
+                alertBox.className = 'alert alert-' + type;
+                alertBox.textContent = message;
+                alertBox.style.display = 'block';
+                alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideAlert() {
+                alertBox.style.display = 'none';
+            }
+
+            function validateField(field) {
+                var value = field.value.trim();
+                var valid = field.checkValidity();
+
+                if (valid && field.hasAttribute('minlength')) {
+                    valid = value.length >= parseInt(field.getAttribute('minlength'), 10);
+                }
+                if (valid && (field.id === 'Subject')) {
+                    valid = value.length >= 3;
+                }
+                if (valid && (field.id === 'Message')) {
+                    valid = value.length >= 10;
+                }
+
+                field.classList.toggle('is-invalid', !valid);
+                field.classList.toggle('is-valid', valid);
+                return valid;
+            }
+
+            function validateForm() {
+                var fields = form.querySelectorAll('#FullName, #Email, #Phone, #Category, #Subject, #Message');
+                var allValid = true;
+                fields.forEach(function(field) {
+                    // Phone is optional -- only validate its pattern if it has a value.
+                    if (field.id === 'Phone' && field.value.trim() === '') {
+                        field.classList.remove('is-invalid');
+                        return;
+                    }
+                    if (!validateField(field)) {
+                        allValid = false;
+                    }
+                });
+                return allValid;
+            }
+
+            form.querySelectorAll('input, select, textarea').forEach(function(field) {
+                field.addEventListener('blur', function() { validateField(field); });
+                field.addEventListener('input', function() {
+                    if (field.classList.contains('is-invalid')) validateField(field);
+                });
+            });
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                hideAlert();
+
+                if (isSubmitting) return; // belt-and-braces alongside the disabled button
+                if (!validateForm()) {
+                    showAlert('danger', 'Please correct the highlighted fields and try again.');
+                    return;
+                }
+
+                isSubmitting = true;
+                submitBtn.disabled = true;
+                spinner.style.display = 'inline-block';
+                submitLabel.textContent = 'Sending...';
+
+                var formData = new FormData(form);
+
+                fetch('@Url.Action("Submit", "ContactUs")', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                    .then(function(response) { return response.json(); })
+                    .then(function(result) {
+                        if (result.success) {
+                            showAlert('success', result.message);
+                            form.reset();
+                            form.querySelectorAll('.is-valid').forEach(function(f) { f.classList.remove('is-valid'); });
+                        } else {
+                            showAlert('danger', result.message || 'Something went wrong. Please try again.');
+                        }
+                    })
+                    .catch(function() {
+                        showAlert('danger', 'Sorry, we couldn\'t submit your message right now. Please try again in a few minutes.');
+                    })
+                    .finally(function() {
+                        isSubmitting = false;
+                        submitBtn.disabled = false;
+                        spinner.style.display = 'none';
+                        submitLabel.textContent = 'Send Message';
+                    });
+            });
+        })();
+    </script>
+}

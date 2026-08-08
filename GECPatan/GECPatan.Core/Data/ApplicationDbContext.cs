@@ -138,6 +138,9 @@ namespace GECPatan.Core.Data
         public DbSet<DepartmentEquipment> DepartmentEquipments { get; set; }
         public DbSet<FacultyTurnoverRecord> FacultyTurnoverRecords { get; set; }
 
+        // ── CONTACT US ────────────────────────────────────
+        public DbSet<ContactMessage> ContactMessages { get; set; }
+
         // MODEL CREATING
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -254,6 +257,8 @@ namespace GECPatan.Core.Data
             modelBuilder.Entity<DepartmentEquipment>()
                 .HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<FacultyTurnoverRecord>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<ContactMessage>()
                 .HasQueryFilter(x => !x.IsDeleted);
 
             // ── RELATIONSHIPS ────────────────────────────────

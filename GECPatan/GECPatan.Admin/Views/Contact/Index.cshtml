@@ -1,136 +1,158 @@
 ﻿@model GECPatan.Admin.Models.ViewModels.ContactVM
 @{
-    ViewData["Title"] = "Contact Information";
+    ViewData["Title"] = ViewData["Title"] ?? "Contact Information";
 }
+
 <div class="row">
     <div class="col-md-8">
-        <form asp-action="Index" method="post">
-            @if (!ViewData.ModelState.IsValid)
-            {
-                <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
-            }
- 
-            <div class="card mb-3">
-                <div class="card-header" style="background:#1a237e;color:#fff;">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-map-marker-alt mr-2"></i>Address & Phone
-                    </h5>
-                </div>
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title">
+                    <i class="fas fa-address-book mr-2"></i>Contact Information
+                </h3>
+            </div>
+            <form asp-action="Index" method="post">
+                @Html.AntiForgeryToken()
                 <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            @TempData["Success"]
+                            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                        </div>
+                    }
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">@Html.ValidationSummary(false)</div>
+                    }
+
+                    <h5 class="text-muted mb-3"><i class="fas fa-university mr-1"></i> College Information</h5>
+                    <div class="form-group">
+                        <label class="font-weight-bold">College Name</label>
+                        <p class="form-control-plaintext font-weight-bold mb-0">Government Engineering College, Patan</p>
+                    </div>
                     <div class="form-group">
                         <label asp-for="Address" class="font-weight-bold"></label>
-                        <textarea asp-for="Address" class="form-control" rows="3"
+                        <textarea asp-for="Address"
+                                  class="form-control"
+                                  rows="3"
                                   placeholder="Full postal address..."></textarea>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label asp-for="Phone1" class="font-weight-bold"></label>
-                                <input asp-for="Phone1" class="form-control"
-                                       placeholder="+91 2734 253030" />
-                            </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Phone1" class="font-weight-bold">Phone Number</label>
+                            <input asp-for="Phone1"
+                                   class="form-control"
+                                   placeholder="+91 2734 253030" />
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label asp-for="Phone2" class="font-weight-bold"></label>
-                                <input asp-for="Phone2" class="form-control"
-                                       placeholder="Alternate number" />
-                            </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Phone2" class="font-weight-bold">Alternate Phone (optional)</label>
+                            <input asp-for="Phone2"
+                                   class="form-control"
+                                   placeholder="Alternate phone number" />
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label asp-for="Email1" class="font-weight-bold"></label>
-                                <input asp-for="Email1" class="form-control"
-                                       placeholder="principal@gecpatan.ac.in" />
-                            </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Email1" class="font-weight-bold">Email Address</label>
+                            <input asp-for="Email1"
+                                   class="form-control"
+                                   placeholder="principal@gecpatan.ac.in" />
+                            <span asp-validation-for="Email1" class="text-danger small"></span>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label asp-for="Email2" class="font-weight-bold"></label>
-                                <input asp-for="Email2" class="form-control"
-                                       placeholder="office@gecpatan.ac.in" />
-                            </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Email2" class="font-weight-bold">Alternate Email (optional)</label>
+                            <input asp-for="Email2"
+                                   class="form-control"
+                                   placeholder="office@gecpatan.ac.in" />
+                            <span asp-validation-for="Email2" class="text-danger small"></span>
                         </div>
                     </div>
                     <div class="form-group">
+                        <label asp-for="OfficeHours" class="font-weight-bold"></label>
+                        <input asp-for="OfficeHours"
+                               class="form-control"
+                               placeholder="Mon - Sat, 10:30 AM - 6:00 PM" />
+                    </div>
+                    <div class="form-group">
                         <label asp-for="MapEmbedUrl" class="font-weight-bold"></label>
-                        <textarea asp-for="MapEmbedUrl" class="form-control" rows="3"
-                                  placeholder="Google Maps embed URL or iframe src..."></textarea>
-                        <small class="text-muted">
-                            Go to Google Maps → Share → Embed a map → Copy the src URL only
+                        <input asp-for="MapEmbedUrl" class="form-control" placeholder="https://www.google.com/maps/embed?pb=..." />
+                        <small class="form-text text-muted">
+                            Use the "Embed a map" iframe <code>src</code> URL from Google Maps → Share → Embed a map.
                         </small>
                     </div>
-                </div>
-            </div>
- 
-            <div class="card mb-3">
-                <div class="card-header" style="background:#1a237e;color:#fff;">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-share-alt mr-2"></i>Social Media
-                    </h5>
-                </div>
-                <div class="card-body">
+
+                    <hr />
+                    <h5 class="text-muted mb-3"><i class="fas fa-envelope-open-text mr-1"></i> Contact Us Form</h5>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-bold">
-                                    <i class="fab fa-facebook text-primary mr-1"></i>Facebook
-                                </label>
-                                <input asp-for="FacebookUrl" class="form-control"
-                                       placeholder="https://facebook.com/..." />
-                            </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="SupportEmail" class="font-weight-bold"></label>
+                            <input asp-for="SupportEmail" class="form-control" placeholder="support@gecpatan.ac.in" />
+                            <span asp-validation-for="SupportEmail" class="text-danger small"></span>
+                            <small class="form-text text-muted">Every Contact Us submission is emailed here.</small>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-bold">
-                                    <i class="fab fa-twitter text-info mr-1"></i>Twitter
-                                </label>
-                                <input asp-for="TwitterUrl" class="form-control"
-                                       placeholder="https://twitter.com/..." />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-bold">
-                                    <i class="fab fa-youtube text-danger mr-1"></i>YouTube
-                                </label>
-                                <input asp-for="YoutubeUrl" class="form-control"
-                                       placeholder="https://youtube.com/..." />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-bold">
-                                    <i class="fab fa-linkedin text-primary mr-1"></i>LinkedIn
-                                </label>
-                                <input asp-for="LinkedinUrl" class="form-control"
-                                       placeholder="https://linkedin.com/..." />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="font-weight-bold">
-                                    <i class="fab fa-instagram text-danger mr-1"></i>Instagram
-                                </label>
-                                <input asp-for="InstagramUrl" class="form-control"
-                                       placeholder="https://instagram.com/..." />
-                            </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="SenderEmail" class="font-weight-bold"></label>
+                            <input asp-for="SenderEmail" class="form-control" placeholder="noreply@gecpatan.ac.in" />
+                            <span asp-validation-for="SenderEmail" class="text-danger small"></span>
+                            <small class="form-text text-muted">Must be sendable via the configured SMTP account.</small>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label asp-for="AllowedCategories" class="font-weight-bold"></label>
+                        <input asp-for="AllowedCategories" class="form-control"
+                               placeholder="General Inquiry, Admission Inquiry, Feedback, Suggestion, Website Issue, Technical Issue, Complaint, Other" />
+                        <small class="form-text text-muted">
+                            These appear as the Category dropdown options on the public Contact Us page. Add or remove
+                            entries here — no code change needed.
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SuccessMessage" class="font-weight-bold"></label>
+                        <textarea asp-for="SuccessMessage" class="form-control" rows="2"
+                                  placeholder="Thank you for contacting us. Your message has been submitted successfully. Our team will review it and contact you if required."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="FailureMessage" class="font-weight-bold"></label>
+                        <textarea asp-for="FailureMessage" class="form-control" rows="2"
+                                  placeholder="Sorry, we couldn't submit your message right now. Please try again in a few minutes."></textarea>
+                    </div>
+
+                    <hr />
+                    <h5 class="text-muted mb-3"><i class="fas fa-share-alt mr-1"></i> Social Media (optional)</h5>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="FacebookUrl" class="font-weight-bold"></label>
+                            <input asp-for="FacebookUrl" class="form-control" />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="TwitterUrl" class="font-weight-bold"></label>
+                            <input asp-for="TwitterUrl" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="YoutubeUrl" class="font-weight-bold"></label>
+                            <input asp-for="YoutubeUrl" class="form-control" />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="LinkedinUrl" class="font-weight-bold"></label>
+                            <input asp-for="LinkedinUrl" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="InstagramUrl" class="font-weight-bold"></label>
+                        <input asp-for="InstagramUrl" class="form-control" />
+                    </div>
                 </div>
-            </div>
- 
-            <div class="text-right">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save mr-2"></i>Save Contact Info
-                </button>
-            </div>
-        </form>
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
- 
-    <!-- Map Preview -->
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-light">
@@ -139,18 +161,19 @@
                 </h6>
             </div>
             <div class="card-body p-0">
-                @if (!string.IsNullOrEmpty(Model.MapEmbedUrl))
+                @if (!string.IsNullOrWhiteSpace(Model.MapEmbedUrl))
                 {
                     <iframe src="@Model.MapEmbedUrl"
                             style="width:100%;height:250px;border:0;"
-                            allowfullscreen loading="lazy">
+                            allowfullscreen
+                            loading="lazy">
                     </iframe>
                 }
                 else
                 {
                     <div class="text-center py-4 text-muted">
                         <i class="fas fa-map-marker-alt fa-3x mb-2 d-block"></i>
-                        Enter a Map Embed URL to preview
+                        Enter a Map Embed URL to preview.
                     </div>
                 }
             </div>

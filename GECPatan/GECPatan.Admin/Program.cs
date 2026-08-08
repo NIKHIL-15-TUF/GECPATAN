@@ -1,6 +1,7 @@
 using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
 using GECPatan.Core.Services;
+using GECPatan.Core.Services.Email;
 using GECPatan.Core.Services.FileStorage;
 using GECPatan.Core.Services.UserManagement;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -95,6 +96,18 @@ builder.Services.AddScoped<IFileStorageService>(sp =>
 //     new FileStorageService(
 //         sp.GetRequiredService<IWebHostEnvironment>().WebRootPath,
 //         sp.GetRequiredService<ILogger<FileStorageService>>()));
+
+// ── EMAIL (Contact Message replies) ────────────────────
+// Same shared IEmailService also registered in GECPatan.Api for the Contact
+// Us submission notification. Transport credentials come from the "Smtp"
+// appsettings section (see appsettings.Contact.md) — the same section used
+// by the Api project, since both send through the same SMTP account.
+builder.Services.Configure<EmailOptions>(
+    builder.Configuration.GetSection(EmailOptions.SectionName));
+builder.Services.AddScoped<IEmailService>(sp =>
+    new EmailService(
+        sp.GetRequiredService<IOptions<EmailOptions>>().Value,
+        sp.GetRequiredService<ILogger<EmailService>>()));
 
 // Batch-loading lookups for the User Management list page — see
 // UserDirectoryService for why this exists (fixes an N+1 query pattern).

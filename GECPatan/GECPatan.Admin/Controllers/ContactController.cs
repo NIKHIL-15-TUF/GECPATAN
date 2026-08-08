@@ -27,12 +27,22 @@ namespace GECPatan.Admin.Controllers
 
             var vm = new ContactVM
             {
+                CollegeName = settings.GetValueOrDefault("Contact_CollegeName"),
                 Address = settings.GetValueOrDefault("Contact_Address"),
                 Phone1 = settings.GetValueOrDefault("Contact_Phone1"),
                 Phone2 = settings.GetValueOrDefault("Contact_Phone2"),
                 Email1 = settings.GetValueOrDefault("Contact_Email1"),
                 Email2 = settings.GetValueOrDefault("Contact_Email2"),
+                OfficeHours = settings.GetValueOrDefault("Contact_OfficeHours"),
                 MapEmbedUrl = settings.GetValueOrDefault("Contact_MapEmbedUrl"),
+
+                SupportEmail = settings.GetValueOrDefault("Contact_SupportEmail"),
+                SenderEmail = settings.GetValueOrDefault("Contact_SenderEmail"),
+
+                SuccessMessage = settings.GetValueOrDefault("Contact_SuccessMessage"),
+                FailureMessage = settings.GetValueOrDefault("Contact_FailureMessage"),
+                AllowedCategories = settings.GetValueOrDefault("Contact_AllowedCategories"),
+
                 FacebookUrl = settings.GetValueOrDefault("Contact_Facebook"),
                 TwitterUrl = settings.GetValueOrDefault("Contact_Twitter"),
                 YoutubeUrl = settings.GetValueOrDefault("Contact_Youtube"),
@@ -50,12 +60,22 @@ namespace GECPatan.Admin.Controllers
             ViewData["Title"] = "Contact Information";
             if (!ModelState.IsValid) return View(model);
 
+            await UpsertSetting("Contact_CollegeName", model.CollegeName);
             await UpsertSetting("Contact_Address", model.Address);
             await UpsertSetting("Contact_Phone1", model.Phone1);
             await UpsertSetting("Contact_Phone2", model.Phone2);
             await UpsertSetting("Contact_Email1", model.Email1);
             await UpsertSetting("Contact_Email2", model.Email2);
+            await UpsertSetting("Contact_OfficeHours", model.OfficeHours);
             await UpsertSetting("Contact_MapEmbedUrl", model.MapEmbedUrl);
+
+            await UpsertSetting("Contact_SupportEmail", model.SupportEmail);
+            await UpsertSetting("Contact_SenderEmail", model.SenderEmail);
+
+            await UpsertSetting("Contact_SuccessMessage", model.SuccessMessage);
+            await UpsertSetting("Contact_FailureMessage", model.FailureMessage);
+            await UpsertSetting("Contact_AllowedCategories", model.AllowedCategories);
+
             await UpsertSetting("Contact_Facebook", model.FacebookUrl);
             await UpsertSetting("Contact_Twitter", model.TwitterUrl);
             await UpsertSetting("Contact_Youtube", model.YoutubeUrl);

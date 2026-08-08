@@ -59,6 +59,11 @@ namespace GECPatan.Admin.Models.ViewModels
     // ── CONTACT ───────────────────────────────────────────
     public class ContactVM
     {
+        // ── College info (public-facing, shown on the Contact Us page) ──
+        [MaxLength(200)]
+        [Display(Name = "College Name")]
+        public string? CollegeName { get; set; } = "Government Engineering College, Patan";
+
         [MaxLength(300)]
         public string? Address { get; set; }
 
@@ -69,14 +74,46 @@ namespace GECPatan.Admin.Models.ViewModels
         public string? Phone2 { get; set; }
 
         [MaxLength(200)]
+        [EmailAddress(ErrorMessage = "Enter a valid email address")]
         public string? Email1 { get; set; }
 
         [MaxLength(200)]
+        [EmailAddress(ErrorMessage = "Enter a valid email address")]
         public string? Email2 { get; set; }
 
+        [MaxLength(200)]
+        [Display(Name = "Office Hours")]
+        public string? OfficeHours { get; set; }
+
         [MaxLength(500)]
+        [Display(Name = "Google Maps Embed URL")]
         public string? MapEmbedUrl { get; set; }
 
+        // ── Contact Us form routing (internal — never shown publicly) ──
+        [MaxLength(200)]
+        [EmailAddress(ErrorMessage = "Enter a valid email address")]
+        [Display(Name = "Support Email (receives form submissions)")]
+        public string? SupportEmail { get; set; }
+
+        [MaxLength(200)]
+        [EmailAddress(ErrorMessage = "Enter a valid email address")]
+        [Display(Name = "Sender Email (\"From\" address for outgoing mail)")]
+        public string? SenderEmail { get; set; }
+
+        // ── Contact Us form copy & categories ──
+        [MaxLength(500)]
+        [Display(Name = "Success Message")]
+        public string? SuccessMessage { get; set; }
+
+        [MaxLength(500)]
+        [Display(Name = "Failure Message")]
+        public string? FailureMessage { get; set; }
+
+        [MaxLength(500)]
+        [Display(Name = "Allowed Categories (comma-separated)")]
+        public string? AllowedCategories { get; set; }
+
+        // ── Social media ──
         [MaxLength(500)]
         public string? FacebookUrl { get; set; }
 
