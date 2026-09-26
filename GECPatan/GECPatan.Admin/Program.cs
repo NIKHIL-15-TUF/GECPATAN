@@ -74,28 +74,28 @@ builder.Services.AddScoped<
 // completely intact in the codebase — only this registration changed.
 // Every controller depends on IFileStorageService, not a concrete class,
 // so no controller changes were needed to make this swap.
-builder.Services.Configure<BlobStorageOptions>(
-    builder.Configuration.GetSection(BlobStorageOptions.SectionName));
+//builder.Services.Configure<BlobStorageOptions>(
+//    builder.Configuration.GetSection(BlobStorageOptions.SectionName));
 
-builder.Services.AddScoped<IFileStorageService>(sp =>
-{
-    var options = sp.GetRequiredService<IOptions<BlobStorageOptions>>().Value;
-    return new BlobStorageService(
-        options.ConnectionString,
-        options.ContainerName,
-        options.PublicBaseUrl,
-        sp.GetRequiredService<ILogger<BlobStorageService>>());
-});
+//builder.Services.AddScoped<IFileStorageService>(sp =>
+//{
+//    var options = sp.GetRequiredService<IOptions<BlobStorageOptions>>().Value;
+//    return new BlobStorageService(
+//        options.ConnectionString,
+//        options.ContainerName,
+//        options.PublicBaseUrl,
+//        sp.GetRequiredService<ILogger<BlobStorageService>>());
+//});
 
 // Disk-based alternative — kept here, commented, for an easy rollback.
 // To switch back, comment out the BlobStorageService registration above
 // and uncomment this block instead. No other code changes are required
 // either way, since both implement the same IFileStorageService interface.
-//
-// builder.Services.AddScoped<IFileStorageService>(sp =>
-//     new FileStorageService(
-//         sp.GetRequiredService<IWebHostEnvironment>().WebRootPath,
-//         sp.GetRequiredService<ILogger<FileStorageService>>()));
+
+builder.Services.AddScoped<IFileStorageService>(sp =>
+    new FileStorageService(
+        sp.GetRequiredService<IWebHostEnvironment>().WebRootPath,
+        sp.GetRequiredService<ILogger<FileStorageService>>()));
 
 // ── EMAIL (Contact Message replies) ────────────────────
 // Same shared IEmailService also registered in GECPatan.Api for the Contact
