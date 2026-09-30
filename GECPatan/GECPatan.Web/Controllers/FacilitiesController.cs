@@ -16,19 +16,19 @@ namespace GECPatan.Web.Controllers
         }
 
         // GET /Facilities
-        public async Task<IActionResult> Index(CancellationToken ct)
-        {
-            var facilities = await _facilities.GetAllFacilitiesAsync(ct);
+        //public async Task<IActionResult> Index(CancellationToken ct)
+        //{
+        //    var facilities = await _facilities.GetAllFacilitiesAsync(ct);
 
-            var vm = new FacilityListViewModel
-            {
-                Facilities = facilities,
-                ApiBaseUrl = _config["Api:BaseUrl"]
-            };
+        //    var vm = new FacilityListViewModel
+        //    {
+        //        Facilities = facilities,
+        //        ApiBaseUrl = _config["Api:BaseUrl"]
+        //    };
 
-            ViewBag.Title = "Facilities";
-            return View(vm);
-        }
+        //    ViewBag.Title = "Facilities";
+        //    return View(vm);
+        //}
 
         // GET /Facilities/Details/{id}
         public async Task<IActionResult> Details(int id, CancellationToken ct)
