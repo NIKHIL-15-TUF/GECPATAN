@@ -6,5 +6,6 @@ namespace GECPatan.Web.Models
     {
         public string ApiBaseUrl { get; set; } = string.Empty;
         public List<NewsLetterDTO> Letters { get; set; } = new();
+       // public bool TableView { get; set; } = false;
     }
 }
