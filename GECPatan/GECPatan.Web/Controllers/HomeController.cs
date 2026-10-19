@@ -37,6 +37,8 @@ namespace GECPatan.Web.Controllers
             var settingsTask = _homeApi.GetSettingsAsync(ct);
             var principalTask = _homeApi.GetPrincipalMessageAsync(ct);
             var departmentsTask = _departmentApi.GetAllDepartmentsAsync(ct);
+            var alumniTask = _homeApi.GetNotableAlumniAsync(ct);
+            var shotsTask = _homeApi.GetLatestShotsAsync(ct);
 
             await Task.WhenAll(
                 slidersTask, marqueeTask, updatesTask, testimonialsTask,
@@ -57,7 +59,9 @@ namespace GECPatan.Web.Controllers
                     .ToList(),
                 Stats = statsTask.Result,
                 Settings = settingsTask.Result,
-                Principal = principalTask.Result
+                Principal = principalTask.Result,
+                NotableAlumni = alumniTask.Result,
+                LatestShots = shotsTask.Result
             };
 
             return View(vm);

@@ -73,7 +73,10 @@ namespace GECPatan.Admin.Controllers
                 Anchor2Link = model.Anchor2Link,
                 DisplayOrder = maxOrder + 1,
                 IsVisible = model.IsVisible,
-                ImagePath = imagePath
+                ImagePath = imagePath,
+                BottomDescription = model.BottomDescription,
+                CaptionBgColor = model.CaptionBgColor,
+                CaptionTextColor = model.CaptionTextColor
             };
 
             try
@@ -120,7 +123,10 @@ namespace GECPatan.Admin.Controllers
                 Anchor2Link = s.Anchor2Link,
                 DisplayOrder = s.DisplayOrder,
                 IsVisible = s.IsVisible,
-                ExistingImagePath = s.ImagePath
+                ExistingImagePath = s.ImagePath,
+                BottomDescription = s.BottomDescription,
+                CaptionBgColor = s.CaptionBgColor,
+                CaptionTextColor = s.CaptionTextColor
             });
         }
 

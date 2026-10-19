@@ -32,6 +32,9 @@ namespace GECPatan.Admin.Models.ViewModels
         public int DisplayOrder { get; set; } = 0;
         public bool IsVisible { get; set; } = true;
         public string? ExistingImagePath { get; set; }
+        public string? BottomDescription { get; set; }
+        public string? CaptionBgColor { get; set; }
+        public string? CaptionTextColor { get; set; }
     }
     public class MarqueeListVM
     {
@@ -62,7 +65,7 @@ namespace GECPatan.Admin.Models.ViewModels
         [Required]
         [Display(Name = "Link Type")]
         public string LinkType { get; set; } = "none";
-
+        public bool IsNew { get; set; }
         // Internal
         [MaxLength(100)]
         [Display(Name = "Controller")]

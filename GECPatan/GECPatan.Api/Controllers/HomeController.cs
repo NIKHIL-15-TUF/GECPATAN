@@ -34,7 +34,10 @@ namespace GECPatan.Api.Controllers
                     Anchor1Link = s.Anchor1Link,
                     Anchor2Text = s.Anchor2Text,
                     Anchor2Link = s.Anchor2Link,
-                    DisplayOrder = s.DisplayOrder
+                    DisplayOrder = s.DisplayOrder,
+                    BottomDescription = s.BottomDescription,
+                    CaptionBgColor = s.CaptionBgColor,
+                    CaptionTextColor = s.CaptionTextColor
                 })
                 .ToListAsync();
 
@@ -106,7 +109,8 @@ namespace GECPatan.Api.Controllers
                         LinkType = m.LinkType,
                         Link = ResolveMarqueeLink(m),
                         FilePath = m.LinkType == "file" ? m.FilePath : null,
-                        Source = "marquee"
+                        Source = "marquee",
+                        IsNew = m.IsNew
                     }
                 })
                 .ToList();
@@ -115,6 +119,7 @@ namespace GECPatan.Api.Controllers
                 .Where(n => n.IsVisible && n.ShowInMarquee)
                 .ToListAsync();
 
+            var newCutoff = now.AddDays(-7);
             var newsUpdates = newsItems.Select(n => new
             {
                 SortDate = n.PublishDate ?? n.CreatedDate,
@@ -125,7 +130,8 @@ namespace GECPatan.Api.Controllers
                     LinkType = "internal",
                     Link = $"/news/{n.Id}",
                     FilePath = null,
-                    Source = "news"
+                    Source = "news",
+                    IsNew = (n.PublishDate ?? n.CreatedDate) >= newCutoff
                 }
             });
 
@@ -348,6 +354,28 @@ namespace GECPatan.Api.Controllers
             return Ok(ApiResponse<List<HomeActivityDTO>>.Ok(data));
         }
 
+        [HttpGet("notable-alumni")]
+        public Task<ActionResult<ApiResponse<List<CarouselItemDTO>>>> GetNotableAlumni() => GetCarousel(CarouselType.NotableAlumni);
+
+        [HttpGet("latest-shots")]
+        public Task<ActionResult<ApiResponse<List<CarouselItemDTO>>>> GetLatestShots() => GetCarousel(CarouselType.LatestShot);
+
+        private async Task<ActionResult<ApiResponse<List<CarouselItemDTO>>>> GetCarousel(CarouselType type)
+        {
+            var data = await _context.CarouselItems
+                .Where(c => c.IsVisible && c.Type == type)
+                .OrderBy(c => c.DisplayOrder)
+                .Select(c => new CarouselItemDTO
+                {
+                    Id = c.Id,
+                    Title = c.Title,
+                    ImagePath = c.ImagePath,
+                    IsVideo = c.IsVideo,
+                    VideoUrl = c.VideoUrl,
+                    UploadDate = c.UploadDate.HasValue ? c.UploadDate.Value.ToString("yyyy-MM-dd") : null
+                }).ToListAsync();
+            return Ok(ApiResponse<List<CarouselItemDTO>>.Ok(data));
+        }
         // ── HELPERS ───────────────────────────────────────
         // Resolves Link for internal/dynamic/external types only. Returns
         // null for "file" and "none" -- file links are exposed separately

@@ -12,6 +12,9 @@
         public string? Anchor2Text { get; set; }
         public string? Anchor2Link { get; set; }
         public int DisplayOrder { get; set; }
+        public string? BottomDescription { get; set; }
+        public string? CaptionBgColor { get; set; }
+        public string? CaptionTextColor { get; set; }
     }
 
     public class TestimonialDTO
@@ -47,8 +50,17 @@
         public string? Link { get; set; }   // resolved URL
         public string? FilePath { get; set; }
         public int DisplayOrder { get; set; }
+        public bool IsNew { get; set; }
     }
-
+    public class CarouselItemDTO
+    {
+        public int Id { get; set; }
+        public string? Title { get; set; }
+        public string? ImagePath { get; set; }
+        public bool IsVideo { get; set; }
+        public string? VideoUrl { get; set; }
+        public string? UploadDate { get; set; }
+    }
     public class UpdateItemDTO
     {
         public int Id { get; set; }
@@ -65,6 +77,7 @@
         // "marquee" | "news" -- not used for rendering logic, just useful
         // if you ever want to badge/style the two sources differently.
         public string Source { get; set; } = string.Empty;
+        public bool IsNew { get; set; }
     }
     public class HomeNewsDTO
     {

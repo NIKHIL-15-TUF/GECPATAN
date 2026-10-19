@@ -39,6 +39,7 @@ namespace GECPatan.Core.Models.Domain
 
         public int DisplayOrder { get; set; } = 0;
         public bool IsVisible { get; set; } = true;
+        public bool IsNew { get; set; }
 
         // NEW: when true, this item shows in the horizontal scrolling
         // ticker directly below the homepage slider. When false (default),

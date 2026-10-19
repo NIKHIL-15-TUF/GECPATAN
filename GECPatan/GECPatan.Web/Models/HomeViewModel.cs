@@ -29,5 +29,10 @@ namespace GECPatan.Web.Models
         public HomeStatsDTO? Stats { get; set; }
         public SiteSettingsDTO? Settings { get; set; }
         public PrincipalMessageDTO? Principal { get; set; }
+        public List<CarouselItemDTO> NotableAlumni { get; set; } = new();
+
+        public List<CarouselItemDTO> LatestShots { get; set; } = new();
+
+
     }
 }

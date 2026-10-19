@@ -66,6 +66,7 @@ namespace GECPatan.Core.Data
         public DbSet<Marquee> Marquees { get; set; }
         public DbSet<Testimonial> Testimonials { get; set; }
         public DbSet<TopRecruiter> TopRecruiters { get; set; }
+        public DbSet<CarouselItem> CarouselItems { get; set; }
 
         // NEWS
         public DbSet<NewsItem> NewsItems { get; set; }
@@ -259,6 +260,8 @@ namespace GECPatan.Core.Data
             modelBuilder.Entity<FacultyTurnoverRecord>()
                 .HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<ContactMessage>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<CarouselItem>()
                 .HasQueryFilter(x => !x.IsDeleted);
 
             // ── RELATIONSHIPS ────────────────────────────────

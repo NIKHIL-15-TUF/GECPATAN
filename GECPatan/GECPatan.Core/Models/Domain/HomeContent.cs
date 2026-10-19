@@ -29,6 +29,12 @@ namespace GECPatan.Core.Models.Domain
 
         [MaxLength(500)]
         public string? Anchor2Link { get; set; }
+        [MaxLength(500)]
+        public string? BottomDescription { get; set; }
+        [MaxLength(20)]
+        public string? CaptionBgColor { get; set; }
+        [MaxLength(20)]
+        public string? CaptionTextColor { get; set; }
 
         public int DisplayOrder { get; set; } = 0;
         public bool IsVisible { get; set; } = true;

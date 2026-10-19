@@ -2,7 +2,7 @@
 using GECPatan.Core.Models.Domain;
 using Microsoft.EntityFrameworkCore;
 
-namespace GECPatan.Core.Data
+namespace GECPatan.Core.Data.Seeders
 {
     public static class MenuItemSeeder
     {

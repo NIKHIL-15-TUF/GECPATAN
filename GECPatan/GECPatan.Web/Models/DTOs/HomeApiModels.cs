@@ -1,4 +1,6 @@
-﻿namespace GECPatan.Web.Models.Dtos
+﻿using Microsoft.Identity.Client;
+
+namespace GECPatan.Web.Models.Dtos
 {
     // Mirrors GECPatan.Api.DTOs.SiteSettingsDTO (from GET /api/home/settings).
     public class SiteSettingsDTO
@@ -71,6 +73,7 @@
         public string? Link { get; set; }
         public string? FilePath { get; set; } // resolve against Api:BaseUrl, same as MarqueeDTO
         public string Source { get; set; } = string.Empty; // "marquee" | "news"
+        public bool IsNew { get; set; }
     }
 
     // Mirrors GECPatan.Api.DTOs.TestimonialDTO (from GET /api/home/testimonials).
@@ -149,4 +152,14 @@
         public string? Link { get; set; }
         public string? ThumbnailPath { get; set; }
     }
+    public class CarouselItemDTO
+    {
+        public int Id { get; set; }
+        public string? Title { get; set; }
+        public string? ImagePath { get; set; }
+        public bool IsVideo { get; set; }
+        public string? VideoUrl { get; set; }
+        public string? UploadDate { get; set; }
+    }
+
 }

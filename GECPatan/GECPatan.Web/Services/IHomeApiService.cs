@@ -37,5 +37,8 @@ namespace GECPatan.Web.Services
 
         // GET /api/home/activities?take=10
         Task<List<HomeActivityDTO>> GetLatestActivitiesAsync(int take = 10, CancellationToken ct = default);
+        // IHomeApiService + HomeApiService
+        Task<List<CarouselItemDTO>> GetNotableAlumniAsync(CancellationToken ct = default);
+        Task<List<CarouselItemDTO>> GetLatestShotsAsync(CancellationToken ct = default);
     }
 }
