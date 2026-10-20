@@ -61,6 +61,7 @@
 }
 
 .updates_section {
+    margin-top:20px;
     width: 25%;
     padding: 0%;
     border-left: 1px solid #000;
@@ -191,6 +192,7 @@ marquee {
 
 /* Master banner slider frame gets 70% width assignment */
 .hero-main-slider-pane {
+    margin-top:-33px;
     flex: 0 0 70% !important;
     width: 70% !important;
     max-width: 70% !important;

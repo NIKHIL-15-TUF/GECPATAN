@@ -1,104 +1,114 @@
-﻿@model List<GECPatan.Web.Models.Dtos.SliderDTO>
+﻿@using GECPatan.Web.Models.Dtos
+@model List<SliderDTO>
 @{
-    int count = 1;
-
-    // Shared with the parent view via ViewData (Html.Partial/PartialAsync
-    // shares the caller's ViewDataDictionary by default), same pattern used
-    // for ApiBaseUrl elsewhere -- see Views/Home/Index.cshtml.
-    var apiBaseUrl = ViewData["ApiBaseUrl"] as string ?? string.Empty;
+    // Uploaded slider images are served by GECPatan.Api (Index.cshtml sets ViewData["ApiBaseUrl"]).
+    string apiBase = (ViewData["ApiBaseUrl"] as string)?.TrimEnd('/') ?? string.Empty;
 
     string ResolveApiFileUrl(string? path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return string.Empty;
-        }
+        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
         if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith("//"))
-        {
             return path;
-        }
-        if (string.IsNullOrEmpty(apiBaseUrl))
-        {
-            return path;
-        }
-        return apiBaseUrl + "/" + path.TrimStart('~', '/');
+        if (string.IsNullOrEmpty(apiBase)) return path;
+        return apiBase + "/" + path.TrimStart('~', '/');
     }
 
-    string ResolveSliderLink(string? link)
+    // Button links: "~/Institute/AboutUs" -> app-relative, anything else is used as typed.
+    string ResolveLink(string? link)
     {
-        if (string.IsNullOrWhiteSpace(link))
-        {
-            return "#";
-        }
-        // External links come back absolute already; internal ones are
-        // root-relative paths like "/Department/2" -- Url.Content handles both.
-        return link;
+        if (string.IsNullOrWhiteSpace(link)) return "#";
+        return link.StartsWith("~/") ? Url.Content(link) : link;
     }
 }
 
-<!-- Slider
-        ======================================= -->
+<!-- Slider ======================================= -->
 <!-- masterslider -->
 <div class="slidermar">
-    <div class="master-slider ms-skin-default" id="masterslider">
+    @if (Model == null || !Model.Any())
+    {
+        <p class="no-items">NO SLIDES FOUND</p>
+    }
+    else
+    {
+        <div class="master-slider ms-skin-default" id="masterslider">
 
-        @if (Model is not null)
-        {
-            @foreach (var item in Model)
-
+            @for (int i = 0; i < Model.Count; i++)
             {
+                var item = Model[i];
+                int count = i + 1;
+                var imageUrl = ResolveApiFileUrl(item.ImagePath);
+
                 <div class="ms-slide slide-@count" data-delay="9">
 
                     <div class="slide-pattern"></div>
 
-                    <img src="@Url.Content("~/js/masterslider/blank.gif")" data-src="@ResolveApiFileUrl(item.ImagePath)" alt="">
+                    @if (!string.IsNullOrEmpty(imageUrl))
+                    {
+                        <img src="@imageUrl" data-src="@imageUrl" alt="@item.H3Text">
+                    }
 
                     @if (!string.IsNullOrWhiteSpace(item.H3Text))
-
                     {
                         <h3 class="ms-layer text1" style="left: 115px; top: 200px;" data-type="text" data-effect="top(45)" data-duration="2000" data-delay="500" data-ease="easeOutExpo">
                             @item.H3Text
                         </h3>
                     }
                     @if (!string.IsNullOrWhiteSpace(item.H4Text))
-
                     {
                         <h4 class="ms-layer text2 caps" style="left: 115px; top: 255px;" data-type="text" data-effect="top(45)" data-duration="2000" data-delay="1000" data-ease="easeOutExpo">
                             @item.H4Text
                         </h4>
                     }
                     @if (!string.IsNullOrWhiteSpace(item.H5Text))
-
                     {
                         <h5 class="ms-layer text3" style="left: 115px; top: 340px;" data-type="text" data-effect="bottom(45)" data-duration="2000" data-delay="1500" data-ease="easeOutExpo">
                             @item.H5Text
-
                         </h5>
                     }
                     @if (!string.IsNullOrWhiteSpace(item.Anchor1Text))
-
                     {
-                        <a href="@ResolveSliderLink(item.Anchor1Link)" class="ms-layer sbut1" style="left: 115px; top: 450px;" data-type="text" data-delay="2000" data-ease="easeOutExpo" data-duration="1200" data-effect="scale(1.5,1.6)">
-                           @item.Anchor1Text
+                        <a href="@ResolveLink(item.Anchor1Link)" class="ms-layer sbut1" style="left: 115px; top: 450px;" data-type="text" data-delay="2000" data-ease="easeOutExpo" data-duration="1200" data-effect="scale(1.5,1.6)">
+                            @item.Anchor1Text
                         </a>
                     }
                     @if (!string.IsNullOrWhiteSpace(item.Anchor2Text))
-
                     {
-                        <a href="@ResolveSliderLink(item.Anchor2Link)" class="ms-layer sbut2" style="left: 300px; top: 450px;" data-type="text" data-delay="2200" data-ease="easeOutExpo" data-duration="1200" data-effect="scale(1.5,1.6)">
-                           @item.Anchor2Text
+                        <a href="@ResolveLink(item.Anchor2Link)" class="ms-layer sbut2" style="left: 300px; top: 450px;" data-type="text" data-delay="2200" data-ease="easeOutExpo" data-duration="1200" data-effect="scale(1.5,1.6)">
+                            @item.Anchor2Text
                         </a>
                     }
 
+                    @* Bottom description bar: colours come from the admin, with the same fallbacks as the live site. *@
+                    @{
+                        string bgColor = !string.IsNullOrWhiteSpace(item.CaptionBgColor) ? item.CaptionBgColor : "rgba(0, 0, 0, 0.7)";
+                        string textColor = !string.IsNullOrWhiteSpace(item.CaptionTextColor) ? item.CaptionTextColor : "#ffffff";
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(item.BottomDescription))
+                    {
+                        <div class="ms-layer ms-custom-description-bar"
+                             style="background: @bgColor !important; color: @textColor !important;"
+                             data-type="text"
+                             data-effect="bottom(35)"
+                             data-duration="1200"
+                             data-delay="200"
+                             data-ease="easeOutExpo">
+
+                            <p class="ms-custom-desc-text">@item.BottomDescription</p>
+
+                        </div>
+                    }
+
                 </div>
-
                 <!-- end slide @count -->
-                count++;
             }
-        }
 
-    </div>
+        </div>
+        <div id="progressBar">
+            <div id="bar"></div>
+        </div>
+    }
 </div>
 <!-- end of masterslider -->

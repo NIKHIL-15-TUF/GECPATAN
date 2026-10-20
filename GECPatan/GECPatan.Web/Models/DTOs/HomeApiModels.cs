@@ -38,6 +38,9 @@ namespace GECPatan.Web.Models.Dtos
         public string? Anchor1Link { get; set; }
         public string? Anchor2Text { get; set; }
         public string? Anchor2Link { get; set; }
+        public string? BottomDescription { get; set; }
+        public string? CaptionBgColor { get; set; }
+        public string? CaptionTextColor { get; set; }   
         public int DisplayOrder { get; set; }
     }
 

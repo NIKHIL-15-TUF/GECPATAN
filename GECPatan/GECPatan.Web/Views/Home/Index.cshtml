@@ -1,4 +1,5 @@
-﻿@model GECPatan.Web.Models.HomeViewModel
+﻿@using GECPatan.Web.Models.Dtos
+@model GECPatan.Web.Models.HomeViewModel
 @{
     ViewData["Title"] = "Home Page";
     ViewData["ApiBaseUrl"] = Model.ApiBaseUrl;
@@ -24,7 +25,7 @@
     string? OpenTarget(string linkType)
         => linkType is "external" or "file" ? "_blank" : null;
 
-    // Converts a YouTube / Vimeo page URL into an embeddable URL.
+    // Converts a YouTube / Vimeo page URL into an embeddable URL (same player options as the live site).
     // Returns null for anything else, so arbitrary URLs are never put in an iframe.
     string? VideoEmbedUrl(string? url)
     {
@@ -63,10 +64,14 @@
 
         if (string.IsNullOrEmpty(id) || !id.All(c => char.IsLetterOrDigit(c) || c == '-' || c == '_'))
             return null;
-        return "https://www.youtube.com/embed/" + id;
+        return "https://www.youtube.com/embed/" + id + "?rel=0&iv_load_policy=3&cc_load_policy=0&playsinline=1";
     }
 
-    // Font-awesome icon per department (falls back to a generic cap icon).
+    // A carousel item can be shown only if it has a valid video URL or an image.
+    bool IsRenderable(CarouselItemDTO c)
+        => (c.IsVideo && VideoEmbedUrl(c.VideoUrl) != null) || !string.IsNullOrWhiteSpace(c.ImagePath);
+
+    // Font-awesome icon per department (the API carries no icon field).
     string DeptIcon(string? shortCode) => (shortCode ?? string.Empty).ToUpperInvariant() switch
     {
         "AM" => "fa fa-graduation-cap",
@@ -79,25 +84,18 @@
         _ => "fa fa-graduation-cap"
     };
 
-    // Cycles through the theme's hexagon colour classes.
-    string HexClass(int index) => (index % 7) switch
-    {
-        0 => "one",
-        1 => "six",
-        2 => "seven",
-        3 => "two",
-        4 => "three",
-        5 => "four",
-        _ => "five"
-    };
-
     // ───────────────────────── PAGE DATA ─────────────────────────
 
     int currentYear = DateTime.Now.Year;
 
-    var vision = (Model.Settings?.Vision
-        ?? "To prepare human resources with value-based competency for technical advancements and growth of society.")
-        .Replace("<p>", "").Replace("</p>", "");
+    // Vision: one <p> per paragraph, like the live site.
+    var visionRaw = Model.Settings?.Vision
+        ?? "To prepare human resources with value-based competency for technical advancements and growth of society.";
+    var visionParagraphs = visionRaw
+        .Split(new[] { "</p>" }, StringSplitOptions.RemoveEmptyEntries)
+        .Select(p => p.Replace("<p>", "").Trim())
+        .Where(p => !string.IsNullOrWhiteSpace(p))
+        .ToList();
 
     var mission = Model.Settings?.Mission ?? string.Empty;
     mission = mission.Replace("<li>", "<li><i class=\"fa fa-toggle-on\" aria-hidden=\"true\"></i> ");
@@ -114,12 +112,15 @@
         .OrderByDescending(a => a.EventDate)   // "yyyy-MM-dd" sorts correctly as text
         .ToList();
 
-    // Feature icon block data: (icon class, text, fallback text, fallback image)
+    var alumni = Model.NotableAlumni.Where(IsRenderable).ToList();
+    var shots = Model.LatestShots.Where(IsRenderable).ToList();
+
+    // Feature icon block: Stats.FeatureN from admin, falling back to the live static images/text.
     var features = new[]
     {
-        (Icon: Model.Stats?.Feature1Icon, Text: Model.Stats?.Feature1Text ?? "Five UG Engineering Programs",  Img: "~/images/Home/icon1.jpg"),
-        (Icon: Model.Stats?.Feature2Icon, Text: Model.Stats?.Feature2Text ?? "Well Qualified Faculties",       Img: "~/images/Home/icon2.jpg"),
-        (Icon: Model.Stats?.Feature3Icon, Text: Model.Stats?.Feature3Text ?? "Center of Excellence",            Img: "~/images/Home/icon3.jpg"),
+        (Icon: Model.Stats?.Feature1Icon, Text: Model.Stats?.Feature1Text ?? "Five UG Engineering Programs",   Img: "~/images/Home/icon1.jpg"),
+        (Icon: Model.Stats?.Feature2Icon, Text: Model.Stats?.Feature2Text ?? "Well Qualified Faculties",        Img: "~/images/Home/icon2.jpg"),
+        (Icon: Model.Stats?.Feature3Icon, Text: Model.Stats?.Feature3Text ?? "Center of Excellence",             Img: "~/images/Home/icon3.jpg"),
         (Icon: Model.Stats?.Feature4Icon, Text: Model.Stats?.Feature4Text ?? "Holistic Development of Students", Img: "~/images/Home/icon4.jpg")
     };
 }
@@ -127,7 +128,8 @@
 <div class="featured_section13">
     <div class="clearfix margin_top11"></div>
 
-    @* ───────── Horizontal ticker (Marquee items flagged HorizontalMarquee) ───────── *@
+    @* ───────── Horizontal ticker (Marquee items flagged HorizontalMarquee) ─────────
+       Live site shows an empty bar when there are no ticker items; kept the same. *@
     @if (Model.Marquee.Any())
     {
         <div class="marquee-container">
@@ -182,7 +184,7 @@
                         <button type="button" class="notice-tab-btn" onclick="switchNoticeTab(event, 'tab-activities')">Activities</button>
                     </div>
 
-                    @* TAB 1: Updates *@
+                    @* TAB 1: Notice Board *@
                     <div id="tab-updates" class="notice-tab-pane active">
                         <div class="notice-board-height">
                             <div>
@@ -260,34 +262,41 @@
                 <ul style="margin-bottom:0px;">
                     <li class="tab-heading">Notable Alumni</li>
                 </ul>
-                <div id="AlumniCarousel" class="owl-carousel">
-                    @foreach (var c in Model.NotableAlumni)
-                    {
-                        var embed = c.IsVideo ? VideoEmbedUrl(c.VideoUrl) : null;
-                        if (embed != null)
+                @if (!alumni.Any())
+                {
+                    <p class="no-items">NO NOTABLE ALUMNI FOUND</p>
+                }
+                else
+                {
+                    <div id="AlumniCarousel" class="owl-carousel">
+                        @foreach (var c in alumni)
                         {
-                            <div class="carousel-slide-item type-video">
-                                <div class="carousel-video-wrapper">
-                                    <iframe src="@embed" title="@c.Title" loading="lazy" allowfullscreen></iframe>
+                            var embed = c.IsVideo ? VideoEmbedUrl(c.VideoUrl) : null;
+                            if (embed != null)
+                            {
+                                <div class="carousel-slide-item type-video">
+                                    <div class="carousel-video-wrapper">
+                                        <iframe src="@embed" title="@c.Title" loading="lazy" allowfullscreen></iframe>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(c.Title))
+                                    {
+                                        <div class="carousel-caption">@c.Title</div>
+                                    }
                                 </div>
-                                @if (!string.IsNullOrWhiteSpace(c.Title))
-                                {
-                                    <div class="carousel-caption">@c.Title</div>
-                                }
-                            </div>
+                            }
+                            else
+                            {
+                                <div class="carousel-slide-item type-image">
+                                    <img src="@ResolveApiFileUrl(c.ImagePath)" alt="@c.Title" class="rimg" loading="lazy" />
+                                    @if (!string.IsNullOrWhiteSpace(c.Title))
+                                    {
+                                        <div class="carousel-caption">@c.Title</div>
+                                    }
+                                </div>
+                            }
                         }
-                        else if (!string.IsNullOrWhiteSpace(c.ImagePath))
-                        {
-                            <div class="carousel-slide-item type-image">
-                                <img src="@ResolveApiFileUrl(c.ImagePath)" alt="@c.Title" class="rimg" loading="lazy" />
-                                @if (!string.IsNullOrWhiteSpace(c.Title))
-                                {
-                                    <div class="carousel-caption">@c.Title</div>
-                                }
-                            </div>
-                        }
-                    }
-                </div>
+                    </div>
+                }
             </div>
 
             <div class="center_icons_section">
@@ -313,34 +322,41 @@
                 <ul style="margin-bottom:0px;">
                     <li class="tab-heading">Latest Shots</li>
                 </ul>
-                <div id="VideoCarousel" class="owl-carousel">
-                    @foreach (var c in Model.LatestShots)
-                    {
-                        var embed = c.IsVideo ? VideoEmbedUrl(c.VideoUrl) : null;
-                        if (embed != null)
+                @if (!shots.Any())
+                {
+                    <p class="no-items">NO LATEST SHOTS FOUND</p>
+                }
+                else
+                {
+                    <div id="VideoCarousel" class="owl-carousel">
+                        @foreach (var c in shots)
                         {
-                            <div class="carousel-slide-item type-video">
-                                <div class="carousel-video-wrapper">
-                                    <iframe src="@embed" title="@c.Title" loading="lazy" allowfullscreen></iframe>
+                            var embed = c.IsVideo ? VideoEmbedUrl(c.VideoUrl) : null;
+                            if (embed != null)
+                            {
+                                <div class="carousel-slide-item type-video">
+                                    <div class="carousel-video-wrapper">
+                                        <iframe src="@embed" title="@c.Title" loading="lazy" allowfullscreen></iframe>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(c.Title))
+                                    {
+                                        <div class="carousel-caption">@c.Title</div>
+                                    }
                                 </div>
-                                @if (!string.IsNullOrWhiteSpace(c.Title))
-                                {
-                                    <div class="carousel-caption">@c.Title</div>
-                                }
-                            </div>
+                            }
+                            else
+                            {
+                                <div class="carousel-slide-item type-image">
+                                    <img src="@ResolveApiFileUrl(c.ImagePath)" alt="@c.Title" class="rimg" loading="lazy" />
+                                    @if (!string.IsNullOrWhiteSpace(c.Title))
+                                    {
+                                        <div class="carousel-caption">@c.Title</div>
+                                    }
+                                </div>
+                            }
                         }
-                        else if (!string.IsNullOrWhiteSpace(c.ImagePath))
-                        {
-                            <div class="carousel-slide-item type-image">
-                                <img src="@ResolveApiFileUrl(c.ImagePath)" alt="@c.Title" class="rimg" loading="lazy" />
-                                @if (!string.IsNullOrWhiteSpace(c.Title))
-                                {
-                                    <div class="carousel-caption">@c.Title</div>
-                                }
-                            </div>
-                        }
-                    }
-                </div>
+                    </div>
+                }
             </div>
 
         </div>
@@ -362,7 +378,7 @@
                         <img src="@ResolveApiFileUrl(principalPhoto)" alt="Principal Photo" />
                     </div>
                     <h4 class="principalname">@principalName</h4>
-                    <p class="principaldesignation">@(principalDesignation?.ToUpperInvariant() ?? "PRINCIPAL")</p>
+                    <p class="principaldesignation">@(principalDesignation ?? "Principal")</p>
                     <p class="principaldesignations">@principalInstitute</p>
                 </div>
 
@@ -379,15 +395,20 @@
 
             </div>
         }
+        else
+        {
+            <p class="no-items">NO PRINCIPAL MESSAGE FOUND</p>
+        }
     </div>
 
     <div class="vision-mission-card-pane">
 
         <div class="vision-segment-box stcode_title4">
             <h3><span class="text"><i class="fa fa-institution" aria-hidden="true"></i><strong> VISION</strong></span></h3>
-            <p class="text-justify" style="font-size: 15px; margin-top: 8px;">
-                @Html.Raw(vision)
-            </p>
+            @foreach (var p in visionParagraphs)
+            {
+                <p class="text-justify" style="font-size: 15px; margin-top: 8px;">@Html.Raw(p)</p>
+            }
         </div>
 
         <div class="mission-segment-box stcode_title4" style="margin-top: 20px;">
@@ -399,7 +420,7 @@
             else
             {
                 <ul class="text-justify" style="list-style: none; padding-left: 0; margin-top: 8px;">
-                    <li><i class="fa fa-toggle-on" aria-hidden="true"></i> To deliver technical programs and services to cater the current needs of society and industry.</li>
+                    <li><i class="fa fa-toggle-on" aria-hidden="true"></i> To Deliver technical programs and services to cater the current needs of society and industry.</li>
                     <li><i class="fa fa-toggle-on" aria-hidden="true"></i> Helping industries in solving challenges by means of providing best technical human resources.</li>
                     <li><i class="fa fa-toggle-on" aria-hidden="true"></i> To contribute in sustainable growth of society.</li>
                 </ul>
@@ -411,40 +432,47 @@
 
 <div class="clearfix"></div>
 
-@* ───────── Departments ───────── *@
-@if (Model.Departments.Any())
-{
-    <div class="featured_section16">
-        <div class="full-container">
+@* ───────── Departments (full name, single hexagon colour - same as live) ───────── *@
+<div class="featured_section16">
+    <div class="full-container">
 
-            <h1 class="caps text-center">Departments</h1>
+        <h1 class="caps text-center">Departments</h1>
 
+        @if (!Model.Departments.Any())
+        {
+            <p class="no-items">NO DEPARTMENTS FOUND</p>
+        }
+        else
+        {
             <div class="box departments-flex-row">
-                @for (int i = 0; i < Model.Departments.Count; i++)
+                @foreach (var dept in Model.Departments)
                 {
-                    var dept = Model.Departments[i];
                     <a href="@Url.Action("Index", "Department", new { id = dept.DeptId })">
-                        <div class="hexagon @HexClass(i) animate" data-anim-type="spinLeft" data-anim-delay="300">
+                        <div class="hexagon one animate" data-anim-type="spinLeft" data-anim-delay="300">
                             <i class="@DeptIcon(dept.ShortCode)"></i>
-                            <h6>@(dept.ShortCode ?? dept.Name)</h6>
+                            <h6>@dept.Name</h6>
                         </div>
                     </a>
                 }
             </div>
+        }
 
-        </div>
     </div>
-}
+</div>
 
 @* ───────── Top Recruiters ───────── *@
-@if (Model.TopRecruiters.Any())
-{
+<div class="clearfix"></div>
+<div class="full-container top-recruiter-section">
+
+    <h1 class="caps text-center">TOP RECRUITERS</h1>
     <div class="clearfix"></div>
-    <div class="full-container top-recruiter-section">
 
-        <h1 class="caps text-center">TOP RECRUITERS</h1>
-        <div class="clearfix"></div>
-
+    @if (!Model.TopRecruiters.Any())
+    {
+        <p class="no-items">NO TOP RECRUITERS FOUND</p>
+    }
+    else
+    {
         <div class="owl-carousel owl-theme" id="owl-demo">
             @foreach (var r in Model.TopRecruiters)
             {
@@ -455,10 +483,10 @@
                 </div>
             }
         </div>
-    </div>
-}
+    }
+</div>
 
-@* Student Testimonials are intentionally not rendered in the new design.
+@* Student Testimonials are not shown on the live site either.
    The API (/api/home/testimonials) and Model.Testimonials are still available. *@
 
 <div class="clearfix"></div>
@@ -482,7 +510,7 @@
     <script src="@Url.Content("~/js/modalwindow/jquery.simplePopup.js")" type="text/javascript"></script>
     <script src="@Url.Content("~/js/masterslider/masterslider.min.js")"></script>
     <script type="text/javascript">
-        (function ($) {
+        (function($) {
             "use strict";
             var slider = new MasterSlider();
 
@@ -505,8 +533,8 @@
     <script>
         // Notice Board / Activities tab switcher
         function switchNoticeTab(evt, paneId) {
-            document.querySelectorAll('.notice-tab-pane').forEach(function (p) { p.classList.remove('active'); });
-            document.querySelectorAll('.notice-tab-btn').forEach(function (b) { b.classList.remove('active'); });
+            document.querySelectorAll('.notice-tab-pane').forEach(function(p) { p.classList.remove('active'); });
+            document.querySelectorAll('.notice-tab-btn').forEach(function(b) { b.classList.remove('active'); });
             var pane = document.getElementById(paneId);
             if (pane) pane.classList.add('active');
             if (evt && evt.currentTarget) evt.currentTarget.classList.add('active');
@@ -516,10 +544,12 @@
             if (url) window.open(url, '_blank');
         }
 
-        $(document).ready(function () {
-            ['#AlumniCarousel', '#VideoCarousel'].forEach(function (sel) {
+        // If your layout/custom.js already initialises these carousels, delete this block
+        // (initialising Owl twice breaks it). Only initialises when the element exists.
+        $(document).ready(function() {
+            ['#AlumniCarousel', '#VideoCarousel'].forEach(function(sel) {
                 var $el = $(sel);
-                if ($el.length && $el.children().length) {
+                if ($el.length && !$el.hasClass('owl-loaded') && $el.children().length) {
                     $el.owlCarousel({
                         items: 1,
                         loop: $el.children().length > 1,
@@ -546,7 +576,18 @@
 
     <style>
         /* Small additions needed by the API-driven markup. Layout classes
-           (hero-split-showcase, notice-tab-*, etc.) come from custom_home.css. */
+                   (hero-split-showcase, notice-tab-*, etc.) come from custom_home.css. */
+
+        /* Empty-state message ("NO ... FOUND") */
+        .no-items {
+            margin: 0;
+            padding: 24px 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: .5px;
+            color: #6b7280;
+        }
 
         .badge-new {
             display: inline-block;
@@ -622,12 +663,23 @@
             margin: 0 5px;
         }
 
-        .marquee-container:hover .marquee-track { animation-play-state: paused; }
-        .marquee-content:hover { text-decoration: underline; color: white; }
+        .marquee-container:hover .marquee-track {
+            animation-play-state: paused;
+        }
+
+        .marquee-content:hover {
+            text-decoration: underline;
+            color: white;
+        }
 
         @@keyframes scroll-left {
-            0% { transform: translateX(100vw); }
-            100% { transform: translateX(-100%); }
+            0% {
+                transform: translateX(100vw);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
         }
     </style>
 }
