@@ -1,0 +1,115 @@
+/*
+ * tab-hash.js  --  URL-hash driven tabs for every page that uses openTab().
+ *
+ *   /Department/5          -> default tab (first tab / #defaultOpen)
+ *   /Department/5#Labs     -> opens the "Labs" tab
+ *   click a tab            -> tab opens AND the URL hash changes
+ *   reload / share link    -> the tab named in the hash opens
+ *   back/forward, or editing the hash by hand -> tab follows the hash
+ *
+ * The hash value is simply the id of the .tabcontent div (About, Labs,
+ * Sec_Research ...), matched case-insensitively.
+ *
+ * Must be loaded AFTER custom.js so it replaces the old openTab().
+ */
+(function () {
+    'use strict';
+
+    var hashApplied = false;          // true once a valid hash tab has been opened
+
+    // Only pages whose buttons call openTab() use this script
+    // (Achievements has its own year tabs and is skipped here).
+    function usesOpenTab() { return !!document.querySelector('.tablinks[onclick*="openTab"]'); }
+
+    function allPanes() { return document.querySelectorAll('.tabcontent'); }
+
+    // Find the pane whose id matches `name` (case-insensitive). Null if none.
+    function findPane(name) {
+        if (!name) return null;
+        var lower = String(name).toLowerCase();
+        var panes = allPanes();
+        for (var i = 0; i < panes.length; i++) {
+            if (panes[i].id && panes[i].id.toLowerCase() === lower) return panes[i];
+        }
+        return null;
+    }
+
+    function hashName() {
+        var h = window.location.hash || '';
+        if (h.charAt(0) === '#') h = h.slice(1);
+        try { return decodeURIComponent(h); } catch (e) { return h; }
+    }
+
+    // Which tab does this button open?  Reads openTab(event,'Name') from onclick.
+    function buttonTarget(btn) {
+        var m = /openTab\s*\(\s*[^,]+,\s*['"]([^'"]+)['"]/.exec(btn.getAttribute('onclick') || '');
+        return m ? m[1] : null;
+    }
+
+    function showTab(pane) {
+        var panes = allPanes();
+        for (var i = 0; i < panes.length; i++) panes[i].style.display = 'none';
+        pane.style.display = 'block';
+
+        // Highlight the matching button in BOTH the desktop and the mobile bar.
+        var links = document.querySelectorAll('.tablinks');
+        for (var j = 0; j < links.length; j++) {
+            var t = buttonTarget(links[j]);
+            var on = t && t.toLowerCase() === pane.id.toLowerCase();
+            links[j].classList.toggle('active', !!on);
+        }
+    }
+
+    function openDefault() {
+        var def = document.getElementById('defaultOpen');
+        var name = def && buttonTarget(def);
+        var pane = findPane(name) || allPanes()[0];
+        if (pane) showTab(pane);
+    }
+
+    function applyHash() {
+        var pane = findPane(hashName());
+        if (pane) { hashApplied = true; showTab(pane); }
+        else { hashApplied = false; openDefault(); }
+    }
+
+    // Replaces the old global openTab(evt, name) used by all the onclick="" attributes.
+    window.openTab = function (evt, name) {
+        var pane = findPane(name);
+        if (!pane) return;
+
+        var byUser = !!(evt && evt.isTrusted);
+
+        // Other scripts (old custom.js) may do defaultOpen.click() on load.
+        // That is not a real click -- don't let it override the tab in the URL.
+        if (!byUser && hashApplied) return;
+
+        showTab(pane);
+
+        if (byUser) {
+            hashApplied = true;
+            // replaceState: changes the URL without piling up history entries
+            // and without making the page jump to the anchor.
+            if (window.history && history.replaceState) {
+                history.replaceState(null, '', '#' + encodeURIComponent(pane.id));
+            } else {
+                window.location.hash = pane.id;
+            }
+        }
+    };
+
+    // Expose helpers so other pages (e.g. Achievements) can reuse them.
+    window.TabHash = { getName: hashName, set: function (n) {
+        if (window.history && history.replaceState) history.replaceState(null, '', '#' + encodeURIComponent(n));
+        else window.location.hash = n;
+    } };
+
+    window.addEventListener('hashchange', function () {
+        if (usesOpenTab()) applyHash();
+    });
+
+    function init() { if (usesOpenTab()) applyHash(); }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+})();

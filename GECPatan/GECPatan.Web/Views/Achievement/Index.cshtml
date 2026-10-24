@@ -17,18 +17,24 @@
 <div class="margin_top10"></div>
 
 <div class="full-container">
-    <div class="tab hidden-xs">
-        <button class="tablinks active" onclick="loadAchievements(event,'@Url.Action("ByYear", "Achievement", new { year = 0 })')" id="defaultOpen">All</button>
-        @foreach (var year in Model.Years)
+    @{
+        void RenderYearButtons()
         {
-            <button class="tablinks" onclick="loadAchievements(event,'@Url.Action("ByYear", "Achievement", new { year })')">@year</button>
+            <button class="tablinks active" data-tab="All" data-url="@Url.Action("ByYear", "Achievement", new { year = 0 })" onclick="loadAchievements(event)">All</button>
+            @foreach (var year in Model.Years)
+            {
+                <button class="tablinks" data-tab="@year" data-url="@Url.Action("ByYear", "Achievement", new { year })" onclick="loadAchievements(event)">@year</button>
+            }
+        }
+    }
+    <div class="tab hidden-xs">
+        @{
+            RenderYearButtons();
         }
     </div>
     <div class="tab-xs visible-xs">
-        <button class="tablinks active" onclick="loadAchievements(event,'@Url.Action("ByYear", "Achievement", new { year = 0 })')" id="defaultOpenXs">All</button>
-        @foreach (var year in Model.Years)
-        {
-            <button class="tablinks" onclick="loadAchievements(event,'@Url.Action("ByYear", "Achievement", new { year })')">@year</button>
+        @{
+            RenderYearButtons();
         }
     </div>
 
@@ -42,31 +48,43 @@
 @section Scripts {
     <script type="text/javascript" src="@Url.Content("~/js/cubeportfolio/gecp_cubeportfolio_custom.js")"></script>
     <script type="text/javascript">
-        // Called by the year tab buttons above.
-        function loadAchievements(evt, url) {
-            evt.preventDefault();
+        // Year tabs. URL hash = tab label:  /Achievement#2024  (or #All)
+        function showAchievementTab(name, byUser) {
+            var btn = $('.tablinks').filter(function() { return $(this).data('tab') == name; }).first();
+            if (!btn.length) { btn = $('.tablinks').first(); }      // unknown hash -> "All"
+            name = btn.data('tab');
 
-            // Remove active class from all tabs and add to the clicked one
-            $(".tablinks").removeClass("active");
-            $(evt.currentTarget).addClass("active");
+            // highlight in both the desktop and mobile bars
+            $('.tablinks').removeClass('active')
+                .filter(function() { return $(this).data('tab') == name; }).addClass('active');
 
-            // Load content into #achDiv
-            $("#achDiv").load(url, function () {
-                // Destroy previous CubePortfolio grid if it exists
+            if (byUser) { TabHash.set(String(name)); }
+
+            $('#achDiv').load(btn.data('url'), function() {
                 if ($('#grid-container').data('cubeportfolio')) {
                     destroyGrid(); // external helper from gecp_cubeportfolio_custom.js
                 }
-
-                // Re-initialize CubePortfolio
                 reInit();
             });
         }
 
-        $(document).ready(function () {
-            // Initial load for "All"
-            $("#achDiv").load("@Url.Action("ByYear", "Achievement", new { year = 0 })", function () {
-                reInit();
-            });
+        // Called by the year buttons above.
+        function loadAchievements(evt) {
+            evt.preventDefault();
+            // custom.js auto-clicks #defaultOpen on load; ignore that fake click
+            // (the ready handler below loads the tab from the URL hash instead).
+            if (!evt.isTrusted) return;
+            showAchievementTab($(evt.currentTarget).data('tab'), true);
+        }
+
+        $(document).ready(function() {
+            // first load: tab from URL hash, else "All"
+            showAchievementTab(TabHash.getName() || 'All', false);
+        });
+
+        // back/forward or manually edited hash
+        $(window).on('hashchange', function() {
+            showAchievementTab(TabHash.getName() || 'All', false);
         });
     </script>
 }

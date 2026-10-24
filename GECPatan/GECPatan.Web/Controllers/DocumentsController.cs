@@ -26,29 +26,31 @@ namespace GECPatan.Web.Controllers
         // Index view builds that link directly from DocumentCategoryListDTO.TableView.
         public async Task<IActionResult> Index(CancellationToken ct)
         {
-            var categoriesTask = _documents.GetCategoriesAsync(ct);
-            var mouTask = _documents.GetMoUAsync(ct);
-            var ssipTask = _documents.GetSSIPAsync(ct);
-            var timetableTask = _documents.GetTimetablesAsync(ct);
+            return NotFound();
+            //var categoriesTask = _documents.GetCategoriesAsync(ct);
+            //var mouTask = _documents.GetMoUAsync(ct);
+            //var ssipTask = _documents.GetSSIPAsync(ct);
+            //var timetableTask = _documents.GetTimetablesAsync(ct);
 
-            await Task.WhenAll(categoriesTask, mouTask, ssipTask, timetableTask);
+            //await Task.WhenAll(categoriesTask, mouTask, ssipTask, timetableTask);
 
-            var vm = new DocumentCategoryListViewModel
-            {
-                Categories = categoriesTask.Result,
-                MoUCount = mouTask.Result.Count,
-                SSIPCount = ssipTask.Result.Count,
-                TimetableCount = timetableTask.Result.Count,
-                ApiBaseUrl = _config["Api:BaseUrl"]
-            };
+            //var vm = new DocumentCategoryListViewModel
+            //{
+            //    Categories = categoriesTask.Result,
+            //    MoUCount = mouTask.Result.Count,
+            //    SSIPCount = ssipTask.Result.Count,
+            //    TimetableCount = timetableTask.Result.Count,
+            //    ApiBaseUrl = _config["Api:BaseUrl"]
+            //};
 
-            ViewBag.Title = "Documents";
-            return View(vm);
+            //ViewBag.Title = "Documents";
+            //return View(vm);
         }
 
-        // GET /Documents/Collection/5
+        // GET /Documents/5
         // Single endpoint that loads the document collection. The View will 
         // dynamically route to the correct Partial View (Table or Grid).
+        [HttpGet("/Documents/{id:int}")]
         public async Task<IActionResult> Collection(int id, CancellationToken ct)
         {
             var collection = await _documents.GetCategoryDetailAsync(id, ct);
