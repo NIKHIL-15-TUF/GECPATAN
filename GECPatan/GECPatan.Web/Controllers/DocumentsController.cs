@@ -15,38 +15,6 @@ namespace GECPatan.Web.Controllers
             _config = config;
         }
 
-        // GET /Documents
-        // Lists all visible document pages (Mandatory Disclosure, Central Store
-        // & Purchase, Academic Calendar, or any other page the Admin creates).
-        // MoU / SSIP / Timetable / Tenders keep their own dedicated pages and are not
-        // listed here.
-        //
-        // No routing logic lives here — each page's card links to either the
-        // Category or TableView action depending on its own TableView flag; the
-        // Index view builds that link directly from DocumentCategoryListDTO.TableView.
-        public async Task<IActionResult> Index(CancellationToken ct)
-        {
-            return NotFound();
-            //var categoriesTask = _documents.GetCategoriesAsync(ct);
-            //var mouTask = _documents.GetMoUAsync(ct);
-            //var ssipTask = _documents.GetSSIPAsync(ct);
-            //var timetableTask = _documents.GetTimetablesAsync(ct);
-
-            //await Task.WhenAll(categoriesTask, mouTask, ssipTask, timetableTask);
-
-            //var vm = new DocumentCategoryListViewModel
-            //{
-            //    Categories = categoriesTask.Result,
-            //    MoUCount = mouTask.Result.Count,
-            //    SSIPCount = ssipTask.Result.Count,
-            //    TimetableCount = timetableTask.Result.Count,
-            //    ApiBaseUrl = _config["Api:BaseUrl"]
-            //};
-
-            //ViewBag.Title = "Documents";
-            //return View(vm);
-        }
-
         // GET /Documents/5
         // Single endpoint that loads the document collection. The View will 
         // dynamically route to the correct Partial View (Table or Grid).

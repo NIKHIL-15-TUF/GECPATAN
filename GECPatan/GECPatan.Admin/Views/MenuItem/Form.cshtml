@@ -12,7 +12,7 @@
                     <i class="fas fa-bars mr-2"></i>@ViewData["Title"]
                 </h3>
             </div>
-            <form asp-action="@(isEdit?"Edit":"Create")" method="post" enctype="multipart/form-data">
+            <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data">
                 @if (isEdit)
                 {
                     <input asp-for="Id" type="hidden" />
@@ -21,6 +21,8 @@
                    (e.g. a validation error elsewhere on the form) when the
                    user did NOT pick a new file this time. *@
                 <input asp-for="PdfPath" type="hidden" />
+                @* Filled by JS from whichever Tab dropdown is active *@
+                <input asp-for="TabAnchor" type="hidden" id="tabAnchorHidden" />
                 <div class="card-body">
                     @if (!ViewData.ModelState.IsValid)
                     {
@@ -90,10 +92,10 @@
                          "Use for items that only group children together.",
                          "secondary"),
                         ("internal", "fa-link",             "Internal Page",
-                         "Link to any page on this website by Controller + Action.",
+                         "Pick a page of this website from a list.",
                          "primary"),
                         ("dynamic",  "fa-database",         "Dynamic Page",
-                         "Auto-links to a Department, Committee, Facility etc.",
+                         "Pick a Department, Committee, Facility etc. (and a tab) from lists.",
                          "success"),
                         ("external", "fa-external-link-alt","External Website",
                          "Link to an external website URL.",
@@ -140,31 +142,24 @@
                         <div class="card border-primary mb-3">
                             <div class="card-header bg-primary text-white py-1">
                                 <small class="font-weight-bold">
-                                    <i class="fas fa-link mr-1"></i>Internal Page Route
+                                    <i class="fas fa-link mr-1"></i>Internal Page
                                 </small>
                             </div>
                             <div class="card-body py-2">
                                 <div class="row">
-                                    <div class="col-6">
+                                    <div class="col-md-6">
                                         <div class="form-group mb-0">
                                             <label class="small font-weight-bold">
-                                                Controller Name
+                                                Page <span class="text-danger">*</span>
                                             </label>
-                                            <input asp-for="ControllerName"
-                                                   class="form-control form-control-sm"
-                                                   placeholder="e.g. PlacementCell" />
-                                            <span asp-validation-for="ControllerName"
+                                            <select asp-for="InternalPage"
+                                                    asp-items="Model.InternalPageOptions"
+                                                    id="intPageSelect"
+                                                    class="form-control form-control-sm">
+                                                <option value="">-- Select page --</option>
+                                            </select>
+                                            <span asp-validation-for="InternalPage"
                                                   class="text-danger small"></span>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="form-group mb-0">
-                                            <label class="small font-weight-bold">
-                                                Action Name
-                                            </label>
-                                            <input asp-for="ActionName"
-                                                   class="form-control form-control-sm"
-                                                   placeholder="e.g. Index" />
                                         </div>
                                     </div>
                                 </div>
@@ -225,7 +220,8 @@
                                             </label>
                                             <select id="dynIdSelect"
                                                     name="DynamicId"
-                                                    class="form-control form-control-sm">
+                                                    class="form-control form-control-sm"
+                                                    onchange="onDynItemChange(this.value)">
                                                 <option value="">
                                                     -- Select type first --
                                                 </option>
@@ -244,21 +240,15 @@
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="small font-weight-bold">
-                                                Route
-                                                <small class="text-muted">(auto-fills)</small>
+                                                Open Tab <small class="text-muted">(optional)</small>
                                             </label>
-                                            <div class="input-group input-group-sm">
-                                                <input asp-for="ControllerName"
-                                                       id="dynCtrl"
-                                                       class="form-control"
-                                                       placeholder="Controller" />
-                                                <input asp-for="ActionName"
-                                                       id="dynAction"
-                                                       class="form-control"
-                                                       placeholder="Action" />
-                                            </div>
-                                            <small class="text-muted">
-                                                Can override if needed.
+                                            <select id="dynTabSelect"
+                                                    class="form-control form-control-sm"
+                                                    onchange="syncTab()" disabled>
+                                                <option value="">Default tab</option>
+                                            </select>
+                                            <small id="dynTabHint" class="text-muted">
+                                                Select an item first.
                                             </small>
                                         </div>
                                     </div>
@@ -322,8 +312,8 @@
                                     {
                                         <div class="mt-2">
                                             <a href="@Model.PdfPath"
-                                                   target="_blank"
-                                                   class="btn btn-sm btn-outline-danger">
+                                               target="_blank"
+                                               class="btn btn-sm btn-outline-danger">
                                                 <i class="fas fa-file-pdf mr-1"></i>
                                                 View Current PDF
                                             </a>
@@ -376,8 +366,8 @@
                 </div>
                 <div class="card-footer d-flex justify-content-between">
                     <a asp-action="Index"
-                           asp-route-menuType="@Model.MenuType"
-                           class="btn btn-secondary">
+                       asp-route-menuType="@Model.MenuType"
+                       class="btn btn-secondary">
                         <i class="fas fa-arrow-left mr-2"></i>Back
                     </a>
                     <button type="submit" class="btn btn-primary">
@@ -409,18 +399,15 @@
                 <div class="p-2 border-bottom">
                     <strong class="small">🔗 Internal Page</strong>
                     <p class="small text-muted mb-0">
-                        Enter the <strong>Controller</strong> and
-                        <strong>Action</strong> of the page.<br />
-                        e.g. Controller: <code>PlacementCell</code>
-                        Action: <code>Index</code>
+                        Choose the page from the list.
                     </p>
                 </div>
                 <div class="p-2 border-bottom">
                     <strong class="small">🗄️ Dynamic Page</strong>
                     <p class="small text-muted mb-0">
-                        Select a Department, Committee, Facility etc.
-                        from the dropdown. Controller &amp; Action
-                        fill automatically.
+                        Select the type (Department, Committee, Facility,
+                        Club…), then the item, then optionally a tab
+                        (e.g. Labs, Members). Nothing else to fill in.
                     </p>
                 </div>
                 <div class="p-2 border-bottom">
@@ -446,89 +433,143 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
     <script>
-        // Default controller/action per dynamic type
-        const dynRoutes = {
-        'Department':  { ctrl: 'Department',      action: 'DepartmentDetails' },
-        'Committee':   { ctrl: 'CampusCommittee', action: 'CommitteePage'     },
-        'Facility':    { ctrl: 'Facility',         action: 'FacilityPage'      },
-        'Club':        { ctrl: 'StudentCorner',    action: 'ClubPage'          },
-        'Document':    { ctrl: 'Documents',        action: 'Index'             },
-        'ContentPage': { ctrl: 'Page',             action: 'View'              }
-        };
+        const savedTab = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TabAnchor ?? ""));
 
-        function switchLinkType(type) {
-        // Hide all field sections
-        document.querySelectorAll('.lt-fields')
-        .forEach(f => f.classList.add('d-none'));
-
-        // Reset all card borders
-        document.querySelectorAll('.lt-card')
-        .forEach(c => {
-        c.style.border = '2px solid #dee2e6';
-        c.style.background = '';
-        });
-
-        // Highlight selected card
-        const card = document.getElementById('lt-' + type);
-        if (card) {
-        card.style.border = '2px solid #1a237e';
-        card.style.background = '#eef0fb';
+        function currentLinkType() {
+            const r = document.querySelector('.lt-radio:checked');
+            return r ? r.value : 'none';
         }
 
-        // Show relevant fields
-        const sec = document.getElementById('fields-' + type);
-        if (sec) sec.classList.remove('d-none');
+        // Copy the visible Tab dropdown into the hidden field that gets posted
+        function syncTab() {
+            const t = currentLinkType();
+            const hidden = document.getElementById('tabAnchorHidden');
+            if (t === 'dynamic') hidden.value = document.getElementById('dynTabSelect').value;
+            else hidden.value = '';
+        }
+
+        function switchLinkType(type) {
+            document.querySelectorAll('.lt-fields')
+                .forEach(f => f.classList.add('d-none'));
+
+            document.querySelectorAll('.lt-card').forEach(c => {
+                c.style.border = '2px solid #dee2e6';
+                c.style.background = '';
+            });
+
+            const card = document.getElementById('lt-' + type);
+            if (card) {
+                card.style.border = '2px solid #1a237e';
+                card.style.background = '#eef0fb';
+            }
+
+            const sec = document.getElementById('fields-' + type);
+            if (sec) sec.classList.remove('d-none');
+
+            syncTab();
+        }
+
+        // Fill a Tab dropdown from /MenuItem/GetTabs and select `selected` if present
+        async function loadTabs(selectId, hintId, query, selected) {
+            const sel = document.getElementById(selectId);
+            const hint = document.getElementById(hintId);
+            sel.innerHTML = '<option value="">Default tab</option>';
+            sel.disabled = true;
+            hint.textContent = 'Loading tabs…';
+            try {
+                const res = await fetch('/MenuItem/GetTabs?' + query);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const result = await res.json();
+                const data = result.tabs;
+                if (!data.length) {
+                    hint.textContent = result.live
+                        ? 'This page has no tabs.'
+                        : 'No tabs found (' + (result.reason || 'unknown reason') + ').';
+                } else {
+                    data.forEach(t => {
+                        const o = document.createElement('option');
+                        o.value = t.value;
+                        o.textContent = t.text;
+                        sel.appendChild(o);
+                    });
+                    sel.disabled = false;
+                    hint.textContent = result.live
+                        ? 'Read from the live page. Leave as "Default tab" to open the first tab.'
+                        : 'Live page not read (' + (result.reason || 'unknown reason') + ') - showing the standard list.';
+                    if (selected) {
+                        // keep a saved tab even if it no longer exists in the list
+                        if (![...sel.options].some(o => o.value === selected)) {
+                            const o = document.createElement('option');
+                            o.value = selected;
+                            o.textContent = selected + ' (saved)';
+                            sel.appendChild(o);
+                        }
+                        sel.value = selected;
+                    }
+                }
+            } catch (e) {
+                hint.textContent = 'Could not load tabs (' + e.message + ').';
+            }
+            syncTab();
+        }
+
+        // ── Dynamic ──────────────────────────────────────────
+        function resetDynTab() {
+            const sel = document.getElementById('dynTabSelect');
+            sel.innerHTML = '<option value="">Default tab</option>';
+            sel.disabled = true;
+            document.getElementById('dynTabHint').textContent = 'Select an item first.';
+            syncTab();
         }
 
         async function onDynTypeChange(type) {
-        const sel   = document.getElementById('dynIdSelect');
-        const ctrl  = document.getElementById('dynCtrl');
-        const act   = document.getElementById('dynAction');
+            const sel = document.getElementById('dynIdSelect');
+            resetDynTab();
+            sel.innerHTML = '<option>Loading…</option>';
+            sel.disabled = true;
 
-        sel.innerHTML = '<option>Loading…</option>';
-        sel.disabled  = true;
+            try {
+                const res = await fetch('/MenuItem/GetDynamicOptions?type=' + encodeURIComponent(type));
+                const data = await res.json();
 
-        // Auto-fill route
-        const route = dynRoutes[type];
-        if (route) {
-        ctrl.value = route.ctrl;
-        act.value  = route.action;
+                sel.innerHTML = '<option value="">-- Select --</option>';
+                data.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = item.text;
+                    sel.appendChild(opt);
+                });
+                sel.disabled = false;
+            } catch (e) {
+                sel.innerHTML = '<option>Error loading items</option>';
+                sel.disabled = false;
+            }
         }
 
-        try {
-        const res  = await fetch(
-        `/MenuItem/GetDynamicOptions?type=${type}`);
-        const data = await res.json();
-
-        sel.innerHTML = '<option value="">-- Select --</option>';
-        data.forEach(item => {
-        const opt      = document.createElement('option');
-        opt.value      = item.id;
-        opt.textContent= item.text;
-        sel.appendChild(opt);
-        });
-        sel.disabled = false;
-        } catch(e) {
-        sel.innerHTML = '<option>Error loading items</option>';
-        sel.disabled  = false;
-        }
+        function onDynItemChange(id) {
+            const type = document.getElementById('dynTypeSelect').value;
+            if (!id || !type) { resetDynTab(); return; }
+            return loadTabs('dynTabSelect', 'dynTabHint',
+                'type=' + encodeURIComponent(type) + '&id=' + encodeURIComponent(id), '');
         }
 
-        // ── Init ────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', function() {
-        const current = '@Model.LinkType';
-        switchLinkType(current);
+        // ── Init ─────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async function () {
+            const current = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LinkType ?? "none"));
+            switchLinkType(current);
 
-        // If editing dynamic — restore the select
-        const dynType = '@Model.DynamicType';
-        if (dynType && current === 'dynamic') {
-        document.getElementById('dynCtrl').value   = '@Model.ControllerName';
-        document.getElementById('dynAction').value = '@Model.ActionName';
-        onDynTypeChange(dynType).then(() => {
-        const sel = document.getElementById('dynIdSelect');
-        sel.value = '@Model.DynamicId';
-        });
-        }
+            // Editing a dynamic link: restore item + tabs
+            const dynType = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DynamicType ?? ""));
+            if (dynType && current === 'dynamic') {
+                await onDynTypeChange(dynType);
+                const sel = document.getElementById('dynIdSelect');
+                sel.value = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DynamicId?.ToString() ?? ""));
+                if (sel.value) {
+                    await loadTabs('dynTabSelect', 'dynTabHint',
+                        'type=' + encodeURIComponent(dynType) + '&id=' + encodeURIComponent(sel.value),
+                        savedTab);
+                }
+            }
         });
     </script>
 }

@@ -1,13 +1,13 @@
 /*
  * tab-hash.js  --  URL-hash driven tabs for every page that uses openTab().
  *
- *   /Department/5          -> default tab (first tab / #defaultOpen)
- *   /Department/5#Labs     -> opens the "Labs" tab
- *   click a tab            -> tab opens AND the URL hash changes
- *   reload / share link    -> the tab named in the hash opens
- *   back/forward, or editing the hash by hand -> tab follows the hash
+ *   /Department/5              -> default tab (first tab / #defaultOpen)
+ *   /Department/5?tab=Labs     -> opens the "Labs" tab
+ *   click a tab                -> tab opens AND the URL's ?tab= changes
+ *   reload / share link        -> the tab named in ?tab= opens
+ *   old links with #Labs       -> still work (read as a fallback)
  *
- * The hash value is simply the id of the .tabcontent div (About, Labs,
+ * The value is simply the id of the .tabcontent div (About, Labs,
  * Sec_Research ...), matched case-insensitively.
  *
  * Must be loaded AFTER custom.js so it replaces the old openTab().
@@ -34,10 +34,29 @@
         return null;
     }
 
+    // Tab name from ?tab=..., else from a legacy #hash.
     function hashName() {
+        try {
+            var q = new URLSearchParams(window.location.search).get('tab');
+            if (q) return q;
+        } catch (e) { /* very old browser: fall through to hash */ }
         var h = window.location.hash || '';
         if (h.charAt(0) === '#') h = h.slice(1);
         try { return decodeURIComponent(h); } catch (e) { return h; }
+    }
+
+    // Put the tab in the URL as ?tab=Name (other query values are kept, #hash dropped).
+    function writeName(name) {
+        try {
+            var u = new URL(window.location.href);
+            u.searchParams.set('tab', name);
+            u.hash = '';
+            if (window.history && history.replaceState) {
+                history.replaceState(null, '', u.pathname + u.search);
+                return;
+            }
+            window.location.href = u.pathname + u.search;
+        } catch (e) { window.location.hash = name; }
     }
 
     // Which tab does this button open?  Reads openTab(event,'Name') from onclick.
@@ -88,21 +107,14 @@
 
         if (byUser) {
             hashApplied = true;
-            // replaceState: changes the URL without piling up history entries
-            // and without making the page jump to the anchor.
-            if (window.history && history.replaceState) {
-                history.replaceState(null, '', '#' + encodeURIComponent(pane.id));
-            } else {
-                window.location.hash = pane.id;
-            }
+            // replaceState: changes the URL without reloading the page
+            // or piling up history entries.
+            writeName(pane.id);
         }
     };
 
     // Expose helpers so other pages (e.g. Achievements) can reuse them.
-    window.TabHash = { getName: hashName, set: function (n) {
-        if (window.history && history.replaceState) history.replaceState(null, '', '#' + encodeURIComponent(n));
-        else window.location.hash = n;
-    } };
+    window.TabHash = { getName: hashName, set: writeName };
 
     window.addEventListener('hashchange', function () {
         if (usesOpenTab()) applyHash();

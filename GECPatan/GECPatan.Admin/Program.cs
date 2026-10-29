@@ -1,4 +1,6 @@
 using GECPatan.Core.Data;
+using GECPatan.Admin.Data;
+using Microsoft.EntityFrameworkCore;
 using GECPatan.Core.Models.Domain;
 using GECPatan.Core.Services;
 using GECPatan.Core.Services.Email;
@@ -6,7 +8,6 @@ using GECPatan.Core.Services.FileStorage;
 using GECPatan.Core.Services.UserManagement;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -112,6 +113,13 @@ builder.Services.AddScoped<IEmailService>(sp =>
 // Batch-loading lookups for the User Management list page — see
 // UserDirectoryService for why this exists (fixes an N+1 query pattern).
 builder.Services.AddScoped<UserDirectoryService>();
+
+// Menu form: reads the tabs of a public page straight from the live site.
+// Needs "WebSite:BaseUrl" in appsettings (e.g. "https://localhost:7001").
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient("WebSite", c => c.Timeout = TimeSpan.FromSeconds(20));
+builder.Services.AddScoped<GECPatan.Admin.Services.ITabDiscoveryService,
+                           GECPatan.Admin.Services.TabDiscoveryService>();
 
 var app = builder.Build();
 
