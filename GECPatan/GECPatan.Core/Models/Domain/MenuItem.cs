@@ -42,6 +42,12 @@ namespace GECPatan.Core.Models.Domain
         [MaxLength(50)]
         public string? DynamicType { get; set; }
 
+        // Optional tab to open on the target page. Appended to the link as
+        // "#TabId" (e.g. /Department/5#Labs). Only used by "internal" and
+        // "dynamic" links. Null/empty = the page's default tab.
+        [MaxLength(100)]
+        public string? TabAnchor { get; set; }
+
         // External URL
         [MaxLength(500)]
         public string? ExternalLink { get; set; }

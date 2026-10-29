@@ -2,6 +2,7 @@
 using GECPatan.Api.DTOs;
 using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -90,6 +91,11 @@ namespace GECPatan.Api.Controllers
                 SortChildren(item.Children);
         }
 
+        private static string? WithTab(string? link, string? tab)
+            => string.IsNullOrEmpty(link) || string.IsNullOrWhiteSpace(tab)
+                ? link
+                : $"{link}?tab={Uri.EscapeDataString(tab.Trim())}";
+
         private static string? ResolveLink(
             MenuItem m,
             Dictionary<int, string> pageSlugs)
@@ -99,27 +105,28 @@ namespace GECPatan.Api.Controllers
                 case "internal":
                     if (!string.IsNullOrEmpty(m.ControllerName)
                         && !string.IsNullOrEmpty(m.ActionName))
-                        return $"/{m.ControllerName}/{m.ActionName}";
+                    {
+                        // Internal pages have no tab option
+                        return MenuRoutes.InternalPath(m.ControllerName, m.ActionName);
+                    }
                     return null;
 
                 case "dynamic":
                     if (!m.DynamicId.HasValue) return null;
 
-                    return m.DynamicType switch
+                    string? link = m.DynamicType switch
                     {
-                        "Department" => $"/Department/{m.DynamicId}",
-                        "Committee" => $"/Committee/{m.DynamicId}",
-                        "Facility" => $"/Facilities/{m.DynamicId}",
-                        "Club" => $"/Clubs/{m.DynamicId}",
+                        "Department" or "Committee" or "Facility" or "Club" or "Document"
+                            => MenuRoutes.DynamicPath(m.DynamicType, m.DynamicId.Value),
                         "ContentPage" => pageSlugs.ContainsKey(m.DynamicId.Value)
                             ? $"/page/{pageSlugs[m.DynamicId.Value]}"
                             : null,
-                        "Document" => $"/documents/{m.DynamicId}",
                         _ => !string.IsNullOrEmpty(m.ControllerName)
                                      && !string.IsNullOrEmpty(m.ActionName)
                             ? $"/{m.ControllerName}/{m.ActionName}/{m.DynamicId}"
                             : null
                     };
+                    return WithTab(link, m.TabAnchor);
 
                 case "external":
                     return m.ExternalLink;

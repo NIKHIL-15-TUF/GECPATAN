@@ -15,6 +15,7 @@ namespace GECPatan.Admin.Models.ViewModels
         public int? DynamicId { get; set; }
         public string? DynamicType { get; set; }
         public string? DynamicLabel { get; set; }  // resolved name
+        public string? TabAnchor { get; set; }
         public string? ExternalLink { get; set; }
         public string? PdfPath { get; set; }
         public string? CssClass { get; set; }
@@ -45,14 +46,22 @@ namespace GECPatan.Admin.Models.ViewModels
         [Display(Name = "Link Type")]
         public string LinkType { get; set; } = "none";
 
-        // Internal
+        // Internal — picked from a dropdown as "Controller/Action".
+        // Controller/Action are derived from it on the server.
+        [Display(Name = "Page")]
+        public string? InternalPage { get; set; }
+
+        // Kept so existing rows round-trip; no longer typed in by the admin.
         [MaxLength(100)]
-        [Display(Name = "Controller")]
         public string? ControllerName { get; set; }
 
         [MaxLength(100)]
-        [Display(Name = "Action")]
         public string? ActionName { get; set; }
+
+        // Optional tab to open (internal + dynamic links); posted via a hidden field.
+        [MaxLength(100)]
+        [Display(Name = "Open Tab")]
+        public string? TabAnchor { get; set; }
 
         // Dynamic
         [MaxLength(50)]
@@ -89,6 +98,7 @@ namespace GECPatan.Admin.Models.ViewModels
 
         // Dropdowns
         public List<SelectListItem> ParentOptions { get; set; } = new();
+        public List<SelectListItem> InternalPageOptions { get; set; } = new();
         public List<SelectListItem> DynamicIdOptions { get; set; } = new();
     }
 }

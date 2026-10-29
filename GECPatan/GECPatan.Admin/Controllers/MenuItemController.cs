@@ -1,12 +1,16 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
 using GECPatan.Core.Services.FileStorage;
+using GECPatan.Admin.Models;
 using GECPatan.Admin.Models.ViewModels;
+using GECPatan.Admin.Services;
+using GECPatan.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
+using System.Text.RegularExpressions;
 
 namespace GECPatan.Admin.Controllers
 {
@@ -18,12 +22,15 @@ namespace GECPatan.Admin.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<MenuItemController> _logger;
         private readonly IFileStorageService _fileStorage;
+        private readonly ITabDiscoveryService _tabDiscovery;
 
-        public MenuItemController(ApplicationDbContext context, ILogger<MenuItemController> logger, IFileStorageService fileStorage)
+        public MenuItemController(ApplicationDbContext context, ILogger<MenuItemController> logger, IFileStorageService fileStorage,
+            ITabDiscoveryService tabDiscovery)
         {
             _context = context;
             _logger = logger;
             _fileStorage = fileStorage;
+            _tabDiscovery = tabDiscovery;
         }
 
         // ── INDEX ─────────────────────────────────────────
@@ -388,6 +395,87 @@ namespace GECPatan.Admin.Controllers
             return Json(items);
         }
 
+        // ── GET TABS (AJAX) ───────────────────────────────
+        // Only for dynamic pages: type = Department | Committee | Facility | Club,
+        // id = item id.  Returns { live, reason, tabs:[{value,text}] }.
+        //   live = true  : tabs were read from the real page right now, so new
+        //                  tabs / custom sections show up with no code change.
+        //   live = false : the page could not be read (see reason); the
+        //                  built-in list + database sections are returned instead.
+        [HttpGet]
+        public async Task<IActionResult> GetTabs(string? type, int? id, CancellationToken ct)
+        {
+            string? reason = null;
+            try
+            {
+                var path = id.HasValue && type != null && MenuLinkCatalog.DynamicTabs.ContainsKey(type)
+                    ? MenuRoutes.DynamicPath(type, id.Value)
+                    : null;
+
+                if (path == null)   // Document / ContentPage etc.: no tabs
+                    return Json(new { live = true, reason, tabs = Array.Empty<object>() });
+
+                var live = await _tabDiscovery.DiscoverAsync(path, ct);
+                if (live.Tabs != null)
+                    return Json(new { live = true, reason, tabs = live.Tabs.Select(t => new { value = t.Value, text = t.Label }) });
+
+                reason = live.Error;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetTabs failed for {Type}/{Id}", type, id);
+                reason = ex.Message;
+            }
+
+            try
+            {
+                var tabs = await FallbackTabsAsync(type, id);
+                return Json(new { live = false, reason, tabs = tabs.Select(t => new { value = t.Value, text = t.Label }) });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetTabs fallback failed for {Type}/{Id}", type, id);
+                return Json(new { live = false, reason = ex.Message, tabs = Array.Empty<object>() });
+            }
+        }
+
+        private async Task<List<TabOption>> FallbackTabsAsync(string? type, int? id)
+        {
+            var tabs = new List<TabOption>();
+
+            if (MenuLinkCatalog.DynamicTabs.TryGetValue(type ?? "", out var fixedTabs))
+            {
+                tabs.AddRange(fixedTabs);
+
+                if (id.HasValue)
+                {
+                    // Clubs store their custom sections under PageType.Custom
+                    PageType? pt = type switch
+                    {
+                        "Department" => PageType.Department,
+                        "Committee" => PageType.Committee,
+                        "Facility" => PageType.Facility,
+                        "Club" => PageType.Custom,
+                        _ => null
+                    };
+
+                    if (pt.HasValue)
+                    {
+                        var titles = await _context.DynamicSections
+                            .Where(s => s.PageType == pt.Value && s.PageId == id.Value && s.IsVisible)
+                            .OrderBy(s => s.DisplayOrder)
+                            .Select(s => s.Title)
+                            .ToListAsync();
+
+                        foreach (var t in titles.Where(t => !string.IsNullOrWhiteSpace(t)))
+                            tabs.Add(new TabOption("Sec_" + Regex.Replace(t, "[^a-zA-Z0-9]", ""), t));
+                    }
+                }
+            }
+
+            return tabs;
+        }
+
         // ══════════════════════════════════════════════════
         // PRIVATE HELPERS
         // ══════════════════════════════════════════════════
@@ -410,6 +498,7 @@ namespace GECPatan.Admin.Controllers
                 DynamicId = m.DynamicId,
                 DynamicType = m.DynamicType,
                 DynamicLabel = resolveLabel(m),
+                TabAnchor = m.TabAnchor,
                 ExternalLink = m.ExternalLink,
                 PdfPath = m.PdfPath,
                 CssClass = m.CssClass,
@@ -498,6 +587,36 @@ namespace GECPatan.Admin.Controllers
             }
 
             vm.ParentOptions = opts;
+            LoadInternalPageOptions(vm);
+        }
+
+        // Dropdown of public pages, grouped. If an existing item points at a
+        // Controller/Action that is not in the catalog, keep it selectable so
+        // editing never silently changes the link.
+        private static void LoadInternalPageOptions(MenuItemFormVM vm)
+        {
+            var groups = new Dictionary<string, SelectListGroup>();
+            var list = new List<SelectListItem>();
+
+            foreach (var p in MenuLinkCatalog.InternalPages)
+            {
+                if (!groups.TryGetValue(p.Group, out var g))
+                    groups[p.Group] = g = new SelectListGroup { Name = p.Group };
+                list.Add(new SelectListItem { Value = p.Key, Text = p.Label, Group = g });
+            }
+
+            if (!string.IsNullOrWhiteSpace(vm.InternalPage) &&
+                !list.Any(o => string.Equals(o.Value, vm.InternalPage, StringComparison.OrdinalIgnoreCase)))
+            {
+                list.Add(new SelectListItem
+                {
+                    Value = vm.InternalPage,
+                    Text = $"{vm.InternalPage} (existing link)",
+                    Group = new SelectListGroup { Name = "Other" }
+                });
+            }
+
+            vm.InternalPageOptions = list;
         }
 
         private async Task LoadDynamicOptions(MenuItemFormVM vm)
@@ -550,8 +669,9 @@ namespace GECPatan.Admin.Controllers
 
         private void ValidateForm(MenuItemFormVM m)
         {
-            if (m.LinkType == "internal" && string.IsNullOrWhiteSpace(m.ControllerName))
-                ModelState.AddModelError(nameof(m.ControllerName), "Controller name is required for Internal links.");
+            if (m.LinkType == "internal" &&
+                (string.IsNullOrWhiteSpace(m.InternalPage) || !m.InternalPage.Contains('/')))
+                ModelState.AddModelError(nameof(m.InternalPage), "Please select a page.");
 
             if (m.LinkType == "dynamic")
             {
@@ -568,13 +688,27 @@ namespace GECPatan.Admin.Controllers
                 ModelState.AddModelError(nameof(m.PdfFile), "Please upload a PDF file.");
         }
 
+        private static (string? ctrl, string? action) SplitPage(string? page)
+        {
+            if (string.IsNullOrWhiteSpace(page)) return (null, null);
+            var parts = page.Split('/', 2);
+            return (parts[0], parts.Length > 1 ? parts[1] : "Index");
+        }
+
+        // Tab is only meaningful for dynamic links (Department, Committee, ...)
+        private static string? CleanTab(MenuItemFormVM m)
+            => m.LinkType == "dynamic" && !string.IsNullOrWhiteSpace(m.TabAnchor)
+                ? m.TabAnchor.Trim()
+                : null;
+
         private static MenuItem BuildEntity(MenuItemFormVM m) => new()
         {
             MenuText = m.MenuText,
             ParentId = m.ParentId == 0 ? null : m.ParentId,
             LinkType = m.LinkType,
-            ControllerName = m.LinkType is "internal" or "dynamic" ? m.ControllerName : null,
-            ActionName = m.LinkType is "internal" or "dynamic" ? m.ActionName : null,
+            ControllerName = m.LinkType == "internal" ? SplitPage(m.InternalPage).ctrl : null,
+            ActionName = m.LinkType == "internal" ? SplitPage(m.InternalPage).action : null,
+            TabAnchor = CleanTab(m),
             DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null,
             DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null,
             ExternalLink = m.LinkType == "external" ? m.ExternalLink : null,
@@ -591,8 +725,9 @@ namespace GECPatan.Admin.Controllers
             e.MenuText = m.MenuText;
             e.ParentId = m.ParentId == 0 ? null : m.ParentId;
             e.LinkType = m.LinkType;
-            e.ControllerName = m.LinkType is "internal" or "dynamic" ? m.ControllerName : null;
-            e.ActionName = m.LinkType is "internal" or "dynamic" ? m.ActionName : null;
+            e.ControllerName = m.LinkType == "internal" ? SplitPage(m.InternalPage).ctrl : null;
+            e.ActionName = m.LinkType == "internal" ? SplitPage(m.InternalPage).action : null;
+            e.TabAnchor = CleanTab(m);
             e.DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null;
             e.DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null;
             e.ExternalLink = m.LinkType == "external" ? m.ExternalLink : null;
@@ -612,6 +747,9 @@ namespace GECPatan.Admin.Controllers
             LinkType = m.LinkType,
             ControllerName = m.ControllerName,
             ActionName = m.ActionName,
+            InternalPage = m.LinkType == "internal" && !string.IsNullOrEmpty(m.ControllerName)
+                ? $"{m.ControllerName}/{m.ActionName}" : null,
+            TabAnchor = m.TabAnchor,
             DynamicType = m.DynamicType,
             DynamicId = m.DynamicId,
             ExternalLink = m.ExternalLink,

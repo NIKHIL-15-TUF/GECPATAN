@@ -3,7 +3,7 @@
     var item = Model;
     var menuType = (string)(ViewData["menuType"] ?? "Main");
     int pad = item.Level * 28;
- 
+
     // Badge + link description
     string badgeClass, badgeIcon, badgeLabel, linkDesc;
     switch (item.LinkType)
@@ -12,13 +12,15 @@
             badgeClass = "badge-success";
             badgeIcon = "fa-database";
             badgeLabel = "Dynamic";
-            linkDesc = $"{item.DynamicType}: {item.DynamicLabel}";
+            linkDesc = $"{item.DynamicType}: {item.DynamicLabel}"
+                + (string.IsNullOrEmpty(item.TabAnchor) ? "" : $" › {item.TabAnchor}");
             break;
         case "internal":
             badgeClass = "badge-primary";
             badgeIcon = "fa-link";
             badgeLabel = "Internal";
-            linkDesc = $"{item.ControllerName}/{item.ActionName}";
+            linkDesc = $"{item.ControllerName}/{item.ActionName}"
+                + (string.IsNullOrEmpty(item.TabAnchor) ? "" : $" › {item.TabAnchor}");
             break;
         case "external":
             badgeClass = "badge-info";
@@ -38,14 +40,14 @@
                 : "No link";
             break;
     }
- 
+
     string rowBg = !item.IsVisible
         ? "background:#f8f9fa;color:#adb5bd;"
         : item.Level == 0
             ? "background:#eef0fb;"
             : item.Level == 1 ? "" : "background:#fafafa;";
 }
- 
+
 <tr style="@rowBg">
     <td>
         <div style="padding-left:@(pad)px;display:flex;align-items:center;gap:6px;">
@@ -64,11 +66,11 @@
                 <i class="fas fa-angle-right text-muted"
                    style="font-size:9px;"></i>
             }
- 
+
             <strong style="font-size:@(item.Level == 0 ? "14px" : "12px");">
                 @item.MenuText
             </strong>
- 
+
             @if (!string.IsNullOrEmpty(item.CssClass))
             {
                 <span class="badge badge-warning"
@@ -134,24 +136,24 @@
     </td>
     <td>
         <div class="d-flex flex-wrap" style="gap:3px;">
- 
+
             @* Add Child (max 3 levels) *@
             @if (item.Level < 2)
             {
                 <a asp-action="Create"
-                       asp-route-parentId="@item.Id"
-                       asp-route-menuType="@menuType"
-                       class="btn btn-xs btn-success"
-                       title="Add child item">
+                   asp-route-parentId="@item.Id"
+                   asp-route-menuType="@menuType"
+                   class="btn btn-xs btn-success"
+                   title="Add child item">
                     <i class="fas fa-plus"></i>
                 </a>
             }
- 
+
             <a asp-action="Edit" asp-route-id="@item.Id"
-                   class="btn btn-xs btn-info" title="Edit">
+               class="btn btn-xs btn-info" title="Edit">
                 <i class="fas fa-edit"></i>
             </a>
- 
+
             <form asp-action="ToggleVisible" method="post"
                   class="d-inline">
                 <input type="hidden" name="id" value="@item.Id" />
@@ -161,7 +163,7 @@
                     <i class="fas @(item.IsVisible ? "fa-eye-slash" : "fa-eye")"></i>
                 </button>
             </form>
- 
+
             <form asp-action="Delete" method="post" class="d-inline">
                 <input type="hidden" name="id" value="@item.Id" />
                 <button type="submit"
@@ -174,7 +176,7 @@
         </div>
     </td>
 </tr>
- 
+
 @* Recursively render children *@
 @foreach (var child in item.Children)
 {
