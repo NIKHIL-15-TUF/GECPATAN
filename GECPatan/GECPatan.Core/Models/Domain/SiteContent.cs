@@ -162,5 +162,13 @@ namespace GECPatan.Core.Models.Domain
 
         [MaxLength(50)]
         public string? IpAddress { get; set; }
+
+        // "Admin" or "Api" - which application made the change
+        [MaxLength(20)]
+        public string? Source { get; set; }
+
+        // e.g. "POST /Department/Edit/3"
+        [MaxLength(300)]
+        public string? RequestPath { get; set; }
     }
 }

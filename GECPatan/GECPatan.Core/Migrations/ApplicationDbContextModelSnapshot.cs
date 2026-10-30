@@ -17,7 +17,7 @@ namespace GECPatan.Core.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.5")
+                .HasAnnotation("ProductVersion", "8.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -744,6 +744,14 @@ namespace GECPatan.Core.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
+                    b.Property<string>("RequestPath")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2");
 
@@ -760,6 +768,16 @@ namespace GECPatan.Core.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Action", "Timestamp");
+
+                    b.HasIndex("Module", "RecordId");
+
+                    b.HasIndex("Module", "Timestamp");
 
                     b.ToTable("AuditLogs");
                 });

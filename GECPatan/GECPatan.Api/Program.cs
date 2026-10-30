@@ -7,13 +7,19 @@ using GECPatan.Core.Services.Logging;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using System.Threading.RateLimiting;
+using GECPatan.Core.Services.Audit;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ── DATABASE ──────────────────────────────────────────
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+// Audit-Log (writes to the same AuditLogs table as Admin; only signed-in users are audited)
+builder.Services.AddAuditLogging("Api");
+builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
+{
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.AddInterceptors(sp.GetRequiredService<GECPatan.Core.Services.Audit.AuditSaveChangesInterceptor>());
+});
 
 // ── CORS ──────────────────────────────────────────────
 var allowedOrigins = builder.Configuration
