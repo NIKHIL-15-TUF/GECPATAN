@@ -168,9 +168,17 @@ using (var scope = app.Services.CreateScope())
         var config = services.GetRequiredService<IConfiguration>();
         var db = scope.ServiceProvider.GetRequiredService<GECPatan.Core.Data.ApplicationDbContext>();
 
-        await context.Database.MigrateAsync();
-        await RoleSeeder.SeedAsync(userManager, roleManager, config);
-        await GECPatan.Admin.Data.DisclosureNarrativeSeeder.SeedAsync(db);
+        try
+        {
+            await context.Database.MigrateAsync();
+            await RoleSeeder.SeedAsync(userManager, roleManager, config);
+            await GECPatan.Admin.Data.DisclosureNarrativeSeeder.SeedAsync(db);
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+        }
     }
     catch (Exception ex)
     {

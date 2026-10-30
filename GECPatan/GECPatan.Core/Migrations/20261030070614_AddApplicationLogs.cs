@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GECPatan.Core.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AddApplicationLogs : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -66,7 +66,7 @@ namespace GECPatan.Core.Migrations
                     Title = table.Column<string>(type: "nvarchar(400)", maxLength: 400, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Date = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Year = table.Column<int>(type: "int", nullable: true),
                     Keywords = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Type = table.Column<int>(type: "int", nullable: false),
@@ -147,6 +147,30 @@ namespace GECPatan.Core.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Alumni", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ApplicationLogs",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Level = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
+                    ExceptionType = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    Exception = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RequestPath = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    HttpMethod = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    IpAddress = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    TraceId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ApplicationLogs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -254,6 +278,37 @@ namespace GECPatan.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ContactMessages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FullName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Subject = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    IsReplied = table.Column<bool>(type: "bit", nullable: false),
+                    RepliedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RepliedBy = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    ReplyMessage = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IpAddress = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContactMessages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ContentPages",
                 columns: table => new
                 {
@@ -274,6 +329,28 @@ namespace GECPatan.Core.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ContentPages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DepartmentEquipments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DeptId = table.Column<int>(type: "int", nullable: false),
+                    EquipmentHtml = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DepartmentEquipments", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -305,12 +382,40 @@ namespace GECPatan.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DocumentCategories",
+                name: "DisclosureNarratives",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SectionKey = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    SectionTitle = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                    HtmlContent = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DisclosureNarratives", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DocumentPages",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    TitleBannerImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TableView = table.Column<bool>(type: "bit", nullable: false),
+                    HasYearSections = table.Column<bool>(type: "bit", nullable: false),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
@@ -323,7 +428,7 @@ namespace GECPatan.Core.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DocumentCategories", x => x.Id);
+                    table.PrimaryKey("PK_DocumentPages", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -362,6 +467,7 @@ namespace GECPatan.Core.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Tagline = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    BlogspotLink = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     About = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TitleImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
@@ -377,6 +483,29 @@ namespace GECPatan.Core.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Facilities", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FacultyApprovalInfos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FacultyId = table.Column<int>(type: "int", nullable: false),
+                    ApprovalStatus = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    LetterNumber = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    ApprovedByUniversity = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FacultyApprovalInfos", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -404,31 +533,6 @@ namespace GECPatan.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ImportantDocuments",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
-                    FileType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    UploadDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
-                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ImportantDocuments", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Marquees",
                 columns: table => new
                 {
@@ -446,6 +550,7 @@ namespace GECPatan.Core.Migrations
                     ValidTo = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    HorizontalMarquee = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
@@ -472,7 +577,9 @@ namespace GECPatan.Core.Migrations
                     ActionName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     DynamicId = table.Column<int>(type: "int", nullable: true),
                     DynamicType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    TabAnchor = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     ExternalLink = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    PdfPath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     CssClass = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     MenuType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Position = table.Column<int>(type: "int", nullable: false),
@@ -707,6 +814,55 @@ namespace GECPatan.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ScholarshipRecords",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SchemeName = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                    AcademicYear = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    TotalApplications = table.Column<int>(type: "int", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ScholarshipRecords", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SecurityLogs",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EventType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Severity = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    AttemptedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    IpAddress = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    UserAgent = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    RequestPath = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    HttpMethod = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    StatusCode = table.Column<int>(type: "int", nullable: true),
+                    Details = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SecurityLogs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SiteSettings",
                 columns: table => new
                 {
@@ -791,6 +947,7 @@ namespace GECPatan.Core.Migrations
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     About = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     BlogLink = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CoverImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ActionName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ControllerName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsDynamic = table.Column<bool>(type: "bit", nullable: false),
@@ -1133,6 +1290,69 @@ namespace GECPatan.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ContentPageImages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ContentPageId = table.Column<int>(type: "int", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Caption = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContentPageImages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ContentPageImages_ContentPages_ContentPageId",
+                        column: x => x.ContentPageId,
+                        principalTable: "ContentPages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CutoffRecords",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DeptId = table.Column<int>(type: "int", nullable: false),
+                    AcademicYear = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    GeneralRank = table.Column<int>(type: "int", nullable: true),
+                    SEBCRank = table.Column<int>(type: "int", nullable: true),
+                    SCRank = table.Column<int>(type: "int", nullable: true),
+                    STRank = table.Column<int>(type: "int", nullable: true),
+                    EWSRank = table.Column<int>(type: "int", nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CutoffRecords", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CutoffRecords_Departments_DeptId",
+                        column: x => x.DeptId,
+                        principalTable: "Departments",
+                        principalColumn: "DeptId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DepartmentImages",
                 columns: table => new
                 {
@@ -1309,6 +1529,39 @@ namespace GECPatan.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DisclosurePlacements",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DeptId = table.Column<int>(type: "int", nullable: false),
+                    AcademicYear = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    NoOfCompanies = table.Column<int>(type: "int", nullable: false),
+                    TotalPlaced = table.Column<int>(type: "int", nullable: false),
+                    MaximumSalary = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    MinimumSalary = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DisclosurePlacements", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DisclosurePlacements_Departments_DeptId",
+                        column: x => x.DeptId,
+                        principalTable: "Departments",
+                        principalColumn: "DeptId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Faculties",
                 columns: table => new
                 {
@@ -1318,6 +1571,7 @@ namespace GECPatan.Core.Migrations
                     Designation = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     DeptId = table.Column<int>(type: "int", nullable: false),
                     DateOfJoining = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LetterNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     AreaOfInterest = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Website = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -1341,6 +1595,69 @@ namespace GECPatan.Core.Migrations
                         principalTable: "Departments",
                         principalColumn: "DeptId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FacultyTurnoverRecords",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DeptId = table.Column<int>(type: "int", nullable: false),
+                    AcademicYear = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    NonTeachingJoin = table.Column<int>(type: "int", nullable: false),
+                    TeachingJoin = table.Column<int>(type: "int", nullable: false),
+                    NonTeachingLeft = table.Column<int>(type: "int", nullable: false),
+                    TeachingLeft = table.Column<int>(type: "int", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FacultyTurnoverRecords", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FacultyTurnoverRecords_Departments_DeptId",
+                        column: x => x.DeptId,
+                        principalTable: "Departments",
+                        principalColumn: "DeptId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "InfrastructureRecords",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RoomType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    AreaSqm = table.Column<double>(type: "float", nullable: false),
+                    BuildingName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    DeptId = table.Column<int>(type: "int", nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InfrastructureRecords", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_InfrastructureRecords_Departments_DeptId",
+                        column: x => x.DeptId,
+                        principalTable: "Departments",
+                        principalColumn: "DeptId");
                 });
 
             migrationBuilder.CreateTable(
@@ -1371,6 +1688,39 @@ namespace GECPatan.Core.Migrations
                         principalTable: "Departments",
                         principalColumn: "DeptId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "NBAAccreditations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProgramName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    AccreditedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ValidFrom = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    ValidTo = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    DeptId = table.Column<int>(type: "int", nullable: true),
+                    DepartmentDeptId = table.Column<int>(type: "int", nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NBAAccreditations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_NBAAccreditations_Departments_DepartmentDeptId",
+                        column: x => x.DepartmentDeptId,
+                        principalTable: "Departments",
+                        principalColumn: "DeptId");
                 });
 
             migrationBuilder.CreateTable(
@@ -1442,7 +1792,7 @@ namespace GECPatan.Core.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    PageId = table.Column<int>(type: "int", nullable: false),
                     Year = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
@@ -1457,9 +1807,9 @@ namespace GECPatan.Core.Migrations
                 {
                     table.PrimaryKey("PK_DocumentYearSections", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_DocumentYearSections_DocumentCategories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "DocumentCategories",
+                        name: "FK_DocumentYearSections_DocumentPages_PageId",
+                        column: x => x.PageId,
+                        principalTable: "DocumentPages",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1938,38 +2288,6 @@ namespace GECPatan.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ClubMembers",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ClubId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Position = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    Department = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ClubMembers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ClubMembers_StudentClubs_ClubId",
-                        column: x => x.ClubId,
-                        principalTable: "StudentClubs",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ClubObjectives",
                 columns: table => new
                 {
@@ -2007,6 +2325,7 @@ namespace GECPatan.Core.Migrations
                     DocTitle = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
                     ValidFrom = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ValidTo = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    MonthYear = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FilePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
@@ -2108,6 +2427,107 @@ namespace GECPatan.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ClubMembers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ClubId = table.Column<int>(type: "int", nullable: false),
+                    MemberType = table.Column<int>(type: "int", nullable: false),
+                    FacultyId = table.Column<int>(type: "int", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Department = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Position = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ClubMembers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ClubMembers_Faculties_FacultyId",
+                        column: x => x.FacultyId,
+                        principalTable: "Faculties",
+                        principalColumn: "FacultyId");
+                    table.ForeignKey(
+                        name: "FK_ClubMembers_StudentClubs_ClubId",
+                        column: x => x.ClubId,
+                        principalTable: "StudentClubs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FacultyBookPublications",
+                columns: table => new
+                {
+                    FacultyBookPublicationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FacultyId = table.Column<int>(type: "int", nullable: false),
+                    SrNo = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(400)", maxLength: 400, nullable: false),
+                    Publisher = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    Year = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FacultyBookPublications", x => x.FacultyBookPublicationId);
+                    table.ForeignKey(
+                        name: "FK_FacultyBookPublications_Faculties_FacultyId",
+                        column: x => x.FacultyId,
+                        principalTable: "Faculties",
+                        principalColumn: "FacultyId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FacultyConsultancies",
+                columns: table => new
+                {
+                    FacultyConsultancyId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FacultyId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(400)", maxLength: 400, nullable: false),
+                    Client = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    Year = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    Amount = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FacultyConsultancies", x => x.FacultyConsultancyId);
+                    table.ForeignKey(
+                        name: "FK_FacultyConsultancies_Faculties_FacultyId",
+                        column: x => x.FacultyId,
+                        principalTable: "Faculties",
+                        principalColumn: "FacultyId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "FacultyExperiences",
                 columns: table => new
                 {
@@ -2138,6 +2558,66 @@ namespace GECPatan.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "FacultyPatents",
+                columns: table => new
+                {
+                    FacultyPatentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FacultyId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(400)", maxLength: 400, nullable: false),
+                    ApplicationNo = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    GrantedYear = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FacultyPatents", x => x.FacultyPatentId);
+                    table.ForeignKey(
+                        name: "FK_FacultyPatents_Faculties_FacultyId",
+                        column: x => x.FacultyId,
+                        principalTable: "Faculties",
+                        principalColumn: "FacultyId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FacultyProfessionalMemberships",
+                columns: table => new
+                {
+                    FacultyProfessionalMembershipId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FacultyId = table.Column<int>(type: "int", nullable: false),
+                    Community = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                    MembershipType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FacultyProfessionalMemberships", x => x.FacultyProfessionalMembershipId);
+                    table.ForeignKey(
+                        name: "FK_FacultyProfessionalMemberships_Faculties_FacultyId",
+                        column: x => x.FacultyId,
+                        principalTable: "Faculties",
+                        principalColumn: "FacultyId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "FacultyPublications",
                 columns: table => new
                 {
@@ -2146,6 +2626,10 @@ namespace GECPatan.Core.Migrations
                     FacultyId = table.Column<int>(type: "int", nullable: false),
                     SrNo = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    JournalName = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    Year = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    CoAuthors = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
@@ -2196,6 +2680,64 @@ namespace GECPatan.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "FacultyResearchGuidances",
+                columns: table => new
+                {
+                    FacultyResearchGuidanceId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FacultyId = table.Column<int>(type: "int", nullable: false),
+                    Level = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Ongoing = table.Column<int>(type: "int", nullable: false),
+                    Completed = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FacultyResearchGuidances", x => x.FacultyResearchGuidanceId);
+                    table.ForeignKey(
+                        name: "FK_FacultyResearchGuidances_Faculties_FacultyId",
+                        column: x => x.FacultyId,
+                        principalTable: "Faculties",
+                        principalColumn: "FacultyId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FacultySubjects",
+                columns: table => new
+                {
+                    FacultySubjectId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FacultyId = table.Column<int>(type: "int", nullable: false),
+                    SubjectName = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                    Level = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateInt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FacultySubjects", x => x.FacultySubjectId);
+                    table.ForeignKey(
+                        name: "FK_FacultySubjects_Faculties_FacultyId",
+                        column: x => x.FacultyId,
+                        principalTable: "Faculties",
+                        principalColumn: "FacultyId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "FacultyTrainings",
                 columns: table => new
                 {
@@ -2203,6 +2745,7 @@ namespace GECPatan.Core.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FacultyId = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                    TrainingType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     OrganizedBy = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
                     FromDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ToDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -2235,6 +2778,7 @@ namespace GECPatan.Core.Migrations
                     Department = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     Contact = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedDateInt = table.Column<long>(type: "bigint", nullable: false),
@@ -2289,7 +2833,8 @@ namespace GECPatan.Core.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    YearSectionId = table.Column<int>(type: "int", nullable: false),
+                    YearSectionId = table.Column<int>(type: "int", nullable: true),
+                    PageId = table.Column<int>(type: "int", nullable: true),
                     Title = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
                     FilePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
@@ -2306,11 +2851,15 @@ namespace GECPatan.Core.Migrations
                 {
                     table.PrimaryKey("PK_DocumentFiles", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_DocumentFiles_DocumentPages_PageId",
+                        column: x => x.PageId,
+                        principalTable: "DocumentPages",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_DocumentFiles_DocumentYearSections_YearSectionId",
                         column: x => x.YearSectionId,
                         principalTable: "DocumentYearSections",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -2419,6 +2968,21 @@ namespace GECPatan.Core.Migrations
                 column: "CommitteeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ApplicationLogs_Level_Timestamp",
+                table: "ApplicationLogs",
+                columns: new[] { "Level", "Timestamp" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ApplicationLogs_Timestamp",
+                table: "ApplicationLogs",
+                column: "Timestamp");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ApplicationLogs_TraceId",
+                table: "ApplicationLogs",
+                column: "TraceId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
                 column: "RoleId");
@@ -2478,6 +3042,11 @@ namespace GECPatan.Core.Migrations
                 column: "ClubId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ClubMembers_FacultyId",
+                table: "ClubMembers",
+                column: "FacultyId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ClubObjectives_ClubId",
                 table: "ClubObjectives",
                 column: "ClubId");
@@ -2508,10 +3077,20 @@ namespace GECPatan.Core.Migrations
                 column: "CommitteeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ContentPageImages_ContentPageId",
+                table: "ContentPageImages",
+                column: "ContentPageId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ContentPages_Slug",
                 table: "ContentPages",
                 column: "Slug",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CutoffRecords_DeptId",
+                table: "CutoffRecords",
+                column: "DeptId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DepartmentImages_DeptId",
@@ -2544,14 +3123,24 @@ namespace GECPatan.Core.Migrations
                 column: "DeptId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DisclosurePlacements_DeptId",
+                table: "DisclosurePlacements",
+                column: "DeptId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentFiles_PageId",
+                table: "DocumentFiles",
+                column: "PageId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DocumentFiles_YearSectionId",
                 table: "DocumentFiles",
                 column: "YearSectionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DocumentYearSections_CategoryId",
+                name: "IX_DocumentYearSections_PageId",
                 table: "DocumentYearSections",
-                column: "CategoryId");
+                column: "PageId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DynamicSectionFiles_DynamicSectionId",
@@ -2584,8 +3173,28 @@ namespace GECPatan.Core.Migrations
                 column: "DeptId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_FacultyBookPublications_FacultyId",
+                table: "FacultyBookPublications",
+                column: "FacultyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FacultyConsultancies_FacultyId",
+                table: "FacultyConsultancies",
+                column: "FacultyId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_FacultyExperiences_FacultyId",
                 table: "FacultyExperiences",
+                column: "FacultyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FacultyPatents_FacultyId",
+                table: "FacultyPatents",
+                column: "FacultyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FacultyProfessionalMemberships_FacultyId",
+                table: "FacultyProfessionalMemberships",
                 column: "FacultyId");
 
             migrationBuilder.CreateIndex(
@@ -2599,9 +3208,29 @@ namespace GECPatan.Core.Migrations
                 column: "FacultyId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_FacultyResearchGuidances_FacultyId",
+                table: "FacultyResearchGuidances",
+                column: "FacultyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FacultySubjects_FacultyId",
+                table: "FacultySubjects",
+                column: "FacultyId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_FacultyTrainings_FacultyId",
                 table: "FacultyTrainings",
                 column: "FacultyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FacultyTurnoverRecords_DeptId",
+                table: "FacultyTurnoverRecords",
+                column: "DeptId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InfrastructureRecords_DeptId",
+                table: "InfrastructureRecords",
+                column: "DeptId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LabImages_LabId",
@@ -2617,6 +3246,11 @@ namespace GECPatan.Core.Migrations
                 name: "IX_MenuItems_ParentId",
                 table: "MenuItems",
                 column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NBAAccreditations_DepartmentDeptId",
+                table: "NBAAccreditations",
+                column: "DepartmentDeptId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_NewsItemFiles_NewsItemId",
@@ -2681,6 +3315,21 @@ namespace GECPatan.Core.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_SecurityLogs_EventType_Timestamp",
+                table: "SecurityLogs",
+                columns: new[] { "EventType", "Timestamp" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SecurityLogs_IpAddress",
+                table: "SecurityLogs",
+                column: "IpAddress");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SecurityLogs_Timestamp",
+                table: "SecurityLogs",
+                column: "Timestamp");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SiteSettings_Key",
                 table: "SiteSettings",
                 column: "Key",
@@ -2720,6 +3369,9 @@ namespace GECPatan.Core.Migrations
 
             migrationBuilder.DropTable(
                 name: "Alumni");
+
+            migrationBuilder.DropTable(
+                name: "ApplicationLogs");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -2767,7 +3419,16 @@ namespace GECPatan.Core.Migrations
                 name: "ContactInfos");
 
             migrationBuilder.DropTable(
-                name: "ContentPages");
+                name: "ContactMessages");
+
+            migrationBuilder.DropTable(
+                name: "ContentPageImages");
+
+            migrationBuilder.DropTable(
+                name: "CutoffRecords");
+
+            migrationBuilder.DropTable(
+                name: "DepartmentEquipments");
 
             migrationBuilder.DropTable(
                 name: "DepartmentImages");
@@ -2788,6 +3449,12 @@ namespace GECPatan.Core.Migrations
                 name: "DeptNotices");
 
             migrationBuilder.DropTable(
+                name: "DisclosureNarratives");
+
+            migrationBuilder.DropTable(
+                name: "DisclosurePlacements");
+
+            migrationBuilder.DropTable(
                 name: "DocumentFiles");
 
             migrationBuilder.DropTable(
@@ -2806,7 +3473,22 @@ namespace GECPatan.Core.Migrations
                 name: "FacilityVisions");
 
             migrationBuilder.DropTable(
+                name: "FacultyApprovalInfos");
+
+            migrationBuilder.DropTable(
+                name: "FacultyBookPublications");
+
+            migrationBuilder.DropTable(
+                name: "FacultyConsultancies");
+
+            migrationBuilder.DropTable(
                 name: "FacultyExperiences");
+
+            migrationBuilder.DropTable(
+                name: "FacultyPatents");
+
+            migrationBuilder.DropTable(
+                name: "FacultyProfessionalMemberships");
 
             migrationBuilder.DropTable(
                 name: "FacultyPublications");
@@ -2815,13 +3497,22 @@ namespace GECPatan.Core.Migrations
                 name: "FacultyQualifications");
 
             migrationBuilder.DropTable(
+                name: "FacultyResearchGuidances");
+
+            migrationBuilder.DropTable(
+                name: "FacultySubjects");
+
+            migrationBuilder.DropTable(
                 name: "FacultyTrainings");
+
+            migrationBuilder.DropTable(
+                name: "FacultyTurnoverRecords");
 
             migrationBuilder.DropTable(
                 name: "GalleryImages");
 
             migrationBuilder.DropTable(
-                name: "ImportantDocuments");
+                name: "InfrastructureRecords");
 
             migrationBuilder.DropTable(
                 name: "LabImages");
@@ -2834,6 +3525,9 @@ namespace GECPatan.Core.Migrations
 
             migrationBuilder.DropTable(
                 name: "MoUDocuments");
+
+            migrationBuilder.DropTable(
+                name: "NBAAccreditations");
 
             migrationBuilder.DropTable(
                 name: "NewsItemFiles");
@@ -2884,6 +3578,12 @@ namespace GECPatan.Core.Migrations
                 name: "ResearchGrants");
 
             migrationBuilder.DropTable(
+                name: "ScholarshipRecords");
+
+            migrationBuilder.DropTable(
+                name: "SecurityLogs");
+
+            migrationBuilder.DropTable(
                 name: "SiteSettings");
 
             migrationBuilder.DropTable(
@@ -2920,6 +3620,9 @@ namespace GECPatan.Core.Migrations
                 name: "StudentClubs");
 
             migrationBuilder.DropTable(
+                name: "ContentPages");
+
+            migrationBuilder.DropTable(
                 name: "DocumentYearSections");
 
             migrationBuilder.DropTable(
@@ -2950,7 +3653,7 @@ namespace GECPatan.Core.Migrations
                 name: "Faculties");
 
             migrationBuilder.DropTable(
-                name: "DocumentCategories");
+                name: "DocumentPages");
 
             migrationBuilder.DropTable(
                 name: "Departments");

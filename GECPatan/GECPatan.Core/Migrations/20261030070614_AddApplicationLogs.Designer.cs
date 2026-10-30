@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GECPatan.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260630075343_AddLetterNumberFaculty")]
-    partial class AddLetterNumberFaculty
+    [Migration("20261030070614_AddApplicationLogs")]
+    partial class AddApplicationLogs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -140,8 +140,8 @@ namespace GECPatan.Core.Migrations
                     b.Property<long>("CreatedDateInt")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("Date")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime?>("Date")
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("DeptId")
                         .HasColumnType("int");
@@ -547,6 +547,75 @@ namespace GECPatan.Core.Migrations
                     b.ToTable("Alumni");
                 });
 
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ApplicationLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Exception")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ExceptionType")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("HttpMethod")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("RequestPath")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TraceId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("TraceId");
+
+                    b.HasIndex("Level", "Timestamp");
+
+                    b.ToTable("ApplicationLogs");
+                });
+
             modelBuilder.Entity("GECPatan.Core.Models.Domain.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -900,14 +969,19 @@ namespace GECPatan.Core.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int?>("FacultyId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<int>("MemberType")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -927,6 +1001,8 @@ namespace GECPatan.Core.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClubId");
+
+                    b.HasIndex("FacultyId");
 
                     b.ToTable("ClubMembers");
                 });
@@ -1277,6 +1353,89 @@ namespace GECPatan.Core.Migrations
                     b.ToTable("ContactInfos");
                 });
 
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ContactMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsReplied")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("RepliedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("RepliedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReplyMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ContactMessages");
+                });
+
             modelBuilder.Entity("GECPatan.Core.Models.Domain.ContentPage", b =>
                 {
                     b.Property<int>("Id")
@@ -1329,6 +1488,57 @@ namespace GECPatan.Core.Migrations
                         .IsUnique();
 
                     b.ToTable("ContentPages");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ContentPageImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Caption")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int>("ContentPageId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContentPageId");
+
+                    b.ToTable("ContentPageImages");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.CutoffRecord", b =>
@@ -1930,51 +2140,6 @@ namespace GECPatan.Core.Migrations
                     b.ToTable("DisclosurePlacements");
                 });
 
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentCategory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsVisible")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DocumentCategories");
-                });
-
             modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentFile", b =>
                 {
                     b.Property<int>("Id")
@@ -2004,6 +2169,9 @@ namespace GECPatan.Core.Migrations
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("PageId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(300)
@@ -2018,14 +2186,70 @@ namespace GECPatan.Core.Migrations
                     b.Property<long?>("UpdatedDateInt")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("YearSectionId")
+                    b.Property<int?>("YearSectionId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PageId");
+
                     b.HasIndex("YearSectionId");
 
                     b.ToTable("DocumentFiles");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentPage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("HasYearSections")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("TableView")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TitleBannerImagePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DocumentPages");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentYearSection", b =>
@@ -2035,9 +2259,6 @@ namespace GECPatan.Core.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -2053,6 +2274,9 @@ namespace GECPatan.Core.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<int>("PageId")
+                        .HasColumnType("int");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -2070,7 +2294,7 @@ namespace GECPatan.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("PageId");
 
                     b.ToTable("DocumentYearSections");
                 });
@@ -2202,6 +2426,9 @@ namespace GECPatan.Core.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("About")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BlogspotLink")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
@@ -2533,10 +2760,6 @@ namespace GECPatan.Core.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ApprovalLetterNumber")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<string>("ApprovalStatus")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -2560,6 +2783,10 @@ namespace GECPatan.Core.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("LetterNumber")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -3251,62 +3478,6 @@ namespace GECPatan.Core.Migrations
                     b.ToTable("GalleryImages");
                 });
 
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.ImportantDocument", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("FilePath")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FileType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsVisible")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedDateInt")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("UploadDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ImportantDocuments");
-                });
-
             modelBuilder.Entity("GECPatan.Core.Models.Domain.InfrastructureRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -3509,6 +3680,9 @@ namespace GECPatan.Core.Migrations
                     b.Property<string>("FilePath")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("HorizontalMarquee")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -3612,8 +3786,16 @@ namespace GECPatan.Core.Migrations
                     b.Property<int?>("ParentId")
                         .HasColumnType("int");
 
+                    b.Property<string>("PdfPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<int>("Position")
                         .HasColumnType("int");
+
+                    b.Property<string>("TabAnchor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
@@ -4928,6 +5110,78 @@ namespace GECPatan.Core.Migrations
                     b.ToTable("ScholarshipRecords");
                 });
 
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.SecurityLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AttemptedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("HttpMethod")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RequestPath")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IpAddress");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("EventType", "Timestamp");
+
+                    b.ToTable("SecurityLogs");
+                });
+
             modelBuilder.Entity("GECPatan.Core.Models.Domain.SiteSetting", b =>
                 {
                     b.Property<int>("Id")
@@ -5073,6 +5327,9 @@ namespace GECPatan.Core.Migrations
                     b.Property<string>("ControllerName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CoverImagePath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -5191,6 +5448,9 @@ namespace GECPatan.Core.Migrations
 
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
+
+                    b.Property<string>("MonthYear")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("TenderCategoryId")
                         .HasColumnType("int");
@@ -5599,7 +5859,13 @@ namespace GECPatan.Core.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("GECPatan.Core.Models.Domain.Faculty", "Faculty")
+                        .WithMany()
+                        .HasForeignKey("FacultyId");
+
                     b.Navigation("Club");
+
+                    b.Navigation("Faculty");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.ClubObjective", b =>
@@ -5666,6 +5932,17 @@ namespace GECPatan.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Committee");
+                });
+
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ContentPageImage", b =>
+                {
+                    b.HasOne("GECPatan.Core.Models.Domain.ContentPage", "ContentPage")
+                        .WithMany("Images")
+                        .HasForeignKey("ContentPageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ContentPage");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.CutoffRecord", b =>
@@ -5758,24 +6035,28 @@ namespace GECPatan.Core.Migrations
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentFile", b =>
                 {
+                    b.HasOne("GECPatan.Core.Models.Domain.DocumentPage", "Page")
+                        .WithMany("Files")
+                        .HasForeignKey("PageId");
+
                     b.HasOne("GECPatan.Core.Models.Domain.DocumentYearSection", "YearSection")
                         .WithMany("Files")
-                        .HasForeignKey("YearSectionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("YearSectionId");
+
+                    b.Navigation("Page");
 
                     b.Navigation("YearSection");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentYearSection", b =>
                 {
-                    b.HasOne("GECPatan.Core.Models.Domain.DocumentCategory", "Category")
+                    b.HasOne("GECPatan.Core.Models.Domain.DocumentPage", "Page")
                         .WithMany("YearSections")
-                        .HasForeignKey("CategoryId")
+                        .HasForeignKey("PageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Category");
+                    b.Navigation("Page");
                 });
 
             modelBuilder.Entity("GECPatan.Core.Models.Domain.DynamicSectionFile", b =>
@@ -6246,6 +6527,11 @@ namespace GECPatan.Core.Migrations
                     b.Navigation("Visions");
                 });
 
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.ContentPage", b =>
+                {
+                    b.Navigation("Images");
+                });
+
             modelBuilder.Entity("GECPatan.Core.Models.Domain.Department", b =>
                 {
                     b.Navigation("BannerImages");
@@ -6263,8 +6549,10 @@ namespace GECPatan.Core.Migrations
                     b.Navigation("Visions");
                 });
 
-            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentCategory", b =>
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.DocumentPage", b =>
                 {
+                    b.Navigation("Files");
+
                     b.Navigation("YearSections");
                 });
 
