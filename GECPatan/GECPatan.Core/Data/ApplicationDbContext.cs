@@ -124,6 +124,9 @@ namespace GECPatan.Core.Data
         public DbSet<PrincipalMembership> PrincipalMemberships { get; set; }
         // ── AUDIT LOG ─────────────────────────────────────
         public DbSet<AuditLog> AuditLogs { get; set; }
+        // ── SECURITY LOG ──────────────────────────────────
+        public DbSet<ApplicationLog> ApplicationLogs { get; set; }
+        public DbSet<SecurityLog> SecurityLogs { get; set; }
         // ── NOTIFICATIONS ─────────────────────────────────
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationRead> NotificationReads { get; set; }
@@ -294,7 +297,19 @@ namespace GECPatan.Core.Data
                 .WithMany(p => p.Images)
                 .HasForeignKey(i => i.ContentPageId)
                 .OnDelete(DeleteBehavior.Cascade);
-
+            // ── SECURITY LOG INDEXES ──────────────────────────
+            modelBuilder.Entity<SecurityLog>(e =>
+            {
+                e.HasIndex(x => x.Timestamp);
+                e.HasIndex(x => new { x.EventType, x.Timestamp });
+                e.HasIndex(x => x.IpAddress);
+            });
+            modelBuilder.Entity<ApplicationLog>(e =>
+            {
+                e.HasIndex(x => x.Timestamp);
+                e.HasIndex(x => new { x.Level, x.Timestamp });
+                e.HasIndex(x => x.TraceId);
+            });
         }
 
         // =============================================

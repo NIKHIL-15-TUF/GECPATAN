@@ -1,0 +1,190 @@
+@model GECPatan.Admin.Models.ViewModels.SecurityLogFilterVM
+@using GECPatan.Core.Models.Domain
+@{
+    ViewData["Title"] = "Security Logs";
+
+    bool hasFilter = !string.IsNullOrEmpty(Model.Search) || !string.IsNullOrEmpty(Model.EventType) ||
+                     !string.IsNullOrEmpty(Model.Severity) || !string.IsNullOrEmpty(Model.Source) ||
+                     Model.DateFrom.HasValue || Model.DateTo.HasValue;
+}
+
+<!-- Last 24 hours -->
+<div class="row">
+    <div class="col-6 col-md-3">
+        <div class="small-box bg-warning mb-3"><div class="inner py-2">
+            <h4 class="mb-0">@Model.FailedLogins24h</h4><small>Failed logins (24h)</small></div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="small-box bg-danger mb-3"><div class="inner py-2">
+            <h4 class="mb-0">@Model.Lockouts24h</h4><small>Account lockouts (24h)</small></div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="small-box bg-info mb-3"><div class="inner py-2">
+            <h4 class="mb-0">@Model.AccessDenied24h</h4><small>Access denied (24h)</small></div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="small-box bg-secondary mb-3"><div class="inner py-2">
+            <h4 class="mb-0">@Model.RateLimited24h</h4><small>Rate-limited requests (24h)</small></div></div>
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form asp-action="Index" method="get">
+            <div class="row align-items-end">
+                <div class="col-md-3 mb-2">
+                    <label class="small font-weight-bold">User / Email / IP</label>
+                    <input asp-for="Search" class="form-control form-control-sm" placeholder="Search..." />
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold">Event</label>
+                    <select asp-for="EventType" class="form-control form-control-sm">
+                        <option value="">All Events</option>
+                        @foreach (var e in SecurityEvents.All)
+                        {
+                            <option value="@e" selected="@(Model.EventType == e)">@e</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-1 mb-2">
+                    <label class="small font-weight-bold">Severity</label>
+                    <select asp-for="Severity" class="form-control form-control-sm">
+                        <option value="">All</option>
+                        @foreach (var s in SecuritySeverity.All)
+                        {
+                            <option value="@s" selected="@(Model.Severity == s)">@s</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-1 mb-2">
+                    <label class="small font-weight-bold">Source</label>
+                    <select asp-for="Source" class="form-control form-control-sm">
+                        <option value="">All</option>
+                        <option value="Admin" selected="@(Model.Source == "Admin")">Admin</option>
+                        <option value="Api" selected="@(Model.Source == "Api")">Api</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold">From</label>
+                    <input asp-for="DateFrom" class="form-control form-control-sm" type="date" />
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold">To</label>
+                    <input asp-for="DateTo" class="form-control form-control-sm" type="date" />
+                </div>
+                <div class="col-md-1 mb-2">
+                    <button type="submit" class="btn btn-primary btn-sm btn-block"><i class="fas fa-filter"></i></button>
+                </div>
+            </div>
+            @if (hasFilter)
+            {
+                <div class="mt-1">
+                    <a asp-action="Index" class="btn btn-link btn-sm text-danger p-0">
+                        <i class="fas fa-times mr-1"></i>Clear Filters
+                    </a>
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-shield-alt mr-2"></i>@Model.TotalCount Event(s)
+            <small class="text-muted">(page @Model.Page of @Model.TotalPages)</small>
+        </h6>
+        <small class="text-muted"><i class="fas fa-lock mr-1"></i>Security logs cannot be edited or deleted</small>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.Logs.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-shield-alt fa-3x mb-3 d-block"></i>
+                No security events found for the selected filters.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead style="background:#1a237e;color:#fff;">
+                        <tr>
+                            <th width="170">When</th>
+                            <th width="90">Severity</th>
+                            <th width="170">Event</th>
+                            <th width="60">Source</th>
+                            <th width="190">User / Email</th>
+                            <th width="120">IP</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model.Logs)
+                        {
+                            var sevBadge = log.Severity switch
+                            {
+                                "Critical" => "badge-danger",
+                                "Warning" => "badge-warning",
+                                _ => "badge-success"
+                            };
+                            <tr title="@log.UserAgent">
+                                <td><small class="text-muted">@log.Timestamp</small></td>
+                                <td><span class="badge @sevBadge" style="font-size:9px;">@log.Severity</span></td>
+                                <td><small><strong>@log.EventType</strong></small></td>
+                                <td><span class="badge badge-secondary" style="font-size:9px;">@log.Source</span></td>
+                                <td>
+                                    <small>
+                                        @(!string.IsNullOrEmpty(log.UserName) ? log.UserName : log.AttemptedEmail ?? "—")
+                                    </small>
+                                </td>
+                                <td><small>@log.IpAddress</small></td>
+                                <td>
+                                    <small>
+                                        @if (!string.IsNullOrEmpty(log.RequestPath))
+                                        {
+                                            <code>@log.RequestPath</code>
+                                        }
+                                        @if (log.StatusCode.HasValue)
+                                        {
+                                            <span class="text-muted"> [@log.StatusCode]</span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(log.Details))
+                                        {
+                                            <span class="d-block text-muted">@log.Details</span>
+                                        }
+                                    </small>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer py-2">
+            <ul class="pagination pagination-sm m-0 float-right">
+                <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-Search="@Model.Search" asp-route-EventType="@Model.EventType"
+                       asp-route-Severity="@Model.Severity" asp-route-Source="@Model.Source"
+                       asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                       asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                       asp-route-Page="@(Model.Page - 1)">&laquo; Prev</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">@Model.Page / @Model.TotalPages</span></li>
+                <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-Search="@Model.Search" asp-route-EventType="@Model.EventType"
+                       asp-route-Severity="@Model.Severity" asp-route-Source="@Model.Source"
+                       asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                       asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                       asp-route-Page="@(Model.Page + 1)">Next &raquo;</a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>

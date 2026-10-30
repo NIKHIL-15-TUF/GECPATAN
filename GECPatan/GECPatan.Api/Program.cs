@@ -2,6 +2,8 @@ using GECPatan.Core.Data;
 using GECPatan.Core.Services.Email;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using GECPatan.Core.Services.Security;
+using GECPatan.Core.Services.Logging;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using System.Threading.RateLimiting;
@@ -28,6 +30,11 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+builder.Services.AddHttpContextAccessor();
+// Security-Log (writes to the same SecurityLogs table as Admin)
+builder.Services.AddSecurityLogging("Api");
+builder.Services.AddApplicationLogging("Api",
+    o => builder.Configuration.GetSection("ApplicationLogging").Bind(o));
 
 // ── EMAIL (Contact Us notification) ────────────────────
 // Shared IEmailService (GECPatan.Core.Services.Email) — also registered in
@@ -103,6 +110,7 @@ builder.Services.AddRouting(options =>
 });
 
 var app = builder.Build();
+app.UseMiddleware<ApiExceptionMiddleware>(app.Environment.IsDevelopment());
 
 // ── PIPELINE ──────────────────────────────────────────
 if (app.Environment.IsDevelopment())
@@ -116,6 +124,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseMiddleware<SecurityEventMiddleware>();
 app.UseCors("WebFrontend");
 app.UseRateLimiter();
 var adminWwwRoot = Path.Combine(

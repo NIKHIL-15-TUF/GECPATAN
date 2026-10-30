@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using GECPatan.Core.Models.Domain;
 using GECPatan.Core.Services;
 using GECPatan.Core.Services.Email;
+using GECPatan.Core.Services.Security;
+using GECPatan.Core.Services.Logging;
 using GECPatan.Core.Services.FileStorage;
 using GECPatan.Core.Services.UserManagement;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -57,10 +59,19 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddHttpContextAccessor();
 //Audit-Log
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<GECPatan.Core.Services.AuditService>();
+// Security-Log
+builder.Services.AddSecurityLogging("Admin");
+// Application-Log (ILogger -> ApplicationLogs table) + daily purge of old logs
+builder.Services.AddApplicationLogging("Admin",
+    o => builder.Configuration.GetSection("ApplicationLogging").Bind(o),
+    runRetention: true);
 // ── MVC ───────────────────────────────────────────────
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Sends users with a temporary password to the Change Password page
+    options.Filters.Add<GECPatan.Admin.Filters.ForcePasswordChangeFilter>();
+});
 //DIscloure Data Service
 builder.Services.AddScoped<
     GECPatan.Admin.Services.DisclosureDataService>();
@@ -132,6 +143,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/Error/{0}");
 
 app.UseHttpsRedirection();
+app.UseMiddleware<SecurityEventMiddleware>();
 app.UseStaticFiles();
 app.UseRouting();
 

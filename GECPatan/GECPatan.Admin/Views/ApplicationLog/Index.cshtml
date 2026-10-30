@@ -1,0 +1,178 @@
+@model GECPatan.Admin.Models.ViewModels.ApplicationLogFilterVM
+@{
+    ViewData["Title"] = "Application Logs";
+    bool hasFilter = !string.IsNullOrEmpty(Model.Search) || !string.IsNullOrEmpty(Model.Level) ||
+                     !string.IsNullOrEmpty(Model.Source) || Model.OnlyWithException ||
+                     Model.DateFrom.HasValue || Model.DateTo.HasValue;
+    string[] levels = { "Critical", "Error", "Warning", "Information", "Debug", "Trace" };
+}
+
+<!-- Last 24 hours -->
+<div class="row">
+    <div class="col-6 col-md-3"><div class="small-box bg-danger mb-3"><div class="inner py-2">
+        <h4 class="mb-0">@Model.Critical24h</h4><small>Critical (24h)</small></div></div></div>
+    <div class="col-6 col-md-3"><div class="small-box bg-orange mb-3" style="background:#fd7e14;color:#fff;"><div class="inner py-2">
+        <h4 class="mb-0">@Model.Errors24h</h4><small>Errors (24h)</small></div></div></div>
+    <div class="col-6 col-md-3"><div class="small-box bg-warning mb-3"><div class="inner py-2">
+        <h4 class="mb-0">@Model.Warnings24h</h4><small>Warnings (24h)</small></div></div></div>
+    <div class="col-6 col-md-3"><div class="small-box bg-info mb-3"><div class="inner py-2">
+        <h4 class="mb-0">@Model.Api24h</h4><small>API errors (24h)</small></div></div></div>
+</div>
+
+<!-- Filter bar -->
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form asp-action="Index" method="get">
+            <div class="row align-items-end">
+                <div class="col-md-3 mb-2">
+                    <label class="small font-weight-bold">Search</label>
+                    <input asp-for="Search" class="form-control form-control-sm"
+                           placeholder="Message, class, exception, path, reference id..." />
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold">Level</label>
+                    <select asp-for="Level" class="form-control form-control-sm">
+                        <option value="">All Levels</option>
+                        @foreach (var l in levels)
+                        {
+                            <option value="@l" selected="@(Model.Level == l)">@l</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-1 mb-2">
+                    <label class="small font-weight-bold">Source</label>
+                    <select asp-for="Source" class="form-control form-control-sm">
+                        <option value="">All</option>
+                        <option value="Admin" selected="@(Model.Source == "Admin")">Admin</option>
+                        <option value="Api" selected="@(Model.Source == "Api")">Api</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold">From</label>
+                    <input asp-for="DateFrom" class="form-control form-control-sm" type="date" />
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold">To</label>
+                    <input asp-for="DateTo" class="form-control form-control-sm" type="date" />
+                </div>
+                <div class="col-md-1 mb-2">
+                    <div class="form-check small">
+                        <input asp-for="OnlyWithException" type="checkbox" class="form-check-input" />
+                        <label asp-for="OnlyWithException" class="form-check-label">Exceptions</label>
+                    </div>
+                </div>
+                <div class="col-md-1 mb-2">
+                    <button type="submit" class="btn btn-primary btn-sm btn-block"><i class="fas fa-filter"></i></button>
+                </div>
+            </div>
+            @if (hasFilter)
+            {
+                <div class="mt-1">
+                    <a asp-action="Index" class="btn btn-link btn-sm text-danger p-0">
+                        <i class="fas fa-times mr-1"></i>Clear Filters
+                    </a>
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h6 class="card-title mb-0">
+            <i class="fas fa-bug mr-2"></i>@Model.TotalCount Log(s)
+            <small class="text-muted">(page @Model.Page of @Model.TotalPages)</small>
+        </h6>
+        <small class="text-muted"><i class="fas fa-lock mr-1"></i>Read-only · old entries are removed automatically</small>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.Logs.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-bug fa-3x mb-3 d-block"></i>
+                No application logs found for the selected filters.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead style="background:#1a237e;color:#fff;">
+                        <tr>
+                            <th width="170">When</th>
+                            <th width="80">Level</th>
+                            <th width="60">Source</th>
+                            <th width="220">Category</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model.Logs)
+                        {
+                            var badge = log.Level switch
+                            {
+                                "Critical" => "badge-danger",
+                                "Error" => "badge-danger",
+                                "Warning" => "badge-warning",
+                                _ => "badge-secondary"
+                            };
+                            var shortCat = log.Category.Contains('.') ? log.Category[(log.Category.LastIndexOf('.') + 1)..] : log.Category;
+                            <tr>
+                                <td><small class="text-muted">@log.Timestamp</small></td>
+                                <td><span class="badge @badge" style="font-size:9px;">@log.Level</span></td>
+                                <td><span class="badge badge-secondary" style="font-size:9px;">@log.Source</span></td>
+                                <td><small title="@log.Category">@shortCat</small></td>
+                                <td>
+                                    <small>@log.Message</small>
+                                    @if (!string.IsNullOrEmpty(log.RequestPath))
+                                    {
+                                        <small class="text-muted d-block">
+                                            @log.HttpMethod <code>@log.RequestPath</code>
+                                            @if (!string.IsNullOrEmpty(log.UserName)) { <span> · @log.UserName</span> }
+                                            @if (!string.IsNullOrEmpty(log.IpAddress)) { <span> · @log.IpAddress</span> }
+                                        </small>
+                                    }
+                                    @if (!string.IsNullOrEmpty(log.Exception))
+                                    {
+                                        <details class="mt-1">
+                                            <summary class="small text-danger" style="cursor:pointer;">@log.ExceptionType</summary>
+                                            <pre class="small bg-light p-2 mb-1" style="white-space:pre-wrap;max-height:300px;overflow:auto;">@log.Exception</pre>
+                                        </details>
+                                    }
+                                    @if (!string.IsNullOrEmpty(log.TraceId))
+                                    {
+                                        <small class="text-muted d-block">Ref: @log.TraceId</small>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer py-2">
+            <ul class="pagination pagination-sm m-0 float-right">
+                <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-Search="@Model.Search" asp-route-Level="@Model.Level" asp-route-Source="@Model.Source"
+                       asp-route-OnlyWithException="@Model.OnlyWithException"
+                       asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                       asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                       asp-route-Page="@(Model.Page - 1)">&laquo; Prev</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">@Model.Page / @Model.TotalPages</span></li>
+                <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-Search="@Model.Search" asp-route-Level="@Model.Level" asp-route-Source="@Model.Source"
+                       asp-route-OnlyWithException="@Model.OnlyWithException"
+                       asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                       asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                       asp-route-Page="@(Model.Page + 1)">Next &raquo;</a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>

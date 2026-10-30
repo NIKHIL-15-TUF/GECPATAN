@@ -46,7 +46,7 @@
         <nav class="main-header navbar navbar-expand navbar-white navbar-light">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" data-widget="pushmenu" href="#">
+                    <a class="nav-link" data-widget="pushmenu" data-enable-remember="true" data-no-transition-after-reload="true" href="#">
                         <i class="fas fa-bars"></i>
                     </a>
                 </li>
@@ -86,7 +86,7 @@
                         <!-- DASHBOARD — all roles see this -->
                         <li class="nav-item">
                             <a asp-controller="Home" asp-action="Index"
-                                   class="nav-link @(ctrl == "Home" && act == "Index" ? "active" : "")">
+                               class="nav-link @(ctrl == "Home" && act == "Index" ? "active" : "")">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
                                 <p>Dashboard</p>
                             </a>
@@ -104,19 +104,19 @@
                             {
                                 <li class="nav-item">
                                     <a asp-controller="ContentPage"
-                                           asp-action="Edit"
-                                           asp-route-id="@appUser.ContentPageId"
-                                           class="nav-link @(ctrl == "ContentPage" && act == "Edit" ? "active" : "")">
+                                       asp-action="Edit"
+                                       asp-route-id="@appUser.ContentPageId"
+                                       class="nav-link @(ctrl == "ContentPage" && act == "Edit" ? "active" : "")">
                                         <i class="nav-icon fas fa-edit"></i>
                                         <p>Edit My Page</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="ContentPage"
-                                           asp-action="Preview"
-                                           asp-route-id="@appUser.ContentPageId"
-                                           target="_blank"
-                                           class="nav-link">
+                                       asp-action="Preview"
+                                       asp-route-id="@appUser.ContentPageId"
+                                       target="_blank"
+                                       class="nav-link">
                                         <i class="nav-icon fas fa-eye"></i>
                                         <p>Preview Page</p>
                                     </a>
@@ -143,24 +143,24 @@
                             {
                                 <li class="nav-item">
                                     <a asp-controller="UserManagement"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "UserManagement" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "UserManagement" ? "active" : "")">
                                         <i class="nav-icon fas fa-users-cog"></i>
                                         <p>Users</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="MenuItem"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "MenuItem" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "MenuItem" ? "active" : "")">
                                         <i class="nav-icon fas fa-bars"></i>
                                         <p>Menu Items</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="ContentPage"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "ContentPage" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "ContentPage" ? "active" : "")">
                                         <i class="nav-icon fas fa-file-alt"></i>
                                         <p>Content Pages</p>
                                     </a>
@@ -172,10 +172,35 @@
                             {
                                 <li class="nav-item">
                                     <a asp-controller="AuditLog"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "AuditLog" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "AuditLog" ? "active" : "")">
                                         <i class="nav-icon fas fa-history"></i>
                                         <p>Audit Logs</p>
+                                    </a>
+                                </li>
+                            }
+
+                            @* ── SECURITY LOGS ────────────────────── *@
+                            @if (isAdmin)
+                            {
+                                <li class="nav-item">
+                                    <a asp-controller="SecurityLog"
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "SecurityLog" ? "active" : "")">
+                                        <i class="nav-icon fas fa-shield-alt"></i>
+                                        <p>Security Logs</p>
+                                    </a>
+                                </li>
+                            }
+
+                            @* ── Application LOGS ────────────────────── *@
+                            @if (isAdmin)
+                            {
+                                <li class="nav-item">
+                                    <a asp-controller="ApplicationLog" asp-action="Index"
+                                       class="nav-link @(ctrl == "ApplicationLog" ? "active" : "")">
+                                        <i class="nav-icon fas fa-bug"></i>
+                                        <p>Application Logs</p>
                                     </a>
                                 </li>
                             }
@@ -189,8 +214,8 @@
                                 {
                                     <li class="nav-item">
                                         <a asp-controller="Department"
-                                               asp-action="Index"
-                                               class="nav-link @(ctrl == "Department" ? "active" : "")">
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Department" ? "active" : "")">
                                             <i class="nav-icon fas fa-building"></i>
                                             <p>Departments</p>
                                         </a>
@@ -200,9 +225,9 @@
                                 {
                                     <li class="nav-item">
                                         <a asp-controller="Department"
-                                               asp-action="Edit"
-                                               asp-route-id="@appUser.DeptId"
-                                               class="nav-link @(ctrl == "Department" ? "active" : "")">
+                                           asp-action="Edit"
+                                           asp-route-id="@appUser.DeptId"
+                                           class="nav-link @(ctrl == "Department" ? "active" : "")">
                                             <i class="nav-icon fas fa-building"></i>
                                             <p>My Department</p>
                                         </a>
@@ -211,8 +236,8 @@
 
                                 <li class="nav-item">
                                     <a asp-controller="Faculty"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "Faculty" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Faculty" ? "active" : "")">
                                         <i class="nav-icon fas fa-chalkboard-teacher"></i>
                                         <p>Faculty</p>
                                     </a>
@@ -222,32 +247,32 @@
                                 {
                                     <li class="nav-item">
                                         <a asp-controller="Lab"
-                                               asp-action="Index"
-                                               class="nav-link @(ctrl == "Lab" ? "active" : "")">
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Lab" ? "active" : "")">
                                             <i class="nav-icon fas fa-flask"></i>
                                             <p>Labs</p>
                                         </a>
                                     </li>
                                     <li class="nav-item">
                                         <a asp-controller="DeptNotice"
-                                               asp-action="Index"
-                                               class="nav-link @(ctrl == "DeptNotice" ? "active" : "")">
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "DeptNotice" ? "active" : "")">
                                             <i class="nav-icon fas fa-clipboard"></i>
                                             <p>Noticeboard</p>
                                         </a>
                                     </li>
                                     <li class="nav-item">
                                         <a asp-controller="Timetable"
-                                               asp-action="Index"
-                                               class="nav-link @(ctrl == "Timetable" ? "active" : "")">
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "Timetable" ? "active" : "")">
                                             <i class="nav-icon fas fa-calendar-alt"></i>
                                             <p>Timetables</p>
                                         </a>
                                     </li>
                                     <li class="nav-item">
                                         <a asp-controller="ProgramIntake"
-                                               asp-action="Index"
-                                               class="nav-link @(ctrl == "ProgramIntake" ? "active" : "")">
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "ProgramIntake" ? "active" : "")">
                                             <i class="nav-icon fas fa-graduation-cap"></i>
                                             <p>Program Intake</p>
                                         </a>
@@ -264,8 +289,8 @@
                                 {
                                     <li class="nav-item">
                                         <a asp-controller="CampusCommittee"
-                                               asp-action="Index"
-                                               class="nav-link @(ctrl == "CampusCommittee" ? "active" : "")">
+                                           asp-action="Index"
+                                           class="nav-link @(ctrl == "CampusCommittee" ? "active" : "")">
                                             <i class="nav-icon fas fa-users"></i>
                                             <p>Campus Committees</p>
                                         </a>
@@ -275,9 +300,9 @@
                                 {
                                     <li class="nav-item">
                                         <a asp-controller="CampusCommittee"
-                                               asp-action="Edit"
-                                               asp-route-id="@appUser.CommitteeId"
-                                               class="nav-link @(ctrl == "CampusCommittee" ? "active" : "")">
+                                           asp-action="Edit"
+                                           asp-route-id="@appUser.CommitteeId"
+                                           class="nav-link @(ctrl == "CampusCommittee" ? "active" : "")">
                                             <i class="nav-icon fas fa-users"></i>
                                             <p>My Committee</p>
                                         </a>
@@ -291,40 +316,40 @@
                                 <li class="nav-header">HOME PAGE</li>
                                 <li class="nav-item">
                                     <a asp-controller="Slider"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "Slider" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Slider" ? "active" : "")">
                                         <i class="nav-icon fas fa-images"></i>
                                         <p>Master Slider</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="Marquee"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "Marquee" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Marquee" ? "active" : "")">
                                         <i class="nav-icon fas fa-bullhorn"></i>
                                         <p>Marquee</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="Testimonial"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "Testimonial" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Testimonial" ? "active" : "")">
                                         <i class="nav-icon fas fa-comments"></i>
                                         <p>Testimonials</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="TopRecruiter"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "TopRecruiter" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "TopRecruiter" ? "active" : "")">
                                         <i class="nav-icon fas fa-briefcase"></i>
                                         <p>Top Recruiters</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="Home"
-                                           asp-action="HomePageSettings"
-                                           class="nav-link @(ctrl == "Home" && act == "HomePageSettings" ? "active" : "")">
+                                       asp-action="HomePageSettings"
+                                       class="nav-link @(ctrl == "Home" && act == "HomePageSettings" ? "active" : "")">
                                         <i class="nav-icon fas fa-sliders-h"></i>
                                         <p>Home Settings</p>
                                     </a>
@@ -336,15 +361,15 @@
                                 <li class="nav-header">MANDATORY DISCLOSURE</li>
                                 <li class="nav-item">
                                     <a asp-controller="CutoffRecord" asp-action="Index" class="nav-link @(ctrl == "CutoffRecord" ? "active" : "")">
-                                            <i class="nav-icon fas fa-graduation-cap"></i>
-                                            <p> Cutoff Records</p>
-                                     </a>
+                                        <i class="nav-icon fas fa-graduation-cap"></i>
+                                        <p> Cutoff Records</p>
+                                    </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="ScholarshipRecord" asp-action="Index" class="nav-link @(ctrl == "ScholarshipRecord" ? "active" : "")">
-                                          <i class="nav-icon fas fa-hand-holding-usd"></i>
-                                          <p> Scholarships</p>
-                                     </a>
+                                        <i class="nav-icon fas fa-hand-holding-usd"></i>
+                                        <p> Scholarships</p>
+                                    </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="InfrastructureRecord" asp-action="Index" class="nav-link @(ctrl == "InfrastructureRecord" ? "active" : "")">
@@ -353,11 +378,11 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a asp-controller="DisclosureNarrative" asp-action="Index" class="nav-link @(ctrl=="DisclosureNarrative" ? "active" : "")">
+                                    <a asp-controller="DisclosureNarrative" asp-action="Index" class="nav-link @(ctrl == "DisclosureNarrative" ? "active" : "")">
                                         <i class="nav-icon fas fa-file-alt"></i>
                                         <p>Narrative Sections</p>
                                     </a>
-                                </li>  
+                                </li>
                                 <li class="nav-item">
                                     <a asp-controller="FacultyTurnover" asp-action="Index" class="nav-link @(ctrl == "FacultyTurnover" ? "active" : "")">
                                         <i class="nav-icon fas fa-people-arrows"></i>
@@ -366,7 +391,7 @@
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="NBAAccreditation" asp-action="Index"
-                                           class="nav-link @(ctrl == "NBAAccreditation" ? "active" : "")">
+                                       class="nav-link @(ctrl == "NBAAccreditation" ? "active" : "")">
                                         <i class="nav-icon fas fa-certificate"></i>
                                         <p>NBA Accreditation</p>
                                     </a>
@@ -374,7 +399,7 @@
 
                                 <li class="nav-item">
                                     <a asp-controller="DeptEquipment" asp-action="Index"
-                                           class="nav-link @(ctrl == "DeptEquipment" ? "active" : "")">
+                                       class="nav-link @(ctrl == "DeptEquipment" ? "active" : "")">
                                         <i class="nav-icon fas fa-tools"></i>
                                         <p>Dept Equipment</p>
                                     </a>
@@ -392,48 +417,48 @@
                                 <li class="nav-header">INSTITUTE</li>
                                 <li class="nav-item">
                                     <a asp-controller="AboutUs"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "AboutUs" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "AboutUs" ? "active" : "")">
                                         <i class="nav-icon fas fa-university"></i>
                                         <p>About Us</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="NewsItem"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "NewsItem" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "NewsItem" ? "active" : "")">
                                         <i class="nav-icon fas fa-newspaper"></i>
                                         <p>News & Notices</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="NewsLetter"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "NewsLetter" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "NewsLetter" ? "active" : "")">
                                         <i class="nav-icon fas fa-file-pdf"></i>
                                         <p>News Letters</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="TenderCategory"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "TenderCategory" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "TenderCategory" ? "active" : "")">
                                         <i class="nav-icon fas fa-file-contract"></i>
                                         <p>Tenders</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="ImportantDocument"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "ImportantDocument" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "ImportantDocument" ? "active" : "")">
                                         <i class="nav-icon fas fa-folder-open"></i>
                                         <p>Important Docs</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="MoU"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "MoU" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "MoU" ? "active" : "")">
                                         <i class="nav-icon fas fa-handshake"></i>
                                         <p>MoU Documents</p>
                                     </a>
@@ -446,31 +471,31 @@
                                 <li class="nav-header">ACADEMICS</li>
                                 <li class="nav-item">
                                     <a asp-controller="AcademicCalendar"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "AcademicCalendar" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "AcademicCalendar" ? "active" : "")">
                                         <i class="nav-icon fas fa-calendar-alt"></i>
                                         <p>Academic Calendars</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="SSIPDocument"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "SSIPDocument" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "SSIPDocument" ? "active" : "")">
                                         <i class="nav-icon fas fa-lightbulb"></i>
                                         <p>SSIP Documents</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="ResearchGrant"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "ResearchGrant" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "ResearchGrant" ? "active" : "")">
                                         <i class="nav-icon fas fa-microscope"></i>
                                         <p>Research Grants</p>
                                     </a>
                                 </li>
                             }
 
-                          @*   ── PLACEMENT ──────────────────────────
+                            @*   ── PLACEMENT ──────────────────────────
                             @if (isAdmin || isPrin || isPO)
                             {
                                 <li class="nav-header">PLACEMENT</li>
@@ -498,8 +523,8 @@
                                 <li class="nav-header">STUDENT CORNER</li>
                                 <li class="nav-item">
                                     <a asp-controller="StudentClub"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "StudentClub" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "StudentClub" ? "active" : "")">
                                         <i class="nav-icon fas fa-users"></i>
                                         <p>Student Clubs</p>
                                     </a>
@@ -512,8 +537,8 @@
                                 <li class="nav-header">FACILITIES</li>
                                 <li class="nav-item">
                                     <a asp-controller="Facility"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "Facility" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Facility" ? "active" : "")">
                                         <i class="nav-icon fas fa-building"></i>
                                         <p>Facility Pages</p>
                                     </a>
@@ -526,24 +551,24 @@
                                 <li class="nav-header">ADMINISTRATION</li>
                                 <li class="nav-item">
                                     <a asp-controller="Principal"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "Principal" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Principal" ? "active" : "")">
                                         <i class="nav-icon fas fa-user-tie"></i>
                                         <p>Principal Profile</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="Gallery"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "Gallery" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Gallery" ? "active" : "")">
                                         <i class="nav-icon fas fa-images"></i>
                                         <p>Gallery</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a asp-controller="Contact"
-                                           asp-action="Index"
-                                           class="nav-link @(ctrl == "Contact" ? "active" : "")">
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Contact" ? "active" : "")">
                                         <i class="nav-icon fas fa-phone-alt"></i>
                                         <p>Contact Info</p>
                                     </a>
@@ -562,6 +587,13 @@
                         <!-- ── ACCOUNT / LOGOUT — all roles ───────── -->
                         <li class="nav-header">ACCOUNT</li>
                         <li class="nav-item">
+                            <a asp-controller="Account" asp-action="ChangePassword"
+                               class="nav-link @(ctrl == "Account" && act == "ChangePassword" ? "active" : "")">
+                                <i class="nav-icon fas fa-key"></i>
+                                <p>Change Password</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <form asp-controller="Account"
                                   asp-action="Logout" method="post">
                                 <button type="submit"
@@ -578,12 +610,60 @@
             </div>
         </aside>
 
+        @* Keep the side menu where it was: every click loads a new page, which
+           would otherwise reset the menu's scroll to the top. *@
+        <script>
+                    (function () {
+                        var sb = document.querySelector('.main-sidebar .sidebar');
+                        if (!sb) return;
+                        var KEY = 'adminSidebarScroll';
+
+                        function restore() {
+                            var saved = null;
+                            try { saved = sessionStorage.getItem(KEY); } catch (e) { }
+                            if (saved !== null) {
+                                sb.scrollTop = parseInt(saved, 10) || 0;
+                            } else {
+                                // first visit: make sure the current page's menu item is visible
+                                var a = sb.querySelector('.nav-link.active');
+                                if (a) {
+                                    var r = a.getBoundingClientRect(), s = sb.getBoundingClientRect();
+                                    if (r.bottom > s.bottom || r.top < s.top)
+                                        sb.scrollTop += (r.top - s.top) - s.height / 3;
+                                }
+                            }
+                        }
+
+                        restore();                                           // before first paint
+                        window.addEventListener('load', restore);            // after layout settles
+
+                        var queued = false;
+                        function save() {
+                            try { sessionStorage.setItem(KEY, sb.scrollTop); } catch (e) { }
+                            queued = false;
+                        }
+                        sb.addEventListener('scroll', function () {
+                            if (!queued) { queued = true; requestAnimationFrame(save); }
+                        }, { passive: true });
+                        window.addEventListener('pagehide', save);
+                    })();
+        </script>
+
         <!-- ══════════════════════════════════════════════════════════
      CONTENT WRAPPER
 ═══════════════════════════════════════════════════════════ -->
         <div class="content-wrapper">
             <section class="content-header">
                 <div class="container-fluid">
+                    @if (appUser?.MustChangePassword == true && ctrl != "Account")
+                    {
+                        <div class="alert alert-warning py-2 mb-3">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            You are still using a temporary password.
+                            <a asp-controller="Account" asp-action="ChangePassword"
+                               class="alert-link">Change it now</a>.
+                        </div>
+                    }
                     @if (TempData["Success"] != null)
                     {
                         <div class="alert alert-success alert-dismissible

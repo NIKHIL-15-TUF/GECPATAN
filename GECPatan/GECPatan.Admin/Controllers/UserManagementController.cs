@@ -1,6 +1,7 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Common;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services.Security;
 using GECPatan.Admin.Models.ViewModels;
 using GECPatan.Core.Services;
 using GECPatan.Core.Services.UserManagement;
@@ -23,6 +24,7 @@ namespace GECPatan.Admin.Controllers
         private readonly NotificationService _notify;
         private readonly UserDirectoryService _directory;
         private readonly ILogger<UserManagementController> _logger;
+        private readonly ISecurityLogService _security;
 
         public UserManagementController(
             UserManager<ApplicationUser> userManager,
@@ -30,7 +32,8 @@ namespace GECPatan.Admin.Controllers
             ApplicationDbContext context,
             NotificationService notify,
             UserDirectoryService directory,
-            ILogger<UserManagementController> logger)
+            ILogger<UserManagementController> logger,
+            ISecurityLogService security)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -38,6 +41,7 @@ namespace GECPatan.Admin.Controllers
             _notify = notify;
             _directory = directory;
             _logger = logger;
+            _security = security;
         }
 
         // ══════════════════════════════════════════════════
@@ -481,6 +485,16 @@ namespace GECPatan.Admin.Controllers
             appUser.IsActive = !appUser.IsActive;
             await _userManager.UpdateAsync(appUser);
 
+            await _security.LogAsync(
+                HttpContext,
+                appUser.IsActive
+                    ? SecurityEvents.AccountActivated
+                    : SecurityEvents.AccountDeactivated,
+                SecuritySeverity.Warning,
+                details: $"Target account: {appUser.Email}",
+                userId: currentUser?.Id,
+                userName: currentUser?.UserName);
+
             _logger.LogInformation("User {Email} {Action} by {AdminEmail}",
                 appUser.Email, appUser.IsActive ? "activated" : "deactivated", currentUser?.Email);
 
@@ -540,8 +554,19 @@ namespace GECPatan.Admin.Controllers
             }
 
             var adminUser = await _userManager.GetUserAsync(User);
-            _logger.LogWarning("Password reset for user {Email} by admin {AdminEmail}",
-                appUser?.Email, adminUser?.Email);
+
+            _logger.LogWarning(
+                "Password reset for user {Email} by admin {AdminEmail}",
+                appUser?.Email,
+                adminUser?.Email);
+
+            await _security.LogAsync(
+                HttpContext,
+                SecurityEvents.PasswordResetByAdmin,
+                SecuritySeverity.Warning,
+                details: $"Target account: {appUser?.Email}",
+                userId: adminUser?.Id,
+                userName: adminUser?.UserName);
 
             TempData["Success"] =
                 $"Password reset for '{model.UserName}'. " +
