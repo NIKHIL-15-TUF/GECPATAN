@@ -45,30 +45,4 @@ namespace GECPatan.Admin.Models.ViewModels
         public List<ContentPageImageVM> ExistingImages { get; set; } = new();
 
     }
-
-    // ── AUDIT LOG ──────────────────────────────────────────
-    public class AuditLogListVM
-    {
-        public int Id { get; set; }
-        public string? UserName { get; set; }
-        public string? UserRole { get; set; }
-        public string Action { get; set; } = string.Empty;
-        public string? Module { get; set; }
-        public string? RecordName { get; set; }
-        public string Timestamp { get; set; } = string.Empty;
-        public string? IpAddress { get; set; }
-        public string? Details { get; set; }
-    }
-
-    public class AuditLogFilterVM
-    {
-        public string? UserName { get; set; }
-        public string? Module { get; set; }
-        public string? Action { get; set; }
-        public DateTime? DateFrom { get; set; }
-        public DateTime? DateTo { get; set; }
-        public List<AuditLogListVM> Logs { get; set; } = new();
-        public List<string> Modules { get; set; } = new();
-        public List<string> Actions { get; set; } = new();
-    }
 }

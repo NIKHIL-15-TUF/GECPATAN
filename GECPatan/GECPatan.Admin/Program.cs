@@ -11,13 +11,19 @@ using GECPatan.Core.Services.UserManagement;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using GECPatan.Core.Services.Audit;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ── DATABASE ──────────────────────────────────────────
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+// Audit-Log: records every create / update / delete made by a signed-in user
+builder.Services.AddAuditLogging("Admin");
+builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
+{
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.AddInterceptors(sp.GetRequiredService<GECPatan.Core.Services.Audit.AuditSaveChangesInterceptor>());
+});
 
 // ── IDENTITY ──────────────────────────────────────────
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -58,8 +64,6 @@ builder.Services.ConfigureApplicationCookie(options =>
 //Notification
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddHttpContextAccessor();
-//Audit-Log
-builder.Services.AddScoped<GECPatan.Core.Services.AuditService>();
 // Security-Log
 builder.Services.AddSecurityLogging("Admin");
 // Application-Log (ILogger -> ApplicationLogs table) + daily purge of old logs

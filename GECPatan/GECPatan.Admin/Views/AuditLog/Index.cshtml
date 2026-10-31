@@ -1,17 +1,40 @@
 ﻿@model GECPatan.Admin.Models.ViewModels.AuditLogFilterVM
 @{
     ViewData["Title"] = "Audit Logs";
+
+    bool hasFilter = !string.IsNullOrEmpty(Model.Search) || !string.IsNullOrEmpty(Model.Module) ||
+                     !string.IsNullOrEmpty(Model.ActionType) || !string.IsNullOrEmpty(Model.Source) ||
+                     Model.DateFrom.HasValue || Model.DateTo.HasValue;
 }
- 
-<!-- Filter Bar -->
+
+<!-- Last 24 hours -->
+<div class="row">
+    <div class="col-6 col-md-3">
+        <div class="small-box bg-success mb-3"><div class="inner py-2">
+            <h4 class="mb-0">@Model.Created24h</h4><small>Records created (24h)</small></div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="small-box bg-info mb-3"><div class="inner py-2">
+            <h4 class="mb-0">@Model.Updated24h</h4><small>Records updated (24h)</small></div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="small-box bg-danger mb-3"><div class="inner py-2">
+            <h4 class="mb-0">@Model.Deleted24h</h4><small>Records deleted (24h)</small></div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="small-box bg-secondary mb-3"><div class="inner py-2">
+            <h4 class="mb-0">@Model.ActiveUsers24h</h4><small>Active users (24h)</small></div></div>
+    </div>
+</div>
+
+<!-- Filter bar -->
 <div class="card mb-3">
     <div class="card-body py-2">
         <form asp-action="Index" method="get">
             <div class="row align-items-end">
                 <div class="col-md-3 mb-2">
-                    <label class="small font-weight-bold">User</label>
-                    <input asp-for="UserName" class="form-control form-control-sm"
-                           placeholder="Search by user..." />
+                    <label class="small font-weight-bold">User / Record</label>
+                    <input asp-for="Search" class="form-control form-control-sm" placeholder="Search..." />
                 </div>
                 <div class="col-md-2 mb-2">
                     <label class="small font-weight-bold">Module</label>
@@ -25,54 +48,53 @@
                 </div>
                 <div class="col-md-2 mb-2">
                     <label class="small font-weight-bold">Action</label>
-                    <select asp-for="Action" class="form-control form-control-sm">
+                    <select asp-for="ActionType" class="form-control form-control-sm">
                         <option value="">All Actions</option>
                         @foreach (var a in Model.Actions)
                         {
-                            <option value="@a" selected="@(Model.Action == a)">@a</option>
+                            <option value="@a" selected="@(Model.ActionType == a)">@a</option>
                         }
                     </select>
                 </div>
-                <div class="col-md-2 mb-2">
-                    <label class="small font-weight-bold">From Date</label>
-                    <input asp-for="DateFrom" class="form-control form-control-sm"
-                           type="date" />
-                </div>
-                <div class="col-md-2 mb-2">
-                    <label class="small font-weight-bold">To Date</label>
-                    <input asp-for="DateTo" class="form-control form-control-sm"
-                           type="date" />
-                </div>
                 <div class="col-md-1 mb-2">
-                    <button type="submit" class="btn btn-primary btn-sm btn-block">
-                        <i class="fas fa-filter"></i>
-                    </button>
+                    <label class="small font-weight-bold">App</label>
+                    <select asp-for="Source" class="form-control form-control-sm">
+                        <option value="">All</option>
+                        <option value="Admin" selected="@(Model.Source == "Admin")">Admin</option>
+                        <option value="Api" selected="@(Model.Source == "Api")">Api</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold">From</label>
+                    <input asp-for="DateFrom" class="form-control form-control-sm" type="date" />
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold">To</label>
+                    <input asp-for="DateTo" class="form-control form-control-sm" type="date" />
                 </div>
             </div>
-            @if (!string.IsNullOrEmpty(Model.UserName) ||
-                             !string.IsNullOrEmpty(Model.Module) ||
-                             !string.IsNullOrEmpty(Model.Action) ||
-                             Model.DateFrom.HasValue || Model.DateTo.HasValue)
-            {
-                <div class="mt-1">
+            <div class="d-flex align-items-center">
+                <button type="submit" class="btn btn-primary btn-sm mr-2">
+                    <i class="fas fa-filter mr-1"></i>Apply
+                </button>
+                @if (hasFilter)
+                {
                     <a asp-action="Index" class="btn btn-link btn-sm text-danger p-0">
                         <i class="fas fa-times mr-1"></i>Clear Filters
                     </a>
-                </div>
-            }
+                }
+            </div>
         </form>
     </div>
 </div>
- 
+
 <div class="card">
     <div class="card-header bg-light d-flex justify-content-between align-items-center">
         <h6 class="card-title mb-0">
-            <i class="fas fa-history mr-2"></i>
-            @Model.Logs.Count Log(s)
-            <small class="text-muted">(showing latest 500)</small>
+            <i class="fas fa-history mr-2"></i>@Model.TotalCount.ToString("N0") entr@(Model.TotalCount == 1 ? "y" : "ies")
         </h6>
         <small class="text-muted">
-            <i class="fas fa-lock mr-1"></i>Audit logs cannot be deleted
+            <i class="fas fa-lock mr-1"></i>Audit logs cannot be edited or deleted
         </small>
     </div>
     <div class="card-body p-0">
@@ -89,61 +111,98 @@
                 <table class="table table-sm table-hover mb-0">
                     <thead style="background:#1a237e;color:#fff;">
                         <tr>
-                            <th width="150">When</th>
-                            <th width="130">User</th>
-                            <th width="100">Role</th>
-                            <th width="80">Action</th>
-                            <th width="120">Module</th>
+                            <th width="160">When</th>
+                            <th width="140">User</th>
+                            <th width="90">Action</th>
+                            <th width="140">Module</th>
                             <th>Record</th>
-                            <th width="100">IP</th>
+                            <th width="110">IP</th>
+                            <th width="70"></th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var log in Model.Logs)
                         {
+                            var badge = log.Action switch
+                            {
+                                "Created" => "badge-success",
+                                "Updated" => "badge-info",
+                                "Deleted" or "Role Removed" => "badge-danger",
+                                "Restored" => "badge-warning",
+                                "Role Assigned" => "badge-primary",
+                                _ => "badge-secondary"
+                            };
                             <tr>
-                                <td>
-                                    <small class="text-muted">@log.Timestamp</small>
-                                </td>
+                                <td><small class="text-muted">@log.Timestamp</small></td>
                                 <td>
                                     <small><strong>@log.UserName</strong></small>
-                                </td>
-                                <td>
-                                    <span class="badge badge-secondary"
-                                          style="font-size:9px;">
-                                        @log.UserRole
-                                    </span>
-                                </td>
-                                <td>
-                                    @{
-                                        var badgeColor = log.Action switch
-                                        {
-                                            "Created" => "badge-success",
-                                            "Updated" => "badge-info",
-                                            "Deleted" => "badge-danger",
-                                            "Login" => "badge-primary",
-                                            _ => "badge-secondary"
-                                        };
+                                    @if (!string.IsNullOrEmpty(log.UserRole))
+                                    {
+                                        <span class="badge badge-secondary d-block" style="font-size:9px;width:fit-content;">@log.UserRole</span>
                                     }
-                                    <span class="badge @badgeColor"
-                                          style="font-size:9px;">
-                                        @log.Action
-                                    </span>
                                 </td>
-                                <td>
-                                    <small>@log.Module</small>
-                                </td>
+                                <td><span class="badge @badge" style="font-size:10px;">@log.Action</span></td>
+                                <td><small>@log.Module</small></td>
                                 <td>
                                     <small>@log.RecordName</small>
-                                    @if (!string.IsNullOrEmpty(log.Details))
+                                    @if (!string.IsNullOrEmpty(log.RequestPath))
                                     {
-                                        <i class="fas fa-info-circle text-muted ml-1"
-                                           title="@log.Details"
-                                           style="cursor:pointer;font-size:10px;"></i>
+                                        <small class="d-block text-muted"><code>@log.RequestPath</code></small>
                                     }
                                 </td>
-                                <td>
-                                    <small class="text-muted">@log.IpAddress</small>
+                                <td><small class="text-muted">@log.IpAddress</small></td>
+                                <td class="text-right">
+                                    @if (log.HasDetails)
+                                    {
+                                        <button type="button" class="btn btn-outline-primary btn-xs py-0 px-2 audit-view"
+                                                data-id="@log.Id"
+                                                data-title="@log.Action · @log.Module · @log.RecordName"
+                                                style="font-size:11px;">
+                                            View
+                                        </button>
+
+                                        <div class="d-none" id="audit-detail-@log.Id">
+                                            @if (log.Changes.Any())
+                                            {
+                                                <table class="table table-sm table-bordered mb-0">
+                                                    <thead class="thead-light">
+                                                        <tr><th width="25%">Field</th><th>Before</th><th>After</th></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var c in log.Changes)
+                                                        {
+                                                            <tr>
+                                                                <td><strong>@c.Field</strong></td>
+                                                                <td class="text-danger" style="word-break:break-word;">@(c.Old ?? "—")</td>
+                                                                <td class="text-success" style="word-break:break-word;">@(c.New ?? "—")</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            }
+                                            else if (log.Values.Any())
+                                            {
+                                                <table class="table table-sm table-bordered mb-0">
+                                                    <thead class="thead-light">
+                                                        <tr><th width="25%">Field</th><th>Value</th></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var v in log.Values)
+                                                        {
+                                                            <tr>
+                                                                <td><strong>@v.Field</strong></td>
+                                                                <td style="word-break:break-word;">@(v.New ?? "—")</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            }
+                                            else
+                                            {
+                                                <p class="mb-0" style="white-space:pre-wrap;">@log.DetailsText</p>
+                                            }
+                                        </div>
+                                    }
                                 </td>
                             </tr>
                         }
@@ -152,4 +211,54 @@
             </div>
         }
     </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer py-2">
+            <ul class="pagination pagination-sm m-0 float-right">
+                <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-Search="@Model.Search" asp-route-Module="@Model.Module"
+                       asp-route-ActionType="@Model.ActionType" asp-route-Source="@Model.Source"
+                       asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                       asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                       asp-route-Page="@(Model.Page - 1)">&laquo; Prev</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">@Model.Page / @Model.TotalPages</span></li>
+                <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-Search="@Model.Search" asp-route-Module="@Model.Module"
+                       asp-route-ActionType="@Model.ActionType" asp-route-Source="@Model.Source"
+                       asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                       asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                       asp-route-Page="@(Model.Page + 1)">Next &raquo;</a>
+                </li>
+            </ul>
+        </div>
+    }
 </div>
+
+<!-- Details popup -->
+<div class="modal fade" id="auditModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title" id="auditModalTitle"></h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="auditModalBody"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.audit-view').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('auditModalTitle').textContent = btn.dataset.title;
+                document.getElementById('auditModalBody').innerHTML =
+                    document.getElementById('audit-detail-' + btn.dataset.id).innerHTML;
+                $('#auditModal').modal('show');
+            });
+        });
+    </script>
+}

@@ -297,6 +297,15 @@ namespace GECPatan.Core.Data
                 .WithMany(p => p.Images)
                 .HasForeignKey(i => i.ContentPageId)
                 .OnDelete(DeleteBehavior.Cascade);
+            // ── AUDIT LOG INDEXES ─────────────────────────────
+            modelBuilder.Entity<AuditLog>(e =>
+            {
+                e.HasIndex(x => x.Timestamp);
+                e.HasIndex(x => new { x.Module, x.Timestamp });
+                e.HasIndex(x => new { x.Action, x.Timestamp });
+                e.HasIndex(x => x.UserId);
+                e.HasIndex(x => new { x.Module, x.RecordId });
+            });
             // ── SECURITY LOG INDEXES ──────────────────────────
             modelBuilder.Entity<SecurityLog>(e =>
             {
