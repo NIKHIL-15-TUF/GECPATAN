@@ -91,7 +91,20 @@
                            @item.Anchor2Text
                         </a>
                     }
+                    @* @if (!string.IsNullOrWhiteSpace(item.BottomDescription))
+                    {
+                        <div class="ms-layer ms-custom-description-bar"
+                             style="background: @bgColor !important; color: @textColor !important;"
+                             data-type="text"
+                             data-effect="bottom(35)"
+                             data-duration="1200"
+                             data-delay="200"
+                             data-ease="easeOutExpo">
 
+                            <p class="ms-custom-desc-text">@item.BottomDescription</p>
+
+                        </div> *@
+                    }
                 </div>
 
                 <!-- end slide @count -->
@@ -99,6 +112,9 @@
             }
         }
 
+    </div>
+    <div id="progressBar">
+        <div id="bar"></div>
     </div>
 </div>
 <!-- end of masterslider -->

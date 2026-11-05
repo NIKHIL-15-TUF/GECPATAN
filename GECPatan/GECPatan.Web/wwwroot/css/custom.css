@@ -1,4 +1,3 @@
-/* Ensure the html and body take up full height */
 html, body {
     height: 100%;
     margin: 0;
@@ -295,7 +294,9 @@ a {
 }
 
 .slidermar {
-    margin-top: 60px !important;
+    /*margin-top: 60px !important;*/
+    margin-top: 0px !important;
+    border: 2px solid #5076bb;
 }
 
 .top_section2 {
@@ -641,7 +642,26 @@ table.dataTable thead .sorting_desc_disabled:before {
 
 .me_title {
     background: #999 url(../images/Title/me_banner.jpg) no-repeat center top;
+    /*background: #999 url(../images/Title/me_banner_new.png) no-repeat center top;*/
 }
+
+    .me_title h1::after {
+        content: "NBA Accredited\A 01/01/2026 to 31/12/2028";
+        display: inline-block;
+        margin-top: 12px;
+        padding: 8px 20px;
+        background: linear-gradient(135deg, #ffb300, #ff8f00);
+        color: #fff;
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border-radius: 20px;
+        box-shadow: 0 4px 10px rgba(255, 143, 0, 0.35);
+        vertical-align: middle;
+        white-space: pre-line;
+        text-align: center;
+    }
 
 .lib_title {
     background: #999 url(../images/Title/lib_banner.jpg) no-repeat center top;
@@ -663,6 +683,11 @@ table.dataTable thead .sorting_desc_disabled:before {
         padding: 20px 0 0 0;
         background-color: #25252575;
     }
+
+.me_title h1, .cs_title h1 {
+    background-color: transparent;
+}
+
 
 .engg_title {
     background: #999 url(../images/Title/title_banner.jpg) no-repeat center top;
@@ -738,6 +763,12 @@ table.dataTable thead .sorting_desc_disabled:before {
 .boxinfo {
     text-align: justify;
 }
+
+    .boxinfo::after {
+        content: "";
+        display: block;
+        clear: both;
+    }
 
 .boxtitle {
     padding: 10px;
@@ -821,7 +852,7 @@ table.dataTable thead .sorting_desc_disabled:before {
     border: 1px solid #ccc;
     background-color: #f1f1f1;
     width: 19%;
-   /* min-height: 300px;*/
+    /* min-height: 300px;*/
     margin-right: 1%;
     margin-bottom: 5%;
 }
@@ -943,6 +974,7 @@ table.dataTable thead .sorting_desc_disabled:before {
     .vision_section .one_half {
         border-right: 2px solid rgb(0 123 255);
     }
+
     .vision_section .last {
         border-right: none;
     }
@@ -954,8 +986,8 @@ table.dataTable thead .sorting_desc_disabled:before {
 
 .box .blog_post .blog_postcontent {
     height: 663px;
-    overflow-y:scroll;
-    scrollbar-width:none;
+    overflow-y: scroll;
+    scrollbar-width: none;
 }
 
 .copyright_info2 {
@@ -970,6 +1002,7 @@ table.dataTable thead .sorting_desc_disabled:before {
     vertical-align: middle !important;
     float: none;
 }
+
 #style-selector {
     top: 212px;
 }
@@ -977,6 +1010,7 @@ table.dataTable thead .sorting_desc_disabled:before {
     #style-selector a.close {
         background: white url(arrow.jpg) no-repeat 8px 5px;
     }
+
 .button1 {
     font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
     font-weight: 100;
@@ -997,12 +1031,12 @@ table.dataTable thead .sorting_desc_disabled:before {
     color: #2e2e2e;
 }
 
-.p1{
-    text-align:justify;
+.p1 {
+    text-align: justify;
 }
 
-.bg{
-    background-color:#f3f3f3;
+.bg {
+    background-color: #f3f3f3;
 }
 /* Legacy Highlighter Blinking Badge */
 .badge-new {
@@ -1031,72 +1065,197 @@ table.dataTable thead .sorting_desc_disabled:before {
     border-right: 1px solid #88aa00;
     border-bottom: 2px solid #556600;
     /* Sharp red backing shadow to give text that authentic old-website "glowing outline" look */
-    text-shadow: 1px 1px 0px #ffffbb, -0.5px -0.5px 0px #ffffff;
-    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-    /* Slowed down cycle rate (2s) to create an intentional, steady legacy flash cadence */
-    animation: old-school-blink 2s steps(2, start) infinite;
-    -webkit-animation: old-school-blink 2s steps(2, start) infinite;
 }
 
-/* Stable layout switch block (leaves position tracking intact while hidden) */
-@keyframes old-school-blink {
-    to {
-        visibility: hidden;
-    }
+/* ==========================================================================
+                   CSS Grid Slider Override Rules (Bypasses Broken Library Sizing)
+                   ========================================================================== */
+
+/* 1. Force the parent module box to strictly lock its 25% boundary */
+#VideoCarousel, #AlumniCarousel {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    position: relative !important;
+    overflow: hidden !important; /* Clips runway horizontal elements */
 }
 
-@-webkit-keyframes old-school-blink {
-    to {
-        visibility: hidden;
+    /* 2. Turn the inner outer wrapper block into a rigid viewing box container */
+    #VideoCarousel .owl-wrapper-outer, #AlumniCarousel .owl-wrapper-outer {
+        display: block !important;
+        width: 100% !important;
+        overflow: hidden !important;
     }
+
+    /* 3. THE FIX: Force the track line into a standard row lane with CSS Grid */
+    #VideoCarousel .owl-wrapper, #AlumniCarousel .owl-wrapper {
+        display: grid !important;
+        grid-auto-flow: column !important; /* Forces all child items to sit on a horizontal line */
+        grid-auto-columns: 100% !important; /* Forces every slide item to be exactly 100% of your 25% box */
+        width: auto !important; /* Erases library calculated track sizes */
+        /* Re-enables the slide translation animations */
+        transition: transform 1500ms ease !important;
+    }
+
+    /* 4. Individual Slide Card Flow Mechanics */
+    #VideoCarousel .owl-item, #AlumniCarousel .owl-item {
+        float: none !important; /* Removes broken dynamic layout parameters */
+        width: 100% !important; /* Syncs width to the Grid Column container specifications */
+        max-width: 100% !important;
+    }
+
+/* 5. Individual Content Fit Dimensions & Centering */
+.carousel-slide-item {
+    width: 100% !important;
+    height: 290px !important; /* Your rigid required design height */
+    background: #000000; /* Dark background padding fill */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden;
+    margin: 0 auto !important;
 }
+
+.carousel-video-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+    position: relative;
+}
+
+    /* Force the iframe/images to scale natively to the parent space */
+    .carousel-video-wrapper iframe,
+    .carousel-slide-item img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important; /* Prevents stretching and centers gracefully */
+        border: none !important;
+        display: block !important;
+    }
+
+/* 6. Navigation Control Circles Layout Overrides */
+#VideoCarousel .owl-controls, #AlumniCarousel .owl-controls {
+    position: absolute !important;
+    top: 50% !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: translateY(-50%) !important;
+    pointer-events: none !important; /* Keeps the transparent wrapper bar clickable */
+    z-index: 9999 !important;
+    width: 100% !important;
+    margin-top: 0px !important;
+}
+
+#VideoCarousel .owl-buttons div, #AlumniCarousel .owl-buttons div {
+    position: absolute !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    color: #ffffff !important;
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 32px !important;
+    text-align: center !important;
+    font-size: 24px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    pointer-events: auto !important; /* Restores button clickability */
+    /*border-radius: 50% !important;*/
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+    #VideoCarousel .owl-buttons div:hover, #AlumniCarousel .owl-buttons div:hover {
+        background: #5076bb !important;
+    }
+
+#VideoCarousel .owl-prev, #AlumniCarousel .owl-prev {
+    left: 0px !important;
+    /*left: 8px !important;*/
+    right: auto !important;
+}
+
+#VideoCarousel .owl-next, #AlumniCarousel .owl-next {
+    right: 0px !important;
+    /*right: 8px !important;*/
+    left: auto !important;
+}
+/* 1. Make sure your parent slide boxes know how to manage absolute tracking positioning layers */
+.carousel-slide-item {
+    position: relative !important; /* Critical to lock the caption block to the bottom of this box */
+}
+
+    /* 2. Transparent caption overlay rules */
+    .carousel-slide-item .carousel-caption {
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: rgba(0, 0, 0, 0.6) !important;
+        color: #ffffff !important;
+        padding: 10px 14px !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        text-align: center !important;
+        z-index: 10 !important;
+        /* Allow text wrapping */
+        white-space: normal !important;
+        overflow: visible !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+        pointer-events: none !important;
+    }
+
+
 /*responsive goes here*/
 @media only screen and (max-width: 479px) {
     .client_logos3 .minheight {
-            width: 60%;
-        }
+        width: 60%;
+    }
+}
+
+@media (max-width: 768px) {
+    .logo_section {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
 
-    @media (max-width: 768px) {
-        .logo_section {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .gecp_logo {
-            flex-direction: column;
-        }
-
-        .gecp_name {
-            font-size: 1.2rem;
-        }
-
-        .gecp_logo img,
-        .gecp_gov_emblame img {
-            max-width: 60px; /* Smaller images for mobile */
-        }
-
-        .gecp_logo h1 {
-            display: inline;
-            margin: auto;
-            font-size: 29px;
-            top: -19px;
-            position: relative;
-            /*left: 3%;*/
-            font-variant: small-caps;
-        }
-        .New_container {
-            flex-direction: column;
-            width: 100%;
-            align-items: center;
-        }
-        .body {
-            overflow-x: hidden;
-        }
+    .gecp_logo {
+        flex-direction: column;
     }
 
-   
+    .gecp_name {
+        font-size: 1.2rem;
+    }
+
+    .gecp_logo img,
+    .gecp_gov_emblame img {
+        max-width: 60px; /* Smaller images for mobile */
+    }
+
+    .gecp_logo h1 {
+        display: inline;
+        margin: auto;
+        font-size: 29px;
+        top: -19px;
+        position: relative;
+        /*left: 3%;*/
+        font-variant: small-caps;
+    }
+
+    .New_container {
+        flex-direction: column;
+        width: 100%;
+        align-items: center;
+    }
+
+    .body {
+        overflow-x: hidden;
+    }
+}
+
+
 @media (max-width: 1024px) {
     .logo_section {
         flex-direction: column;
@@ -1106,7 +1265,7 @@ table.dataTable thead .sorting_desc_disabled:before {
 
     .gecp_logo {
         flex-direction: column;
-        top:73px;
+        top: 73px;
     }
 
     body, input, textarea {
@@ -1145,17 +1304,20 @@ table.dataTable thead .sorting_desc_disabled:before {
     .body {
         overflow-x: hidden;
     }
-    .tabcontent{
-        width:100%;
+
+    .tabcontent {
+        width: 100%;
     }
-    .top_section2 .right{
-        width:100%;
+
+    .top_section2 .right {
+        width: 100%;
     }
 
     .featured_section13 .updates_section {
         width: 96%;
-        }
-    .responsive-logo{
+    }
+
+    .responsive-logo {
         max-width: 100%;
     }
 }

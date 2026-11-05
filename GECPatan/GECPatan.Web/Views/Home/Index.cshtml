@@ -174,7 +174,7 @@
                                             <li>
                                                 @if (item.LinkType != "none")
                                                 {
-                                                    <a href="@ResolveItemHref(item.LinkType, item.Link, item.FilePath)"
+                                                    <a href="@ResolveItemHref(item.LinkType, item.Link, item.FilePath)" style="color: red; font-weight: 600;"
                                                        target="@OpenTarget(item.LinkType)">@item.Title</a>
                                                 }
                                                 else
@@ -193,7 +193,7 @@
                     <div id="tab-activities" class="notice-tab-pane">
                         <div class="activity-height">
                             <marquee scrollamount="3" direction="up" onMouseOver="this.stop()" onMouseOut="this.start()" class="activity-marquee-height">
-                                <ul class="newssection activity-list">
+                                <ul class="newssection" style="list-style: none; padding-left: 0;">
                                     @if (!currentYearActivities.Any())
                                     {
                                         <li><strong>NO ACTIVITIES FOUND</strong></li>
@@ -202,10 +202,10 @@
                                     {
                                         foreach (var item in currentYearActivities)
                                         {
-                                            <li>
+                                            <li style="margin-bottom: 12px;">
                                                 @if (!string.IsNullOrWhiteSpace(item.Link))
                                                 {
-                                                    <a class="activity-link" href="@item.Link" target="_blank">@item.Title</a>
+                                                    <a class="activity-link" style="color: red; font-weight: 600;" href="@item.Link" target="_blank">@item.Title</a>
                                                 }
                                                 else
                                                 {
@@ -216,8 +216,8 @@
                                     }
                                 </ul>
                             </marquee>
-                            <div class="clearfix activity-viewall">
-                                <a href="@Url.Action("Index", "Achievement")" class="btn btn-success">View All</a>
+                            <div class="clearfix" style="margin-top: 5px; text-align: center;">
+                                <a href="@Url.Action("Index", "Activity")" class="btn btn-success">View All</a>
                             </div>
                         </div>
                     </div>
@@ -369,11 +369,7 @@
             }
             else
             {
-                <ul class="text-justify">
-                    <li><i class="fa fa-toggle-on" aria-hidden="true"></i> To deliver technical programs and services to cater the current needs of society and industry.</li>
-                    <li><i class="fa fa-toggle-on" aria-hidden="true"></i> Helping industries in solving challenges by means of providing best technical human resources.</li>
-                    <li><i class="fa fa-toggle-on" aria-hidden="true"></i> To contribute in sustainable growth of society.</li>
-                </ul>
+                <p>No missions added yet</p>
             }
         </div>
 
@@ -509,17 +505,23 @@
         $(document).ready(function() {
             ['#AlumniCarousel', '#VideoCarousel'].forEach(function(sel) {
                 var $el = $(sel);
+
                 if ($el.length && !$el.hasClass('owl-loaded')) {
                     $el.owlCarousel({
                         items: 1,
-                        loop: $el.children().length > 1,
-                        margin: 10,
-                        nav: true,
-                        dots: false,
-                        autoplay: sel === '#AlumniCarousel',
-                        autoplayTimeout: 4000,
-                        autoplayHoverPause: true,
-                        autoHeight: true
+                        singleItem: true,
+                        loop: false,
+
+                        navigation: true,
+                        navigationText: ["&#10094;", "&#10095;"],
+
+                        pagination: false,
+
+                        autoPlay: sel === '#AlumniCarousel'
+                            ? 4000
+                            : false,
+
+                        stopOnHover: true
                     });
                 }
             });
@@ -532,7 +534,7 @@
     <link rel="stylesheet" href="@Url.Content("~/js/flexslider/flexslider.css")" type="text/css" media="screen" />
     <link rel="stylesheet" type="text/css" href="@Url.Content("~/js/flexslider/skin.css")" />
     <link rel="stylesheet" type="text/css" href="@Url.Content("~/js/tabs/assets/css/responsive-tabs3.css")">
-
+    <link rel="stylesheet" type="text/css" href="@Url.Content("~/js/carouselowl/owl.carousel.css")">
     <link rel="stylesheet" type="text/css" href="@Url.Content("~/css/custom.css")">
     <link rel="stylesheet" type="text/css" href="@Url.Content("~/css/custom-home.css")">
 }
