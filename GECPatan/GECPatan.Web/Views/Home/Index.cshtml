@@ -75,10 +75,12 @@
     var vision = (Model.Settings?.Vision
         ?? "To prepare human resources with value-based competency for technical advancements and growth of society.")
         .Replace("<p>", "").Replace("</p>", "");
-
     var mission = (Model.Settings?.Mission ?? string.Empty)
-        .Replace("<li>", "<li><i class=\"fa fa-toggle-on\" aria-hidden=\"true\"></i> ");
-
+        .Replace("<ul>", "")
+        .Replace("</ul>", "")
+        .Replace("<li>", "<li style=\"list-style: none; display: grid; grid-template-columns: 20px 1fr; column-gap: 8px; align-items: start; margin-bottom: 12px;\"><i class=\"fa fa-toggle-on\" style=\"color: #4f75ba; margin-top: 5px;\" aria-hidden=\"true\"></i><span>")
+        .Replace("</li>", "</span></li>");
+    
     var principalName = Model.Principal?.Name ?? Model.Settings?.PrincipalName;
     var principalDesignation = Model.Principal?.Designation ?? Model.Settings?.PrincipalDesignation;
     var principalMessage = (Model.Principal?.Message ?? Model.Settings?.PrincipalMessage ?? string.Empty)
@@ -362,15 +364,25 @@
         </div>
 
         <div class="mission-segment-box stcode_title4" style="margin-top: 20px;">
-            <h3><span class="text"><i class="fa fa-mortar-board" aria-hidden="true"></i><strong> MISSION</strong></span></h3>
+
+            <h3>
+                <span class="text">
+                    <i class="fa fa-mortar-board" aria-hidden="true"></i>
+                    <strong> MISSION</strong>
+                </span>
+            </h3>
+
             @if (!string.IsNullOrWhiteSpace(mission))
             {
-                @Html.Raw(mission)
+                <div style="font-size: 16px; line-height: 1.5; margin-top: 8px; color: #555;">
+                    @Html.Raw(mission)
+                </div>
             }
             else
             {
                 <p>No missions added yet</p>
             }
+
         </div>
 
     </div>
