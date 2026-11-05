@@ -45,5 +45,6 @@ namespace GECPatan.Core.Models.Domain
         // it shows in the vertical "UPDATES" list instead alongside any
         // NewsItem flagged with ShowInMarquee.
         public bool HorizontalMarquee { get; set; } = false;
+        public bool IsNew { get; set; } = false;
     }
 }

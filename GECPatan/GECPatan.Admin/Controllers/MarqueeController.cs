@@ -422,6 +422,7 @@ namespace GECPatan.Admin.Controllers
             ValidTo = m.ValidTo,
             DisplayOrder = m.DisplayOrder,
             IsVisible = m.IsVisible,
+            IsNew = m.IsNew,
             HorizontalMarquee = m.HorizontalMarquee
         };
 
@@ -438,6 +439,7 @@ namespace GECPatan.Admin.Controllers
             e.ValidTo = m.ValidTo;
             e.DisplayOrder = m.DisplayOrder;
             e.IsVisible = m.IsVisible;
+            e.IsNew = m.IsNew;
             e.HorizontalMarquee = m.HorizontalMarquee;
         }
 
@@ -464,6 +466,7 @@ namespace GECPatan.Admin.Controllers
                 ValidTo = m.ValidTo,
                 DisplayOrder = m.DisplayOrder,
                 IsVisible = m.IsVisible,
+                IsNew = m.IsNew,
                 HorizontalMarquee = m.HorizontalMarquee
             };
         }

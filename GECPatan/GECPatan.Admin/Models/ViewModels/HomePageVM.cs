@@ -101,6 +101,8 @@ namespace GECPatan.Admin.Models.ViewModels
         public int DisplayOrder { get; set; } = 0;
 
         public bool IsVisible { get; set; } = true;
+        [Display(Name = "Add New Keyword")]
+        public bool IsNew { get; set; } = false;
 
         // NEW: see MarqueeListVM.HorizontalMarquee above.
         [Display(Name = "Show in Horizontal Ticker")]
