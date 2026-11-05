@@ -133,7 +133,11 @@ builder.Services.AddHttpClient<IContactApiService, ContactApiService>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
-
+builder.Services.AddHttpClient<IActivityApiService, ActivityApiService>(client =>
+{
+    client.BaseAddress = new Uri(
+        builder.Configuration["Api:BaseUrl"]!);
+});
 builder.Services.AddControllersWithViews()
     .ConfigureApplicationPartManager(apm =>
     {
