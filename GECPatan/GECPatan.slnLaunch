@@ -1,0 +1,22 @@
+[
+  {
+    "Name": "LaunchAll",
+    "Projects": [
+      {
+        "Path": "GECPatan.Admin\\GECPatan.Admin.csproj",
+        "Action": "Start",
+        "DebugTarget": "IIS Express"
+      },
+      {
+        "Path": "GECPatan.Api\\GECPatan.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      },
+      {
+        "Path": "GECPatan.Web\\GECPatan.Web.csproj",
+        "Action": "Start",
+        "DebugTarget": "IIS Express"
+      }
+    ]
+  }
+]

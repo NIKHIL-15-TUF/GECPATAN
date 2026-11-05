@@ -1,6 +1,7 @@
 ﻿using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
 using GECPatan.Core.Services.FileStorage;
+using GECPatan.Admin.Models;
 using GECPatan.Admin.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -60,11 +61,13 @@ namespace GECPatan.Admin.Controllers
         public IActionResult Create()
         {
             ViewData["Title"] = "Add Marquee Item";
-            return View("Form", new MarqueeFormVM
+            var model = new MarqueeFormVM
             {
                 ValidFrom = DateTime.Today,
                 ValidTo = DateTime.Today.AddMonths(1)
-            });
+            };
+            LoadInternalPageOptions(model);
+            return View("Form", model);
         }
 
         // ── CREATE POST ───────────────────────────────────
@@ -76,6 +79,7 @@ namespace GECPatan.Admin.Controllers
             ValidateForm(model);
             if (!ModelState.IsValid)
             {
+                LoadInternalPageOptions(model);
                 await LoadDynamicOptions(model);
                 return View("Form", model);
             }
@@ -88,6 +92,7 @@ namespace GECPatan.Admin.Controllers
                 if (!uploadResult.Success)
                 {
                     ModelState.AddModelError(nameof(UploadFile), uploadResult.ErrorMessage!);
+                    LoadInternalPageOptions(model);
                     await LoadDynamicOptions(model);
                     return View("Form", model);
                 }
@@ -116,6 +121,7 @@ namespace GECPatan.Admin.Controllers
                 _fileStorage.Delete(filePath);
                 _logger.LogError(ex, "Database error creating marquee item '{Title}'", model.Title);
                 ModelState.AddModelError(string.Empty, "Unable to save the marquee item. Please try again.");
+                LoadInternalPageOptions(model);
                 await LoadDynamicOptions(model);
                 return View("Form", model);
             }
@@ -124,6 +130,7 @@ namespace GECPatan.Admin.Controllers
                 _fileStorage.Delete(filePath);
                 _logger.LogError(ex, "Unexpected error creating marquee item '{Title}'", model.Title);
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                LoadInternalPageOptions(model);
                 await LoadDynamicOptions(model);
                 return View("Form", model);
             }
@@ -150,6 +157,7 @@ namespace GECPatan.Admin.Controllers
             ValidateForm(model);
             if (!ModelState.IsValid)
             {
+                LoadInternalPageOptions(model);
                 await LoadDynamicOptions(model);
                 return View("Form", model);
             }
@@ -165,6 +173,7 @@ namespace GECPatan.Admin.Controllers
                 if (!uploadResult.Success)
                 {
                     ModelState.AddModelError(nameof(UploadFile), uploadResult.ErrorMessage!);
+                    LoadInternalPageOptions(model);
                     await LoadDynamicOptions(model);
                     return View("Form", model);
                 }
@@ -198,6 +207,7 @@ namespace GECPatan.Admin.Controllers
 
                 _logger.LogError(ex, "Database error updating marquee item {MarqueeId}", id);
                 ModelState.AddModelError(string.Empty, "Unable to save the marquee item. Please try again.");
+                LoadInternalPageOptions(model);
                 await LoadDynamicOptions(model);
                 return View("Form", model);
             }
@@ -208,6 +218,7 @@ namespace GECPatan.Admin.Controllers
 
                 _logger.LogError(ex, "Unexpected error updating marquee item {MarqueeId}", id);
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
+                LoadInternalPageOptions(model);
                 await LoadDynamicOptions(model);
                 return View("Form", model);
             }
@@ -332,6 +343,11 @@ namespace GECPatan.Admin.Controllers
                     .Select(p => new { id = p.Id, text = p.Title })
                     .ToListAsync<object>(),
 
+                "Club" => await _context.StudentClubs
+                    .Where(c => c.IsVisible).OrderBy(c => c.Title)
+                    .Select(c => new { id = c.Id, text = c.Title })
+                    .ToListAsync<object>(),
+
                 "Document" => await _context.DocumentPages
                     .Where(d => d.IsVisible).OrderBy(d => d.Title)
                     .Select(d => new { id = d.Id, text = d.Title })
@@ -353,6 +369,45 @@ namespace GECPatan.Admin.Controllers
             "file" => m.FilePath != null ? "PDF/File" : "—",
             _ => "No link"
         };
+
+        private static (string? controller, string? action) GetInternalRouteParts(string? key)
+        {
+            var parts = key?.Split('/', 2, StringSplitOptions.TrimEntries);
+            return parts is { Length: 2 } ? (parts[0], parts[1]) : (null, null);
+        }
+
+        private static void LoadInternalPageOptions(MarqueeFormVM vm)
+        {
+            var groups = new Dictionary<string, SelectListGroup>();
+            var options = new List<SelectListItem>();
+
+            foreach (var page in MenuLinkCatalog.InternalPages)
+            {
+                if (!groups.TryGetValue(page.Group, out var group))
+                    groups[page.Group] = group = new SelectListGroup { Name = page.Group };
+
+                options.Add(new SelectListItem
+                {
+                    Value = page.Key,
+                    Text = page.Label,
+                    Group = group
+                });
+            }
+
+            // Preserve existing routes that are no longer in the catalog.
+            if (!string.IsNullOrWhiteSpace(vm.InternalPage) &&
+                !options.Any(o => string.Equals(o.Value, vm.InternalPage, StringComparison.OrdinalIgnoreCase)))
+            {
+                options.Add(new SelectListItem
+                {
+                    Value = vm.InternalPage,
+                    Text = $"{vm.InternalPage} (existing link)",
+                    Group = new SelectListGroup { Name = "Other" }
+                });
+            }
+
+            vm.InternalPageOptions = options;
+        }
 
         private async Task LoadDynamicOptions(MarqueeFormVM vm)
         {
@@ -380,6 +435,11 @@ namespace GECPatan.Admin.Controllers
                     .Select(p => new SelectListItem { Value = p.Id.ToString(), Text = p.Title })
                     .ToListAsync(),
 
+                "Club" => await _context.StudentClubs
+                    .Where(c => c.IsVisible).OrderBy(c => c.Title)
+                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Title })
+                    .ToListAsync(),
+
                 "Document" => await _context.DocumentPages
                     .Where(d => d.IsVisible).OrderBy(d => d.Title)
                     .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Title })
@@ -391,8 +451,13 @@ namespace GECPatan.Admin.Controllers
 
         private void ValidateForm(MarqueeFormVM m)
         {
-            if (m.LinkType == "internal" && string.IsNullOrWhiteSpace(m.ControllerName))
-                ModelState.AddModelError(nameof(m.ControllerName), "Controller is required for Internal links.");
+            if (m.LinkType == "internal")
+            {
+                if (string.IsNullOrWhiteSpace(m.InternalPage))
+                    ModelState.AddModelError(nameof(m.InternalPage), "Please select an internal page.");
+                else if (!MenuLinkCatalog.InternalPages.Any(p => p.Key == m.InternalPage))
+                    ModelState.AddModelError(nameof(m.InternalPage), "The selected internal page is invalid.");
+            }
 
             if (m.LinkType == "dynamic")
             {
@@ -413,8 +478,12 @@ namespace GECPatan.Admin.Controllers
         {
             Title = m.Title,
             LinkType = m.LinkType,
-            ControllerName = m.LinkType is "internal" or "dynamic" ? m.ControllerName : null,
-            ActionName = m.LinkType is "internal" or "dynamic" ? m.ActionName : null,
+            ControllerName = m.LinkType == "internal"
+                ? GetInternalRouteParts(m.InternalPage).controller
+                : m.LinkType == "dynamic" ? m.ControllerName : null,
+            ActionName = m.LinkType == "internal"
+                ? GetInternalRouteParts(m.InternalPage).action
+                : m.LinkType == "dynamic" ? m.ActionName : null,
             DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null,
             DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null,
             ExternalLink = m.LinkType == "external" ? m.ExternalLink : null,
@@ -430,8 +499,13 @@ namespace GECPatan.Admin.Controllers
         {
             e.Title = m.Title;
             e.LinkType = m.LinkType;
-            e.ControllerName = m.LinkType is "internal" or "dynamic" ? m.ControllerName : null;
-            e.ActionName = m.LinkType is "internal" or "dynamic" ? m.ActionName : null;
+            var internalRoute = GetInternalRouteParts(m.InternalPage);
+            e.ControllerName = m.LinkType == "internal"
+                ? internalRoute.controller
+                : m.LinkType == "dynamic" ? m.ControllerName : null;
+            e.ActionName = m.LinkType == "internal"
+                ? internalRoute.action
+                : m.LinkType == "dynamic" ? m.ActionName : null;
             e.DynamicType = m.LinkType == "dynamic" ? m.DynamicType : null;
             e.DynamicId = m.LinkType == "dynamic" ? m.DynamicId : null;
             e.ExternalLink = m.LinkType == "external" ? m.ExternalLink : null;
@@ -458,6 +532,9 @@ namespace GECPatan.Admin.Controllers
                 LinkType = linkType,
                 ControllerName = m.ControllerName,
                 ActionName = m.ActionName,
+                InternalPage = linkType == "internal" && m.ControllerName != null && m.ActionName != null
+                    ? $"{m.ControllerName}/{m.ActionName}"
+                    : null,
                 DynamicType = m.DynamicType,
                 DynamicId = m.DynamicId,
                 ExternalLink = m.ExternalLink,

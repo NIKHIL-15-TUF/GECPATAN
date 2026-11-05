@@ -63,13 +63,15 @@ namespace GECPatan.Admin.Models.ViewModels
         [Display(Name = "Link Type")]
         public string LinkType { get; set; } = "none";
 
-        // Internal
+        // Internal page selected from the same catalog used by MenuItems.
+        [Display(Name = "Page")]
+        public string? InternalPage { get; set; }
+
+        // Retained for existing records and dynamically generated routes.
         [MaxLength(100)]
-        [Display(Name = "Controller")]
         public string? ControllerName { get; set; }
 
         [MaxLength(100)]
-        [Display(Name = "Action")]
         public string? ActionName { get; set; }
 
         // Dynamic
@@ -101,14 +103,15 @@ namespace GECPatan.Admin.Models.ViewModels
         public int DisplayOrder { get; set; } = 0;
 
         public bool IsVisible { get; set; } = true;
+
         [Display(Name = "Add New Keyword")]
         public bool IsNew { get; set; } = false;
 
-        // NEW: see MarqueeListVM.HorizontalMarquee above.
         [Display(Name = "Show in Horizontal Ticker")]
         public bool HorizontalMarquee { get; set; } = false;
 
         // Dropdowns
+        public List<SelectListItem> InternalPageOptions { get; set; } = new();
         public List<SelectListItem> DynamicIdOptions { get; set; } = new();
     }
 

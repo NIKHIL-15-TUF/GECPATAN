@@ -2,6 +2,7 @@
 using GECPatan.Api.DTOs;
 using GECPatan.Core.Data;
 using GECPatan.Core.Models.Domain;
+using GECPatan.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,11 +43,8 @@ namespace GECPatan.Api.Controllers
         }
 
         // GET /api/home/marquee
-        // The HORIZONTAL scrolling ticker directly below the slider.
-        // Only Admin > Marquee items explicitly flagged HorizontalMarquee = true
-        // show here. Everything else (HorizontalMarquee = false, plus any
-        // NewsItem flagged ShowInMarquee) shows in GET /api/home/updates
-        // (the vertical "UPDATES" list) instead -- see GetUpdates() below.
+        // Horizontal ticker. Returns only visible marquee items flagged
+        // HorizontalMarquee = true and within their validity dates.
         [HttpGet("marquee")]
         public async Task<ActionResult<ApiResponse<List<MarqueeDTO>>>> GetMarquee()
         {
@@ -60,13 +58,15 @@ namespace GECPatan.Api.Controllers
                 .OrderBy(m => m.DisplayOrder)
                 .ToListAsync();
 
+            var pageSlugs = await GetContentPageSlugsAsync(items);
+
             var data = items.Select(m => new MarqueeDTO
             {
                 Id = m.Id,
                 Title = m.Title,
                 LinkType = m.LinkType,
-                Link = ResolveMarqueeLink(m),
-                IsNew=m.IsNew,
+                Link = ResolveMarqueeLink(m, pageSlugs),
+                IsNew = m.IsNew,
                 FilePath = m.LinkType == "file" ? m.FilePath : null,
                 DisplayOrder = m.DisplayOrder
             }).ToList();
@@ -75,12 +75,8 @@ namespace GECPatan.Api.Controllers
         }
 
         // GET /api/home/updates?take=20
-        // The vertical "UPDATES" list. Merges:
-        //   - Marquee items where HorizontalMarquee == false (the default --
-        //     most marquee items land here, not in the ticker)
-        //   - NewsItem items explicitly flagged ShowInMarquee == true
-        // Ordered newest-first by each source's own natural date
-        // (Marquee.CreatedDate, NewsItem.PublishDate).
+        // Vertical updates list. Uses Marquee records only; NewsItems are
+        // currently not part of the updates feed.
         [HttpGet("updates")]
         public async Task<ActionResult<ApiResponse<List<UpdateItemDTO>>>> GetUpdates(
             [FromQuery] int take = 20)
@@ -89,35 +85,27 @@ namespace GECPatan.Api.Controllers
 
             var now = DateTime.Now;
 
-            var marqueeItems = await _context.Marquees
+            var items = await _context.Marquees
                 .Where(m => m.IsVisible
                     && !m.HorizontalMarquee
                     && (!m.ValidFrom.HasValue || m.ValidFrom <= now)
                     && (!m.ValidTo.HasValue || m.ValidTo >= now))
+                .OrderByDescending(m => m.CreatedDate)
+                .Take(take)
                 .ToListAsync();
 
-            var updates = marqueeItems
-                .Select(m => new
-                {
-                    SortDate = m.CreatedDate,
-                    Dto = new UpdateItemDTO
-                    {
-                        Id = m.Id,
-                        Title = m.Title,
-                        LinkType = m.LinkType,
-                        IsNew = m.IsNew,
-                        Link = ResolveMarqueeLink(m),
-                        FilePath = m.LinkType == "file" ? m.FilePath : null,
-                        Source = "marquee"
-                    }
-                })
-                .ToList();
+            var pageSlugs = await GetContentPageSlugsAsync(items);
 
-            var data = updates
-                .OrderByDescending(u => u.SortDate)
-                .Take(take)
-                .Select(u => u.Dto)
-                .ToList();
+            var data = items.Select(m => new UpdateItemDTO
+            {
+                Id = m.Id,
+                Title = m.Title,
+                LinkType = m.LinkType,
+                Link = m.LinkType == "file" ? null : ResolveMarqueeLink(m, pageSlugs),
+                FilePath = m.LinkType == "file" ? m.FilePath : null,
+                Source = "marquee",
+                IsNew = m.IsNew
+            }).ToList();
 
             return Ok(ApiResponse<List<UpdateItemDTO>>.Ok(data));
         }
@@ -162,34 +150,7 @@ namespace GECPatan.Api.Controllers
             return Ok(ApiResponse<List<TopRecruiterDTO>>.Ok(data));
         }
 
-        // GET /api/home/news?take=5
-        // Unchanged/unfiltered -- general "latest news" feed, independent of
-        // ShowInMarquee. ShowInMarquee only controls whether an item ALSO
-        // appears in GET /api/home/updates (see GetUpdates above); it does
-        // not remove the item from here.
-        [HttpGet("news")]
-        public async Task<ActionResult<ApiResponse<List<HomeNewsDTO>>>> GetLatestNews(
-            [FromQuery] int take = 5)
-        {
-            var data = await _context.NewsItems
-                .Where(n => n.IsVisible)
-                .OrderByDescending(n => n.PublishDate)
-                .Take(take)
-                .Select(n => new HomeNewsDTO
-                {
-                    Id = n.Id,
-                    Title = n.Title,
-                    PublishDate = n.PublishDate.HasValue
-                        ? n.PublishDate.Value.ToString("yyyy-MM-dd")
-                        : null,
-                    ShowInMarquee = n.ShowInMarquee,
-                    Link = $"/news/{n.Id}",
-                    IsNew = n.IsNew
-                })
-                .ToListAsync();
-
-            return Ok(ApiResponse<List<HomeNewsDTO>>.Ok(data));
-        }
+        // NewsItems are currently not used by the home API.
 
         // GET /api/home/stats
         [HttpGet("stats")]
@@ -374,18 +335,50 @@ namespace GECPatan.Api.Controllers
             return Ok(ApiResponse<List<VideoCarouselDTO>>.Ok(data));
         }
 
-        // ── HELPERS ───────────────────────────────────────
+        // â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Resolves Link for internal/dynamic/external types only. Returns
         // null for "file" and "none" -- file links are exposed separately
         // via FilePath (see MarqueeDTO/UpdateItemDTO), since a raw
         // Api-relative file path needs Api:BaseUrl resolution on the
         // consumer side, not a same-origin href.
-        private static string? ResolveMarqueeLink(Marquee m)
+        private async Task<Dictionary<int, string>> GetContentPageSlugsAsync(
+            List<Marquee> items)
+        {
+            var pageIds = items
+                .Where(m => m.LinkType == "dynamic"
+                    && m.DynamicType == "ContentPage"
+                    && m.DynamicId.HasValue)
+                .Select(m => m.DynamicId!.Value)
+                .Distinct()
+                .ToList();
+
+            if (pageIds.Count == 0)
+                return new Dictionary<int, string>();
+
+            return await _context.ContentPages
+                .Where(p => pageIds.Contains(p.Id))
+                .ToDictionaryAsync(p => p.Id, p => p.Slug);
+        }
+
+        private static string? ResolveMarqueeLink(
+            Marquee m,
+            IReadOnlyDictionary<int, string> pageSlugs)
         {
             return m.LinkType switch
             {
-                "internal" => $"/{m.ControllerName}/{m.ActionName}",
-                "dynamic" => $"/{m.ControllerName}/{m.ActionName}/{m.DynamicId}",
+                "internal" when !string.IsNullOrWhiteSpace(m.ControllerName)
+                    && !string.IsNullOrWhiteSpace(m.ActionName)
+                    => MenuRoutes.InternalPath(m.ControllerName, m.ActionName),
+
+                "dynamic" when m.DynamicId.HasValue
+                    && m.DynamicType == "ContentPage"
+                    && pageSlugs.TryGetValue(m.DynamicId.Value, out var slug)
+                    => $"/page/{slug}",
+
+                "dynamic" when m.DynamicId.HasValue
+                    && m.DynamicType is "Department" or "Committee" or "Facility" or "Club" or "Document"
+                    => MenuRoutes.DynamicPath(m.DynamicType, m.DynamicId.Value),
+
                 "external" => m.ExternalLink,
                 _ => null
             };
