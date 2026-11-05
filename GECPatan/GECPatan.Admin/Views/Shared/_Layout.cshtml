@@ -233,6 +233,14 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
+                                    <a asp-controller="VideoCarousel"
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "VideoCarousel" ? "active" : "")">
+                                        <i class="nav-icon fas fa-video"></i>
+                                        <p>Video Carousel</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
                                     <a asp-controller="Testimonial"
                                        asp-action="Index"
                                        class="nav-link @(ctrl == "Testimonial" ? "active" : "")">

@@ -67,6 +67,8 @@ namespace GECPatan.Core.Data
         public DbSet<Testimonial> Testimonials { get; set; }
         public DbSet<TopRecruiter> TopRecruiters { get; set; }
         public DbSet<NotableAlumni> NotableAlumni { get; set; }
+        public DbSet<VideoCarousel> VideoCarousel { get; set; }
+
         // NEWS
         public DbSet<NewsItem> NewsItems { get; set; }
         public DbSet<NewsItemImage> NewsItemImages { get; set; }
@@ -229,6 +231,8 @@ namespace GECPatan.Core.Data
             modelBuilder.Entity<TopRecruiter>()
                 .HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<NotableAlumni>()
+                .HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<VideoCarousel>()
                 .HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<StudentClub>()
                 .HasQueryFilter(x => !x.IsDeleted);
