@@ -204,7 +204,51 @@
                                     </a>
                                 </li>
                             }
-
+                            @* ── HOME PAGE ────────────────────────── *@
+                            @if (isAdmin || isPrin)
+                            {
+                                <li class="nav-header">HOME PAGE</li>
+                                <li class="nav-item">
+                                    <a asp-controller="Slider"
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Slider" ? "active" : "")">
+                                        <i class="nav-icon fas fa-images"></i>
+                                        <p>Master Slider</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Marquee"
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Marquee" ? "active" : "")">
+                                        <i class="nav-icon fas fa-bullhorn"></i>
+                                        <p>Marquee</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Testimonial"
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "Testimonial" ? "active" : "")">
+                                        <i class="nav-icon fas fa-comments"></i>
+                                        <p>Testimonials</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="TopRecruiter"
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "TopRecruiter" ? "active" : "")">
+                                        <i class="nav-icon fas fa-briefcase"></i>
+                                        <p>Top Recruiters</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Home"
+                                       asp-action="HomePageSettings"
+                                       class="nav-link @(ctrl == "Home" && act == "HomePageSettings" ? "active" : "")">
+                                        <i class="nav-icon fas fa-sliders-h"></i>
+                                        <p>Home Settings</p>
+                                    </a>
+                                </li>
+                            }
                             @* ── DEPARTMENT ───────────────────────── *@
                             @if (isAdmin || isPrin || isHOD || isFac)
                             {
@@ -310,51 +354,7 @@
                                 }
                             }
 
-                            @* ── HOME PAGE ────────────────────────── *@
-                            @if (isAdmin || isPrin)
-                            {
-                                <li class="nav-header">HOME PAGE</li>
-                                <li class="nav-item">
-                                    <a asp-controller="Slider"
-                                       asp-action="Index"
-                                       class="nav-link @(ctrl == "Slider" ? "active" : "")">
-                                        <i class="nav-icon fas fa-images"></i>
-                                        <p>Master Slider</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a asp-controller="Marquee"
-                                       asp-action="Index"
-                                       class="nav-link @(ctrl == "Marquee" ? "active" : "")">
-                                        <i class="nav-icon fas fa-bullhorn"></i>
-                                        <p>Marquee</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a asp-controller="Testimonial"
-                                       asp-action="Index"
-                                       class="nav-link @(ctrl == "Testimonial" ? "active" : "")">
-                                        <i class="nav-icon fas fa-comments"></i>
-                                        <p>Testimonials</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a asp-controller="TopRecruiter"
-                                       asp-action="Index"
-                                       class="nav-link @(ctrl == "TopRecruiter" ? "active" : "")">
-                                        <i class="nav-icon fas fa-briefcase"></i>
-                                        <p>Top Recruiters</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a asp-controller="Home"
-                                       asp-action="HomePageSettings"
-                                       class="nav-link @(ctrl == "Home" && act == "HomePageSettings" ? "active" : "")">
-                                        <i class="nav-icon fas fa-sliders-h"></i>
-                                        <p>Home Settings</p>
-                                    </a>
-                                </li>
-                            }
+                           
                             @* ── MANDATORY DISCLOUSRE ────────────────────────── *@
                             @if (isAdmin)
                             {
