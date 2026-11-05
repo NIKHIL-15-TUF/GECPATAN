@@ -34,6 +34,7 @@ namespace GECPatan.Core.Models.Domain
         [ValidateNever]
         public ICollection<NewsItemFile> Files { get; set; }
             = new List<NewsItemFile>();
+        public bool IsNew { get; set; }
     }
 
     // NEWS ITEM IMAGE
