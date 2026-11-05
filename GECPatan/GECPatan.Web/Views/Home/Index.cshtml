@@ -23,7 +23,7 @@
         return Model.ApiBaseUrl + "/" + path.TrimStart('~', '/');
     }
 
-    // Shared by Marquee and Updates (same LinkType/Link/FilePath shape).
+    // Shared by Marquee and Updates (same LinkType/Link/FilePath shapeAc
     string ResolveItemHref(string linkType, string? link, string? filePath)
         => linkType == "file" ? ResolveApiFileUrl(filePath) : (link ?? "#");
 
@@ -207,7 +207,11 @@
                                             <li style="margin-bottom: 12px;">
                                                 @if (!string.IsNullOrWhiteSpace(item.Link))
                                                 {
-                                                    <a class="activity-link" style="color: red; font-weight: 600;" href="@item.Link" target="_blank">@item.Title</a>
+                                                    <a class="activity-link"
+                                                       style="color: red; font-weight: 600;"
+                                                       href="/activity/@item.Id">
+                                                        @item.Title
+                                                    </a>
                                                 }
                                                 else
                                                 {
