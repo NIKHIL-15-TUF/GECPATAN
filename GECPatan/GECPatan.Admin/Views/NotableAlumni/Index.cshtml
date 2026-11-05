@@ -1,0 +1,136 @@
+﻿@model List<GECPatan.Admin.Models.ViewModels.NotableAlumniVM>
+@{
+    ViewData["Title"] = "Notable Alumni";
+}
+
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge badge-info px-3 py-2" style="font-size:13px;">
+                @Model.Count Item(s)
+            </span>
+            <span class="badge badge-success ml-2 px-2 py-1">
+                @Model.Count(x => x.IsShow) Visible
+            </span>
+            <span class="badge badge-secondary ml-1 px-2 py-1">
+                @Model.Count(x => !x.IsShow) Hidden
+            </span>
+        </div>
+
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-2"></i>Add Notable Alumni
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead style="background:#1a237e;color:#fff;">
+                    <tr>
+                        <th width="70">Order</th>
+                        <th width="100">Image</th>
+                        <th>Title</th>
+                        <th width="100">IFrame</th>
+                        <th width="100">Status</th>
+                        <th width="150">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="fas fa-user-graduate fa-2x mb-2 d-block"></i>
+                                No notable alumni records yet.
+                            </td>
+                        </tr>
+                    }
+
+                    @foreach (var item in Model)
+                    {
+                        <tr class="@(!item.IsShow ? "table-secondary" : "")">
+                            <td>
+                                <span class="badge badge-light border">
+                                    @item.OrderNo
+                                </span>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(item.Image))
+                                {
+                                    <img src="@Url.Content(item.Image)"
+                                         alt="Alumni image"
+                                         class="img-thumbnail"
+                                         style="max-width:75px;max-height:65px;object-fit:cover;" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">No image</span>
+                                }
+                            </td>
+                            <td>
+                                <strong style="font-size:13px;">@item.Title</strong>
+                            </td>
+                            <td>
+                                @if (item.IsIframe)
+                                {
+                                    <span class="badge badge-info" style="font-size:9px;">
+                                        <i class="fas fa-window-maximize mr-1"></i>Yes
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-light border" style="font-size:9px;">
+                                        No
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsShow)
+                                {
+                                    <span class="badge badge-success" style="font-size:9px;">
+                                        Visible
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-secondary" style="font-size:9px;">
+                                        Hidden
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@item.ID"
+                                   class="btn btn-xs btn-info"
+                                   title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                <form asp-action="ToggleVisible" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.ID" />
+                                    <button type="submit"
+                                            class="btn btn-xs @(item.IsShow ? "btn-warning" : "btn-success")"
+                                            title="@(item.IsShow ? "Hide" : "Show")">
+                                        <i class="fas @(item.IsShow ? "fa-eye-slash" : "fa-eye")"></i>
+                                    </button>
+                                </form>
+
+                                <form asp-action="Delete" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.ID" />
+                                    <button type="submit" class="btn btn-xs btn-danger"
+                                            title="Soft delete"
+                                            onclick="return confirm('Delete this notable alumni record?');">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

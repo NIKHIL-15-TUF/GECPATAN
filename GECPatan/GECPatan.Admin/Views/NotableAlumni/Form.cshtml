@@ -1,0 +1,206 @@
+﻿@model GECPatan.Admin.Models.ViewModels.NotableAlumniVM
+@{
+    bool isEdit = Model.ID > 0;
+    ViewData["Title"] = isEdit ? "Edit Notable Alumni" : "Add Notable Alumni";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header" style="background:#1a237e;color:#fff;">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-user-graduate mr-2"></i>@ViewData["Title"]
+                </h3>
+            </div>
+
+            <form asp-action="@(isEdit ? "Edit" : "Create")"
+                  asp-route-id="@(isEdit ? Model.ID : null)"
+                  method="post" enctype="multipart/form-data">
+                @if (isEdit)
+                {
+                    <input asp-for="ID" type="hidden" />
+                }
+
+                <div class="card-body">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger py-2">
+                            @Html.ValidationSummary(false)
+                        </div>
+                    }
+
+                    <div class="form-group">
+                        <label asp-for="Title" class="font-weight-bold"></label>
+                        <textarea asp-for="Title" class="form-control" rows="3"
+                                  placeholder="Enter notable alumni name and details"
+                                  autofocus></textarea>
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <hr />
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="OrderNo" class="font-weight-bold"></label>
+                                <input asp-for="OrderNo" class="form-control"
+                                       type="number" min="0" />
+                                <span asp-validation-for="OrderNo" class="text-danger small"></span>
+                                <small class="text-muted">Lower values appear first.</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mt-4">
+                                <div class="custom-control custom-switch">
+                                    <input asp-for="IsShow" type="checkbox"
+                                           class="custom-control-input" id="isShow" />
+                                    <label class="custom-control-label" for="isShow">
+                                        Show on Website
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group mt-4">
+                                <div class="custom-control custom-switch">
+                                    <input asp-for="IsIframe" type="checkbox"
+                                           class="custom-control-input" id="isIframe"
+                                           onchange="toggleIframeFields()" />
+                                    <label class="custom-control-label" for="isIframe">
+                                        Use IFrame
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="iframeFields" class="card border-info mb-3">
+                        <div class="card-header bg-info text-white py-1">
+                            <small class="font-weight-bold">IFrame URL</small>
+                        </div>
+                        <div class="card-body py-2">
+                            <input asp-for="IFrame" class="form-control"
+                                   placeholder="https://example.com/embed/..." />
+                            <span asp-validation-for="IFrame" class="text-danger small"></span>
+                            <small class="text-muted">
+                                Provide the embedded content URL when IFrame is enabled.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Alumni Image</label>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Image))
+                        {
+                            <div class="mb-2">
+                                <img src="@Url.Content(Model.Image)" alt="Current alumni image"
+                                     class="img-thumbnail"
+                                     style="max-height:160px;max-width:220px;" />
+                                <input asp-for="Image" type="hidden" />
+                                <small class="text-muted d-block">
+                                    Upload a new image to replace the current one.
+                                </small>
+                            </div>
+                        }
+
+                        <div class="custom-file">
+                            <input asp-for="ImageFile" type="file"
+                                   class="custom-file-input" id="imageFile"
+                                   accept="image/*"
+                                   onchange="previewImage(this)" />
+                            <label class="custom-file-label" for="imageFile">
+                                Choose image...
+                            </label>
+                        </div>
+                        <span asp-validation-for="ImageFile" class="text-danger small"></span>
+                        <small class="text-muted d-block mt-1">
+                            Select an image file for this alumni record.
+                        </small>
+
+                        <div id="imagePreviewContainer" class="mt-2 d-none">
+                            <img id="imagePreview" class="img-thumbnail"
+                                 style="max-height:160px;max-width:220px;"
+                                 alt="Selected image preview" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>
+                        @(isEdit ? "Save Changes" : "Add Alumni")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle mr-2 text-info"></i>About Notable Alumni
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    Use the title field for the alumni name, qualification, role,
+                    organization, and other display details.
+                </p>
+                <hr />
+                <strong class="small">Display Order</strong>
+                <p class="small text-muted">
+                    Determines the order in which alumni appear on the website.
+                </p>
+                <hr />
+                <strong class="small">Show on Website</strong>
+                <p class="small text-muted">
+                    Turn this off to hide the alumni without deleting the record.
+                </p>
+                <hr />
+                <strong class="small">IFrame</strong>
+                <p class="small text-muted mb-0">
+                    Enable this only when the alumni content should be loaded
+                    from an embedded URL.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        function toggleIframeFields() {
+            const enabled = document.getElementById("isIframe").checked;
+            document.getElementById("iframeFields").classList.toggle("d-none", !enabled);
+        }
+
+        function previewImage(input) {
+            const label = input.nextElementSibling;
+            const previewContainer = document.getElementById("imagePreviewContainer");
+            const preview = document.getElementById("imagePreview");
+
+            label.textContent = input.files && input.files.length
+                ? input.files[0].name
+                : "Choose image...";
+
+            if (input.files && input.files[0]) {
+                preview.src = URL.createObjectURL(input.files[0]);
+                previewContainer.classList.remove("d-none");
+            } else {
+                preview.src = "";
+                previewContainer.classList.add("d-none");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", toggleIframeFields);
+    </script>
+}

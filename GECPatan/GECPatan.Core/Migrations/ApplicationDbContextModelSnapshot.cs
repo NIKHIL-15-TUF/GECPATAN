@@ -4170,6 +4170,60 @@ namespace GECPatan.Core.Migrations
                     b.ToTable("NewsLetters");
                 });
 
+            modelBuilder.Entity("GECPatan.Core.Models.Domain.NotableAlumni", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("IFrame")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsIframe")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsShow")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OrderNo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedDateInt")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("NotableAlumni");
+                });
+
             modelBuilder.Entity("GECPatan.Core.Models.Domain.Notification", b =>
                 {
                     b.Property<int>("Id")

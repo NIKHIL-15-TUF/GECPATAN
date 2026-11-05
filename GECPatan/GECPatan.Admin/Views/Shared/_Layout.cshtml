@@ -225,6 +225,14 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
+                                    <a asp-controller="NotableAlumni"
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "NotableAlumni" ? "active" : "")">
+                                        <i class="nav-icon fas fa-user-graduate"></i>
+                                        <p>Notable Alumni</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
                                     <a asp-controller="Testimonial"
                                        asp-action="Index"
                                        class="nav-link @(ctrl == "Testimonial" ? "active" : "")">
