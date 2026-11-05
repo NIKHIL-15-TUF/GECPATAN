@@ -347,6 +347,48 @@ namespace GECPatan.Api.Controllers
 
             return Ok(ApiResponse<List<HomeActivityDTO>>.Ok(data));
         }
+        // GET /api/home/notable-alumni
+        [HttpGet("notable-alumni")]
+        public async Task<ActionResult<ApiResponse<List<NotableAlumniDTO>>>>
+            GetNotableAlumni()
+        {
+            var data = await _context.NotableAlumni
+                .Where(x => x.IsShow && !x.IsDeleted)
+                .OrderBy(x => x.OrderNo)
+                .Select(x => new NotableAlumniDTO
+                {
+                    Id = x.ID,
+                    OrderNo = x.OrderNo,
+                    Title = x.Title,
+                    Image = x.Image,
+                    IsIframe = x.IsIframe,
+                    IFrame = x.IFrame
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponse<List<NotableAlumniDTO>>.Ok(data));
+        }
+
+
+        // GET /api/home/video-carousel
+        [HttpGet("video-carousel")]
+        public async Task<ActionResult<ApiResponse<List<VideoCarouselDTO>>>>
+            GetVideoCarousel()
+        {
+            var data = await _context.VideoCarousel
+                .Where(x => x.IsShow && !x.IsDeleted)
+                .OrderBy(x => x.OrderNo)
+                .Select(x => new VideoCarouselDTO
+                {
+                    Id = x.ID,
+                    OrderNo = x.OrderNo,
+                    Title = x.Title,
+                    VideoUrl = x.VideoUrl
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponse<List<VideoCarouselDTO>>.Ok(data));
+        }
 
         // ── HELPERS ───────────────────────────────────────
         // Resolves Link for internal/dynamic/external types only. Returns

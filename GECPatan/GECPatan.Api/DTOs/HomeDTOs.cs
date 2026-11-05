@@ -132,4 +132,20 @@
         public string? Link { get; set; }
         public string? ThumbnailPath { get; set; }
     }
+    public class NotableAlumniDTO
+    {
+        public int Id { get; set; }
+        public int OrderNo { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? Image { get; set; }
+        public bool IsIframe { get; set; }
+        public string? IFrame { get; set; }
+    }
+    public class VideoCarouselDTO
+    {
+        public int Id { get; set; }
+        public int OrderNo { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string VideoUrl { get; set; } = string.Empty;
+    }
 }
