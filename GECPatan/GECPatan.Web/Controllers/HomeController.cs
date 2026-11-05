@@ -37,11 +37,13 @@ namespace GECPatan.Web.Controllers
             var settingsTask = _homeApi.GetSettingsAsync(ct);
             var principalTask = _homeApi.GetPrincipalMessageAsync(ct);
             var departmentsTask = _departmentApi.GetAllDepartmentsAsync(ct);
+            var notableAlumniTask = _homeApi.GetNotableAlumniAsync(ct);
+            var videoCarouselTask = _homeApi.GetVideoCarouselAsync(ct);
 
             await Task.WhenAll(
                 slidersTask, marqueeTask, updatesTask, testimonialsTask,
                 topRecruitersTask, activitiesTask, statsTask, settingsTask,
-                principalTask, departmentsTask);
+                principalTask, departmentsTask, notableAlumniTask, videoCarouselTask);
 
             var vm = new HomeViewModel
             {
@@ -57,7 +59,9 @@ namespace GECPatan.Web.Controllers
                     .ToList(),
                 Stats = statsTask.Result,
                 Settings = settingsTask.Result,
-                Principal = principalTask.Result
+                Principal = principalTask.Result,
+                NotableAlumni = notableAlumniTask.Result,
+                VideoCarousel = videoCarouselTask.Result
             };
 
             return View(vm);

@@ -54,6 +54,10 @@ namespace GECPatan.Web.Services
 
         public async Task<List<HomeActivityDTO>> GetLatestActivitiesAsync(int take = 10, CancellationToken ct = default)
             => await GetAsync<List<HomeActivityDTO>>($"api/home/activities?take={take}", ct) ?? new();
+        public async Task<List<NotableAlumniDTO>> GetNotableAlumniAsync(CancellationToken ct = default)
+            => await GetAsync<List<NotableAlumniDTO>>($"api/home/notable-alumni", ct) ?? new();
+        public async Task<List<VideoCarouselDTO>> GetVideoCarouselAsync(CancellationToken ct = default)
+            => await GetAsync<List<VideoCarouselDTO>>($"api/home/video-carousel", ct) ?? new();
 
         private async Task<T?> GetAsync<T>(string url, CancellationToken ct)
         {

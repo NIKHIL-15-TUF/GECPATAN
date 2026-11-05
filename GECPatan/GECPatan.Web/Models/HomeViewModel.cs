@@ -24,6 +24,9 @@ namespace GECPatan.Web.Models
         public List<TestimonialDTO> Testimonials { get; set; } = new();
         public List<TopRecruiterDTO> TopRecruiters { get; set; } = new();
         public List<HomeActivityDTO> Activities { get; set; } = new();
+        public List<NotableAlumniDTO> NotableAlumni { get; set; } = new();
+
+        public List<VideoCarouselDTO> VideoCarousel { get; set; } = new();
         public List<DepartmentListDTO> Departments { get; set; } = new();
 
         public HomeStatsDTO? Stats { get; set; }
