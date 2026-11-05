@@ -1,92 +1,155 @@
 ﻿@using GECPatan.Core.Models.Domain
 @model List<Slider>
+
 @{
     ViewData["Title"] = "Home Sliders";
 }
+
 <div class="row mb-3">
     <div class="col-12 d-flex justify-content-between align-items-center">
-        <span class="badge badge-info px-3 py-2" style="font-size:13px;">@Model.Count Slider(s)</span>
-        <a asp-action="Create" class="btn btn-primary">
+        <span class="badge badge-info px-3 py-2" style="font-size:13px;">
+            @Model.Count Slider(s)
+        </span>
+
+        <a asp-action="Create" class="btn btn-primary btn-sm">
             <i class="fas fa-plus mr-2"></i>Add Slider
         </a>
     </div>
 </div>
-<div class="row">
-    @if (!Model.Any())
-    {
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body text-center py-5 text-muted">
-                    <i class="fas fa-images fa-3x mb-3 d-block"></i>
-                    No sliders yet. Click Add Slider to create one.
-                </div>
-            </div>
-        </div>
-    }
-    @foreach (var s in Model)
-    {
-        <div class="col-md-4 mb-3">
-            <div class="card @(!s.IsVisible ? "border-secondary" : "")">
-                @if (!string.IsNullOrEmpty(s.ImagePath))
-                {
-                    <img src="@s.ImagePath" class="card-img-top"
-                         style="height:160px;object-fit:cover;" />
-                }
-                else
-                {
-                    <div class="bg-light d-flex align-items-center justify-content-center"
-                         style="height:160px;">
-                        <i class="fas fa-image fa-3x text-muted"></i>
-                    </div>
-                }
-                <div class="card-body py-2">
-                    <p class="mb-1"><strong>@s.H3Text</strong></p>
-                    <p class="mb-1 text-muted small">@s.H4Text</p>
-                    <p class="mb-0 text-muted small">@s.H5Text</p>
-                    @if (!s.IsVisible)
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead style="background:#1a237e;color:#fff;">
+                    <tr>
+                        <th width="50">Order</th>
+                        <th width="100">Image</th>
+                        <th>Slider Content</th>
+                        <th width="90">Status</th>
+                        <th width="150">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (!Model.Any())
                     {
-                        <span class="badge badge-secondary mt-1">Hidden</span>
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="fas fa-images fa-2x mb-2 d-block"></i>
+                                No sliders yet. Click Add Slider to create one.
+                            </td>
+                        </tr>
                     }
-                </div>
-                <div class="card-footer py-2 d-flex justify-content-between align-items-center">
-                    <div>
-                        <form asp-action="Reorder" method="post" class="d-inline">
-                            <input type="hidden" name="id" value="@s.Id" />
-                            <input type="hidden" name="direction" value="up" />
-                            <button type="submit" class="btn btn-xs btn-light border">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                        </form>
-                        <span class="mx-1 small text-muted">@s.DisplayOrder</span>
-                        <form asp-action="Reorder" method="post" class="d-inline">
-                            <input type="hidden" name="id" value="@s.Id" />
-                            <input type="hidden" name="direction" value="down" />
-                            <button type="submit" class="btn btn-xs btn-light border">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </form>
-                    </div>
-                    <div>
-                        <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-xs btn-info">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <form asp-action="ToggleVisible" method="post" class="d-inline">
-                            <input type="hidden" name="id" value="@s.Id" />
-                            <button type="submit" class="btn btn-xs @(s.IsVisible?"btn-warning":"btn-success")">
-                                <i class="fas @(s.IsVisible?"fa-eye-slash":"fa-eye")"></i>
-                            </button>
-                        </form>
-                        <form asp-action="Delete" method="post" class="d-inline">
-                            <input type="hidden" name="id" value="@s.Id" />
-                            <button type="submit" class="btn btn-xs btn-danger"
-                                    onclick="return confirm('Delete slider?')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+
+                    @foreach (var s in Model)
+                    {
+                        <tr class="@(!s.IsVisible ? "table-secondary" : "")">
+                            <td>
+                                <div class="d-flex flex-column" style="gap:2px;">
+                                    <form asp-action="Reorder" method="post">
+                                        <input type="hidden" name="id" value="@s.Id" />
+                                        <input type="hidden" name="direction" value="up" />
+
+                                        <button type="submit"
+                                                class="btn btn-xs btn-light border px-2">
+                                            <i class="fas fa-chevron-up"
+                                               style="font-size:9px;"></i>
+                                        </button>
+                                    </form>
+
+                                    <form asp-action="Reorder" method="post">
+                                        <input type="hidden" name="id" value="@s.Id" />
+                                        <input type="hidden" name="direction" value="down" />
+
+                                        <button type="submit"
+                                                class="btn btn-xs btn-light border px-2">
+                                            <i class="fas fa-chevron-down"
+                                               style="font-size:9px;"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrEmpty(s.ImagePath))
+                                {
+                                    <img src="@s.ImagePath"
+                                         alt="Slider Image"
+                                         style="width:75px;height:50px;object-fit:cover;"
+                                         class="img-thumbnail" />
+                                }
+                                else
+                                {
+                                    <div class="bg-light d-flex align-items-center justify-content-center"
+                                         style="width:75px;height:50px;">
+                                        <i class="fas fa-image text-muted"></i>
+                                    </div>
+                                }
+                            </td>
+
+                            <td>
+                                <strong style="font-size:13px;">@s.H3Text</strong>
+
+                                @if (!string.IsNullOrWhiteSpace(s.H4Text))
+                                {
+                                    <div class="text-muted small">@s.H4Text</div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(s.H5Text))
+                                {
+                                    <div class="text-muted small">@s.H5Text</div>
+                                }
+                            </td>
+
+                            <td>
+                                @if (!s.IsVisible)
+                                {
+                                    <span class="badge badge-secondary"
+                                          style="font-size:9px;">Hidden</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-success"
+                                          style="font-size:9px;">Visible</span>
+                                }
+                            </td>
+
+                            <td>
+                                <a asp-action="Edit"
+                                   asp-route-id="@s.Id"
+                                   class="btn btn-xs btn-info">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                <form asp-action="ToggleVisible"
+                                      method="post"
+                                      class="d-inline">
+                                    <input type="hidden" name="id" value="@s.Id" />
+
+                                    <button type="submit"
+                                            class="btn btn-xs @(s.IsVisible ? "btn-warning" : "btn-success")"
+                                            title="@(s.IsVisible ? "Hide" : "Show")">
+                                        <i class="fas @(s.IsVisible ? "fa-eye-slash" : "fa-eye")"></i>
+                                    </button>
+                                </form>
+
+                                <form asp-action="Delete"
+                                      method="post"
+                                      class="d-inline">
+                                    <input type="hidden" name="id" value="@s.Id" />
+
+                                    <button type="submit"
+                                            class="btn btn-xs btn-danger"
+                                            onclick="return confirm('Delete slider?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-    }
-</div>
+    </div>
 </div>
