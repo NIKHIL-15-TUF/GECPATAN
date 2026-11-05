@@ -45,6 +45,7 @@
         public string Title { get; set; } = string.Empty;
         public string LinkType { get; set; } = "none";
         public string? Link { get; set; }   // resolved URL
+        public bool IsNew { get; set; }
         public string? FilePath { get; set; }
         public int DisplayOrder { get; set; }
     }
@@ -65,6 +66,7 @@
         // "marquee" | "news" -- not used for rendering logic, just useful
         // if you ever want to badge/style the two sources differently.
         public string Source { get; set; } = string.Empty;
+        public bool IsNew { get; set; }
     }
     public class HomeNewsDTO
     {
@@ -73,6 +75,7 @@
         public string? PublishDate { get; set; }
         public bool ShowInMarquee { get; set; }
         public string? Link { get; set; }
+        public bool IsNew { get; set; }
     }
 
     public class HomeStatsDTO

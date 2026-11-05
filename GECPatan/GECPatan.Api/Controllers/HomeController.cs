@@ -66,6 +66,7 @@ namespace GECPatan.Api.Controllers
                 Title = m.Title,
                 LinkType = m.LinkType,
                 Link = ResolveMarqueeLink(m),
+                IsNew=m.IsNew,
                 FilePath = m.LinkType == "file" ? m.FilePath : null,
                 DisplayOrder = m.DisplayOrder
             }).ToList();
@@ -104,6 +105,7 @@ namespace GECPatan.Api.Controllers
                         Id = m.Id,
                         Title = m.Title,
                         LinkType = m.LinkType,
+                        IsNew = m.IsNew,
                         Link = ResolveMarqueeLink(m),
                         FilePath = m.LinkType == "file" ? m.FilePath : null,
                         Source = "marquee"
@@ -111,26 +113,7 @@ namespace GECPatan.Api.Controllers
                 })
                 .ToList();
 
-            var newsItems = await _context.NewsItems
-                .Where(n => n.IsVisible && n.ShowInMarquee)
-                .ToListAsync();
-
-            var newsUpdates = newsItems.Select(n => new
-            {
-                SortDate = n.PublishDate ?? n.CreatedDate,
-                Dto = new UpdateItemDTO
-                {
-                    Id = n.Id,
-                    Title = n.Title,
-                    LinkType = "internal",
-                    Link = $"/news/{n.Id}",
-                    FilePath = null,
-                    Source = "news"
-                }
-            });
-
             var data = updates
-                .Concat(newsUpdates)
                 .OrderByDescending(u => u.SortDate)
                 .Take(take)
                 .Select(u => u.Dto)
@@ -200,7 +183,8 @@ namespace GECPatan.Api.Controllers
                         ? n.PublishDate.Value.ToString("yyyy-MM-dd")
                         : null,
                     ShowInMarquee = n.ShowInMarquee,
-                    Link = $"/news/{n.Id}"
+                    Link = $"/news/{n.Id}",
+                    IsNew = n.IsNew
                 })
                 .ToListAsync();
 
