@@ -128,7 +128,10 @@
                     {
                         <span class="marquee-content">@item.Title</span>
                     }
-
+                    @if (item.IsNew)
+                    {
+                        <span class="badge-new">New</span>
+                    }
                     if (i < Model.Marquee.Count - 1)
                     {
                         <span class="marquee-separator"> | </span>
@@ -183,6 +186,11 @@
                                                 {
                                                     @item.Title
                                                 }
+                                                @if (item.IsNew)
+                                                {
+                                                    <span class="badge-new">New</span>
+                                                }
+
                                             </li>
                                         }
                                     }

@@ -58,6 +58,7 @@
         // files fail to open.
         public string? FilePath { get; set; }
         public int DisplayOrder { get; set; }
+        public bool IsNew { get; set; }
     }
 
     // Mirrors GECPatan.Api.DTOs.UpdateItemDTO (from GET /api/home/updates --
@@ -71,6 +72,7 @@
         public string? Link { get; set; }
         public string? FilePath { get; set; } // resolve against Api:BaseUrl, same as MarqueeDTO
         public string Source { get; set; } = string.Empty; // "marquee" | "news"
+        public bool IsNew { get; set; }
     }
 
     // Mirrors GECPatan.Api.DTOs.TestimonialDTO (from GET /api/home/testimonials).
