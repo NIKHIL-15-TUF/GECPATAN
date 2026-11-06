@@ -38,7 +38,7 @@ namespace GECPatan.Admin.Controllers
         public IActionResult Create()
         {
             ViewData["Title"] = "Add Slider";
-            return View(new SliderVM());
+            return View("Form", new SliderVM());
         }
 
         [HttpPost]
@@ -46,7 +46,7 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Create(SliderVM model, IFormFile? SliderImage)
         {
             ViewData["Title"] = "Add Slider";
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid) return View("Form", model);
 
             string? imagePath = null;
             if (SliderImage != null && SliderImage.Length > 0)
@@ -55,7 +55,7 @@ namespace GECPatan.Admin.Controllers
                 if (!uploadResult.Success)
                 {
                     ModelState.AddModelError(nameof(SliderImage), uploadResult.ErrorMessage!);
-                    return View(model);
+                    return View("Form", model);
                 }
                 imagePath = uploadResult.RelativePath;
             }
@@ -91,14 +91,14 @@ namespace GECPatan.Admin.Controllers
                 _fileStorage.Delete(imagePath);
                 _logger.LogError(ex, "Database error creating slider");
                 ModelState.AddModelError(string.Empty, "Unable to save the slider. Please try again.");
-                return View(model);
+                return View("Form", model);
             }
             catch (Exception ex)
             {
                 _fileStorage.Delete(imagePath);
                 _logger.LogError(ex, "Unexpected error creating slider");
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
-                return View(model);
+                return View("Form", model);
             }
         }
 
@@ -108,7 +108,7 @@ namespace GECPatan.Admin.Controllers
             var s = await _context.Sliders.FindAsync(id);
             if (s == null) return NotFound();
 
-            return View(new SliderVM
+            return View("Form", new SliderVM
             {
                 Id = s.Id,
                 H3Text = s.H3Text,
@@ -129,10 +129,15 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Edit(int id, SliderVM model, IFormFile? SliderImage)
         {
             ViewData["Title"] = "Edit Slider";
-            if (!ModelState.IsValid) return View(model);
+            if (id != model.Id) return BadRequest();
 
             var s = await _context.Sliders.FindAsync(id);
             if (s == null) return NotFound();
+
+            // Needed so the form can still show the current image when it is redisplayed.
+            model.ExistingImagePath = s.ImagePath;
+
+            if (!ModelState.IsValid) return View("Form", model);
 
             string? newImagePath = null;
             bool replacingImage = SliderImage != null && SliderImage.Length > 0;
@@ -142,7 +147,7 @@ namespace GECPatan.Admin.Controllers
                 if (!uploadResult.Success)
                 {
                     ModelState.AddModelError(nameof(SliderImage), uploadResult.ErrorMessage!);
-                    return View(model);
+                    return View("Form", model);
                 }
                 newImagePath = uploadResult.RelativePath;
             }
@@ -181,7 +186,7 @@ namespace GECPatan.Admin.Controllers
 
                 _logger.LogError(ex, "Database error updating slider {SliderId}", id);
                 ModelState.AddModelError(string.Empty, "Unable to save the slider. Please try again.");
-                return View(model);
+                return View("Form", model);
             }
             catch (Exception ex)
             {
@@ -190,7 +195,7 @@ namespace GECPatan.Admin.Controllers
 
                 _logger.LogError(ex, "Unexpected error updating slider {SliderId}", id);
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
-                return View(model);
+                return View("Form", model);
             }
         }
 

@@ -3,6 +3,8 @@
     bool isEdit = Model.Id > 0;
     ViewData["Title"] = isEdit ? "Edit Slider" : "Add Slider";
     string action = isEdit ? "Edit" : "Create";
+    // Shared by SliderController.Create and SliderController.Edit
+    // (return View("Form", model)).
 }
 <div class="row">
     <div class="col-md-8">
