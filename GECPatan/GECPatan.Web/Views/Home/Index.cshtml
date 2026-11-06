@@ -24,9 +24,31 @@
     }
 
     // Shared by Marquee and Updates (same LinkType/Link/FilePath shapeAc
+    // string ResolveItemHref(string linkType, string? link, string? filePath)
+    //     => linkType == "file" ? ResolveApiFileUrl(filePath) : (link ?? "#");
     string ResolveItemHref(string linkType, string? link, string? filePath)
-        => linkType == "file" ? ResolveApiFileUrl(filePath) : (link ?? "#");
+    {
+        if (linkType == "file")
+            return ResolveApiFileUrl(filePath);
 
+        if (linkType == "external")
+        {
+            if (string.IsNullOrWhiteSpace(link))
+                return "#";
+
+            link = link.Trim();
+
+            if (!link.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !link.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                link = "https://" + link;
+            }
+
+            return link;
+        }
+
+        return link ?? "#";
+    }
     string? OpenTarget(string linkType)
         => linkType is "external" or "file" ? "_blank" : null;
 
