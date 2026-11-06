@@ -38,6 +38,9 @@ namespace GECPatan.Web.Services
                 Id = dto.Id,
                 Title = dto.Title,
                 Slug = dto.Slug,
+                TitleImageUrl = string.IsNullOrEmpty(dto.TitleImageUrl)
+                    ? null
+                    : ResolveApiFileUrl(dto.TitleImageUrl),
                 HtmlContent = dto.HtmlContent,
                 Images = dto.Images
                     .OrderBy(i => i.DisplayOrder)
@@ -96,6 +99,7 @@ namespace GECPatan.Web.Services
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
+        public string? TitleImageUrl { get; set; }
         public string? HtmlContent { get; set; }
         public List<ContentPageImageApiDTO> Images { get; set; } = new();
         public List<DynamicSectionApiDTO> DynamicSections { get; set; } = new();

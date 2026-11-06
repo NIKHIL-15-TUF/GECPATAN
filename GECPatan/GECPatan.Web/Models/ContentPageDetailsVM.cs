@@ -32,11 +32,12 @@
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
+        public string? TitleImageUrl { get; set; }
         public string? HtmlContent { get; set; }
 
         // Fully-resolved (API host prefixed) image URLs, in DisplayOrder
         public List<ContentPageImageVM> Images { get; set; } = new();
-
+        public bool HasTitleImage => !string.IsNullOrWhiteSpace(TitleImageUrl);
         public List<ContentPageDynamicSectionVM> DynamicSections { get; set; } = new();
 
         public bool HasImages => Images.Any();

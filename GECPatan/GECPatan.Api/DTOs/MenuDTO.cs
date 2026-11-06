@@ -21,6 +21,7 @@
         public string Title { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
         public string? HtmlContent { get; set; }
+        public string? TitleImageUrl { get; set; }
         public List<ContentPageImageDTO> Images { get; set; } = new();
         public List<DynamicSectionDTO> DynamicSections { get; set; } = new();
     }

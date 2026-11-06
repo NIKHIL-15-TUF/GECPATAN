@@ -1,85 +1,224 @@
-﻿@using GECPatan.Core.Models.Domain
-@model ContentPage
+﻿@model GECPatan.Core.Models.Domain.ContentPage
 @{
+    // Standalone page (no admin layout) that mirrors the public /page/{slug} layout:
+    // title banner (with title image) -> carousel + content side by side -> content only.
     Layout = null;
-    ViewData["Title"] = Model.Title;
-    var images = Model.Images?.OrderBy(i => i.DisplayOrder).ToList() ?? new List<ContentPageImage>();
+
+    // Uploaded paths are stored relative. Served from the site root here; if your Admin app
+    // does not serve uploads, prefix the API base URL in this one helper.
+    string FileUrl(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("//"))
+            return path;
+        return "/" + path.TrimStart('~', '/');
+    }
+
+    var images = Model.Images
+        .Where(i => !i.IsDeleted)
+        .OrderBy(i => i.DisplayOrder)
+        .ToList();
+
+    var titleImage = FileUrl(Model.TitleImageUrl).Replace("'", "%27");
+    bool hasTitleImage = titleImage.Length > 0;
+    string? bannerStyle = hasTitleImage
+        ? $"background:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)), url('{titleImage}') center/cover no-repeat;padding:70px 0;"
+        : null;
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@Model.Title — Preview</title>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Model.Title (Preview)</title>
     <style>
-        body { padding: 30px; }
-        .preview-banner {
-            background: #1a237e;
-            color: white;
-            padding: 10px 20px;
-            margin: -30px -30px 30px;
-            font-size: 13px;
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #333; background: #fff; line-height: 1.6; }
+
+        /* ── Preview bar (admin only, not part of the real page) ── */
+        .pv-bar { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 10px;
+                  align-items: center; justify-content: space-between; padding: 8px 16px;
+                  background: #1a237e; color: #fff; font-size: 13px; }
+        .pv-bar a, .pv-bar button { color: #fff; background: rgba(255,255,255,.15); border: 0; border-radius: 4px;
+                  padding: 5px 12px; text-decoration: none; cursor: pointer; font-size: 13px; }
+        .pv-bar a:hover, .pv-bar button:hover { background: rgba(255,255,255,.3); }
+        .pv-badge { padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+        .pv-live  { background: #2e7d32; }
+        .pv-draft { background: #f9a825; color: #222; }
+
+        /* ── Title banner (page_title3) ── */
+            .pv-title {
+                text-align: center;
+            }
+
+                .pv-title h1 {
+                    margin: 0;
+                    font-size: 30px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                }
+
+            .pv-line {
+                width: 70px;
+                height: 3px;
+                background: #4f75ba;
+                margin: 12px auto 0;
+            }
+
+        .pv-title { background: #f4f6fb; padding: 40px 0; border-bottom: 3px solid #4f75ba; }
+        .pv-container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .pv-title.has-image h1 { color: #fff; }
+
+        /* ── Body ── */
+        .pv-body { padding: 30px 0 50px; }
+        .pv-row { display: flex; gap: 30px; align-items: flex-start; }
+        .pv-col { flex: 1 1 0; min-width: 0; }
+        .pv-heading { margin: 0 0 14px; font-size: 20px; padding-bottom: 8px; border-bottom: 2px solid #e3e8f2; }
+        .pv-content { text-align: justify; }
+        .pv-content img { max-width: 100%; height: auto; }
+        .pv-content table { max-width: 100%; border-collapse: collapse; }
+        .pv-content table td, .pv-content table th { border: 1px solid #ddd; padding: 6px 8px; }
+
+        /* ── Carousel ── */
+        .pv-carousel { position: relative; overflow: hidden; border-radius: 4px; background: #f0f0f0; }
+        .pv-track { display: flex; transition: transform .5s ease; }
+        .pv-slide { min-width: 100%; }
+        .pv-slide img { display: block; width: 100%; height: auto; }
+        .pv-caption { margin: 0; padding: 6px 10px; font-size: 13px; text-align: center; color: #666; background: #fff; }
+        .pv-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border: 0;
+                  border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 18px; cursor: pointer; }
+        .pv-prev { left: 8px; } .pv-next { right: 8px; }
+        .pv-dots { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; }
+        .pv-dot { display: inline-block; width: 9px; height: 9px; margin: 0 3px; border-radius: 50%;
+                  background: rgba(255,255,255,.6); cursor: pointer; }
+        .pv-dot.active { background: #4f75ba; }
+
+        .pv-note { margin-top: 40px; padding: 10px 14px; background: #fff8e1; border: 1px solid #ffe082;
+                   border-radius: 4px; font-size: 12px; color: #6d5a00; }
+
+        @@media (max-width: 800px) {
+            .pv-row { flex-direction: column; }
+            .pv-title h1 { font-size: 22px; }
         }
-        img { max-width: 100%; }
-        .content-carousel { max-height: 420px; overflow: hidden; border-radius: 6px; margin-bottom: 24px; }
-        .content-carousel .carousel-item img { width: 100%; height: 420px; object-fit: cover; }
     </style>
 </head>
 <body>
-    <div class="preview-banner d-flex justify-content-between align-items-center">
-        <span>
-            <strong>Preview:</strong> @Model.Title
-            &nbsp;|&nbsp;
-            <code style="background:rgba(255,255,255,0.2);padding:2px 6px;border-radius:3px;">
-                /page/@Model.Slug
-            </code>
-        </span>
-        <button onclick="window.close()" class="btn btn-sm btn-light">
-            Close Preview
-        </button>
+
+    <div class="pv-bar">
+        <div>
+            <strong>PREVIEW</strong>
+            @if (Model.IsVisible)
+            {
+                <span class="pv-badge pv-live">Published</span>
+            }
+            else
+            {
+                <span class="pv-badge pv-draft">Draft — not visible on the website</span>
+            }
+            <span style="opacity:.8;margin-left:8px;">/page/@Model.Slug</span>
+        </div>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id">&larr; Back to edit</a>
+            <button type="button" onclick="window.close()">Close</button>
+        </div>
     </div>
-    <div class="container">
-        @if (images.Any())
-        {
-            <div id="pageCarousel" class="carousel slide content-carousel" data-ride="carousel">
-                <ol class="carousel-indicators">
-                    @for (var i = 0; i < images.Count; i++)
-                    {
-                        <li data-target="#pageCarousel" data-slide-to="@i" class="@(i == 0 ? "active" : "")"></li>
-                    }
-                </ol>
-                <div class="carousel-inner">
-                    @for (var i = 0; i < images.Count; i++)
-                    {
-                        <div class="carousel-item @(i == 0 ? "active" : "")">
-                            <img src="@images[i].ImageUrl" alt="@images[i].Caption" />
-                            @if (!string.IsNullOrWhiteSpace(images[i].Caption))
+
+    @* Title banner *@
+    <div class="pv-title @(hasTitleImage ? "has-image" : "")" style="@bannerStyle">
+        <div class="pv-container">
+            <h1>
+                @Model.Title
+                <div class="pv-line"></div>
+            </h1>
+        </div>
+    </div>
+
+    <div class="pv-body">
+        <div class="pv-container">
+
+            @if (images.Any())
+            {
+                <div class="pv-row">
+                    <div class="pv-col">
+                        <div class="pv-carousel" id="pvCarousel">
+                            <div class="pv-track" id="pvTrack">
+                                @foreach (var img in images)
+                                {
+                                    <div class="pv-slide">
+                                        <img src="@FileUrl(img.ImageUrl)" alt="@img.Caption" />
+                                        @if (!string.IsNullOrWhiteSpace(img.Caption))
+                                        {
+                                            <p class="pv-caption">@img.Caption</p>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                            @if (images.Count > 1)
                             {
-                                <div class="carousel-caption d-none d-md-block">
-                                    <p>@images[i].Caption</p>
+                                <button type="button" class="pv-nav pv-prev" id="pvPrev" aria-label="Previous">&#10094;</button>
+                                <button type="button" class="pv-nav pv-next" id="pvNext" aria-label="Next">&#10095;</button>
+                                <div class="pv-dots" id="pvDots">
+                                    @for (int i = 0; i < images.Count; i++)
+                                    {
+                                        <span class="pv-dot @(i == 0 ? "active" : "")" data-index="@i"></span>
+                                    }
                                 </div>
                             }
                         </div>
-                    }
+                    </div>
+
+                    <div class="pv-col pv-content">
+                        <h3 class="pv-heading">@Model.Title</h3>
+                        @Html.Raw(Model.HtmlContent)
+                    </div>
                 </div>
-                @if (images.Count > 1)
-                {
-                    <a class="carousel-control-prev" href="#pageCarousel" role="button" data-slide="prev">
-                        <span class="carousel-control-prev-icon"></span>
-                    </a>
-                    <a class="carousel-control-next" href="#pageCarousel" role="button" data-slide="next">
-                        <span class="carousel-control-next-icon"></span>
-                    </a>
-                }
+            }
+            else
+            {
+                <div class="pv-content">
+                    <h3 class="pv-heading">@Model.Title</h3>
+                    @Html.Raw(Model.HtmlContent)
+                </div>
+            }
+
+            <div class="pv-note">
+                This preview shows the title image, carousel and page content as saved.
+                Dynamic sections (files and extra blocks) are managed separately and are not shown here.
+                Fonts and colours on the live site may differ slightly.
             </div>
-        }
-        <h1 class="mb-4">@Model.Title</h1>
-        <hr />
-        @Html.Raw(Model.HtmlContent)
+        </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    @if (images.Count > 1)
+    {
+        <script>
+            (function () {
+                var track = document.getElementById('pvTrack');
+                var dots  = Array.prototype.slice.call(document.querySelectorAll('#pvDots .pv-dot'));
+                var box   = document.getElementById('pvCarousel');
+                var total = dots.length, index = 0, timer = null;
+
+                function go(i) {
+                    index = (i + total) % total;
+                    track.style.transform = 'translateX(-' + (index * 100) + '%)';
+                    dots.forEach(function (d, n) { d.classList.toggle('active', n === index); });
+                }
+                function start() { stop(); timer = setInterval(function () { go(index + 1); }, 4000); }
+                function stop()  { if (timer) { clearInterval(timer); timer = null; } }
+
+                document.getElementById('pvPrev').addEventListener('click', function () { go(index - 1); });
+                document.getElementById('pvNext').addEventListener('click', function () { go(index + 1); });
+                dots.forEach(function (d) {
+                    d.addEventListener('click', function () { go(parseInt(d.getAttribute('data-index'), 10)); });
+                });
+                box.addEventListener('mouseenter', stop);
+                box.addEventListener('mouseleave', start);
+                start();
+            })();
+        </script>
+    }
 </body>
 </html>

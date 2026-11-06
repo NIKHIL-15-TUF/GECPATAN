@@ -17,6 +17,7 @@ namespace GECPatan.Admin.Controllers
         private const string AuditModule = "ContentPage";
         private const string SuperAdminRole = "SuperAdmin";
         private const string ContentPageIcon = "fa-file-alt";
+        private const string FormView = "Form";   // shared by Create and Edit
 
         private readonly ApplicationDbContext _context;
         private readonly NotificationService _notify;
@@ -39,6 +40,7 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Content Pages";
+
             var pages = await _context.ContentPages
                 .AsNoTracking()
                 .Where(p => !p.IsDeleted)
@@ -61,60 +63,97 @@ namespace GECPatan.Admin.Controllers
         public IActionResult Create()
         {
             ViewData["Title"] = "Create Page";
-            return View(new ContentPageCreateVM());
+            return View(FormView, new ContentPageFormVM());
         }
 
         // ── CREATE POST ───────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ContentPageCreateVM model)
+        public async Task<IActionResult> Create(ContentPageFormVM model)
         {
             ViewData["Title"] = "Create Page";
 
-            model.Slug = GenerateSlug(string.IsNullOrWhiteSpace(model.Slug) ? model.Title : model.Slug);
+            model.Slug = GenerateSlug(
+                string.IsNullOrWhiteSpace(model.Slug) ? model.Title : model.Slug);
 
-            if (await _context.ContentPages.AnyAsync(p => p.Slug == model.Slug))
+            // Show the cleaned slug in the form, not the raw value that was posted.
+            ModelState.Remove(nameof(model.Slug));
+
+            if (string.IsNullOrEmpty(model.Slug))
             {
-                ModelState.AddModelError(nameof(model.Slug),
+                ModelState.AddModelError(
+                    nameof(model.Slug),
+                    "Could not generate a URL slug. Please type one using English letters or numbers.");
+            }
+            else if (await _context.ContentPages.AnyAsync(p => p.Slug == model.Slug))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Slug),
                     "This slug is already in use. Please choose a different title or slug.");
             }
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                return View(FormView, model);
 
             var userName = User.Identity?.Name ?? "Admin";
 
-            // Two SaveChangesAsync calls are needed — carousel images and the
-            // audit entry both need the page's real, database-generated Id,
-            // which only exists after the first insert. The transaction gives
-            // the all-or-nothing guarantee instead.
             using var transaction = await _context.Database.BeginTransactionAsync();
             var newlySavedFiles = new List<string>();
+
             try
             {
                 var page = new ContentPage
                 {
                     Title = model.Title,
                     Slug = model.Slug,
-                    HtmlContent = model.HtmlContent,
+                    HtmlContent = model.HtmlContent ?? string.Empty,
                     CreatedBy = userName,
                     IsVisible = model.IsVisible
                 };
 
                 _context.ContentPages.Add(page);
+
+                // Save first to obtain the database-generated page Id.
                 await _context.SaveChangesAsync();
 
-                var (skipped, savedPaths) = await SaveCarouselImages(page.Id, page.Slug, model.CarouselImages);
-                newlySavedFiles.AddRange(savedPaths);
+                // Save carousel images.
+                var (skipped, carouselSavedPaths) = await SaveCarouselImages(
+                    page.Id, page.Slug, model.CarouselImages);
+
+                newlySavedFiles.AddRange(carouselSavedPaths);
+
+                // Save the single Title Image, if provided.
+                if (model.TitleImage != null && model.TitleImage.Length > 0)
+                {
+                    var titleImageResult = await _fileStorage.SaveAsync(
+                        model.TitleImage,
+                        $"content-pages-{page.Slug}",
+                        FileCategory.Image);
+
+                    if (titleImageResult.Success &&
+                        !string.IsNullOrWhiteSpace(titleImageResult.RelativePath))
+                    {
+                        page.TitleImageUrl = titleImageResult.RelativePath;
+                        newlySavedFiles.Add(titleImageResult.RelativePath);
+                    }
+                    else
+                    {
+                        skipped.Add(
+                            $"Title Image: {titleImageResult.ErrorMessage ?? "The image could not be saved."}");
+                    }
+                }
 
                 AddAuditLog("Created", page.Id, page.Title);
-                await _context.SaveChangesAsync();
 
+                // Persist title image path, carousel rows, and audit entry together.
+                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                _logger.LogInformation("Content page {Id} '{Title}' created by {User}", page.Id, page.Title, User.Identity?.Name);
+                _logger.LogInformation(
+                    "Content page {Id} '{Title}' created by {User}",
+                    page.Id, page.Title, User.Identity?.Name);
 
-                // Best-effort: the page is already saved at this point, so a
-                // notification failure is logged, not surfaced as a request error.
+                // Notification is best-effort; the page has already been committed.
                 try
                 {
                     await _notify.SendAsync(
@@ -124,34 +163,50 @@ namespace GECPatan.Admin.Controllers
                         icon: ContentPageIcon,
                         color: "primary",
                         link: $"/ContentPage/Edit/{page.Id}",
-                        forRole: SuperAdminRole
-                    );
+                        forRole: SuperAdminRole);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to send creation notification for content page {Id}", page.Id);
+                    _logger.LogWarning(
+                        ex,
+                        "Failed to send creation notification for content page {Id}",
+                        page.Id);
                 }
 
-                TempData["Success"] = $"Page '{page.Title}' created. URL: /page/{page.Slug}";
+                TempData["Success"] =
+                    $"Page '{page.Title}' created. URL: /page/{page.Slug}";
+
                 if (skipped.Any())
-                    TempData["Warning"] = "Some images were skipped: " + string.Join(" | ", skipped);
+                    TempData["Warning"] =
+                        "Some images were skipped: " + string.Join(" | ", skipped);
+
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateException ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "Database error while creating content page '{Title}'", model.Title);
+                _logger.LogError(
+                    ex, "Database error while creating content page '{Title}'", model.Title);
+
                 CleanupOrphanFiles(newlySavedFiles);
-                ModelState.AddModelError(string.Empty, "Could not save the page due to a database error. Please try again.");
-                return View(model);
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Could not save the page due to a database error. Please try again.");
+
+                return View(FormView, model);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "Unexpected error while creating content page '{Title}'", model.Title);
+                _logger.LogError(
+                    ex, "Unexpected error while creating content page '{Title}'", model.Title);
+
                 CleanupOrphanFiles(newlySavedFiles);
-                ModelState.AddModelError(string.Empty, "An unexpected error occurred while creating the page. Please try again.");
-                return View(model);
+                ModelState.AddModelError(
+                    string.Empty,
+                    "An unexpected error occurred while creating the page. Please try again.");
+
+                return View(FormView, model);
             }
         }
 
@@ -159,20 +214,30 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             ViewData["Title"] = "Edit Page";
-            var p = await _context.ContentPages
+
+            // AsNoTracking: the page is only read to fill a form model.
+            var page = await _context.ContentPages
+                .AsNoTracking()
                 .Include(x => x.Images)
                 .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-            if (p == null) return NotFound();
 
-            return View(new ContentPageEditVM
+            if (page == null)
+                return NotFound();
+
+            var model = new ContentPageFormVM
             {
-                Id = p.Id,
-                Title = p.Title,
-                Slug = p.Slug,
-                HtmlContent = p.HtmlContent,
-                IsVisible = p.IsVisible,
-                GeneratedUrl = $"/page/{p.Slug}",
-                ExistingImages = p.Images
+                Id = page.Id,
+                Title = page.Title,
+                Slug = page.Slug,
+                HtmlContent = page.HtmlContent,
+                IsVisible = page.IsVisible,
+                GeneratedUrl = $"/page/{page.Slug}",
+
+                // This is the saved single Title Image path for the form.
+                TitleImageUrl = page.TitleImageUrl,
+
+                ExistingImages = page.Images
+                    .Where(i => !i.IsDeleted)
                     .OrderBy(i => i.DisplayOrder)
                     .Select(i => new ContentPageImageVM
                     {
@@ -180,78 +245,173 @@ namespace GECPatan.Admin.Controllers
                         ImageUrl = i.ImageUrl,
                         Caption = i.Caption,
                         DisplayOrder = i.DisplayOrder
-                    }).ToList()
-            });
+                    })
+                    .ToList()
+            };
+
+            return View(FormView, model);
         }
 
         // ── EDIT POST ─────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, ContentPageEditVM model)
+        public async Task<IActionResult> Edit(int id, ContentPageFormVM model)
         {
             ViewData["Title"] = "Edit Page";
 
-            model.Slug = GenerateSlug(string.IsNullOrWhiteSpace(model.Slug) ? model.Title : model.Slug);
+            if (id != model.Id)
+                return BadRequest();
 
-            if (await _context.ContentPages.AnyAsync(p => p.Slug == model.Slug && p.Id != id))
+            model.Slug = GenerateSlug(
+                string.IsNullOrWhiteSpace(model.Slug) ? model.Title : model.Slug);
+
+            // Show the cleaned slug in the form, not the raw value that was posted.
+            ModelState.Remove(nameof(model.Slug));
+
+            if (string.IsNullOrEmpty(model.Slug))
             {
-                ModelState.AddModelError(nameof(model.Slug), "This slug is already in use by another page.");
+                ModelState.AddModelError(
+                    nameof(model.Slug),
+                    "Could not generate a URL slug. Please type one using English letters or numbers.");
             }
+            else if (await _context.ContentPages.AnyAsync(
+                p => p.Slug == model.Slug && p.Id != id && !p.IsDeleted))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Slug),
+                    "This slug is already in use by another page.");
+            }
+
+            // Check the page exists and retrieve the saved Title Image path.
+            var page = await _context.ContentPages
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+
+            if (page == null)
+                return NotFound();
 
             if (!ModelState.IsValid)
             {
-                var existing = await _context.ContentPages.Include(x => x.Images).AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.Id == id);
-                model.ExistingImages = existing?.Images
-                    .OrderBy(i => i.DisplayOrder)
-                    .Select(i => new ContentPageImageVM
-                    {
-                        Id = i.Id,
-                        ImageUrl = i.ImageUrl,
-                        Caption = i.Caption,
-                        DisplayOrder = i.DisplayOrder
-                    }).ToList() ?? new List<ContentPageImageVM>();
-                return View(model);
+                await PopulateEditModelData(model, id, page.TitleImageUrl);
+                return View(FormView, model);
             }
 
-            var p = await _context.ContentPages.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-            if (p == null) return NotFound();
+            var oldTitleImagePath = page.TitleImageUrl;
+            string? newTitleImagePath = null;
 
-            p.Title = model.Title;
-            p.Slug = model.Slug;
-            p.HtmlContent = model.HtmlContent;
-            p.IsVisible = model.IsVisible;
+            page.Title = model.Title;
+            page.Slug = model.Slug!;
+            page.HtmlContent = model.HtmlContent ?? string.Empty;
+            page.IsVisible = model.IsVisible;
 
-            var (skipped, newlySavedFiles) = await SaveCarouselImages(p.Id, p.Slug, model.CarouselImages);
+            var (skipped, newlySavedFiles) = await SaveCarouselImages(
+                page.Id, page.Slug, model.CarouselImages);
+
+            // Upload a replacement only when the admin selected a new file.
+            if (model.TitleImage != null && model.TitleImage.Length > 0)
+            {
+                var titleImageResult = await _fileStorage.SaveAsync(
+                    model.TitleImage,
+                    $"content-pages-{page.Slug}",
+                    FileCategory.Image);
+
+                if (titleImageResult.Success &&
+                    !string.IsNullOrWhiteSpace(titleImageResult.RelativePath))
+                {
+                    newTitleImagePath = titleImageResult.RelativePath;
+                    page.TitleImageUrl = newTitleImagePath;
+                    newlySavedFiles.Add(newTitleImagePath);
+                }
+                else
+                {
+                    skipped.Add(
+                        $"Title Image: {titleImageResult.ErrorMessage ?? "The image could not be saved."}");
+                }
+            }
 
             try
             {
-                AddAuditLog("Updated", p.Id, p.Title);
+                AddAuditLog("Updated", page.Id, page.Title);
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
                 _logger.LogError(ex, "Database error while editing content page {Id}", id);
                 CleanupOrphanFiles(newlySavedFiles);
-                ModelState.AddModelError(string.Empty, "Could not save the page due to a database error. Please try again.");
-                return View(model);
+
+                // Rebuild view data and show the old saved image after failure.
+                await PopulateEditModelData(model, id, oldTitleImagePath);
+
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Could not save the page due to a database error. Please try again.");
+
+                return View(FormView, model);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error while editing content page {Id}", id);
                 CleanupOrphanFiles(newlySavedFiles);
-                ModelState.AddModelError(string.Empty, "An unexpected error occurred while saving the page. Please try again.");
-                return View(model);
+
+                await PopulateEditModelData(model, id, oldTitleImagePath);
+
+                ModelState.AddModelError(
+                    string.Empty,
+                    "An unexpected error occurred while saving the page. Please try again.");
+
+                return View(FormView, model);
             }
 
-            _logger.LogInformation("Content page {Id} '{Title}' edited by {User}", p.Id, p.Title, User.Identity?.Name);
-            TempData["Success"] = $"Page updated. URL: /page/{p.Slug}";
+            // Delete the previous image only after the replacement path was saved.
+            if (!string.IsNullOrWhiteSpace(newTitleImagePath) &&
+                !string.IsNullOrWhiteSpace(oldTitleImagePath))
+            {
+                TryDeleteFile(oldTitleImagePath, "replaced content page title image");
+            }
+
+            _logger.LogInformation(
+                "Content page {Id} '{Title}' edited by {User}",
+                page.Id, page.Title, User.Identity?.Name);
+
+            TempData["Success"] = $"Page updated. URL: /page/{page.Slug}";
+
             if (skipped.Any())
-                TempData["Warning"] = "Some images were skipped: " + string.Join(" | ", skipped);
+                TempData["Warning"] =
+                    "Some images were skipped: " + string.Join(" | ", skipped);
 
             if (User.IsInRole(AppRoles.ContentEditor))
                 return RedirectToAction("Index", "Home");
+
             return RedirectToAction(nameof(Index));
+        }
+
+        // Repopulates saved image and carousel details when Edit POST returns
+        // the form because validation or persistence failed.
+        private async Task PopulateEditModelData(
+            ContentPageFormVM model,
+            int pageId,
+            string? titleImageUrl)
+        {
+            var existing = await _context.ContentPages
+                .AsNoTracking()
+                .Include(x => x.Images)
+                .FirstOrDefaultAsync(x => x.Id == pageId && !x.IsDeleted);
+
+            model.TitleImageUrl = titleImageUrl;
+            model.GeneratedUrl = existing == null
+                ? string.Empty
+                : $"/page/{existing.Slug}";
+
+            model.ExistingImages = existing?.Images
+                .Where(i => !i.IsDeleted)
+                .OrderBy(i => i.DisplayOrder)
+                .Select(i => new ContentPageImageVM
+                {
+                    Id = i.Id,
+                    ImageUrl = i.ImageUrl,
+                    Caption = i.Caption,
+                    DisplayOrder = i.DisplayOrder
+                })
+                .ToList() ?? new List<ContentPageImageVM>();
         }
 
         // ── DELETE ONE CAROUSEL IMAGE ─────────────────────
@@ -260,7 +420,8 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> DeleteImage(int id, int pageId)
         {
             var img = await _context.ContentPageImages.FindAsync(id);
-            if (img == null || img.ContentPageId != pageId) return NotFound();
+            if (img == null || img.ContentPageId != pageId)
+                return NotFound();
 
             var imagePath = img.ImageUrl;
 
@@ -271,13 +432,18 @@ namespace GECPatan.Admin.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete content page image {ImageId} for page {PageId}", id, pageId);
+                _logger.LogError(
+                    ex,
+                    "Failed to delete content page image {ImageId} for page {PageId}",
+                    id, pageId);
+
                 TempData["Error"] = "Could not remove the image. Please try again.";
                 return RedirectToAction(nameof(Edit), new { id = pageId });
             }
 
             TryDeleteFile(imagePath, "deleted content page image");
             TempData["Success"] = "Image removed.";
+
             return RedirectToAction(nameof(Edit), new { id = pageId });
         }
 
@@ -286,9 +452,11 @@ namespace GECPatan.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleVisible(int id)
         {
-            var p = await _context.ContentPages.FindAsync(id);
-            if (p == null) return NotFound();
-            p.IsVisible = !p.IsVisible;
+            var page = await _context.ContentPages.FindAsync(id);
+            if (page == null || page.IsDeleted)
+                return NotFound();
+
+            page.IsVisible = !page.IsVisible;
 
             try
             {
@@ -301,7 +469,9 @@ namespace GECPatan.Admin.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            TempData["Success"] = $"'{p.Title}' " + (p.IsVisible ? "published" : "hidden") + ".";
+            TempData["Success"] =
+                $"'{page.Title}' " + (page.IsVisible ? "published" : "hidden") + ".";
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -311,13 +481,15 @@ namespace GECPatan.Admin.Controllers
         [Authorize(Roles = SuperAdminRole)]
         public async Task<IActionResult> Delete(int id)
         {
-            var p = await _context.ContentPages.FindAsync(id);
-            if (p == null) return NotFound();
-            p.IsDeleted = true;
+            var page = await _context.ContentPages.FindAsync(id);
+            if (page == null || page.IsDeleted)
+                return NotFound();
+
+            page.IsDeleted = true;
 
             try
             {
-                AddAuditLog("Deleted", p.Id, p.Title);
+                AddAuditLog("Deleted", page.Id, page.Title);
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -327,27 +499,33 @@ namespace GECPatan.Admin.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            _logger.LogInformation("Content page {Id} '{Title}' deleted by {User}", p.Id, p.Title, User.Identity?.Name);
-            TempData["Success"] = $"Page '{p.Title}' deleted.";
+            _logger.LogInformation(
+                "Content page {Id} '{Title}' deleted by {User}",
+                page.Id, page.Title, User.Identity?.Name);
+
+            TempData["Success"] = $"Page '{page.Title}' deleted.";
             return RedirectToAction(nameof(Index));
         }
 
         // ── PREVIEW (renders TinyMCE content + carousel) ──
         public async Task<IActionResult> Preview(int id)
         {
-            var p = await _context.ContentPages
-                .Include(x => x.Images)
+            var page = await _context.ContentPages
                 .AsNoTracking()
+                .Include(x => x.Images)
                 .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
-            if (p == null) return NotFound();
-            ViewData["Title"] = p.Title;
-            return View(p);
+
+            if (page == null)
+                return NotFound();
+
+            ViewData["Title"] = page.Title;
+            return View(page);
         }
 
         // ── HELPERS ───────────────────────────────────────
         private static string GenerateSlug(string text)
         {
-            text = text.ToLowerInvariant();
+            text = (text ?? string.Empty).ToLowerInvariant();
             text = Regex.Replace(text, @"\s+", "-");
             text = Regex.Replace(text, @"[^a-z0-9\-]", "");
             text = Regex.Replace(text, @"-+", "-");
@@ -356,20 +534,20 @@ namespace GECPatan.Admin.Controllers
         }
 
         /// <summary>
-        /// Saves carousel images through the centralized file service, grouped
-        /// under a per-page folder (content-pages-{slug}) so a bad image on one
-        /// page doesn't require guessing which folder it landed in. Bad files
-        /// are skipped and reported rather than silently dropped or failing
-        /// the whole save, matching the multi-file pattern used elsewhere.
-        /// Returns the skip messages and the list of paths actually written,
-        /// so the caller can clean them up if the surrounding save fails.
+        /// Saves carousel images through the centralized file service.
+        /// Invalid files are skipped and reported. Returns paths saved so
+        /// callers can clean them up if the database save fails.
         /// </summary>
         private async Task<(List<string> Skipped, List<string> SavedPaths)> SaveCarouselImages(
-            int contentPageId, string slug, List<IFormFile>? files)
+            int contentPageId,
+            string slug,
+            List<IFormFile>? files)
         {
             var skipped = new List<string>();
             var savedPaths = new List<string>();
-            if (files == null || files.Count == 0) return (skipped, savedPaths);
+
+            if (files == null || files.Count == 0)
+                return (skipped, savedPaths);
 
             var folder = $"content-pages-{slug}";
 
@@ -377,24 +555,31 @@ namespace GECPatan.Admin.Controllers
                 .Where(i => i.ContentPageId == contentPageId)
                 .Select(i => (int?)i.DisplayOrder)
                 .MaxAsync() ?? -1;
+
             nextOrder++;
 
             foreach (var file in files)
             {
-                if (file == null || file.Length == 0) continue;
+                if (file == null || file.Length == 0)
+                    continue;
 
-                var result = await _fileStorage.SaveAsync(file, folder, FileCategory.Image);
-                if (!result.Success)
+                var result = await _fileStorage.SaveAsync(
+                    file, folder, FileCategory.Image);
+
+                if (!result.Success ||
+                    string.IsNullOrWhiteSpace(result.RelativePath))
                 {
-                    skipped.Add($"{file.FileName}: {result.ErrorMessage}");
+                    skipped.Add(
+                        $"{file.FileName}: {result.ErrorMessage ?? "The image could not be saved."}");
                     continue;
                 }
 
-                savedPaths.Add(result.RelativePath!);
+                savedPaths.Add(result.RelativePath);
+
                 _context.ContentPageImages.Add(new ContentPageImage
                 {
                     ContentPageId = contentPageId,
-                    ImageUrl = result.RelativePath!,
+                    ImageUrl = result.RelativePath,
                     DisplayOrder = nextOrder++
                 });
             }
@@ -403,22 +588,27 @@ namespace GECPatan.Admin.Controllers
         }
 
         /// <summary>
-        /// Deletes a single file and never throws — a failed delete here
-        /// should never take down the request; it just gets logged so it can
-        /// be cleaned up manually.
+        /// Deletes one file without throwing. A failed delete is logged for
+        /// later cleanup and does not take down the request.
         /// </summary>
         private void TryDeleteFile(string? path, string context)
         {
-            if (string.IsNullOrEmpty(path)) return;
+            if (string.IsNullOrEmpty(path))
+                return;
 
             try
             {
                 if (!_fileStorage.Delete(path))
-                    _logger.LogWarning("File delete returned false for {Path} ({Context})", path, context);
+                {
+                    _logger.LogWarning(
+                        "File delete returned false for {Path} ({Context})",
+                        path, context);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete file {Path} ({Context})", path, context);
+                _logger.LogError(
+                    ex, "Failed to delete file {Path} ({Context})", path, context);
             }
         }
 
@@ -429,15 +619,14 @@ namespace GECPatan.Admin.Controllers
         }
 
         /// <summary>
-        /// Stages an audit log entry on the context without saving. Callers
-        /// commit it together with their own entity changes in a single
-        /// SaveChangesAsync call, so the audit entry and the change it
-        /// describes are always persisted atomically.
+        /// Stages an audit log entry without saving. It is persisted with the
+        /// entity changes in the caller's SaveChangesAsync operation.
         /// </summary>
         private void AddAuditLog(string action, int recordId, string recordName)
         {
             var userName = User.Identity?.Name ?? "Unknown";
-            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "";
+            var role = User.Claims
+                .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "";
 
             _context.AuditLogs.Add(new AuditLog
             {
@@ -448,7 +637,7 @@ namespace GECPatan.Admin.Controllers
                 Module = AuditModule,
                 RecordId = recordId,
                 RecordName = recordName,
-                Timestamp = DateTime.UtcNow // stored in UTC; convert to local time when displaying
+                Timestamp = DateTime.UtcNow
             });
         }
     }

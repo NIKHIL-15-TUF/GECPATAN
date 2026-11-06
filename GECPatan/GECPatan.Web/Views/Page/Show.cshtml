@@ -3,20 +3,23 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = Model.Title;
 }
+@{
+    var titleStyle = Model.HasTitleImage
+        ? $"background:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)), url('{Model.TitleImageUrl}') center/cover no-repeat;"
+        : null;
+}
 <div class="clearfix"></div>
- 
-<div class="page_title3 engg_title">
+<div class="page_title3 engg_title" style="@titleStyle">
     <div class="container">
-        <h1>
+        <h1 style="@(Model.HasTitleImage ? "color:#fff;" : null)">
             @Model.Title
             <div class="line"></div>
         </h1>
     </div>
 </div>
 <!-- end page title -->
- 
+
 <div class="clearfix margin_top2"></div>
- 
 <div class="content_fullwidth">
     <div class="full-container">
  

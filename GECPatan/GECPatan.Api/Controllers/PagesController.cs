@@ -22,7 +22,7 @@ namespace GECPatan.Api.Controllers
         {
             var page = await _context.ContentPages
                 .Include(p => p.Images)
-                .FirstOrDefaultAsync(p => p.Slug == slug && p.IsVisible);
+                .FirstOrDefaultAsync(p => p.Slug == slug && p.IsVisible && !p.IsDeleted);
 
             if (page == null)
                 return NotFound(ApiResponse<ContentPageDTO>.Fail(
@@ -42,9 +42,11 @@ namespace GECPatan.Api.Controllers
                 Id = page.Id,
                 Title = page.Title,
                 Slug = page.Slug,
+                TitleImageUrl = page.TitleImageUrl,
                 HtmlContent = page.HtmlContent,
                 Images = page.Images
                     .OrderBy(i => i.DisplayOrder)
+                    .Where(i => !i.IsDeleted)
                     .Select(i => new ContentPageImageDTO
                     {
                         ImageUrl = i.ImageUrl,
