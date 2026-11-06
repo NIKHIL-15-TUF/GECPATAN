@@ -31,7 +31,7 @@ namespace GECPatan.Admin.Controllers
         public IActionResult Create()
         {
             ViewData["Title"] = "Add Testimonial";
-            return View(new TestimonialVM());
+            return View("Form", new TestimonialVM());
         }
 
         [HttpPost]
@@ -39,7 +39,7 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Create(TestimonialVM model)
         {
             ViewData["Title"] = "Add Testimonial";
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid) return View("Form", model);
 
             int maxOrder = await _context.Testimonials.Select(t => (int?)t.DisplayOrder).MaxAsync() ?? -1;
 
@@ -68,13 +68,13 @@ namespace GECPatan.Admin.Controllers
             {
                 _logger.LogError(ex, "Database error creating testimonial for '{StudentName}'", model.StudentName);
                 ModelState.AddModelError(string.Empty, "Unable to save the testimonial. Please try again.");
-                return View(model);
+                return View("Form", model);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error creating testimonial for '{StudentName}'", model.StudentName);
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
-                return View(model);
+                return View("Form", model);
             }
         }
 
@@ -84,7 +84,7 @@ namespace GECPatan.Admin.Controllers
             var t = await _context.Testimonials.FindAsync(id);
             if (t == null) return NotFound();
 
-            return View(new TestimonialVM
+            return View("Form", new TestimonialVM
             {
                 Id = t.Id,
                 StudentName = t.StudentName,
@@ -101,7 +101,8 @@ namespace GECPatan.Admin.Controllers
         public async Task<IActionResult> Edit(int id, TestimonialVM model)
         {
             ViewData["Title"] = "Edit Testimonial";
-            if (!ModelState.IsValid) return View(model);
+            if (id != model.Id) return BadRequest();
+            if (!ModelState.IsValid) return View("Form", model);
 
             var t = await _context.Testimonials.FindAsync(id);
             if (t == null) return NotFound();
@@ -126,19 +127,19 @@ namespace GECPatan.Admin.Controllers
                 _logger.LogWarning(ex, "Concurrency conflict updating testimonial {TestimonialId}", id);
                 ModelState.AddModelError(string.Empty,
                     "This testimonial was changed by someone else. Please reload and try again.");
-                return View(model);
+                return View("Form", model);
             }
             catch (DbUpdateException ex)
             {
                 _logger.LogError(ex, "Database error updating testimonial {TestimonialId}", id);
                 ModelState.AddModelError(string.Empty, "Unable to save the testimonial. Please try again.");
-                return View(model);
+                return View("Form", model);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error updating testimonial {TestimonialId}", id);
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
-                return View(model);
+                return View("Form", model);
             }
         }
 
