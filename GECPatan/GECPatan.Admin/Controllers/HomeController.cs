@@ -64,7 +64,6 @@ namespace GECPatan.Admin.Controllers
                 DepartmentCount = await _context.Departments.CountAsync(),
                 FacultyCount = await _context.Faculties.CountAsync(),
                 CommitteeCount = await _context.CampusCommittees.CountAsync(),
-                NewsCount = await _context.NewsItems.CountAsync(),
                 ActivityCount = await _context.Activities.CountAsync(),
                 AchievementCount = await _context.Achievements.CountAsync(),
                 StudentClubCount = await _context.StudentClubs.CountAsync(),
@@ -108,20 +107,17 @@ namespace GECPatan.Admin.Controllers
                 DepartmentCount = await _context.Departments.CountAsync(),
                 FacultyCount = await _context.Faculties.CountAsync(),
                 CommitteeCount = await _context.CampusCommittees.CountAsync(),
-                NewsCount = await _context.NewsItems.CountAsync(),
-                ActiveUsersCount = await _context.Users
-                    .OfType<ApplicationUser>()
-                    .CountAsync(u => u.IsActive),
+                NewsCount = await _context.NewsLetters.CountAsync(),
 
-                RecentNews = await _context.NewsItems
-                    .OrderByDescending(n => n.PublishDate)
+                RecentNews = await _context.NewsLetters
+                    .OrderByDescending(n => n.UpdatedDate)
                     .Take(5)
                     .Select(n => new RecentItemVM
                     {
                         Id = n.Id,
                         Title = n.Title,
-                        Date = n.PublishDate.HasValue
-                            ? n.PublishDate.Value.ToString("dd MMM yyyy")
+                        Date = n.UpdatedDate.HasValue
+                            ? n.UpdatedDate.Value.ToString("dd MMM yyyy")
                             : ""
                     }).ToListAsync(),
 

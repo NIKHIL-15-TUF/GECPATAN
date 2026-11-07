@@ -3,54 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GECPatan.Admin.Models.ViewModels
 {
-    // ── NEWS ITEM ─────────────────────────────────────────
-    public class NewsItemVM
-    {
-        public int Id { get; set; }
-
-        [Required(ErrorMessage = "Title is required")]
-        [MaxLength(500)]
-        public string Title { get; set; } = string.Empty;
-
-        public string? Description { get; set; }
-
-        [Display(Name = "Publish Date")]
-        [DataType(DataType.Date)]
-        public DateTime? PublishDate { get; set; }
-
-        [Display(Name = "External Link")]
-        public string? ExternalLink { get; set; }
-
-        // Replaced ControllerName/ActionName with:
-        [Display(Name = "Link to Department")]
-        public int? LinkDeptId { get; set; }
-
-        [Display(Name = "Link to Committee")]
-        public int? LinkCommitteeId { get; set; }
-
-        public bool IsVisible { get; set; } = true;
-        public bool ShowInMarquee { get; set; } = false;
-
-        public string? ExistingBannerPath { get; set; }
-        public string? ExistingThumbnailPath { get; set; }
-
-        // For dropdowns
-        public List<SelectListItem> Departments { get; set; } = new();
-        public List<SelectListItem> Committees { get; set; } = new();
-    }
-
-    public class NewsItemListVM
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string? PublishDate { get; set; }
-        public string? ThumbnailPath { get; set; }
-        public bool IsVisible { get; set; }
-        public bool ShowInMarquee { get; set; }
-        public int ImageCount { get; set; }
-        public int FileCount { get; set; }
-    }
-
     // ── NEWS LETTER ───────────────────────────────────────
     public class NewsLetterVM
     {

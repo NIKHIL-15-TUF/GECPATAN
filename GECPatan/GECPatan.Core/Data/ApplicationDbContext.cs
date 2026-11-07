@@ -69,10 +69,7 @@ namespace GECPatan.Core.Data
         public DbSet<NotableAlumni> NotableAlumni { get; set; }
         public DbSet<VideoCarousel> VideoCarousel { get; set; }
 
-        // NEWS
-        public DbSet<NewsItem> NewsItems { get; set; }
-        public DbSet<NewsItemImage> NewsItemImages { get; set; }
-        public DbSet<NewsItemFile> NewsItemFiles { get; set; }
+        // NEWS LETTERS
         public DbSet<NewsLetter> NewsLetters { get; set; }
 
         // DOCUMENTS
@@ -214,7 +211,7 @@ namespace GECPatan.Core.Data
             modelBuilder.Entity<DynamicSection>()
                 .HasQueryFilter(x => !x.IsDeleted);
 
-            modelBuilder.Entity<NewsItem>()
+            modelBuilder.Entity<NewsLetter>()
                 .HasQueryFilter(x => !x.IsDeleted);
 
             modelBuilder.Entity<Slider>()
