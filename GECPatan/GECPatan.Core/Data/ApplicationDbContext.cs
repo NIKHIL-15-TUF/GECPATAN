@@ -108,7 +108,6 @@ namespace GECPatan.Core.Data
         // SITE CONTENT
         public DbSet<Alumni> Alumni { get; set; }
         public DbSet<SiteSetting> SiteSettings { get; set; }
-        public DbSet<AboutUs> AboutUs { get; set; }
         public DbSet<GalleryImage> GalleryImages { get; set; }
         public DbSet<ContactInfo> ContactInfos { get; set; }
         public DbSet<ContentPage> ContentPages { get; set; }
