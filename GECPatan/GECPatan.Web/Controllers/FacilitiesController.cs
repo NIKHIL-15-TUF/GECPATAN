@@ -30,8 +30,10 @@ namespace GECPatan.Web.Controllers
         //    return View(vm);
         //}
 
-        // GET /Facilities/Details/{id}
-        public async Task<IActionResult> Details(int id, CancellationToken ct)
+        // GET /Facilities/{id}
+
+        [HttpGet("Facilities/{id:int}")]
+        public async Task<IActionResult> Index(int id, CancellationToken ct)
         {
             var f = await _facilities.GetFacilityDetailAsync(id, ct);
             if (f == null) return NotFound();
