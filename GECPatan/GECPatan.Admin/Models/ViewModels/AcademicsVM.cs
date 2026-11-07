@@ -3,38 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GECPatan.Admin.Models.ViewModels
 {
-    // ── ACADEMIC CALENDAR ───
-    public class AcademicCalendarVM
-    {
-        public int Id { get; set; }
-
-        [Required(ErrorMessage = "Title is required")]
-        [MaxLength(300)]
-        public string Title { get; set; } = string.Empty;
-
-        [Display(Name = "Upload Date")]
-        public string? UploadDate { get; set; }
-
-        [Display(Name = "Department (optional)")]
-        public int? DeptId { get; set; }
-
-        public bool IsVisible { get; set; } = true;
-        public int DisplayOrder { get; set; } = 0;
-        public string? ExistingFilePath { get; set; }
-
-        public List<SelectListItem> Departments { get; set; } = new();
-    }
-
-    public class AcademicCalendarListVM
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string? UploadDate { get; set; }
-        public string? DeptName { get; set; }
-        public bool IsVisible { get; set; }
-        public string? FilePath { get; set; }
-    }
-
     // ── SSIP DOCUMENT ────
     public class SSIPDocumentVM
     {

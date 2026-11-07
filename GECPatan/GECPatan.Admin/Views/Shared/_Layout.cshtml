@@ -430,7 +430,7 @@
                             @* ── Document/File Section ────────────────────────── *@
                             @if (isAdmin || isPrin)
                             {
-                                <li class="nav-header">Document/File Section</li>
+                                <li class="nav-header">DOCUMENT/FILE SECTION</li>
                                 <li class="nav-item">
                                     <a asp-controller="ImportantDocument"
                                        asp-action="Index"
@@ -477,14 +477,6 @@
                             @if (isAdmin || isPrin || isHOD)
                             {
                                 <li class="nav-header">ACADEMICS</li>
-                                <li class="nav-item">
-                                    <a asp-controller="AcademicCalendar"
-                                       asp-action="Index"
-                                       class="nav-link @(ctrl == "AcademicCalendar" ? "active" : "")">
-                                        <i class="nav-icon fas fa-calendar-alt"></i>
-                                        <p>Academic Calendars</p>
-                                    </a>
-                                </li>
                                 <li class="nav-item">
                                     <a asp-controller="SSIPDocument"
                                        asp-action="Index"

@@ -3,19 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GECPatan.Core.Models.Domain
 {
-    // ACADEMIC CALENDAR
-    public class AcademicCalendar : BaseEntity
-    {
-        public int Id { get; set; }
-
-        [Required, MaxLength(300)]
-        public string Title { get; set; } = string.Empty;
-        public string? FilePath { get; set; }
-        public string? UploadDate { get; set; }
-        public int? DeptId { get; set; }
-        public bool IsVisible { get; set; } = true;
-        public int DisplayOrder { get; set; } = 0;
-    }
+    
     // SSIP DOCUMENT
     public class SSIPDocument : BaseEntity
     {

@@ -86,7 +86,6 @@ namespace GECPatan.Core.Data
         public DbSet<MoUDocument> MoUDocuments { get; set; }
 
         // ACADEMICS
-        public DbSet<AcademicCalendar> AcademicCalendars { get; set; }
         public DbSet<SSIPDocument> SSIPDocuments { get; set; }
         public DbSet<ResearchGrant> ResearchGrants { get; set; }
         public DbSet<ProgramIntake> ProgramIntakes { get; set; }
