@@ -17,7 +17,6 @@ namespace GECPatan.Core.Models.Domain
         public string? Tagline { get; set; }
         public string? BlogspotLink { get; set; }
         public string? About { get; set; }
-
         public string? TitleImagePath { get; set; }
 
         public int DisplayOrder { get; set; } = 0;

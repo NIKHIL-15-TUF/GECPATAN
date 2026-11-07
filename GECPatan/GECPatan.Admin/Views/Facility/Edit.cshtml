@@ -6,6 +6,8 @@
       method="post" enctype="multipart/form-data">
     <input asp-for="Id" type="hidden" />
 
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
     <ul class="nav nav-tabs mb-0" id="facilityTabs">
         <li class="nav-item">
             <a class="nav-link active" data-toggle="tab" href="#basic">
@@ -13,8 +15,13 @@
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#banners">
+                <i class="fas fa-images mr-1"></i>Banner Images
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link" data-toggle="tab" href="#vision">
-                <i class="fas fa-eye mr-1"></i>Vision & Mission
+                <i class="fas fa-eye mr-1"></i>Vision &amp; Mission
             </a>
         </li>
     </ul>
@@ -32,19 +39,22 @@
                 <div class="form-group">
                     <label asp-for="Tagline" class="font-weight-bold"></label>
                     <input asp-for="Tagline" class="form-control" />
+                    <span asp-validation-for="Tagline" class="text-danger small"></span>
                 </div>
                 <div class="form-group">
                     <label asp-for="BlogspotLink" class="font-weight-bold"></label>
-                    <input asp-for="BlogspotLink" class="form-control" />
+                    <input asp-for="BlogspotLink" class="form-control"
+                           placeholder="https://example.blogspot.com/" />
+                    <span asp-validation-for="BlogspotLink" class="text-danger small"></span>
                 </div>
                 <div class="form-group">
-                    <label class="font-weight-bold">About</label>
+                    <label asp-for="About" class="font-weight-bold"></label>
                     <textarea asp-for="About" class="form-control" rows="5"></textarea>
                 </div>
 
                 <!-- Auto stats -->
                 <div class="row mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label class="font-weight-bold">
                                 Members <small class="text-muted">(auto)</small>
@@ -54,7 +64,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="form-group">
                             <label class="font-weight-bold">
                                 Sections <small class="text-muted">(auto)</small>
@@ -64,14 +74,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="DisplayOrder" class="font-weight-bold"></label>
-                            <input asp-for="DisplayOrder" class="form-control"
-                                   type="number" min="0" />
-                        </div>
-                    </div>
                 </div>
+                <small class="text-muted d-block mb-3">
+                    Display order is changed with the up/down arrows on the Facilities list.
+                </small>
 
                 <!-- Title Image -->
                 <div class="form-group">
@@ -80,7 +86,7 @@
                     {
                         <div class="mb-2">
                             <img src="@Model.ExistingTitleImagePath" class="img-thumbnail"
-                                 style="max-height:100px;" />
+                                 style="max-height:100px;" alt="Current title image" />
                             <small class="text-muted d-block">Current image</small>
                         </div>
                     }
@@ -93,10 +99,53 @@
                                 ? "Choose image..." : "Replace image...")
                         </label>
                     </div>
+                    @Html.ValidationMessage("TitleImage", new { @class = "text-danger small" })
                 </div>
             </div>
 
-            <!-- TAB 2: VISION & MISSION -->
+            <!-- TAB 2: BANNER IMAGES -->
+            <div class="tab-pane fade" id="banners">
+                <label class="font-weight-bold">Current Banner Images</label>
+
+                @if (Model.ExistingBannerImages.Any())
+                {
+                    <div class="row" id="bannerGrid">
+                        @foreach (var b in Model.ExistingBannerImages)
+                        {
+                            <div class="col-6 col-md-3 mb-3" id="banner-@b.Id">
+                                <div class="card h-100">
+                                    <img src="@b.ImagePath" class="card-img-top" alt="Banner image"
+                                         style="height:110px;object-fit:cover;" />
+                                    <div class="card-footer p-1 text-center bg-light">
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-delete-banner"
+                                                data-id="@b.Id">
+                                            <i class="fas fa-trash mr-1"></i>Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted small" id="noBannersMsg">No banner images yet.</p>
+                }
+
+                <div class="form-group mt-3">
+                    <label class="font-weight-bold">Add Banner Images</label>
+                    <small class="text-muted d-block mb-1">Up to 10 images at a time.</small>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" name="BannerImages"
+                               accept="image/*" multiple
+                               onchange="this.nextElementSibling.textContent = this.files.length > 1 ? this.files.length + ' files selected' : (this.files[0]?.name || 'Choose images...')" />
+                        <label class="custom-file-label">Choose images...</label>
+                    </div>
+                    @Html.ValidationMessage("BannerImages", new { @class = "text-danger small" })
+                </div>
+            </div>
+
+            <!-- TAB 3: VISION & MISSION -->
             <div class="tab-pane fade" id="vision">
                 <div class="row">
                     <div class="col-md-6">
@@ -105,7 +154,7 @@
                                 <i class="fas fa-eye mr-1 text-primary"></i>Vision Statements
                             </label>
                             <small class="text-muted d-block mb-1">One per line</small>
-                            <textarea name="VisionItems" id="visionInput"
+                            <textarea name="VisionText" id="visionInput"
                                       class="form-control" rows="7">@string.Join("\n", Model.VisionItems)</textarea>
                         </div>
                         <div class="border rounded p-2 bg-light">
@@ -124,7 +173,7 @@
                                 <i class="fas fa-rocket mr-1 text-success"></i>Mission Statements
                             </label>
                             <small class="text-muted d-block mb-1">One per line</small>
-                            <textarea name="MissionItems" id="missionInput"
+                            <textarea name="MissionText" id="missionInput"
                                       class="form-control" rows="7">@string.Join("\n", Model.MissionItems)</textarea>
                         </div>
                         <div class="border rounded p-2 bg-light">
@@ -163,15 +212,15 @@
         <div class="row">
             <div class="col-md-4 mb-2">
                 <a asp-action="Members" asp-route-id="@Model.Id"
-                       class="btn btn-outline-secondary btn-block btn-sm">
+                   class="btn btn-outline-secondary btn-block btn-sm">
                     <i class="fas fa-users d-block mb-1" style="font-size:18px;"></i>
                     Members
                 </a>
             </div>
             <div class="col-md-4 mb-2">
                 <a asp-controller="DynamicSection" asp-action="Index"
-                       asp-route-pageType="3" asp-route-pageId="@Model.Id"
-                       class="btn btn-outline-primary btn-block btn-sm">
+                   asp-route-pageType="3" asp-route-pageId="@Model.Id"
+                   class="btn btn-outline-primary btn-block btn-sm">
                     <i class="fas fa-layer-group d-block mb-1" style="font-size:18px;"></i>
                     Sections
                 </a>
@@ -184,22 +233,59 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
     <script>
-        function updatePreview(inputId, listId) {
-        const ta = document.getElementById(inputId);
-        const ul = document.getElementById(listId);
-        if (!ta || !ul) return;
-        ta.addEventListener('input', function() {
-        const lines = this.value.split('\n').filter(l => l.trim());
-        ul.innerHTML = lines.map(l => `<li class="small">${l.trim()}</li>`).join('');
-        });
+        // Live preview — built with textContent so typed text is never parsed as HTML.
+        function bindPreview(inputId, listId) {
+            const ta = document.getElementById(inputId);
+            const ul = document.getElementById(listId);
+            if (!ta || !ul) return;
+            ta.addEventListener('input', function() {
+                const items = this.value.split('\n')
+                    .map(l => l.trim())
+                    .filter(l => l.length > 0)
+                    .map(l => {
+                        const li = document.createElement('li');
+                        li.className = 'small';
+                        li.textContent = l;
+                        return li;
+                    });
+                ul.replaceChildren(...items);
+            });
         }
-        updatePreview('visionInput',  'visionList');
-        updatePreview('missionInput', 'missionList');
+        bindPreview('visionInput', 'visionList');
+        bindPreview('missionInput', 'missionList');
+
+        // Remove an existing banner image (soft delete on the server).
+        document.querySelectorAll('.btn-delete-banner').forEach(function(btn) {
+            btn.addEventListener('click', async function() {
+                if (!confirm('Remove this banner image?')) return;
+
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                const body = new URLSearchParams({
+                    id: this.dataset.id,
+                    facilityId: '@Model.Id',
+                    __RequestVerificationToken: tokenInput ? tokenInput.value : ''
+                });
+
+                this.disabled = true;
+                try {
+                    const res = await fetch('@Url.Action("DeleteBannerImage", "Facility")', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: body
+                    });
+                    if (!res.ok) throw new Error('Request failed');
+                    document.getElementById('banner-' + this.dataset.id).remove();
+                } catch (e) {
+                    this.disabled = false;
+                    alert('Could not remove the banner image. Please try again.');
+                }
+            });
+        });
 
         const activeTab = localStorage.getItem('facilityTab');
         if (activeTab) $(`a[href="${activeTab}"]`).tab('show');
         $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
-        localStorage.setItem('facilityTab', $(e.target).attr('href'));
+            localStorage.setItem('facilityTab', $(e.target).attr('href'));
         });
     </script>
 }

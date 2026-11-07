@@ -34,6 +34,8 @@ namespace GECPatan.Admin.Models.ViewModels
     {
         public int Id { get; set; }
         public string? ExistingTitleImagePath { get; set; }
+        public List<FacilityBannerImageVM> ExistingBannerImages { get; set; } = new();
+
         public List<string> VisionItems { get; set; } = new();
         public List<string> MissionItems { get; set; } = new();
 
@@ -66,7 +68,11 @@ namespace GECPatan.Admin.Models.ViewModels
         public int FacilityId { get; set; }
         public string? ExistingImagePath { get; set; }
     }
-
+    public class FacilityBannerImageVM
+    {
+        public int Id { get; set; }
+        public string ImagePath { get; set; } = string.Empty;
+    }
     //// ── STUDENT CLUB ──────────────────────────────────────
     public class StudentClubListVM
     {
