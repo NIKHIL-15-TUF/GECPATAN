@@ -427,16 +427,32 @@
                                     </a>
                                 </li>
                             }
-                            @* ── INSTITUTE ────────────────────────── *@
+                            @* ── Document/File Section ────────────────────────── *@
                             @if (isAdmin || isPrin)
                             {
-                                <li class="nav-header">INSTITUTE</li>
+                                <li class="nav-header">Document/File Section</li>
                                 <li class="nav-item">
-                                    <a asp-controller="AboutUs"
+                                    <a asp-controller="ImportantDocument"
                                        asp-action="Index"
-                                       class="nav-link @(ctrl == "AboutUs" ? "active" : "")">
-                                        <i class="nav-icon fas fa-university"></i>
-                                        <p>About Us</p>
+                                       class="nav-link @(ctrl == "ImportantDocument" ? "active" : "")">
+                                            <i class="nav-icon fas fa-folder-open"></i>
+                                        <p>Important Docs</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="TenderCategory"
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "TenderCategory" ? "active" : "")">
+                                        <i class="nav-icon fas fa-file-contract"></i>
+                                        <p>Tenders</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="MoU"
+                                       asp-action="Index"
+                                       class="nav-link @(ctrl == "MoU" ? "active" : "")">
+                                        <i class="nav-icon fas fa-handshake"></i>
+                                        <p>MoU Documents</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
@@ -453,30 +469,6 @@
                                        class="nav-link @(ctrl == "NewsLetter" ? "active" : "")">
                                         <i class="nav-icon fas fa-file-pdf"></i>
                                         <p>News Letters</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a asp-controller="TenderCategory"
-                                       asp-action="Index"
-                                       class="nav-link @(ctrl == "TenderCategory" ? "active" : "")">
-                                        <i class="nav-icon fas fa-file-contract"></i>
-                                        <p>Tenders</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a asp-controller="ImportantDocument"
-                                       asp-action="Index"
-                                       class="nav-link @(ctrl == "ImportantDocument" ? "active" : "")">
-                                        <i class="nav-icon fas fa-folder-open"></i>
-                                        <p>Important Docs</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a asp-controller="MoU"
-                                       asp-action="Index"
-                                       class="nav-link @(ctrl == "MoU" ? "active" : "")">
-                                        <i class="nav-icon fas fa-handshake"></i>
-                                        <p>MoU Documents</p>
                                     </a>
                                 </li>
                             }
