@@ -5,45 +5,45 @@
     string pageTitle = ViewBag.PageTitle;
 }
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-action="Index">Document Pages</a></li>
-        <li class="breadcrumb-item active" aria-current="page">@pageTitle</li>
-    </ol>
-</nav>
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">@pageTitle — Years</h3>
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addYearModal">
-        <i class="fa fa-plus"></i> Add Year
-    </button>
-</div>
+<ol class="breadcrumb bg-white shadow-sm px-3 py-2 mb-3">
+    <li class="breadcrumb-item"><a asp-action="Index">Document Pages</a></li>
+    <li class="breadcrumb-item active" aria-current="page">@pageTitle</li>
+</ol>
 
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="alert alert-success alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <h5><i class="icon fas fa-check"></i> Success</h5>
         @TempData["Success"]
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
     </div>
 }
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <h5><i class="icon fas fa-ban"></i> Error</h5>
         @TempData["Error"]
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
     </div>
 }
 
 <div class="card">
-    <div class="card-body table-responsive">
-        <table class="table table-striped table-bordered align-middle">
+    <div class="card-header" style="background:#1a237e;color:#fff;">
+        <h3 class="card-title">
+            <i class="fas fa-calendar-alt mr-2"></i>@pageTitle — Years
+        </h3>
+        <div class="card-tools">
+            <button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#addYearModal">
+                <i class="fas fa-plus mr-1"></i>Add Year
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body table-responsive p-0">
+        <table class="table table-bordered table-striped table-hover mb-0">
             <thead>
                 <tr>
-                    <th style="width:60px;">Order</th>
+                    <th style="width:70px;">Order</th>
                     <th>Year</th>
                     <th class="text-center" style="width:100px;">Files</th>
                     <th class="text-center" style="width:180px;">Actions</th>
@@ -53,7 +53,10 @@
                 @if (Model == null || !Model.Any())
                 {
                     <tr>
-                        <td colspan="4" class="text-center">No year sections yet. Click "Add Year" to create one.</td>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <i class="fas fa-folder-open mr-1"></i>
+                            No year sections yet. Click "Add Year" to create one.
+                        </td>
                     </tr>
                 }
                 else
@@ -61,30 +64,30 @@
                     foreach (var y in Model.OrderByDescending(x => x.Year))
                     {
                         <tr>
-                            <td>@y.DisplayOrder</td>
-                            <td>
+                            <td class="align-middle">@y.DisplayOrder</td>
+                            <td class="align-middle">
                                 <a asp-action="Files" asp-route-yearSectionId="@y.Id">@y.Year</a>
                             </td>
-                            <td class="text-center">@y.FileCount</td>
-                            <td class="text-center">
+                            <td class="text-center align-middle">
+                                <span class="badge badge-info">@y.FileCount</span>
+                            </td>
+                            <td class="text-center align-middle">
                                 <a asp-action="Files"
                                    asp-route-yearSectionId="@y.Id"
-                                   class="btn btn-sm btn-outline-primary"
+                                   class="btn btn-sm btn-info"
                                    title="Manage Files">
-                                    <i class="fa fa-file"></i> Files
+                                    <i class="fas fa-file-alt mr-1"></i>Files
                                 </a>
 
                                 <form asp-action="DeleteYearSection"
                                       asp-route-id="@y.Id"
                                       asp-route-pageId="@pageId"
                                       method="post"
-                                      class="d-inline"
-                                      onsubmit="return confirm('Delete year \'@y.Year\'? This cannot be undone.');">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit"
-                                            class="btn btn-sm btn-outline-danger"
-                                            title="Delete">
-                                        <i class="fa fa-trash"></i>
+                                      class="d-inline js-delete-form"
+                                      data-confirm-name="@y.Year"
+                                      data-confirm-kind="year">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             </td>
@@ -100,52 +103,53 @@
 <div class="modal fade" id="addYearModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <form asp-action="AddYearSection" method="post">
-            @Html.AntiForgeryToken()
             <input type="hidden" name="PageId" value="@pageId" />
 
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Year Section</h5>
-                    <button type="button"
-                            class="close"
-                            data-dismiss="modal"
-                            aria-label="Close">
+                <div class="modal-header" style="background:#1a237e;color:#fff;">
+                    <h5 class="modal-title">
+                        <i class="fas fa-calendar-plus mr-2"></i>Add Year Section
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
 
                 <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <label class="form-label">Year (e.g. 2023-24)</label>
-                        <input type="text"
-                               name="Year"
-                               class="form-control"
-                               maxlength="20"
-                               required />
+                    <div class="form-group">
+                        <label class="font-weight-bold" for="yearInput">Year (e.g. 2023-24)</label>
+                        <input type="text" id="yearInput" name="Year" class="form-control"
+                               maxlength="20" required />
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label">Display Order</label>
-                        <input type="number"
-                               name="DisplayOrder"
-                               class="form-control"
-                               value="0" />
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold" for="yearOrderInput">Display Order</label>
+                        <input type="number" id="yearOrderInput" name="DisplayOrder"
+                               class="form-control" value="0" min="0" />
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button"
-                            class="btn btn-secondary"
-                            data-dismiss="modal">
-                        Cancel
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Cancel
                     </button>
-
-                    <button type="submit"
-                            class="btn btn-primary">
-                        Save
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-1"></i>Save
                     </button>
                 </div>
             </div>
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // The name is read from a data attribute (not pasted into inline JavaScript),
+        // so a quote or special character in it cannot break or inject script.
+        $(document).on('submit', '.js-delete-form', function() {
+            var name = $(this).data('confirm-name');
+            var kind = $(this).data('confirm-kind');
+            return confirm('Delete ' + kind + ' "' + name + '"? This cannot be undone.');
+        });
+    </script>
+}
