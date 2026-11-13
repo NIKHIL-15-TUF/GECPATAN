@@ -20,7 +20,9 @@ namespace GECPatan.Admin.Models.ViewModels
 
         public PageType PageType { get; set; } = PageType.Department;
         public int PageId { get; set; }
-
+        [Url(ErrorMessage = "Please enter a valid URL")]
+        [MaxLength(2048)]
+        public string? ExternalUrl { get; set; }
         public int DisplayOrder { get; set; } = 0;
         public bool IsVisible { get; set; } = true;
 

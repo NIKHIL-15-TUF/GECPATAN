@@ -146,6 +146,7 @@ namespace GECPatan.Admin.Controllers
                 HtmlContent = model.HtmlContent,
                 PageType = model.PageType,
                 PageId = model.PageId,
+                ExternalUrl = model.ExternalUrl,
                 DisplayOrder = maxOrder + 1,
                 IsVisible = true,
                 FilePath = sectionFilePath,
@@ -222,6 +223,7 @@ namespace GECPatan.Admin.Controllers
                 FileName = section.FileName,
                 PageType = section.PageType,
                 PageId = section.PageId,
+                ExternalUrl = section.ExternalUrl,
                 DisplayOrder = section.DisplayOrder,
                 IsVisible = section.IsVisible,
                 SectionTypes = GetSectionTypeList()
@@ -265,7 +267,8 @@ namespace GECPatan.Admin.Controllers
             }
 
             string? previousFilePath = section.FilePath;
-
+            section.SectionType = model.SectionType;
+            section.ExternalUrl = model.ExternalUrl;
             section.Title = model.Title;
             section.HtmlContent = model.HtmlContent;
             section.IsVisible = model.IsVisible;
@@ -513,6 +516,7 @@ namespace GECPatan.Admin.Controllers
             new SelectListItem("Image Gallery",           "4"),
             new SelectListItem("File List",               "5"),
             new SelectListItem("Table",                   "6"),
+            new SelectListItem("External Link",           "7")
         };
 
         private async Task<string> GetPageNameAsync(PageType pageType, int pageId)

@@ -114,7 +114,26 @@
                             <small class="text-muted">Hold Ctrl to select multiple files.</small>
                         </div>
                     </div>
- 
+                    <!-- EXTERNAL LINK fields -->
+                    <div id="fields-external-link" class="section-fields d-none">
+                        <div class="form-group">
+                            <label asp-for="ExternalUrl" class="font-weight-bold">
+                                External URL
+                            </label>
+
+                            <input asp-for="ExternalUrl"
+                                   class="form-control"
+                                   type="url"
+                                   placeholder="https://example.com" />
+
+                            <span asp-validation-for="ExternalUrl"
+                                  class="text-danger small"></span>
+
+                            <small class="text-muted">
+                                Enter the external website URL. It will open in a new tab.
+                            </small>
+                        </div>
+                    </div>
                 </div>
  
                 <div class="card-footer d-flex justify-content-between">
@@ -166,6 +185,10 @@
                         <span class="badge badge-secondary mr-2">Table</span>
                         <small>HTML table with custom rows/cols</small>
                     </li>
+                    <li class="list-group-item">
+                        <span class="badge badge-dark mr-2">External Link</span>
+                        <small>Redirect users to an external website in a new tab.</small>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -186,36 +209,39 @@
         '3': 'Upload a PDF file. A download button will be shown.',
         '4': 'Upload multiple images. They will be displayed as a gallery.',
         '5': 'Upload multiple files. They will be shown as a download list.',
-        '6': 'Enter an HTML table. Use Bootstrap classes for styling.'
+        '6': 'Enter an HTML table. Use Bootstrap classes for styling.',
+        '7': 'Enter an external website URL. It will open in a new tab.'
         };
  
         function showTypeFields(val) {
-        document.querySelectorAll('.section-fields').forEach(el => el.classList.add('d-none'));
-        document.getElementById('typeHint').textContent = hints[val] || '';
+            document.querySelectorAll('.section-fields').forEach(el => el.classList.add('d-none'));
+            document.getElementById('typeHint').textContent = hints[val] || '';
  
-        if (val === '1') {
-        document.getElementById('fields-richtext').classList.remove('d-none');
-        if (!tinyMceInitialized) {
-        tinymce.init({
-        selector: '#richTextEditor',
-        plugins: 'link lists table image code',
-        toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image table | code',
-        height: 350,
-        menubar: false,
-        promotion: false,
-        branding: false
-        });
-        tinyMceInitialized = true;
-        }
-        } else if (val === '6') {
-        document.getElementById('fields-table').classList.remove('d-none');
-        } else if (val === '2' || val === '3') {
-        document.getElementById('fields-pdf').classList.remove('d-none');
-        } else if (val === '4') {
-        document.getElementById('fields-gallery').classList.remove('d-none');
-        } else if (val === '5') {
-        document.getElementById('fields-filelist').classList.remove('d-none');
-        }
+            if (val === '1') {
+            document.getElementById('fields-richtext').classList.remove('d-none');
+            if (!tinyMceInitialized) {
+            tinymce.init({
+            selector: '#richTextEditor',
+            plugins: 'link lists table image code',
+            toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image table | code',
+            height: 350,
+            menubar: false,
+            promotion: false,
+            branding: false
+            });
+            tinyMceInitialized = true;
+            }
+            } else if (val === '6') {
+            document.getElementById('fields-table').classList.remove('d-none');
+            } else if (val === '2' || val === '3') {
+            document.getElementById('fields-pdf').classList.remove('d-none');
+            } else if (val === '4') {
+            document.getElementById('fields-gallery').classList.remove('d-none');
+            } else if (val === '5') {
+            document.getElementById('fields-filelist').classList.remove('d-none');
+            } else if (val === '7') {
+            document.getElementById('fields-external-link').classList.remove('d-none');
+            }
         }
  
         function updateLabel(input) {

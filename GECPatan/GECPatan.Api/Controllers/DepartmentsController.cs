@@ -141,6 +141,7 @@ namespace GECPatan.Api.Controllers
                     HtmlContent = s.HtmlContent,
                     FilePath = s.FilePath,
                     FileName = s.FileName,
+                    ExternalUrl=s.ExternalUrl,
                     DisplayOrder = s.DisplayOrder,
                     Files = s.Files
                         .OrderBy(f => f.DisplayOrder)

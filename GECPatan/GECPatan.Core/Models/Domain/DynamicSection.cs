@@ -11,7 +11,8 @@ namespace GECPatan.Core.Models.Domain
         PDFDownload = 3,    // Download button
         ImageGallery = 4,   // Multiple images
         FileList = 5,       // Multiple downloadable files
-        Table = 6           // HTML table
+        Table = 6,          // HTML table
+        ExternalLink = 7    //Redirect to External Link  
     }
     // PAGE TYPE ENUM
     public enum PageType
@@ -20,7 +21,8 @@ namespace GECPatan.Core.Models.Domain
         Committee = 2,
         Facility = 3,
         Custom = 4,
-        Principal = 5
+        Principal = 5,
+        StudentClub = 6
     }
     // DYNAMIC SECTION
     public class DynamicSection : BaseEntity
@@ -42,6 +44,11 @@ namespace GECPatan.Core.Models.Domain
         // Which page this section belongs to
         public PageType PageType { get; set; } = PageType.Department;
         public int PageId { get; set; }
+
+        //Redirect to other pages
+        // External link
+        [MaxLength(2048)]
+        public string? ExternalUrl { get; set; }
 
         // Display
         public int DisplayOrder { get; set; } = 0;

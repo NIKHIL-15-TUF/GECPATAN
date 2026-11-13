@@ -2242,6 +2242,10 @@ namespace GECPatan.Core.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
+                    b.Property<string>("ExternalUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
                     b.Property<string>("FileName")
                         .HasColumnType("nvarchar(max)");
 

@@ -12,8 +12,9 @@
         <a asp-controller="@(pageType == PageType.Department
                    ? "Department"
                    : pageType == PageType.Facility
-                       ? "Facility"
-                       : "CampusCommittee")"
+                       ? "Facility" :
+                       pageType == PageType.Committee ? "CampusCommittee"
+                                : pageType == PageType.StudentClub ? "StudentClub" : "Custom")"
            asp-action="Index"
            asp-route-id="@pageId"
            class="btn btn-secondary btn-sm mr-2">
@@ -47,7 +48,7 @@
             <div class="text-center py-5 text-muted">
                 <i class="fas fa-layer-group fa-3x mb-3 d-block"></i>
                 <p>No sections yet. Click <strong>Add Section</strong> to get started.</p>
-                <p class="small">You can add Rich Text, PDF, Image Gallery, or File List sections.</p>
+                <p class="small">You can add Rich Text, PDF, Image Gallery, File List or External Link sections.</p>
             </div>
         }
         else
@@ -125,6 +126,7 @@
          GECPatan.Core.Models.Domain.SectionType.ImageGallery => "badge-success",
          GECPatan.Core.Models.Domain.SectionType.FileList => "badge-info",
          GECPatan.Core.Models.Domain.SectionType.Table => "badge-secondary",
+         GECPatan.Core.Models.Domain.SectionType.ExternalLink => "badge-dark",
         _ => "badge-light"
     };
  
@@ -136,6 +138,7 @@
          GECPatan.Core.Models.Domain.SectionType.ImageGallery => "🖼️",
          GECPatan.Core.Models.Domain.SectionType.FileList => "📁",
          GECPatan.Core.Models.Domain.SectionType.Table => "📊",
+         GECPatan.Core.Models.Domain.SectionType.ExternalLink => "🔗",
         _ => ""
     };
 }

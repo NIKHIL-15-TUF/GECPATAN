@@ -62,6 +62,7 @@ namespace GECPatan.Api.Controllers
                     FilePath = s.FilePath,
                     FileName = s.FileName,
                     DisplayOrder = s.DisplayOrder,
+                    ExternalUrl = s.ExternalUrl,
                     Files = s.Files
                         .OrderBy(f => f.DisplayOrder)
                         .Select(f => new DynamicSectionFileDTO

@@ -123,7 +123,50 @@
                                 }
                             </div>
                         }
- 
+                        <!-- EXTERNAL LINK -->
+                        @if (Model.SectionType == SectionType.ExternalLink)
+                        {
+                            <div class="form-group">
+                                <label asp-for="ExternalUrl" class="font-weight-bold">
+                                    External Website URL
+                                </label>
+
+                                @if (!string.IsNullOrWhiteSpace(Model.ExternalUrl))
+                                {
+                                    <div class="alert alert-light border d-flex align-items-center mb-2">
+                                        <i class="fas fa-external-link-alt text-primary mr-2"></i>
+
+                                        <div class="text-truncate flex-grow-1">
+                                            <small class="text-muted d-block">Current URL</small>
+                                            <a href="@Model.ExternalUrl"
+                                               target="_blank"
+                                               rel="noopener noreferrer">
+                                                @Model.ExternalUrl
+                                            </a>
+                                        </div>
+
+                                        <a href="@Model.ExternalUrl"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           class="btn btn-sm btn-outline-primary ml-2">
+                                            <i class="fas fa-external-link-alt"></i> Visit
+                                        </a>
+                                    </div>
+                                }
+
+                                <input asp-for="ExternalUrl"
+                                       type="url"
+                                       class="form-control"
+                                       placeholder="https://example.com" />
+
+                                <span asp-validation-for="ExternalUrl"
+                                      class="text-danger small"></span>
+
+                                <small class="form-text text-muted">
+                                    Update the external website URL. It will open in a new tab.
+                                </small>
+                            </div>
+                        }
                         <!-- Add more files -->
                         <form asp-action="AddFiles" method="post"
                               enctype="multipart/form-data" class="border p-3 bg-light rounded">
