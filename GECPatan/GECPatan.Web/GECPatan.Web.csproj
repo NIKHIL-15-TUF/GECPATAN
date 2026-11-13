@@ -5,18 +5,39 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Views\Academics\**" />
+    <Compile Remove="Views\Administration\**" />
+    <Compile Remove="Views\Alumni\**" />
+    <Compile Remove="Views\CampusLife\**" />
+    <Compile Remove="Views\PlacementCell\**" />
+    <Compile Remove="Views\Research\**" />
+    <Content Remove="Views\Academics\**" />
+    <Content Remove="Views\Administration\**" />
+    <Content Remove="Views\Alumni\**" />
+    <Content Remove="Views\CampusLife\**" />
+    <Content Remove="Views\PlacementCell\**" />
+    <Content Remove="Views\Research\**" />
+    <EmbeddedResource Remove="Views\Academics\**" />
+    <EmbeddedResource Remove="Views\Administration\**" />
+    <EmbeddedResource Remove="Views\Alumni\**" />
+    <EmbeddedResource Remove="Views\CampusLife\**" />
+    <EmbeddedResource Remove="Views\PlacementCell\**" />
+    <EmbeddedResource Remove="Views\Research\**" />
+    <None Remove="Views\Academics\**" />
+    <None Remove="Views\Administration\**" />
+    <None Remove="Views\Alumni\**" />
+    <None Remove="Views\CampusLife\**" />
+    <None Remove="Views\PlacementCell\**" />
+    <None Remove="Views\Research\**" />
+  </ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\GECPatan.Core\GECPatan.Core.csproj" />
 	</ItemGroup>
 
   <ItemGroup>
     <Folder Include="Views\Institute\" />
-    <Folder Include="Views\Academics\" />
-    <Folder Include="Views\Administration\" />
-    <Folder Include="Views\Alumni\" />
-    <Folder Include="Views\CampusLife\" />
-    <Folder Include="Views\Research\" />
-    <Folder Include="Views\PlacementCell\" />
   </ItemGroup>
 
   <ItemGroup>

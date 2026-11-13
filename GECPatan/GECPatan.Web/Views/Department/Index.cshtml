@@ -92,7 +92,9 @@
                 var sid = SafeId(sec.Title);
 
                 <button class="tablinks"
-                        onclick="openTab(event,'@sid')">
+                        onclick="@(!string.IsNullOrWhiteSpace(sec.ExternalUrl)
+                                   ? $"window.open('{sec.ExternalUrl}', '_blank', 'noopener,noreferrer')"
+                                   : $"openTab(event, '{sid}')")">
                     @sec.Title
                 </button>
             }
@@ -647,6 +649,12 @@
                         </li>
                     </ul>
                 }
+                @* else if (!string.IsNullOrWhiteSpace(sec.ExternalUrl))
+                {
+                    <a href="@sec.ExternalUrl" target="_blank" rel="noopener noreferrer">
+                        @sec.Title
+                    </a>
+                } *@
             </div>
         </div>
     }

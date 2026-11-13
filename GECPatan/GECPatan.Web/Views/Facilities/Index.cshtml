@@ -70,7 +70,13 @@
             @foreach (var sec in dynamicSections)
             {
                 var sid = SafeId(sec.Title);
-                <button class="tablinks" onclick="openTab(event,'@sid')">@sec.Title</button>
+
+                <button class="tablinks"
+                        onclick="@(!string.IsNullOrWhiteSpace(sec.ExternalUrl)
+                                                       ? $"window.open('{sec.ExternalUrl}', '_blank', 'noopener,noreferrer')"
+                                                       : $"openTab(event, '{sid}')")">
+                    @sec.Title
+                </button>
             }
         }
     }

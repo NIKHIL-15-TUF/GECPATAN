@@ -53,6 +53,7 @@
         public string? HtmlContent { get; set; }
         public string? FilePath { get; set; }
         public string? FileName { get; set; }
+        public string? ExternalUrl { get; set; }
         public int DisplayOrder { get; set; }
         public List<DynamicSectionFileDTO> Files { get; set; } = new();
     }

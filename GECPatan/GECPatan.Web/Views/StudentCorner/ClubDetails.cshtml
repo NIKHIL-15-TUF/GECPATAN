@@ -3,7 +3,16 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = Model.Title;
     int count = 1;
+    var dynamicSections = Model.DynamicSections
+      .Where(s => !string.IsNullOrWhiteSpace(s.Title))
+      .OrderBy(s => s.DisplayOrder)
+      .ToList();
 
+    string SafeId(string title)
+    {
+        return "Sec_" + System.Text.RegularExpressions.Regex
+            .Replace(title ?? "", @"[^a-zA-Z0-9]", "");
+    }
     // Uploaded images/files are served by GECPatan.Api's own static file
     // middleware, not by this Web app -- same reasoning as
     // DepartmentViewModel.ApiBaseUrl / ResolveApiFileUrl in Department/Index.cshtml.
@@ -59,9 +68,16 @@
             {
                 <button class="tablinks" onclick="openTab(event, 'Activities')">Activities</button>
             }
-            @if (!string.IsNullOrWhiteSpace(Model.BlogLink))
+            @foreach (var sec in dynamicSections)
             {
-                <a href="@Model.BlogLink" target="_blank"><button class="tablinks">Blogspot</button></a>
+                var sid = SafeId(sec.Title);
+
+                <button class="tablinks"
+                        onclick="@(!string.IsNullOrWhiteSpace(sec.ExternalUrl)
+                                                       ? $"window.open('{sec.ExternalUrl}', '_blank', 'noopener,noreferrer')"
+                                                       : $"openTab(event, '{sid}')")">
+                    @sec.Title
+                </button>
             }
         }
     }
@@ -185,13 +201,6 @@
             <h2>No Activities Available</h2>
         }
     </div>
-
-    @{
-        var dynamicSections = Model.DynamicSections
-            .Where(s => !string.IsNullOrWhiteSpace(s.HtmlContent) || !string.IsNullOrWhiteSpace(s.FilePath))
-            .OrderBy(s => s.DisplayOrder)
-            .ToList();
-    }
     @foreach (var sec in dynamicSections)
     {
         <div id="@("Sec_" + System.Text.RegularExpressions.Regex.Replace(sec.Title ?? "", @"[^a-zA-Z0-9]", ""))" class="tabcontent">
